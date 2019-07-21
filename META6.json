@@ -1,0 +1,16 @@
+{
+  "name": "Behave",
+  "description": "Behavior driven development framework",
+  "version": "0.1",
+  "perl": "6.*",
+  "auth": "Greg Donald",
+  "depends": [],
+  "build-depends": [],
+  "test-depends": [],
+  "provides": {
+    "Behave": "lib/Behave.pm6"
+  },
+  "resources": [],
+  "license": "GPL v2",
+  "source-url": "http://github.com/gdonald/behave"
+}
