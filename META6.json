@@ -8,9 +8,12 @@
   "build-depends": [],
   "test-depends": [],
   "provides": {
-    "Behave": "lib/Behave.pm6"
+    "Actions": "lib/Actions.pm6",
+    "Behave": "lib/Behave.pm6",
+    "Grammar": "lib/Grammar.pm6",
+    "Utils": "lib/Utils.pm6"
   },
   "resources": [],
-  "license": "GPL v2",
+  "license": "MIT",
   "source-url": "http://github.com/gdonald/behave"
 }
