@@ -8,9 +8,7 @@
   "build-depends": [],
   "test-depends": [],
   "provides": {
-    "Actions": "lib/Actions.pm6",
     "Behave": "lib/Behave.pm6",
-    "Grammar": "lib/Grammar.pm6",
     "Utils": "lib/Utils.pm6"
   },
   "resources": [],
