@@ -1,6 +1,4 @@
 
-
-
 describe -> "this spec" {
   it -> "is succesful" {
     expect(42).to_eq(42);
