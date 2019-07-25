@@ -7,9 +7,7 @@ class Expectation {
 
   submethod BUILD(:$!given) {}
 
-  method to {
-    self;
-  }
+  method to { self }
 
   method not {
     $!compare = False;
@@ -19,10 +17,13 @@ class Expectation {
   method be($expected) {
     my $result = $!given == $expected;
     $result = $!compare ?? $result !! !$result;
+    $result = $result ?? green('SUCCESS') !! red('FAILURE');
 
     do-indent;
-    say (get-indent) ~ ($result ?? "SUCCESS" !! "FAILURE");
+    say (get-indent) ~ $result ~ "\n";
     un-indent;
-    say '';
   }
+
+  sub red($str) { "\e[31m" ~ $str ~ "\e[0m" }
+  sub green($str) { "\e[32m" ~ $str ~ "\e[0m" }
 }
