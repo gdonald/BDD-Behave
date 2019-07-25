@@ -1,2 +1,2 @@
 # behave
-A mini RSpec written in Perl6 Grammar.
+A mini RSpec written in Perl6
