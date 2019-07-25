@@ -8,8 +8,10 @@
   "build-depends": [],
   "test-depends": [],
   "provides": {
+    "BasicBlock": "lib/BasicBlock.pm6",
     "Behave": "lib/Behave.pm6",
-    "Utils": "lib/Utils.pm6"
+    "Files": "lib/Files.pm6",
+    "Indent": "lib/Indent.pm6"
   },
   "resources": [],
   "license": "MIT",

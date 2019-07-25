@@ -1,11 +1,15 @@
 
+use Indent;
+
 class Expectation {
   has $!given;
 
   submethod BUILD(:$!given) {}
 
   method to_eq($arg) {
-    say '        ' ~ ($!given == $arg ?? "SUCCESS" !! "FAILURE");
+    do-indent;
+    say (get-indent) ~ ($!given == $arg ?? "SUCCESS" !! "FAILURE");
+    un-indent;
     say '';
   }
 }

@@ -1,4 +1,6 @@
 
+use Behave;
+
 describe -> "this spec" {
   it -> "is succesful" {
     expect(42).to_eq(42);
@@ -22,7 +24,6 @@ describe -> "this spec has contexts" {
     it -> "is succesful" {
       expect(42).to_eq(42);
     }
-
 
     it -> "is a big failure" {
       expect(42).to_eq(41);
