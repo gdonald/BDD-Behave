@@ -1,6 +1,6 @@
-class Utils {
+class Files {
 
-  method specs {
+  method list {
     my @files = Array.new;
     my @dir = 'specs'.IO;
     while @dir {
