@@ -2,11 +2,9 @@
 use v6.d;
 use MONKEY;
 
-use Context;
-use Describe;
+use BasicBlock;
 use Expectation;
 use Files;
-use It;
 
 class Behave {
   method run {
@@ -16,6 +14,10 @@ class Behave {
     }
   }
 }
+
+class Context is BasicBlock {}
+class Describe is BasicBlock {}
+class It is BasicBlock {}
 
 sub describe(Block $block) is export { Describe.new(:$block) }
 sub context(Block $block) is export { Context.new(:$block) }
