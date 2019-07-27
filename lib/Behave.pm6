@@ -4,14 +4,26 @@ use MONKEY;
 
 use BasicBlock;
 use Expectation;
+use Failure;
 use Files;
 
 class Behave {
+  my @.failures = [];
+
   method run {
     for Files.list -> $file {
       say $file;
       EVAL $file.IO.slurp;
     }
+
+    for @.failures -> $failure {
+      say $failure.desc ~ ":" ~ $failure.line;
+    }
+  }
+
+  method add-failure($desc, $line) {
+    my Failure $failure = Failure.new(:$desc, :$line);
+    @.failures.push: $failure;
   }
 }
 

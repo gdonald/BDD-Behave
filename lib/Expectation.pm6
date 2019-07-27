@@ -1,5 +1,6 @@
 
 use Indent;
+use Failure;
 
 class Expectation {
   has $!given;
@@ -17,6 +18,11 @@ class Expectation {
   method be($expected) {
     my $result = $!given == $expected;
     $result = $!compare ?? $result !! !$result;
+
+    if !$result {
+      add-failure('foo', 1);
+    }
+
     $result = $result ?? green('SUCCESS') !! red('FAILURE');
 
     do-indent;
