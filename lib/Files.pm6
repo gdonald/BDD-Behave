@@ -3,7 +3,7 @@ class Files {
   my $.current;
 
   method list {
-    self.find('specs', :test(/'_spec.p6' $/)).sort;
+    self.find('specs', :test(/'spec.p6' $/)).sort;
   }
 
   method find($dir, Mu :$test) {
