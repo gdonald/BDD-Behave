@@ -1,4 +1,5 @@
 
+use Colors;
 use Indent;
 use Failures;
 use Files;
@@ -21,18 +22,11 @@ class Expectation {
     $result = $!compare ?? $result !! !$result;
 
     if !$result {
-      my $frame = callframe(1);
-      my Failure $failure = Failure.new(:file(Files.current), :line($frame.line));
+      my $failure = Failure.new(:file(Files.current), :line(callframe(1).line));
       Failures.list.push($failure);
     }
 
     $result = $result ?? green('SUCCESS') !! red('FAILURE');
-
-    Indent.increase;
-    say Indent.get ~ $result ~ "\n";
-    Indent.decrease;
+    indent-block -> 'do' { $result }
   }
-
-  sub red($str) { "\e[31m" ~ $str ~ "\e[0m" }
-  sub green($str) { "\e[32m" ~ $str ~ "\e[0m" }
 }

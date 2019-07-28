@@ -3,6 +3,7 @@ use v6.d;
 use MONKEY;
 
 use BasicBlock;
+use Colors;
 use Expectation;
 use Failures;
 use Files;
@@ -11,14 +12,14 @@ class Behave {
   method run {
     for Files.list -> $file {
       Files.current = $file;
-      say $file;
+      say light-blue($file) ~ "\n";
       EVAL $file.IO.slurp;
     }
 
     if Failures.list.elems {
-      say "Failures: \n";
+      say red("Failures:") ~ "\n";
       for (Failures.list) -> $failure {
-        say '  ' ~ $failure.file ~ ':' ~ $failure.line;
+        say '  [' ~ red(" ✗ ") ~ '] ' ~ $failure.file ~ ':' ~ $failure.line;
       }
       say '';
     }
