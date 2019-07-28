@@ -2,6 +2,15 @@
 use Indent;
 use Failure;
 
+my @failures = [];
+
+sub add-failure($desc, $line) is export {
+  my $failure = Failure.new(:$desc, :$line);
+  @failures.push($failure);
+}
+
+sub get-failures is export { @failures }
+
 class Expectation {
   has $!given;
   has $!compare = True;
@@ -20,7 +29,8 @@ class Expectation {
     $result = $!compare ?? $result !! !$result;
 
     if !$result {
-      add-failure('foo', 1);
+      my $frame = callframe(1);
+      add-failure($frame.file, $frame.line);
     }
 
     $result = $result ?? green('SUCCESS') !! red('FAILURE');

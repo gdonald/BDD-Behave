@@ -8,22 +8,20 @@ use Failure;
 use Files;
 
 class Behave {
-  my @.failures = [];
-
   method run {
     for Files.list -> $file {
       say $file;
       EVAL $file.IO.slurp;
     }
 
-    for @.failures -> $failure {
-      say $failure.desc ~ ":" ~ $failure.line;
+    if get-failures.elems {
+      say "Failures: \n";
+      for (get-failures) -> $failure {
+        # TODO: get file path
+        say "  : " ~ $failure.line;
+      }
+      say '';
     }
-  }
-
-  method add-failure($desc, $line) {
-    my Failure $failure = Failure.new(:$desc, :$line);
-    @.failures.push: $failure;
   }
 }
 

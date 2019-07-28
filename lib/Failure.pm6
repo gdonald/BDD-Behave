@@ -1,9 +1,8 @@
 
 class Failure {
-  has $.desc;
-  has $.line;
+  has Str $.desc;
+  has Str $.line;
 
-  submethod BUILD(:$desc, :$line) {
-
+  submethod BUILD(:$!desc, :$!line) {
   }
 }
