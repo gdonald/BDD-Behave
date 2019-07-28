@@ -1,15 +1,7 @@
 
 use Indent;
-use Failure;
-
-my @failures = [];
-
-sub add-failure($file, $line) is export {
-  my $failure = Failure.new(:$file, :$line);
-  @failures.push($failure);
-}
-
-sub get-failures is export { @failures }
+use Failures;
+use Files;
 
 class Expectation {
   has $!given;
@@ -30,7 +22,8 @@ class Expectation {
 
     if !$result {
       my $frame = callframe(1);
-      add-failure(get-current-file, $frame.line);
+      my Failure $failure = Failure.new(:file(Files.current), :line($frame.line));
+      Failures.list.push($failure);
     }
 
     $result = $result ?? green('SUCCESS') !! red('FAILURE');

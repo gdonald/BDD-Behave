@@ -4,20 +4,20 @@ use MONKEY;
 
 use BasicBlock;
 use Expectation;
-use Failure;
+use Failures;
 use Files;
 
 class Behave {
   method run {
     for Files.list -> $file {
-      set-current-file($file);
+      Files.current = $file;
       say $file;
       EVAL $file.IO.slurp;
     }
 
-    if get-failures.elems {
+    if Failures.list.elems {
       say "Failures: \n";
-      for (get-failures) -> $failure {
+      for (Failures.list) -> $failure {
         say '  ' ~ $failure.file ~ ':' ~ $failure.line;
       }
       say '';
