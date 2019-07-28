@@ -1,6 +1,16 @@
 
-my Int $indent = 0;
+class Indent {
+  my Int $.value = 0;
 
-sub do-indent is export { $indent += 2 }
-sub un-indent is export { $indent -= 2 }
-sub get-indent is export { ' ' x $indent }
+  method increase {
+    Indent.value += 2;
+  }
+
+  method decrease {
+    Indent.value -= 2;
+  }
+
+  method get {
+    ' ' x Indent.value;
+  }
+}

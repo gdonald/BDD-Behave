@@ -28,9 +28,9 @@ class Expectation {
 
     $result = $result ?? green('SUCCESS') !! red('FAILURE');
 
-    do-indent;
-    say (get-indent) ~ $result ~ "\n";
-    un-indent;
+    Indent.increase;
+    say Indent.get ~ $result ~ "\n";
+    Indent.decrease;
   }
 
   sub red($str) { "\e[31m" ~ $str ~ "\e[0m" }
