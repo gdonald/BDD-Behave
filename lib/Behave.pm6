@@ -10,6 +10,7 @@ use Files;
 class Behave {
   method run {
     for Files.list -> $file {
+      set-current-file($file);
       say $file;
       EVAL $file.IO.slurp;
     }
@@ -17,8 +18,7 @@ class Behave {
     if get-failures.elems {
       say "Failures: \n";
       for (get-failures) -> $failure {
-        # TODO: get file path
-        say "  : " ~ $failure.line;
+        say '  ' ~ $failure.file ~ ':' ~ $failure.line;
       }
       say '';
     }

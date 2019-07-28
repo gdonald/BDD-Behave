@@ -4,8 +4,8 @@ use Failure;
 
 my @failures = [];
 
-sub add-failure($desc, $line) is export {
-  my $failure = Failure.new(:$desc, :$line);
+sub add-failure($file, $line) is export {
+  my $failure = Failure.new(:$file, :$line);
   @failures.push($failure);
 }
 
@@ -30,7 +30,7 @@ class Expectation {
 
     if !$result {
       my $frame = callframe(1);
-      add-failure($frame.file, $frame.line);
+      add-failure(get-current-file, $frame.line);
     }
 
     $result = $result ?? green('SUCCESS') !! red('FAILURE');
