@@ -1,4 +1,6 @@
+
 class Files {
+  my $.current;
 
   method list {
     my @files = Array.new;
@@ -8,6 +10,6 @@ class Files {
         @files.push($path.Str);
       }
     }
-    @files;
+    @files.sort;
   }
 }

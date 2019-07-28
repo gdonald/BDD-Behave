@@ -1,5 +1,7 @@
 
 use Indent;
+use Failures;
+use Files;
 
 class Expectation {
   has $!given;
@@ -17,6 +19,13 @@ class Expectation {
   method be($expected) {
     my $result = $!given == $expected;
     $result = $!compare ?? $result !! !$result;
+
+    if !$result {
+      my $frame = callframe(1);
+      my Failure $failure = Failure.new(:file(Files.current), :line($frame.line));
+      Failures.list.push($failure);
+    }
+
     $result = $result ?? green('SUCCESS') !! red('FAILURE');
 
     do-indent;

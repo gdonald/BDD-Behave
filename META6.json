@@ -10,6 +10,7 @@
   "provides": {
     "BasicBlock": "lib/BasicBlock.pm6",
     "Behave": "lib/Behave.pm6",
+    "Failures": "lib/Failures.pm6",
     "Files": "lib/Files.pm6",
     "Indent": "lib/Indent.pm6"
   },
