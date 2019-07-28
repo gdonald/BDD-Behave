@@ -78,7 +78,7 @@ describe -> "this spec have to and not" {
 }
 
 describe -> "this spec" {
-  it -> "is succesful" {
+  it -> "fails at line 82" {
     expect(42).to.be(41);
   }
 }
