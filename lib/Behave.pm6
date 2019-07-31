@@ -9,6 +9,18 @@ use Failures;
 use Files;
 
 class Behave {
+  has @!args;
+  has Bool $!verbose;
+
+  submethod BUILD(:$!verbose, :@!args) {
+    self.parse-args;
+  }
+
+  method parse-args {
+    say @!args;
+    exit;
+  }
+
   method run {
     for Files.list -> $file {
       Files.current = $file;
