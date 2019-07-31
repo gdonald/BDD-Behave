@@ -2,8 +2,14 @@
 class Files {
   my $.current;
 
-  method list {
-    self.find('specs', :test(/'spec.p6' $/)).sort;
+  method list(@args) {
+    my Mu $test = /'spec.p6' [\: \d+]?$/;
+
+    if @args.elems {
+      gather for @args -> $arg { if $arg ~~ $test { take $arg } }
+    } else {
+      self.find('specs', :$test).sort;
+    }
   }
 
   method find($dir, Mu :$test) {

@@ -12,20 +12,13 @@ class Behave {
   has @!args;
   has Bool $!verbose;
 
-  submethod BUILD(:$!verbose, :@!args) {
-    self.parse-args;
-  }
-
-  method parse-args {
-    say @!args;
-    exit;
-  }
+  submethod BUILD(:$!verbose, :@!args) {}
 
   method run {
-    for Files.list -> $file {
+    for Files.list(@!args) -> $file {
       Files.current = $file;
       say light-blue($file) ~ "\n";
-      EVAL $file.IO.slurp;
+      EVAL $file.IO.slurp; # TODO: handle files that match [\:\d+]?$
     }
 
     if Failures.list.elems {
