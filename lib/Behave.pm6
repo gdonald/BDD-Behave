@@ -21,13 +21,7 @@ class Behave {
       self.eval-file(:$file);
     }
 
-    if Failures.list.elems {
-      say red("Failures:") ~ "\n";
-      for (Failures.list) -> $failure {
-        say '  [' ~ red(" ✗ ") ~ '] ' ~ $failure.file ~ ':' ~ $failure.line;
-      }
-      say '';
-    }
+    Failures.say;
   }
 
   method eval-file(:$file) {
@@ -40,8 +34,6 @@ class Behave {
 
   method eval-partial-file(:$file) {
     my ($path, $line) = $file.split(':');
-    say $path;
-    say $line;
     EVAL $path.IO.slurp;
   }
 }
