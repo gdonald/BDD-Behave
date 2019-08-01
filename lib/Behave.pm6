@@ -18,7 +18,7 @@ class Behave {
     for Files.list(@!args) -> $file {
       Files.current = $file;
       say light-blue($file) ~ "\n";
-      EVAL $file.IO.slurp; # TODO: handle files that match [\:\d+]?$
+      self.eval-file(:$file);
     }
 
     if Failures.list.elems {
@@ -28,6 +28,21 @@ class Behave {
       }
       say '';
     }
+  }
+
+  method eval-file(:$file) {
+    if $file ~~ /\: \d+$/ {
+      self.eval-partial-file(:$file);
+    } else {
+      EVAL $file.IO.slurp;
+    }
+  }
+
+  method eval-partial-file(:$file) {
+    my ($path, $line) = $file.split(':');
+    say $path;
+    say $line;
+    EVAL $path.IO.slurp;
   }
 }
 
