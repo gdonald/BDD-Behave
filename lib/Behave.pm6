@@ -9,20 +9,32 @@ use Failures;
 use Files;
 
 class Behave {
+  has @!args;
+  has Bool $!verbose;
+
+  submethod BUILD(:$!verbose, :@!args) {}
+
   method run {
-    for Files.list -> $file {
+    for Files.list(@!args) -> $file {
       Files.current = $file;
       say light-blue($file) ~ "\n";
-      EVAL $file.IO.slurp;
+      self.eval-file(:$file);
     }
 
-    if Failures.list.elems {
-      say red("Failures:") ~ "\n";
-      for (Failures.list) -> $failure {
-        say '  [' ~ red(" ✗ ") ~ '] ' ~ $failure.file ~ ':' ~ $failure.line;
-      }
-      say '';
+    Failures.say;
+  }
+
+  method eval-file(:$file) {
+    if $file ~~ /\: \d+$/ {
+      self.eval-partial-file(:$file);
+    } else {
+      EVAL $file.IO.slurp;
     }
+  }
+
+  method eval-partial-file(:$file) {
+    my ($path, $line) = $file.split(':');
+    EVAL $path.IO.slurp;
   }
 }
 
