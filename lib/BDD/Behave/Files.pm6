@@ -1,5 +1,7 @@
 
-class Files {
+unit class BDD::Behave::Files;
+
+class Files is export {
   my $.current;
   my Mu $.test = /'spec.p6' [\: \d+]?$/;
 

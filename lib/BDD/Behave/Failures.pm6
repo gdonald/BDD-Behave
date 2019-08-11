@@ -1,17 +1,9 @@
 
-use Colors;
+unit class BDD::Behave::Failures;
 
-class Failure {
-  has Str $.file;
-  has Str $.line;
+use BDD::Behave::Colors;
 
-  submethod BUILD(:$!file, :$!line) {
-    my ($path,) = $!file.split(':');
-    $!file = $path;
-  }
-}
-
-class Failures {
+class Failures is export {
   my @.list;
 
   method say {

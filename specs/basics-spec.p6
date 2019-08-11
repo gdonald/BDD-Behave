@@ -1,78 +1,78 @@
 
-use Behave;
+use BDD::Behave;
+
+describe -> 'this spec has a given variable' {
+  let(:foo) => { 42 };
+
+  it -> 'is successful' {
+    expect(:foo).to.be(42);
+  }
+}
 
 describe -> 'this spec' {
-  it -> 'is succesful' {
+  it -> 'is successful' {
     expect(42).to.be(42);
   }
 }
 
-describe -> 'this other spec' {
-  it -> 'is a big failure' {
+describe -> 'this other not spec' {
+  it -> 'is a success' {
     expect(42).to.not.be(41);
   }
 }
 
 describe -> 'this spec has contexts' {
   context -> 'with an it block' {
-    it -> 'is succesful' {
+    it -> 'is successful' {
       expect(42).to.be(42);
     }
   }
 
   context -> 'with more than one it block' {
-    it -> 'is succesful' {
+    it -> 'is successful' {
       expect(42).to.be(42);
     }
 
-    it -> 'is a big failure' {
+    it -> 'is good to go' {
       expect(42).to.not.be(41);
     }
   }
 }
 
-describe -> 'this describe has describes with contexts' {
-  describe -> 'this describe has contexts' {
-    context -> 'with an it block' {
-      it -> 'is succesful' {
+describe -> 'this describe has a describe' {
+  describe -> 'this describe has two contexts' {
+    context -> 'one has a single it block' {
+      it -> 'is successful' {
         expect(42).to.be(42);
       }
     }
 
-    context -> 'with more than one it block' {
-      it -> 'is succesful' {
+    context -> 'the other has two it blocks' {
+      it -> 'is successful' {
         expect(42).to.be(42);
       }
 
-      it -> 'is a big failure' {
+      it -> 'is also successful' {
         expect(42).to.not.be(41);
       }
     }
   }
 }
 
-describe -> 'this spec has a given variable' {
-  my $foo = 42;
-
-  it -> 'is succesful' {
-    expect($foo).to.be(42);
-  }
-}
-
 describe -> 'this spec has an expected variable' {
-  my $foo = 42;
+  let(:foo) => { 42 };
 
-  it -> 'is succesful' {
-    expect(42).to.be($foo);
+  it -> 'is successful' {
+    expect(42).to.be(:foo);
   }
 }
 
-describe -> 'this spec have to and not' {
-  it -> 'is succesful' {
+describe -> 'this spec has a to and a not' {
+  it -> 'is successful' {
     expect(42).to.be(42);
   }
 
-  it -> 'is succesful' {
+  it -> 'is also successful' {
     expect(42).to.not.be(41);
   }
 }
