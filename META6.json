@@ -1,21 +1,40 @@
 {
-  "name": "Behave",
+  "name": "BDD::Behave",
   "description": "Behavior driven development framework",
-  "version": "0.1",
-  "perl": "6.*",
-  "auth": "Greg Donald",
-  "depends": [],
+  "version": "1.0.0",
+  "perl": "6.d",
+  "authors": [
+    "Greg Donald"
+  ],
+  "auth": "github:gdonald",
+  "depends": [
+    "Grammar::Debugger"
+  ],
   "build-depends": [],
   "test-depends": [],
   "provides": {
-    "BasicBlock": "lib/BasicBlock.pm6",
-    "Behave": "lib/Behave.pm6",
-    "Colors": "lib/Colors.pm6",
-    "Failures": "lib/Failures.pm6",
-    "Files": "lib/Files.pm6",
-    "Indent": "lib/Indent.pm6"
+    "BDD::Behave": "lib/BDD/Behave.pm6",
+    "BDD::Behave::Actions": "lib/BDD/Behave/Actions.pm6",
+    "BDD::Behave::BasicBlock": "lib/BDD/Behave/BasicBlock.pm6",
+    "BDD::Behave::Colors": "lib/BDD/Behave/Colors.pm6",
+    "BDD::Behave::Failure": "lib/BDD/Behave/Failure.pm6",
+    "BDD::Behave::Failures": "lib/BDD/Behave/Failures.pm6",
+    "BDD::Behave::Files": "lib/BDD/Behave/Files.pm6",
+    "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.pm6",
+    "BDD::Behave::Indent": "lib/BDD/Behave/Indent.pm6",
+    "BDD::Behave::Let": "lib/BDD/Behave/Let.pm6",
+    "BDD::Behave::Lets": "lib/BDD/Behave/Lets.pm6"
   },
   "resources": [],
-  "license": "MIT",
-  "source-url": "http://github.com/gdonald/behave"
+  "license": "Artistic-2.0",
+  "tags": [
+    "BDD",
+    "Behavior",
+    "Driven",
+    "Development",
+    "Test",
+    "Testing",
+    "Spec"
+  ],
+  "source-url": "git://github.com/gdonald/BDD-Behave.git"
 }

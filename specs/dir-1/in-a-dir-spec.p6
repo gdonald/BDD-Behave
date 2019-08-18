@@ -1,5 +1,5 @@
 
-use Behave;
+use BDD::Behave;
 
 describe -> 'this spec' {
   it -> 'fails at line 6' {

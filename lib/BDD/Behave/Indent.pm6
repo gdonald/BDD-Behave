@@ -1,7 +1,9 @@
 
-use Colors;
+unit class BDD::Behave::Indent;
 
-class Indent {
+use BDD::Behave::Colors;
+
+class Indent is export {
   my Int $.value = 0;
 
   method increase {
@@ -24,7 +26,7 @@ sub block-desc(Block $block) is export {
 sub indent-block(Block $block) is export {
   indent -> 'do' {
     my $desc = block-desc($block);
-    say Indent.get ~ $block($desc) ~ "\n";
+    say Indent.get ~ $block($desc);
   }
 }
 

@@ -1,29 +1,30 @@
 
-use Behave;
+use BDD::Behave;
 
-my $foo = 42;
+let(:foo) => { 42 };
 
 describe -> 'this spec' {
   it -> 'passes' {
-    expect($foo).to.be(42);
+    expect(:foo).to.be(42);
   }
 
-  it -> 'fails' {
-    $foo = 41;
-    expect($foo).to.be(42);
+  it -> 'fails at line 14' {
+    let(:foo) => { 41 };
+
+    expect(:foo).to.be(42);
   }
 }
 
 describe -> 'another spec' {
-  $foo = 17;
+  let(:foo) => { 17 };
 
   it -> 'passes' {
-    expect($foo).to.be(17);
+    expect(:foo).to.be(17);
   }
 
-  it -> 'fails' {
-    $foo = 13;
-    expect($foo).to.be(17);
+  it -> 'fails at line 27' {
+    let(:foo) => { 13 };
+    expect(:foo).to.be(17);
   }
 }
 

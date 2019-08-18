@@ -1,7 +1,7 @@
 
-use Indent;
+use BDD::Behave::Indent;
 
-class BasicBlock {
+class BasicBlock is export {
   our $block;
 
   submethod BUILD(:$block) {

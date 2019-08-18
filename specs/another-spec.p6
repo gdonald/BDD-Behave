@@ -1,5 +1,5 @@
 
-use Behave;
+use BDD::Behave;
 
 describe -> 'this spec' {
   it -> 'passes' {
@@ -7,7 +7,7 @@ describe -> 'this spec' {
   }
 }
 
-describe -> 'this spec' {
+describe -> 'this other spec' {
   it -> 'fails at line 12' {
     expect(42).to.be(41);
   }
