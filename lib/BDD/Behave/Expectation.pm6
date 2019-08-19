@@ -41,11 +41,14 @@ class Expectation is export {
   }
 
   method value($thing) {
-    given $thing {
-      when .Str ~~ /^\:/ { $!lets.get($thing.Str) }
-      when +$_ ~~ Numeric { +$_ }
-      when .WHAT ~~ Match { $thing.Str }
-      default { die "Unknown \$thing: $_" }
+    if $thing.Str ~~ /^\:/ {
+      $!lets.get($thing.Str);
+    } elsif $thing.Numeric.so {
+      +($thing.Str);
+    } elsif $thing.WHAT ~~ Match {
+      $thing.Str;
+    } else {
+      die "Unknown \$thing: $thing";
     }
   }
 }

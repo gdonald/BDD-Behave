@@ -7,7 +7,7 @@ describe -> 'this spec' {
   }
 }
 
-describe -> 'this spec' {
+describe -> 'this final spec' {
   it -> 'passes' {
     expect(42).to.be(42);
   }
