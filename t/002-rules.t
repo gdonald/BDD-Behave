@@ -223,4 +223,25 @@ for @strings -> $str {
   ok Grammar.parse($str, :rule<TOP>), "parses $str as <TOP>";
 }
 
+# <comment>
+@strings =
+  "# comment\n",
+  "#comment\n",
+  "# comment\n\n",
+  "## comment\n";
+
+for @strings -> $str {
+  ok Grammar.parse($str, :rule<comment>), "parses $str as <comment>";
+}
+
+@strings =
+  "code # comment\n",
+  "code #comment\n",
+  "code # comment\n\n",
+  "code ## comment\n";
+
+for @strings -> $str {
+  nok Grammar.parse($str, :rule<comment>), "does not parse $str as <comment>";
+}
+
 done-testing;

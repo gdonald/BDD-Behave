@@ -39,3 +39,9 @@ class Behave is export {
     Grammar.parse($path.IO.slurp.trim, :actions(Actions));
   }
 }
+
+sub context is export {}
+sub describe is export {}
+sub let is export {}
+sub it is export {}
+sub expect is export {}

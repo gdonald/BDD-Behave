@@ -77,7 +77,7 @@ describe -> 'this spec has a to and a not' {
   }
 }
 
-describe -> 'this spec' {
+describe -> 'this final spec' {
   it -> 'fails at line 82' {
     expect(42).to.be(41);
   }

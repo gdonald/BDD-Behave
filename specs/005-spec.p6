@@ -22,7 +22,7 @@ describe -> 'another spec' {
     expect(:foo).to.be(17);
   }
 
-  it -> 'fails at line 27' {
+  it -> 'this final spec fails at line 27' {
     let(:foo) => { 13 };
     expect(:foo).to.be(17);
   }

@@ -12,6 +12,7 @@ grammar Grammar is export {
   token word { \w+ }
   token symbol { \:\w+ }
   token block-content { <[\:\"\'\d\w]>+ }
+  token comment { [ [ <[#]> \N* ]? \n ]+ }
 
   rule given { <block-content> }
   rule expected { <block-content> }
@@ -31,13 +32,13 @@ grammar Grammar is export {
   rule let-statement {
     let\(<symbol>\) \=\> \{ <block-content> \}\;
     {
-      my $block = { $<block-content>; };
+      my $block = { $<block-content> };
       $*LETS.put(:name($<symbol>.Str), :$block)
     }
   }
 
   rule expectation-not {
-    <expect>\.to\.not\.<be>\;
+    <expect>\.to\.not\.<be>\; <comment>?
     {
       my $line = self.line-number;
       my $e = Expectation.new(:given($<expect><given>), :lets($*LETS), :$line);
@@ -46,7 +47,7 @@ grammar Grammar is export {
   }
 
   rule expectation {
-    <expect>\.to\.<be>\;
+    <expect>\.to\.<be>\; <comment>?
     {
       my $line = self.line-number;
       my $e = Expectation.new(:given($<expect><given>), :lets($*LETS), :$line);
@@ -59,7 +60,12 @@ grammar Grammar is export {
       { Indent.increase; }
       { say Indent.get ~ $<quoted-string>; }
       { $*LETS.push-scope() }
-      [ <let-statement> | <expectation> | <expectation-not> ]*
+      [
+        | <comment>
+        | <let-statement>
+        | <expectation>
+        | <expectation-not>
+      ]*
       { $*LETS.pop-scope() }
       { Indent.decrease; }
     \}
@@ -70,7 +76,11 @@ grammar Grammar is export {
       { Indent.increase; }
       { say "\n" ~ Indent.get ~ $<quoted-string>; }
       { $*LETS.push-scope() }
-      [ <let-statement> | <it-block> ]*
+      [
+        | <comment>
+        | <let-statement>
+        | <it-block>
+      ]*
       { $*LETS.pop-scope() }
       { Indent.decrease; }
     \}
@@ -81,16 +91,25 @@ grammar Grammar is export {
       { Indent.increase; }
       { say "\n" ~ Indent.get ~ $<quoted-string>; }
       { $*LETS.push-scope() }
-      [ <let-statement> | <describe-block> | <context-block> | <it-block> ]*
+      [
+        | <comment>
+        | <let-statement>
+        | <describe-block>
+        | <context-block>
+        | <it-block>
+      ]*
       { $*LETS.pop-scope() }
       { Indent.decrease; }
     \}
   }
 
   rule statements {
-    <use-statement>*
-    <let-statement>*
-    <describe-block>*
+    [
+      | <comment>
+      | <use-statement>
+      | <let-statement>
+      | <describe-block>
+    ]*
   }
 
   rule TOP {
