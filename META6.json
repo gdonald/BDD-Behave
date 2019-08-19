@@ -1,21 +1,18 @@
 {
   "name": "BDD::Behave",
   "description": "Behavior driven development framework",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "perl": "6.d",
   "authors": [
     "Greg Donald"
   ],
   "auth": "github:gdonald",
-  "depends": [
-    "Grammar::Debugger"
-  ],
+  "depends": [],
   "build-depends": [],
   "test-depends": [],
   "provides": {
     "BDD::Behave": "lib/BDD/Behave.pm6",
     "BDD::Behave::Actions": "lib/BDD/Behave/Actions.pm6",
-    "BDD::Behave::BasicBlock": "lib/BDD/Behave/BasicBlock.pm6",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.pm6",
     "BDD::Behave::Failure": "lib/BDD/Behave/Failure.pm6",
     "BDD::Behave::Failures": "lib/BDD/Behave/Failures.pm6",

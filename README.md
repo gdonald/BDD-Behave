@@ -1,12 +1,32 @@
 ## Behave
-A currently very small BDD spec framework written in Perl6
+A behavior driven development framework written in Perl 6.
 
-### Status
+#### To use this you need Perl 6
 
-Very alpha, just some ideas at the moment.
+##### [https://perl6.org/](https://perl6.org/)
+
+Currently developed against Rakudo `v6.d`.
+
+#### Example Output:
 
 ![Behave](https://raw.githubusercontent.com/gdonald/behave/master/screen-shot.png)
 
-### License
+#### Run Example Behave Specs:
 
-Behave is released under the [MIT License](http://www.opensource.org/licenses/MIT)
+```
+$ perl6 -Ilib bin/behave
+```
+
+#### Run Tests:
+
+```
+$ prove --exec=perl6
+```
+
+#### Status
+
+[![Build Status](https://travis-ci.org/gdonald/BDD-Behave.svg?branch=master)](https://travis-ci.org/gdonald/BDD-Behave)
+
+#### License
+
+Behave is released under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0)
