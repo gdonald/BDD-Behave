@@ -20,7 +20,8 @@
     "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.pm6",
     "BDD::Behave::Indent": "lib/BDD/Behave/Indent.pm6",
     "BDD::Behave::Let": "lib/BDD/Behave/Let.pm6",
-    "BDD::Behave::Lets": "lib/BDD/Behave/Lets.pm6"
+    "BDD::Behave::Lets": "lib/BDD/Behave/Lets.pm6",
+    "BDD::Behave::Value": "lib/BDD/Behave/Value.pm6"
   },
   "resources": [],
   "license": "Artistic-2.0",

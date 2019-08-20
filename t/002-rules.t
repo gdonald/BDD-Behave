@@ -111,7 +111,6 @@ for @strings -> $str {
 @strings = 'expect(1).to.be(1);';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<expectation>), "parses $str as <expectation>";
 }
 
@@ -128,7 +127,6 @@ for @strings -> $str {
   'it -> "1 is 1" { expect(1).to.be(1);expect(2).to.be(2); }';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<it-block>), "parses $str as <it-block>";
 }
 
@@ -142,7 +140,6 @@ for @strings -> $str {
   'context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); }}';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<context-block>), "parses $str as <context-block>";
 }
 
@@ -162,7 +159,6 @@ for @strings -> $str {
   'describe -> "contains two describe blocks" { describe -> "contains a context block" { context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } } } describe -> "contains a context block" { context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } } } }';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<describe-block>), "parses $str as <describe-block>";
 }
 
@@ -173,7 +169,6 @@ for @strings -> $str {
   'use Foo;';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<statements>), "parses $str as <statements>";
 }
 
@@ -184,9 +179,8 @@ for @strings -> $str {
         'let(:foo)=>{ 42 };';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<let-statement>), "parses $str as <let-statement>";
-  ok $*LETS.get(':foo') == 42, ":foo is 42";
+  ok Lets.get(':foo') == 42, ":foo is 42";
 }
 
 @strings =
@@ -195,9 +189,8 @@ for @strings -> $str {
         'let(:foo)=>{ "42" };';
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<let-statement>), "parses $str as <let-statement>";
-  ok $*LETS.get(':foo') eq '"42"', ':foo is "42"';
+  ok Lets.get(':foo') eq '"42"', ':foo is "42"';
 }
 
 @strings =
@@ -206,12 +199,10 @@ for @strings -> $str {
         "let(:foo)=>\{ '42' \};";
 
 for @strings -> $str {
-  my $*LETS = Lets.new();
   ok Grammar.parse($str, :rule<let-statement>), "parses $str as <let-statement>";
-  ok $*LETS.get(':foo') eq "'42'", ":foo is '42'";
+  ok Lets.get(':foo') eq "'42'", ":foo is '42'";
 }
 
-my $*LETS = Lets.new();
 $m = Grammar.parse('let(:foo) => { 42 };', :rule<let-statement>, :actions(Actions));
 ok ($m<symbol> eq ':foo'), "\$m<symbol> == ':foo'";
 ok ($m<block-content> == 42), "\$m<block-content> == 42";

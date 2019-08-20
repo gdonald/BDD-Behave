@@ -7,15 +7,16 @@ use BDD::Behave::Failures;
 use BDD::Behave::Files;
 use BDD::Behave::Indent;
 use BDD::Behave::Lets;
+use BDD::Behave::Value;
 
 class Expectation is export {
-  has $!given;
-  has $!compare = True;
-  has $!line;
-  has Lets $!lets;
+  has Str $!raw;
+  has Value $!given;
+  has Bool $!compare = True;
+  has Int $!line;
 
-  submethod BUILD(:$!given, :$!lets, :$!line) {
-    $!given = self.value($!given);
+  submethod BUILD(:$!raw, :$!line) {
+    $!given = Value.new(:$!raw);
   }
 
   method to { self }
@@ -26,8 +27,8 @@ class Expectation is export {
   }
 
   method be($expect) {
-    my $expected = self.value($expect);
-    my $result = $!given ~~ $expected;
+    my Value $expected = Value.new(:raw($expect));
+    my $result = $!given.get() ~~ $expected.get();
 
     $result = $!compare ?? $result !! !$result;
 
@@ -38,17 +39,5 @@ class Expectation is export {
 
     $result = $result ?? green('SUCCESS') !! red('FAILURE');
     indent-block -> 'do' { $result }
-  }
-
-  method value($thing) {
-    if $thing.Str ~~ /^\:/ {
-      $!lets.get($thing.Str);
-    } elsif $thing.Numeric.so {
-      +($thing.Str);
-    } elsif $thing.WHAT ~~ Match {
-      $thing.Str;
-    } else {
-      die "Unknown \$thing: $thing";
-    }
   }
 }
