@@ -20,8 +20,10 @@ class Value is export {
     given $!raw {
       when .Str ~~ /^\:/ { Lets.get(.Str) }
       when .Numeric.so { +(.Str) }
-      when .WHAT ~~ Match { .Str }
-      when /^\'\d+\'$/ { $0 }
+      when /^\'(\d+)\'$/ { $0.Int }
+      when /^\"(\d+)\"$/ { $0.Int }
+      when /^\'(\w+)\'$/ { $0 }
+      when /^\"(\w+)\"$/ { $0 }
       default { dd $_; die "Unknown \$!raw ☹" }
     }
   }

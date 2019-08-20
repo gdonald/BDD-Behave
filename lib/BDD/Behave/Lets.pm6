@@ -4,7 +4,7 @@ unit class BDD::Behave::Lets;
 use BDD::Behave::Let;
 
 class Lets is export {
-  my @.scopes = Array[Hash].new({});
+  my @.scopes;
 
   method push-scope() {
     Lets.scopes.push({});
@@ -15,7 +15,8 @@ class Lets is export {
   }
 
   method put(Str :$name, Block :$block) {
-    Lets.scopes[Lets.scopes.elems]{$name} = Let.new(:$block);
+    Lets.push-scope if Lets.scopes.elems == 0;
+    Lets.scopes[Lets.scopes.elems - 1]{$name} = Let.new(:$block);
   }
 
   method get(Str $name) {
