@@ -3,6 +3,8 @@ use lib 'lib';
 use BDD::Behave::Lets;
 use Test;
 
+plan 13;
+
 ok Lets.scopes.elems == 0, 'scopes.elems is 0';
 
 # first scope

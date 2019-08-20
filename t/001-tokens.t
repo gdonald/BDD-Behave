@@ -3,6 +3,8 @@ use lib 'lib';
 use BDD::Behave::Grammar;
 use Test;
 
+plan 13;
+
 my $m;
 
 # <double-quote>

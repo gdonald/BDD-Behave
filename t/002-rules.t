@@ -5,6 +5,8 @@ use BDD::Behave::Grammar;
 use BDD::Behave::Lets;
 use Test;
 
+plan 91;
+
 my @strings;
 my $m;
 

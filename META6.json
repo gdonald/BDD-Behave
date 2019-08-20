@@ -9,11 +9,15 @@
   "auth": "github:gdonald",
   "depends": [],
   "build-depends": [],
-  "test-depends": [],
+  "test-depends": [
+    "Test",
+    "Test::META"
+  ],
   "provides": {
     "BDD::Behave": "lib/BDD/Behave.pm6",
     "BDD::Behave::Actions": "lib/BDD/Behave/Actions.pm6",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.pm6",
+    "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.pm6",
     "BDD::Behave::Failure": "lib/BDD/Behave/Failure.pm6",
     "BDD::Behave::Failures": "lib/BDD/Behave/Failures.pm6",
     "BDD::Behave::Files": "lib/BDD/Behave/Files.pm6",

@@ -5,6 +5,8 @@ use BDD::Behave::Lets;
 use BDD::Behave::Value;
 use Test;
 
+plan 9;
+
 my $v;
 
 # symbols from the Lets scope stack
