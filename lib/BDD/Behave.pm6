@@ -8,7 +8,7 @@ use BDD::Behave::Files;
 use BDD::Behave::Grammar;
 
 class Behave is export {
-  has @!args;
+  has Array @!args;
   has Bool $!verbose;
 
   submethod BUILD(:$!verbose, :@!args) {

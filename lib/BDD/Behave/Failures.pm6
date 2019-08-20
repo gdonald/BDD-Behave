@@ -2,9 +2,10 @@
 unit class BDD::Behave::Failures;
 
 use BDD::Behave::Colors;
+use BDD::Behave::Failure;
 
 class Failures is export {
-  my @.list;
+  my @.list = Array[Failure].new;
 
   method say {
     if Failures.list.elems {

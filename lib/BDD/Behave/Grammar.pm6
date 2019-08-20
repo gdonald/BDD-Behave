@@ -33,7 +33,7 @@ grammar Grammar is export {
     let\(<symbol>\) \=\> \{ <block-content> \}\;
     {
       my $block = { $<block-content> };
-      $*LETS.put(:name($<symbol>.Str), :$block)
+      Lets.put(:name($<symbol>.Str), :$block)
     }
   }
 
@@ -41,8 +41,9 @@ grammar Grammar is export {
     <expect>\.to\.not\.<be>\; <comment>?
     {
       my $line = self.line-number;
-      my $e = Expectation.new(:given($<expect><given>), :lets($*LETS), :$line);
-      $e.to().not().be($<be><expected>);
+      my $raw = $<expect><given>.Str;
+      my $e = Expectation.new(:$raw, :$line);
+      $e.to().not().be($<be><expected>.Str);
     }
   }
 
@@ -50,8 +51,9 @@ grammar Grammar is export {
     <expect>\.to\.<be>\; <comment>?
     {
       my $line = self.line-number;
-      my $e = Expectation.new(:given($<expect><given>), :lets($*LETS), :$line);
-      $e.to().be($<be><expected>);
+      my $raw = $<expect><given>.Str;
+      my $e = Expectation.new(:$raw, :$line);
+      $e.to().be($<be><expected>.Str);
     }
   }
 
@@ -59,14 +61,14 @@ grammar Grammar is export {
     it \-\> <quoted-string> \{
       { Indent.increase; }
       { say Indent.get ~ $<quoted-string>; }
-      { $*LETS.push-scope() }
+      { Lets.push-scope() }
       [
         | <comment>
         | <let-statement>
         | <expectation>
         | <expectation-not>
       ]*
-      { $*LETS.pop-scope() }
+      { Lets.pop-scope() }
       { Indent.decrease; }
     \}
   }
@@ -75,13 +77,13 @@ grammar Grammar is export {
     context \-\> <quoted-string> \{
       { Indent.increase; }
       { say "\n" ~ Indent.get ~ $<quoted-string>; }
-      { $*LETS.push-scope() }
+      { Lets.push-scope() }
       [
         | <comment>
         | <let-statement>
         | <it-block>
       ]*
-      { $*LETS.pop-scope() }
+      { Lets.pop-scope() }
       { Indent.decrease; }
     \}
   }
@@ -90,7 +92,7 @@ grammar Grammar is export {
     describe \-\> <quoted-string> \{
       { Indent.increase; }
       { say "\n" ~ Indent.get ~ $<quoted-string>; }
-      { $*LETS.push-scope() }
+      { Lets.push-scope() }
       [
         | <comment>
         | <let-statement>
@@ -98,7 +100,7 @@ grammar Grammar is export {
         | <context-block>
         | <it-block>
       ]*
-      { $*LETS.pop-scope() }
+      { Lets.pop-scope() }
       { Indent.decrease; }
     \}
   }
@@ -113,12 +115,11 @@ grammar Grammar is export {
   }
 
   rule TOP {
-    :my $*LETS = Lets.new();
     <statements>
   }
 
   method line-number {
     my $parsed = self.target.substr(0, self.pos);
-    ($parsed.lines.elems + 1).Str;
+    $parsed.lines.elems + 1;
   }
 }
