@@ -16,8 +16,10 @@ $ perl6 -Ilib bin/behave
 #### Run Tests:
 
 ```
-$ prove --exec=perl6
+$ prove --exec=perl6 --ext=t6
 ```
+
+(`prove6` has some issues running these tests `¯\_(ツ)_/¯`)
 
 #### Status
 
