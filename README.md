@@ -19,7 +19,7 @@ $ perl6 -Ilib bin/behave
 $ prove --exec=perl6 --ext=t6
 ```
 
-(`prove6` has some issues running these tests `¯\_(ツ)_/¯`)
+`prove6` has some issues running these tests `¯\_(ツ)_/¯`
 
 #### Status
 
