@@ -1,7 +1,8 @@
-
 unit class BDD::Behave::Value;
 
 use BDD::Behave::Lets;
+
+use MONKEY-SEE-NO-EVAL;
 
 class Value is export {
   has Str $!raw;
@@ -24,7 +25,8 @@ class Value is export {
       when /^\"(\d+)\"$/ { $0.Int }
       when /^\'(\w+)\'$/ { $0 }
       when /^\"(\w+)\"$/ { $0 }
-      default { dd $_; die "Unknown \$!raw ☹" }
+      when /^(<[A..Z]>[\w+][\:\:<[A..Z]>[\w+]]*\.new\(.*\))$/ { EVAL $0 }
+      default { dd $_; die "Unknown \$!raw '$!raw' ☹" }
     }
   }
 }

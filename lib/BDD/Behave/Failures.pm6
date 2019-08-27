@@ -5,7 +5,7 @@ use BDD::Behave::Colors;
 use BDD::Behave::Failure;
 
 class Failures is export {
-  my @.list = Array[Failure].new;
+  my @.list of Failure;
 
   method say {
     if Failures.list.elems {
