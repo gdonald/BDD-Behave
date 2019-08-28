@@ -7,7 +7,7 @@ use BDD::Behave::Lets;
 use BDD::Behave::Value;
 use Test;
 
-plan 9;
+plan 14;
 
 my $v;
 
@@ -44,5 +44,37 @@ ok $v.get() eq 'foo', 'is "foo"';
 
 $v = Value.new(:raw('"bar"'));
 ok $v.get() eq 'bar', 'is "bar"';
+
+# class instances
+class Foo {
+  has $.bar;
+  has $.baz;
+
+  submethod BUILD(:$!bar) {
+    $!baz = '42';
+  }
+}
+
+$v = Value.new(:raw('Foo.new(:bar(17))'));
+ok $v.get().bar == 17, '.bar is 17';
+ok $v.get().baz eq '42', '.baz is "42"';
+
+class Bar {
+  has $.baz;
+  has $.foo;
+}
+
+$v = Value.new(:raw('Bar.new(:baz(17), :foo("42"))'));
+ok $v.get().baz == 17, '.baz is 17';
+ok $v.get().foo eq '42', '.foo is "42"';
+
+class Baz {
+  class Foo {
+    has $.bar;
+  }
+}
+
+$v = Value.new(:raw('Baz::Foo.new(:bar(13))'));
+ok $v.get().bar == 13, '.bar is 13';
 
 done-testing;

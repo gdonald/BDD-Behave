@@ -1,7 +1,9 @@
+use MONKEY-SEE-NO-EVAL;
 
 unit class BDD::Behave::Lets;
 
 use BDD::Behave::Let;
+use BDD::Behave::Klasses;
 
 class Lets is export {
   my @.scopes;
@@ -20,8 +22,31 @@ class Lets is export {
   }
 
   method get(Str $name) {
+    my Str $scope-name = $name;
+    my Str $call = Nil;
+
+    if $name ~~ /^(\:\w+)\.(\w+)$/ {
+      $scope-name = $0.Str;
+      $call = $1.Str;
+    }
+
     for Lets.scopes.reverse -> %scope {
-      return %scope{$name}.block()() if %scope{$name};
+      if %scope{$scope-name} {
+        if $call {
+          my $obj = %scope{$scope-name}.block()().Str ~ '.' ~ $call;
+          if $obj ~~ /^(\w+)\./ {
+            my $klass-name = $0.Str;
+            my $klass = Klasses.get($klass-name);
+
+            if $klass {
+              try { EVAL $klass unless ::{$klass-name}:exists; }
+              return EVAL $obj;
+            }
+          }
+        }
+
+        return %scope{$scope-name}.block()();
+      }
     }
   }
 }
