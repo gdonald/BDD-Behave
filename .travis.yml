@@ -1,4 +1,4 @@
 language: perl6
 perl6:
   - latest
-  - '6.d'
+  - '2019.07.1'
