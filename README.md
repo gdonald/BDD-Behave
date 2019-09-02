@@ -19,11 +19,13 @@ $ perl6 -Ilib bin/behave
 $ prove --exec=perl6 --ext=t6
 ```
 
-`prove6` has some issues running these tests `¯\_(ツ)_/¯`
-
 #### Status
 
 [![Build Status](https://travis-ci.org/gdonald/BDD-Behave.svg?branch=master)](https://travis-ci.org/gdonald/BDD-Behave)
+
+#### Documentation
+
+No docs yet, see the examples in specs/*.
 
 #### License
 
