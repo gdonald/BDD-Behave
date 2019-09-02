@@ -1,6 +1,4 @@
 
-unit class BDD::Behave::Indent;
-
 use BDD::Behave::Colors;
 
 class Indent is export {

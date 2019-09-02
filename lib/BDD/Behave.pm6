@@ -1,6 +1,4 @@
 
-unit module BDD::Behave;
-
 use BDD::Behave::Actions;
 use BDD::Behave::Colors;
 use BDD::Behave::Failures;

@@ -1,4 +1,3 @@
-unit class BDD::Behave::Value;
 
 use BDD::Behave::Lets;
 

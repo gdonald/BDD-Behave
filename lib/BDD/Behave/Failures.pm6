@@ -1,6 +1,4 @@
 
-unit class BDD::Behave::Failures;
-
 use BDD::Behave::Colors;
 use BDD::Behave::Failure;
 

@@ -1,6 +1,5 @@
-use MONKEY-SEE-NO-EVAL;
 
-unit class BDD::Behave::Lets;
+use MONKEY-SEE-NO-EVAL;
 
 use BDD::Behave::Let;
 use BDD::Behave::Klasses;

@@ -1,6 +1,4 @@
 
-unit class BDD::Behave::Klasses;
-
 use BDD::Behave::Klass;
 
 class Klasses is export {

@@ -1,6 +1,4 @@
 
-unit class BDD::Behave::Failure;
-
 class Failure is export {
   has Str $.file;
   has Int  $.line;

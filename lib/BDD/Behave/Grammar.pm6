@@ -1,6 +1,4 @@
 
-unit grammar BDD::Behave::Grammar;
-
 use BDD::Behave::Expectation;
 use BDD::Behave::Indent;
 use BDD::Behave::Klasses;
