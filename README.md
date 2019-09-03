@@ -15,7 +15,7 @@ zef install --/test BDD::Behave
 
 #### Running Behave:
 
-Behave will automatically look for a `spec` directory and will run anything matching `/spec.p6/`.
+Behave will automatically look for a `specs` directory and will run anything matching `/spec.p6/`.
 
 You can run a specific spec file like this:
 
