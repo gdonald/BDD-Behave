@@ -7,16 +7,20 @@ Currently developed against Rakudo `v6.d`.
 
 ![Behave](https://raw.githubusercontent.com/gdonald/behave/master/screen-shot.png)
 
-#### Run Example Behave Specs:
+#### Install from CPAN
 
 ```
-$ perl6 -Ilib bin/behave
+zef install --/test BDD::Behave
 ```
 
-#### Run Tests:
+#### Running Behave:
+
+Behave will automatically look for a `spec` directory and will run anything matching `/spec.p6/`.
+
+You can run a specific spec file like this:
 
 ```
-$ prove --exec=perl6 --ext=t6
+$ behave specs/001-spec.p6
 ```
 
 #### Status
@@ -25,7 +29,7 @@ $ prove --exec=perl6 --ext=t6
 
 #### Documentation
 
-No docs yet, see the examples in specs/*.
+No docs yet, see the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
 
 #### License
 
