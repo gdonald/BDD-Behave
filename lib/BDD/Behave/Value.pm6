@@ -1,7 +1,7 @@
 
-use BDD::Behave::Lets;
-
 use MONKEY-SEE-NO-EVAL;
+
+use BDD::Behave::Lets;
 
 class Value is export {
   has Str $!raw;

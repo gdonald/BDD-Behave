@@ -1,4 +1,3 @@
-#!perl6
 
 use v6.d;
 use lib 'lib';
@@ -11,41 +10,36 @@ plan 14;
 
 my $v;
 
-# symbols from the Lets scope stack
 Lets.put(:name(':foo'), :block({1}));
 $v = Value.new(:raw(':foo'));
-ok $v.get() == 1, ':foo is 1';
+ok $v.get() == 1;
 
 Lets.put(:name(':bar'), :block({'2'}));
 $v = Value.new(:raw(':bar'));
-ok $v.get() == '2', ":bar is '2'";
+ok $v.get() == '2';
 
 Lets.put(:name(':baz'), :block({"3"}));
 $v = Value.new(:raw(':baz'));
-ok $v.get() == '3', ":baz is '3'";
+ok $v.get() == '3';
 
-# numerics
 $v = Value.new(:raw('4'));
-ok $v.get() == 4, 'is 4';
+ok $v.get() == 4;
 
 $v = Value.new(:raw("5"));
-ok $v.get() == 5, 'is 5';
+ok $v.get() == 5;
 
-# quoted numerics
 $v = Value.new(:raw("'6'"));
-ok $v.get() == 6, 'is 6';
+ok $v.get() == 6;
 
 $v = Value.new(:raw('"7"'));
-ok $v.get() == 7, 'is 7';
+ok $v.get() == 7;
 
-# quoted strings
 $v = Value.new(:raw("'foo'"));
-ok $v.get() eq 'foo', 'is "foo"';
+ok $v.get() eq 'foo';
 
 $v = Value.new(:raw('"bar"'));
-ok $v.get() eq 'bar', 'is "bar"';
+ok $v.get() eq 'bar';
 
-# class instances
 class Foo {
   has $.bar;
   has $.baz;
@@ -56,8 +50,8 @@ class Foo {
 }
 
 $v = Value.new(:raw('Foo.new(:bar(17))'));
-ok $v.get().bar == 17, '.bar is 17';
-ok $v.get().baz eq '42', '.baz is "42"';
+ok $v.get().bar == 17;
+ok $v.get().baz eq '42';
 
 class Bar {
   has $.baz;
@@ -65,8 +59,8 @@ class Bar {
 }
 
 $v = Value.new(:raw('Bar.new(:baz(17), :foo("42"))'));
-ok $v.get().baz == 17, '.baz is 17';
-ok $v.get().foo eq '42', '.foo is "42"';
+ok $v.get().baz == 17;
+ok $v.get().foo eq '42';
 
 class Baz {
   class Foo {
@@ -75,6 +69,4 @@ class Baz {
 }
 
 $v = Value.new(:raw('Baz::Foo.new(:bar(13))'));
-ok $v.get().bar == 13, '.bar is 13';
-
-done-testing;
+ok $v.get().bar == 13;

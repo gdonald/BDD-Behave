@@ -3,24 +3,58 @@ A behavior driven development framework written in [Perl 6](https://perl6.org/).
 
 Currently developed against Rakudo `v6.d`.
 
-#### Example Output:
-
-![Behave](https://raw.githubusercontent.com/gdonald/behave/master/screen-shot.png)
-
 #### Install from CPAN
 
 ```
-zef install --/test BDD::Behave
+zef install BDD::Behave
 ```
 
 #### Running Behave:
 
-Behave will automatically look for a `specs` directory and will run anything matching `/spec.p6/`.
+If a file is not specificed Behave will automatically look for a `specs` directory and will run anything matching `/spec.p6/`.
 
-You can run a specific spec file like this:
+#### An example:
+
+**specs/001-spec.p6**
+
+```perl6
+use BDD::Behave;
+
+describe -> 'this spec' {
+  it -> 'passes' {
+    expect(42).to.be(42);
+  }
+}
+
+describe -> 'this final spec' {
+  it -> 'fails at line 12' {
+    expect(42).to.be(41);
+  }
+}
+```
+
+You can run the spec like this:
 
 ```
 $ behave specs/001-spec.p6
+```
+
+Output:
+
+```perl6
+specs/001-spec.p6
+
+    ⮑  'this spec'
+        ⮑  'passes'
+            ⮑  SUCCESS
+
+    ⮑  'this final spec'
+        ⮑  'fails at line 12'
+            ⮑  FAILURE
+
+Failures:
+
+  [ ✗ ] specs/001-spec.p6:12
 ```
 
 #### Status
