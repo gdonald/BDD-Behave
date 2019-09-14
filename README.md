@@ -3,7 +3,7 @@ A behavior driven development framework written in [Perl 6](https://perl6.org/).
 
 Currently developed against Rakudo `v6.d`.
 
-#### Install from CPAN
+#### Install using zef
 
 ```
 zef install BDD::Behave
