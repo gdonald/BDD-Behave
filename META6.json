@@ -6,7 +6,7 @@
   "authors": [
     "Greg Donald"
   ],
-  "auth": "github:gdonald",
+  "auth": "github:rakuist",
   "depends": [],
   "build-depends": [],
   "test-depends": [
@@ -24,15 +24,13 @@
     "BDD::Behave::Files": "lib/BDD/Behave/Files.pm6",
     "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.pm6",
     "BDD::Behave::Indent": "lib/BDD/Behave/Indent.pm6",
-    "BDD::Behave::Klass": "lib/BDD/Behave/Klass.pm6",
-    "BDD::Behave::Klasses": "lib/BDD/Behave/Klasses.pm6",
     "BDD::Behave::Let": "lib/BDD/Behave/Let.pm6",
     "BDD::Behave::Lets": "lib/BDD/Behave/Lets.pm6",
     "BDD::Behave::Value": "lib/BDD/Behave/Value.pm6"
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/gdonald/BDD-Behave/issues"
+    "source": "https://github.com/rakuist/BDD-Behave/issues"
   },
   "license": "Artistic-2.0",
   "tags": [
@@ -44,5 +42,5 @@
     "Testing",
     "Spec"
   ],
-  "source-url": "git://github.com/gdonald/BDD-Behave.git"
+  "source-url": "git://github.com/rakuist/BDD-Behave.git"
 }

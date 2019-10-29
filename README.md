@@ -59,11 +59,11 @@ Failures:
 
 #### Status
 
-[![Build Status](https://travis-ci.org/gdonald/BDD-Behave.svg?branch=master)](https://travis-ci.org/gdonald/BDD-Behave)
+[![Build Status](https://travis-ci.org/rakuist/BDD-Behave.svg?branch=master)](https://travis-ci.org/rakuist/BDD-Behave)
 
 #### Documentation
 
-No docs yet, see the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
+No docs yet, see the examples in [specs/*](https://github.com/rakuist/BDD-Behave/tree/master/specs).
 
 #### License
 
