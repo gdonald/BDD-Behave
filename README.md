@@ -1,7 +1,7 @@
 ## Behave
-A behavior driven development framework written in [Perl 6](https://perl6.org/).
+A behavior driven development framework written in [Raku](https://raku.org/).
 
-Currently developed against Rakudo `v6.d`.
+Currently developed against Raku `v6.d`.
 
 #### Install using zef
 
@@ -63,7 +63,7 @@ Failures:
 
 #### Documentation
 
-No docs yet, see the examples in [specs/*](https://github.com/rakuist/BDD-Behave/tree/master/specs).
+No docs yet, see the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
 
 #### License
 
