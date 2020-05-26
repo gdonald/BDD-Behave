@@ -60,7 +60,7 @@ Failures:
 
 #### Status
 
-[![Build Status](https://travis-ci.org/rakuist/BDD-Behave.svg?branch=master)](https://travis-ci.org/rakuist/BDD-Behave)
+[![Build Status](https://travis-ci.org/gdonald/BDD-Behave.svg?branch=master)](https://travis-ci.org/gdonald/BDD-Behave)
 
 #### Documentation
 
