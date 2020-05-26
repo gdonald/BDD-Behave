@@ -6,7 +6,7 @@
   "authors": [
     "Greg Donald"
   ],
-  "auth": "github:rakuist",
+  "auth": "github:gdonald",
   "depends": [],
   "build-depends": [],
   "test-depends": [
@@ -30,7 +30,7 @@
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/rakuist/BDD-Behave/issues"
+    "source": "https://github.com/gdonald/BDD-Behave/issues"
   },
   "license": "Artistic-2.0",
   "tags": [
@@ -42,5 +42,5 @@
     "Testing",
     "Spec"
   ],
-  "source-url": "git://github.com/rakuist/BDD-Behave.git"
+  "source-url": "git://github.com/gdonald/BDD-Behave.git"
 }

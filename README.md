@@ -1,5 +1,5 @@
 ## Behave
-A behavior driven development framework written in [Perl 6](https://perl6.org/).
+A behavior driven development framework written in [Raku](https://https://raku.org//).
 
 Currently developed against Rakudo `v6.d`.
 
