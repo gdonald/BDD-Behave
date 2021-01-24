@@ -60,7 +60,7 @@ Failures:
 
 #### Status
 
-[![Raku Status](https://github.com/gdonald/BDD-Behave/workflows/.github/workflows/raku.yml/badge.svg)](https://github.com/gdonald/BDD-Behave/actions)
+[![.github/workflows/raku.yml](https://github.com/gdonald/BDD-Behave/workflows/.github/workflows/raku.yml/badge.svg)](https://github.com/gdonald/BDD-Behave/actions)
 
 #### Documentation
 
