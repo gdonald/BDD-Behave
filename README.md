@@ -60,7 +60,7 @@ Failures:
 
 #### Status
 
-[![Build Status](https://travis-ci.org/gdonald/BDD-Behave.svg?branch=master)](https://travis-ci.org/gdonald/BDD-Behave)
+![Raku Status](https://github.com/gdonald/BDD-Behave/workflows/.github/workflows/test.yml/badge.svg)](https://github.com/gdonald/BDD-Behave/actions)
 
 #### Documentation
 
