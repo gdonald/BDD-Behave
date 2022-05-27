@@ -1,12 +1,10 @@
-on: [push]
-
+on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
-    name: Tests
     steps:
     - name: Checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Runs tests
-      id: tests
-      uses: JJ/raku-container-action@master
+      uses: JJ/raku-test-action@main
+
