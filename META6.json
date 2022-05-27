@@ -24,6 +24,8 @@
     "BDD::Behave::Files": "lib/BDD/Behave/Files.rakumod",
     "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.rakumod",
     "BDD::Behave::Indent": "lib/BDD/Behave/Indent.rakumod",
+    "BDD::Behave::Klass": "lib/BDD/Behave/Klass.rakumod",
+    "BDD::Behave::Klasses": "lib/BDD/Behave/Klasses.rakumod",
     "BDD::Behave::Let": "lib/BDD/Behave/Let.rakumod",
     "BDD::Behave::Lets": "lib/BDD/Behave/Lets.rakumod",
     "BDD::Behave::Value": "lib/BDD/Behave/Value.rakumod"
