@@ -2,7 +2,7 @@
 class Files is export {
   my Str $.specs-dir = 'specs';
   my Str $.current;
-  my Mu $.test = /'spec.p6' [\: \d+]?$/;
+  my Mu $.test = /'spec.raku' [\: \d+]?$/;
 
   method list(@args) {
     if @args.elems {
