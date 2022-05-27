@@ -12,13 +12,13 @@ zef install BDD::Behave
 
 #### Running Behave:
 
-If a file is not specificed Behave will automatically look for a `specs` directory and will run anything matching `/spec.p6/`.
+If a file is not specified Behave will automatically look for a `specs` directory and will run anything matching `/spec.raku/`.
 
 #### An example:
 
-**specs/001-spec.p6**
+**specs/001-spec.raku**
 
-```perl6
+```raku
 use BDD::Behave;
 
 describe -> 'this spec' {
@@ -37,13 +37,13 @@ describe -> 'this final spec' {
 You can run the spec like this:
 
 ```
-$ behave specs/001-spec.p6
+$ behave specs/001-spec.raku
 ```
 
 Output:
 
-```perl6
-specs/001-spec.p6
+```raku
+specs/001-spec.raku
 
     ⮑  'this spec'
         ⮑  'passes'
@@ -55,7 +55,7 @@ specs/001-spec.p6
 
 Failures:
 
-  [ ✗ ] specs/001-spec.p6:12
+  [ ✗ ] specs/001-spec.raku:12
 ```
 
 #### Status
@@ -64,7 +64,7 @@ Failures:
 
 #### Documentation
 
-No docs yet, see the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
+See the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
 
 #### License
 
