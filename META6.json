@@ -1,7 +1,7 @@
 {
   "name": "BDD::Behave",
   "description": "Behavior driven development framework",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "perl": "6.d",
   "authors": [
     "Greg Donald"
@@ -15,18 +15,18 @@
     "Test::Output"
   ],
   "provides": {
-    "BDD::Behave": "lib/BDD/Behave.pm6",
-    "BDD::Behave::Actions": "lib/BDD/Behave/Actions.pm6",
-    "BDD::Behave::Colors": "lib/BDD/Behave/Colors.pm6",
-    "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.pm6",
-    "BDD::Behave::Failure": "lib/BDD/Behave/Failure.pm6",
-    "BDD::Behave::Failures": "lib/BDD/Behave/Failures.pm6",
-    "BDD::Behave::Files": "lib/BDD/Behave/Files.pm6",
-    "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.pm6",
-    "BDD::Behave::Indent": "lib/BDD/Behave/Indent.pm6",
-    "BDD::Behave::Let": "lib/BDD/Behave/Let.pm6",
-    "BDD::Behave::Lets": "lib/BDD/Behave/Lets.pm6",
-    "BDD::Behave::Value": "lib/BDD/Behave/Value.pm6"
+    "BDD::Behave": "lib/BDD/Behave.rakumod",
+    "BDD::Behave::Actions": "lib/BDD/Behave/Actions.rakumod",
+    "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
+    "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.rakumod",
+    "BDD::Behave::Failure": "lib/BDD/Behave/Failure.rakumod",
+    "BDD::Behave::Failures": "lib/BDD/Behave/Failures.rakumod",
+    "BDD::Behave::Files": "lib/BDD/Behave/Files.rakumod",
+    "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.rakumod",
+    "BDD::Behave::Indent": "lib/BDD/Behave/Indent.rakumod",
+    "BDD::Behave::Let": "lib/BDD/Behave/Let.rakumod",
+    "BDD::Behave::Lets": "lib/BDD/Behave/Lets.rakumod",
+    "BDD::Behave::Value": "lib/BDD/Behave/Value.rakumod"
   },
   "resources": [],
   "support": {
