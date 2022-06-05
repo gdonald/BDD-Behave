@@ -5,16 +5,16 @@ use BDD::Behave::Failures;
 use BDD::Behave::Files;
 use BDD::Behave::Grammar;
 
-class Behave is export {
-  has @!args of Str;
+class Behave {
+  has @!specs of Str;
   has Bool $!verbose;
 
-  submethod BUILD(:$!verbose, :@!args) {
+  submethod BUILD(:$!verbose, :@!specs) {
     self.run
   }
 
   method run {
-    for Files.list(@!args) -> $file {
+    for Files.list(@!specs) -> $file {
       Files.current = $file;
       say "\n" ~ light-blue($file);
       self.eval-file(:$file);
@@ -37,6 +37,8 @@ class Behave is export {
     Grammar.parse($path.IO.slurp.trim, :actions(Actions));
   }
 }
+
+sub run-behave(:$verbose, :@specs) is export { Behave.new(:$verbose, :@specs) }
 
 sub context is export {}
 sub describe is export {}

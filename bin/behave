@@ -3,6 +3,26 @@
 use v6.d;
 use BDD::Behave;
 
-sub MAIN(Bool :$verbose, *@args) {
-  Behave.new(:$verbose, :@args)
+my $verbose = False;
+my @specs = [];
+
+for @*ARGS -> $arg {
+  if $arg ~~ '--help' {
+    say qq:to/HERE/;
+    Usage: behave [options...] [specs/spec_file.raku]
+      Runs the `behave` program against specs in the local `specs` directory
+      or against a list of spec files provided on the command line.
+
+    Options:
+      --help          Displays how to run behave.
+      --verbose       Display verbose output during the specs execution.
+    HERE
+    exit
+  } elsif $arg ~~ '--verbose' {
+    $verbose = True;
+  } else {
+    @specs.push: $arg;
+  }
 }
+
+run-behave :$verbose, :@specs;
