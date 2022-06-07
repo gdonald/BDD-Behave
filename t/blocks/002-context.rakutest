@@ -1,0 +1,34 @@
+
+use v6.d;
+use lib 'lib';
+use BDD::Behave::Actions;
+use BDD::Behave::Files;
+use BDD::Behave::Grammar;
+use BDD::Behave::Lets;
+use Test;
+use Test::Output;
+
+plan 12;
+
+my $m;
+my $k;
+my $out;
+my $str;
+
+$out = "\n    \x[1B][36m⮑  \x[1B][0m\"contains an it block\" \n        \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n            \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } }', :rule<context-block>) }, $out, '<context-block> parses correctly';
+ok $m.Str eq 'context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } }';
+output-is { $m = Grammar.parse('context-> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } }', :rule<context-block>) }, $out, '<context-block> parses correctly';
+ok $m.Str eq 'context-> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } }';
+output-is { $m = Grammar.parse('context ->"contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } }', :rule<context-block>) }, $out, '<context-block> parses correctly';
+ok $m.Str eq 'context ->"contains an it block" { it -> "1 is 1" { expect(1).to.be(1); } }';
+
+$out = "\n    \x[1B][36m⮑  \x[1B][0m\"contains an it block\"\n        \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n            \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('context -> "contains an it block"{ it -> "1 is 1" { expect(1).to.be(1); } }', :rule<context-block>) }, $out, '<context-block> parses correctly';
+ok $m.Str eq 'context -> "contains an it block"{ it -> "1 is 1" { expect(1).to.be(1); } }';
+
+$out = "\n    \x[1B][36m⮑  \x[1B][0m\"contains an it block\" \n        \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n            \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('context -> "contains an it block" {it -> "1 is 1" { expect(1).to.be(1); } }', :rule<context-block>) }, $out, '<context-block> parses correctly';
+ok $m.Str eq 'context -> "contains an it block" {it -> "1 is 1" { expect(1).to.be(1); } }';
+output-is { $m = Grammar.parse('context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); }}', :rule<context-block>) }, $out, '<context-block> parses correctly';
+ok $m.Str eq 'context -> "contains an it block" { it -> "1 is 1" { expect(1).to.be(1); }}';

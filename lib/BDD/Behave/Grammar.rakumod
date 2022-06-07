@@ -1,4 +1,9 @@
 
+use MONKEY-SEE-NO-EVAL;
+
+# use Grammar::Tracer;
+# use Grammar::ErrorReporting;
+
 use BDD::Behave::Expectation;
 use BDD::Behave::Indent;
 use BDD::Behave::Klasses;
@@ -13,10 +18,16 @@ grammar Grammar is export {
   token dot-method { \.\w+ }
   token symbol { \:\w+ }
   token block-content { <[\.\:\"\'\d\w\(\)]>+ }
-  token given { <[\.\:\"\'\d\w]>+ }
+  token given { <[$\.\:\"\'\d\w]>+ }
   token expected { <[\.\:\"\'\d\w]>+ }
-  token comment { [ [ <[#]> \N* ]? \n ]+ }
+  
+  token comment-string { '#'\N*\n }
+  rule comment-line { ^^ <comment-string> $$ }
+  
   token var-name { <[\$\!\.]>+\w+ }
+  # token data-begin { ^^ <[#]> <.ws> DATA\-BEGIN $$ }
+  # rule data-content { .+ <?before <[#]> DATA\-END> }
+  # token data-end { ^^ <[#]> <.ws> DATA\-END $$ }
 
   rule expect { 'expect(' <given> ')' }
   rule be { 'be(' <expected> ')' }
@@ -36,9 +47,16 @@ grammar Grammar is export {
   rule double-quoted-string { <double-quote><phrase><double-quote> }
   rule quoted-string { [ <single-quoted-string> | <double-quoted-string> ] }
 
-  rule use-statement { use <module-name>\;}
+  rule use-statement { use <module-name>\; }
   rule has-statement { has <var-name>\; }
   rule var-assignment { <var-name> \= <number>\; }
+
+  # rule data {
+  #   <data-begin> <data-content> <data-end>
+  #   {
+  #     EVAL $/.<data-content>;
+  #   }
+  # }
 
   rule submethod {
     submethod BUILD\(\:<var-name>\) \{
@@ -71,7 +89,7 @@ grammar Grammar is export {
   }
 
   rule expectation-not {
-    <expect>\.to\.not\.<be>\; <comment>?
+    <expect>\.to\.not\.<be>\; <comment-string>?
     {
       my $line = self.line-number;
       my $raw = $<expect><given>.Str;
@@ -81,7 +99,7 @@ grammar Grammar is export {
   }
 
   rule expectation {
-    <expect>\.to\.<be>\; <comment>?
+    <expect>\.to\.<be>\; <comment-string>?
     {
       my $line = self.line-number;
       my $raw = $<expect><given>.Str;
@@ -96,7 +114,7 @@ grammar Grammar is export {
       { say Indent.get ~ $<quoted-string>; }
       { Lets.push-scope() }
       [
-        | <comment>
+        | <comment-line>
         | <let-statement>
         | <expectation>
         | <expectation-not>
@@ -112,7 +130,7 @@ grammar Grammar is export {
       { say "\n" ~ Indent.get ~ $<quoted-string>; }
       { Lets.push-scope() }
       [
-        | <comment>
+        | <comment-line>
         | <let-statement>
         | <it-block>
       ]*
@@ -127,7 +145,7 @@ grammar Grammar is export {
       { say "\n" ~ Indent.get ~ $<quoted-string>; }
       { Lets.push-scope() }
       [
-        | <comment>
+        | <comment-line>
         | <let-statement>
         | <describe-block>
         | <context-block>
@@ -140,7 +158,7 @@ grammar Grammar is export {
 
   rule statements {
     [
-      | <comment>
+      | <comment-line>
       | <klass-definition>
       | <use-statement>
       | <let-statement>

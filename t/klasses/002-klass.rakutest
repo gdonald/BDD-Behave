@@ -1,0 +1,35 @@
+
+use v6.d;
+use lib 'lib';
+use BDD::Behave::Actions;
+use BDD::Behave::Files;
+use BDD::Behave::Grammar;
+use BDD::Behave::Lets;
+use Test;
+use Test::Output;
+
+plan 3;
+
+my $m;
+my $k;
+my $out;
+my $str;
+
+$k = q:to/END/;
+class Foo {
+  has $!bar;
+  has $!baz;
+
+  submethod BUILD(:$!bar) {
+    $!baz = 42;
+  }
+}
+
+END
+
+$m = Grammar.parse($k, :rule<klass-definition>);
+ok $m.Str eq "class Foo \{\n  has \$!bar;\n  has \$!baz;\n\n  submethod BUILD(:\$!bar) \{\n    \$!baz = 42;\n  }\n}\n\n";
+$m = Grammar.parse($k, :rule<statements>);
+ok $m.Str eq "class Foo \{\n  has \$!bar;\n  has \$!baz;\n\n  submethod BUILD(:\$!bar) \{\n    \$!baz = 42;\n  }\n}\n\n";
+$m = Grammar.parse($k, :rule<TOP>);
+ok $m.Str eq "class Foo \{\n  has \$!bar;\n  has \$!baz;\n\n  submethod BUILD(:\$!bar) \{\n    \$!baz = 42;\n  }\n}\n\n";

@@ -1,0 +1,32 @@
+
+use v6.d;
+use lib 'lib';
+use BDD::Behave::Actions;
+use BDD::Behave::Files;
+use BDD::Behave::Grammar;
+use BDD::Behave::Lets;
+use Test;
+use Test::Output;
+
+plan 7;
+
+my $m;
+my $k;
+my $out;
+my $str;
+
+$m = Grammar.parse('be(1)', :rule<be>);
+ok $m.Str eq 'be(1)';
+$m = Grammar.parse('be( 1)', :rule<be>);
+ok $m.Str eq 'be( 1)';
+$m = Grammar.parse('be(1 )', :rule<be>);
+ok $m.Str eq 'be(1 )';
+$m = Grammar.parse('be( 1 )', :rule<be>);
+ok $m.Str eq 'be( 1 )';
+
+$m = Grammar.parse('be(', :rule<be>);
+nok $m;
+$m = Grammar.parse('bex', :rule<be>);
+nok $m;
+$m = Grammar.parse('xbe', :rule<be>);
+nok $m;
