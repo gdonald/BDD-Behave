@@ -1,0 +1,54 @@
+
+use v6.d;
+use lib 'lib';
+use BDD::Behave::Actions;
+use BDD::Behave::Files;
+use BDD::Behave::Grammar;
+use BDD::Behave::Lets;
+use Test;
+use Test::Output;
+
+plan 8;
+
+my $m;
+my $k;
+my $out;
+my $str;
+
+$k = q:to/END/;
+
+use BDD::Behave;
+
+class Foo {
+  has $!bar;
+  has $!baz;
+
+  submethod BUILD(:$!bar) {
+    $!baz = 42;
+  }
+}
+
+let(:foo) => { Foo.new(17) };
+
+describe -> 'Foo' {
+  it -> '.bar' {
+    expect(:foo).to.be(17);
+  }
+}
+
+END
+
+Files.current = 'test';
+$out = "\n    \x[1B][36m⮑  \x[1B][0m'Foo' \n        \x[1B][36m⮑  \x[1B][0m'.bar' \n            \x[1B][36m⮑  \x[1B][0m\x[1B][31mFAILURE\x[1B][0m\n";
+$m = Grammar.parse($k, :rule<TOP>);
+say '$m: ', $m;
+# output-is { $m = Grammar.parse($k, :rule<TOP>) }, $out, '<TOP> parses correctly';
+# say '$m<statements><use-statement>.Str: ', $m<statements>;
+# ok $m<statements><use-statement>.Str eq "use BDD::Behave;\n\n";
+# ok $m<statements><klass-definition>.Str eq "class Foo \{\n  has \$!bar;\n  has \$!baz;\n\n  submethod BUILD(:\$!bar) \{\n    \$!baz = 42;\n  }\n}\n\n";
+# ok $m<statements><let-statement>.Str eq "let(:foo) => \{ Foo.new(17) };\n\n";
+
+# output-is { $m = Grammar.parse($k, :rule<statements>) }, $out, '<statements> parses correctly';
+# ok $m<use-statement>.Str eq "use BDD::Behave;\n\n";
+# ok $m<klass-definition>.Str eq "class Foo \{\n  has \$!bar;\n  has \$!baz;\n\n  submethod BUILD(:\$!bar) \{\n    \$!baz = 42;\n  }\n}\n\n";
+# ok $m<let-statement>.Str eq "let(:foo) => \{ Foo.new(17) };\n\n";

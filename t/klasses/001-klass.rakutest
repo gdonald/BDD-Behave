@@ -1,0 +1,23 @@
+
+use v6.d;
+use lib 'lib';
+use BDD::Behave::Actions;
+use BDD::Behave::Files;
+use BDD::Behave::Grammar;
+use BDD::Behave::Lets;
+use Test;
+use Test::Output;
+
+plan 2;
+
+my $m;
+my $k;
+my $out;
+my $str;
+
+Files.current = 'test';
+
+$k = "class Foo \{ has \$!bar; has \$!baz; submethod BUILD(:\$!bar) \{ \$!baz = 42; } }\n";
+$out = '';
+output-is { $m = Grammar.parse($k, :rule<klass-definition>) }, $out, '<klass-definition> parses correctly';
+ok $m.Str eq "class Foo \{ has \$!bar; has \$!baz; submethod BUILD(:\$!bar) \{ \$!baz = 42; } }\n";

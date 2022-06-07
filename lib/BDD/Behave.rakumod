@@ -1,4 +1,6 @@
 
+use MONKEY-SEE-NO-EVAL;
+
 use BDD::Behave::Actions;
 use BDD::Behave::Colors;
 use BDD::Behave::Failures;
@@ -44,4 +46,4 @@ sub context is export {}
 sub describe is export {}
 sub let is export {}
 sub it is export {}
-sub expect is export {}
+sub expect($given) is export {}

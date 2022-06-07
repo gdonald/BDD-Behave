@@ -1,0 +1,44 @@
+
+use v6.d;
+use lib 'lib';
+use BDD::Behave::Actions;
+use BDD::Behave::Files;
+use BDD::Behave::Grammar;
+use BDD::Behave::Lets;
+use Test;
+use Test::Output;
+
+plan 18;
+
+my $m;
+my $k;
+my $out;
+my $str;
+
+$out = "    \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n        \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('it -> "1 is 1" { expect(1).to.be(1); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1" { expect(1).to.be(1); }';
+output-is { $m = Grammar.parse('it-> "1 is 1" { expect(1).to.be(1); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it-> "1 is 1" { expect(1).to.be(1); }';
+output-is { $m = Grammar.parse('it ->"1 is 1" { expect(1).to.be(1); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it ->"1 is 1" { expect(1).to.be(1); }';
+
+$out = "    \x[1B][36m⮑  \x[1B][0m\"1 is 1\"\n        \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('it -> "1 is 1"{ expect(1).to.be(1); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1"{ expect(1).to.be(1); }';
+
+$out = "    \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n        \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('it -> "1 is 1" {expect(1).to.be(1); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1" {expect(1).to.be(1); }';
+output-is { $m = Grammar.parse('it -> "1 is 1" { expect(1).to.be(1);}', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1" { expect(1).to.be(1);}';
+
+$out = "    \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n";
+output-is { $m = Grammar.parse('it -> "1 is 1" {}', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1" {}';
+
+$out = "    \x[1B][36m⮑  \x[1B][0m\"1 is 1\" \n        \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n        \x[1B][36m⮑  \x[1B][0m\x[1B][32mSUCCESS\x[1B][0m\n";
+output-is { $m = Grammar.parse('it -> "1 is 1" { expect(1).to.be(1); expect(2).to.be(2); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1" { expect(1).to.be(1); expect(2).to.be(2); }';
+output-is { $m = Grammar.parse('it -> "1 is 1" { expect(1).to.be(1);expect(2).to.be(2); }', :rule<it-block>) }, $out, '<it-block> parses correctly';
+ok $m.Str eq 'it -> "1 is 1" { expect(1).to.be(1);expect(2).to.be(2); }';

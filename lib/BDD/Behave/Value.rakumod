@@ -24,6 +24,7 @@ class Value is export {
       when /^\"(\d+)\"$/ { $0.Int }
       when /^\'(\w+)\'$/ { $0 }
       when /^\"(\w+)\"$/ { $0 }
+      when /^\$(\w+)$/ { $0 }
       when /^(<[A..Z]>[\w+][\:\:<[A..Z]>[\w+]]*\.new\(.*\))$/ { EVAL $0 }
       default { dd $_; die "Unknown \$!raw '$!raw' ☹" }
     }
