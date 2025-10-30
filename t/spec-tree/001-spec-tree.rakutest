@@ -1,0 +1,45 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::SpecTree;
+
+constant Suite = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example = BDD::Behave::SpecTree::Example;
+
+plan 16;
+
+my $suite = Suite.create(:file('specs/example.raku'));
+ok $suite.is-root, 'suite is root node';
+is $suite.description, 'suite', 'suite has default description';
+is $suite.depth, 0, 'suite depth is zero';
+is $suite.children.elems, 0, 'suite starts with no children';
+
+my $group = ExampleGroup.new(:description('math'), :file('specs/example.raku'), :line(10));
+$suite.add-group($group);
+is $suite.groups.elems, 1, 'group added to suite';
+is $group.parent, $suite, 'group parent set automatically';
+is $group.depth, 1, 'group depth increments';
+
+my $example = Example.new(
+  :description('adds numbers'),
+  :file('specs/example.raku'),
+  :line(12),
+  :block(-> :$value { $value + 1 })
+);
+$group.add-example($example);
+is $group.examples.elems, 1, 'example added to group';
+is-deeply $example.ancestry».description.Array, ['suite', 'math', 'adds numbers'], 'ancestry includes suite, group, example';
+ok !$example.pending, 'example not pending by default';
+
+$example.mark-pending(:reason('wip'));
+ok $example.pending, 'example marked pending';
+is $example.get-metadata('pending-reason'), 'wip', 'pending reason stored in metadata';
+
+my $before-each = $group.add-hook('before-each', -> { });
+my $after-all = $group.add-hook('after-all', -> { });
+is $group.hooks('before-each').elems, 1, 'before-each hook registered';
+is $group.hooks('after-all').elems, 1, 'after-all hook registered';
+ok $group.hooks('before-each')[0] === $before-each, 'hook reference preserved';
+
+is $example.execute(:value(1)), 2, 'example executes stored block';

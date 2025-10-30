@@ -42,8 +42,28 @@ class Behave {
 
 sub run-behave(:$verbose, :@specs) is export { Behave.new(:$verbose, :@specs) }
 
-sub context is export {}
-sub describe is export {}
+sub describe(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&describe');
+  };
+  $impl(|args);
+}
+
+sub context(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&context');
+  };
+  $impl(|args);
+}
+
+sub it(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&it');
+  };
+  $impl(|args);
+}
 sub let is export {}
-sub it is export {}
 sub expect($given) is export {}

@@ -1,0 +1,35 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::SpecRegistry;
+plan 9;
+
+registry().clear;
+
+my $ran = False;
+
+describe 'outer', {
+  context 'inner', {
+    it 'example', {
+      $ran = True;
+    }
+  }
+}
+
+my @suites = suites();
+is @suites.elems, 1, 'suite registered';
+
+my $suite = @suites[0];
+is $suite.groups.elems, 1, 'suite has one top-level group';
+is $suite.groups[0].description, 'outer', 'group description stored';
+
+my $inner = $suite.groups[0].groups[0];
+is $inner.description, 'inner', 'context registered as nested group';
+is $inner.parent, $suite.groups[0], 'nested group parent set correctly';
+
+is $inner.examples.elems, 1, 'example registered under nested group';
+is $inner.examples[0].description, 'example', 'example description stored';
+is $inner.examples[0].block.^name, 'Block', 'example block stored for deferred execution';
+is $ran, False, 'example block not executed during registration';
