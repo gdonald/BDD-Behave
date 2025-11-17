@@ -1,31 +1,31 @@
 
 use BDD::Behave;
 
-#describe -> 'this is commented out' {
+#describe 'this is commented out', {
 #  let(:number) => { 42 };
 #
-#  context -> 'has one it' {
-#    it -> 'has one expect' {
+#  context 'has one it', {
+#    it 'has one expect', {
 #      expect(42).to.be(42);
 #    }
 #  }
 #}
 
-describe -> 'foo bar' {
+describe 'foo bar', {
   let(:number) => { 42 };
 
-  context -> 'bar baz' {
-    it -> 'has two expects' {
+  context 'bar baz', {
+    it 'has two expects', {
       expect(42).to.be(42);
       expect(:number).to.be(42);
       # expect(42).to.be(:number);
     }
   }
 
-  context -> 'baz foo' {
+  context 'baz foo', {
     let(:number) => { '42' };
 
-    it -> 'has one expect' {
+    it 'has one expect', {
       expect('42').to.be('42');
 #      expect(:number).to.be('42');
 #      expect('42').to.be(:number);
@@ -33,11 +33,11 @@ describe -> 'foo bar' {
   }
 }
 
-describe -> 'foo bar' {
+describe 'foo bar', {
   let(:number) => { 42 };
 
-  context -> 'has one it' {
-#    it -> 'has two expects' {
+  context 'has one it', {
+#    it 'has two expects', {
 #      expect(42).to.be(42);
 #      expect(:number).to.be(42);
 #    }

@@ -12,12 +12,12 @@ class Foo {
 
 let(:foo) => { Foo.new(:bar(17)) };
 
-describe -> 'Foo' {
-  it -> '.bar' {
+describe 'Foo', {
+  it '.bar', {
     expect(:foo.bar).to.be(17);
   }
 
-  it -> '.baz' {
+  it '.baz', {
     expect(:foo.baz).to.be(42);
   }
 }

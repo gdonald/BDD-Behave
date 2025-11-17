@@ -1,39 +1,39 @@
 
 use BDD::Behave;
 
-describe -> 'this spec has a given variable' {
+describe 'this spec has a given variable', {
   let(:foo) => { 42 };
 
-  it -> 'is successful' {
+  it 'is successful', {
     expect(:foo).to.be(42);
   }
 }
 
-describe -> 'this spec' {
-  it -> 'is successful' {
+describe 'this spec', {
+  it 'is successful', {
     expect(42).to.be(42);
   }
 }
 
-describe -> 'this other not spec' {
-  it -> 'is a success' {
+describe 'this other not spec', {
+  it 'is a success', {
     expect(42).to.not.be(41);
   }
 }
 
-describe -> 'this spec has contexts' {
-  context -> 'with an it block' {
-    it -> 'is successful' {
+describe 'this spec has contexts', {
+  context 'with an it block', {
+    it 'is successful', {
       expect(42).to.be(42);
     }
   }
 
-  context -> 'with more than one it block' {
-    it -> 'is successful' {
+  context 'with more than one it block', {
+    it 'is successful', {
       expect(42).to.be(42);
     }
 
-    it -> 'is good to go' {
+    it 'is good to go', {
       expect(42).to.not.be(41);
     }
   }

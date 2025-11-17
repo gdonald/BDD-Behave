@@ -5,8 +5,8 @@ use BDD::Behave;
 my $foo = 'bar';
 # DATA-END
 
-describe -> 'this spec' {
-  it -> 'passes' {
+describe 'this spec', {
+  it 'passes', {
     expect($foo).to.be('bar');
   }
 }
