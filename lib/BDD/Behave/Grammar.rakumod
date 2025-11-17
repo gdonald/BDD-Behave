@@ -20,9 +20,11 @@ grammar Grammar is export {
   token block-content { <[\.\:\"\'\d\w\(\)]>+ }
   token given { <[$\.\:\"\'\d\w]>+ }
   token expected { <[\.\:\"\'\d\w]>+ }
+  token gap { \s+ }
   
   token comment-string { '#'\N*\n }
   rule comment-line { ^^ <comment-string> $$ }
+  token comment { <comment-string> }
   
   token var-name { <[\$\!\.]>+\w+ }
   # token data-begin { ^^ <[#]> <.ws> DATA\-BEGIN $$ }
@@ -158,16 +160,19 @@ grammar Grammar is export {
 
   rule statements {
     [
-      | <comment-line>
-      | <klass-definition>
-      | <use-statement>
-      | <let-statement>
-      | <describe-block>
+      <gap>*
+      [
+        | <comment-line>
+        | <klass-definition>
+        | <use-statement>
+        | <let-statement>
+        | <describe-block>
+      ]
     ]*
   }
 
   rule TOP {
-    <statements>
+    <gap>* <statements> <gap>*
   }
 
   method line-number {
