@@ -13,6 +13,7 @@ class Entry {
 
 class SpecRegistry {
   has %.entries;
+  has $.current-entry is rw;
 
   method entry-for(IO::Path $file --> Entry) {
     my IO::Path $path = $file.absolute.IO;
@@ -31,11 +32,15 @@ class SpecRegistry {
   method register-group(:$description!, :&block!, :$file!, :$line!) {
     my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
     my $entry = self.entry-for($path);
+    $!current-entry = $entry;
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
     my $group = example-group-type().new(:$description, :file($path), :$line);
     $parent.add-group($group);
     $entry.stack.push($group);
-    LEAVE $entry.stack.pop;
+    LEAVE {
+      $entry.stack.pop;
+      $!current-entry = Nil;
+    }
     block();
     $group;
   }
@@ -45,8 +50,19 @@ class SpecRegistry {
     my $entry = self.entry-for($path);
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
     my $example = example-type().new(:$description, :file($path), :$line, :block(&block));
+    my @lets = gather for $entry.stack.grep(example-group-type()) -> $group {
+      my @definitions = $group.let-definitions;
+      take |@definitions if @definitions;
+    }
+    $example.set-metadata(:lets(@lets));
     $parent.add-example($example);
     $example;
+  }
+
+  method current-group-for(IO::Path $file) {
+    my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
+    my $entry = self.entry-for($path);
+    $entry.stack.elems ?? $entry.stack[*-1] !! Nil;
   }
 
   method suites() {

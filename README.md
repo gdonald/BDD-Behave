@@ -21,15 +21,19 @@ If a file is not specified Behave will automatically look for a `specs` director
 ```raku
 use BDD::Behave;
 
-describe -> 'this spec' {
-  it -> 'passes' {
-    expect(42).to.be(42);
+describe 'this spec', {
+  let(:answer, { 42 });
+
+  it 'passes', {
+    expect(:answer).to.be(42);
   }
 }
 
-describe -> 'this final spec' {
-  it -> 'fails at line 12' {
-    expect(42).to.be(41);
+describe 'this final spec', {
+  let(:answer, { 42 });
+
+  it 'fails at line 12', {
+    expect(:answer).to.be(41);
   }
 }
 ```
@@ -56,6 +60,22 @@ specs/001-spec.raku
 Failures:
 
   [ ✗ ] specs/001-spec.raku:12
+```
+
+#### Local Behave development:
+
+For local development of Behave itself:
+
+```
+raku -Ilib bin/behave
+```
+
+#### Prove Tests
+
+To run the tests in t/*:
+
+```
+prove6 -Ilib t
 ```
 
 #### Status

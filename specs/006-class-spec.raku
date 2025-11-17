@@ -10,7 +10,7 @@ class Foo {
   }
 }
 
-let(:foo) => { Foo.new(:bar(17)) };
+let(:foo, { Foo.new(:bar(17)) });
 
 describe 'Foo', {
   it '.bar', {

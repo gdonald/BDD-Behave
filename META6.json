@@ -22,6 +22,7 @@
     "BDD::Behave::Failure": "lib/BDD/Behave/Failure.rakumod",
     "BDD::Behave::Failures": "lib/BDD/Behave/Failures.rakumod",
     "BDD::Behave::Files": "lib/BDD/Behave/Files.rakumod",
+    "BDD::Behave::LetRuntime": "lib/BDD/Behave/LetRuntime.rakumod",
     "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.rakumod",
     "BDD::Behave::Indent": "lib/BDD/Behave/Indent.rakumod",
     "BDD::Behave::Klass": "lib/BDD/Behave/Klass.rakumod",

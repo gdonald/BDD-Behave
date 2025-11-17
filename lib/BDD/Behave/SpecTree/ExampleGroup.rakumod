@@ -13,6 +13,7 @@ our class ExampleGroup is SpecNode does Container {
   has Callable @.after-all;
   has Callable @.before-each;
   has Callable @.after-each;
+  has @.lets;
 
   method groups {
     @!children.grep(::?CLASS);
@@ -28,6 +29,15 @@ our class ExampleGroup is SpecNode does Container {
 
   method add-example(Example $example --> Example) {
     self.add-child($example);
+  }
+
+  method add-let($let) {
+    @!lets.push($let);
+    $let;
+  }
+
+  method let-definitions {
+    @!lets // [];
   }
 
   method add-hook(HookPhase:D $phase, Callable:D $callback --> Callable) {

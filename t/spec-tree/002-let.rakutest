@@ -1,0 +1,37 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::LetRuntime;
+
+plan 6;
+
+registry().clear;
+
+my $outer-called = 0;
+my $inner-called = 0;
+
+describe 'outer', {
+  let(:foo, { ++$outer-called; 1 });
+
+  context 'inner', {
+    let(:foo, { ++$inner-called; 2 });
+
+    it 'collects lets', {
+      pass 'registered';
+    }
+  }
+}
+
+my $example = suites()[0].groups[0].groups[0].examples[0];
+my @lets = $example.get-metadata('lets').flat;
+is @lets.elems, 2, 'captures lets from ancestors';
+is @lets[0].name, 'foo', 'stores let name';
+
+my $runtime = BDD::Behave::LetRuntime::LetRuntime.new(:definitions(@lets));
+is $runtime.value('foo'), 2, 'nearest let wins';
+is $runtime.value('foo'), 2, 'memoizes per example';
+is $inner-called, 1, 'evaluates inner let once';
+is $outer-called, 0, 'does not execute shadowed parent let';
