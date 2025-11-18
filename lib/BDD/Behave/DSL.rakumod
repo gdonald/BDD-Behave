@@ -1,5 +1,8 @@
 unit module BDD::Behave::DSL;
 
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+
 need BDD::Behave::SpecRegistry;
 need BDD::Behave::LetRuntime;
 
@@ -53,4 +56,52 @@ our sub it(Str $description, &block) is export {
     :$line
   );
   Nil;
+}
+
+class ExpectationBuilder {
+  has $.given;
+  has Bool $.negated is rw = False;
+  has Int $.line;
+  has Str $.file;
+
+  method to { self }
+
+  method not {
+    my $new = ExpectationBuilder.new(
+      :given($!given),
+      :negated(True),
+      :line($!line),
+      :file($!file)
+    );
+    $new;
+  }
+
+  method be($expected) {
+    my $result = $!given ~~ $expected;
+    $result = $!negated ?? !$result !! $result;
+
+    if !$result {
+      my $failure = Failure.new(
+        :file($!file),
+        :line($!line),
+        :given($!given),
+        :expected($expected),
+        :negated($!negated)
+      );
+      Failures.list.push($failure);
+    }
+
+    $result;
+  }
+}
+
+our sub expect($given) is export {
+  my $caller-file = callframe(1).file.Str;
+  my $caller-line = callframe(1).line.Int;
+
+  ExpectationBuilder.new(
+    :$given,
+    :file($caller-file),
+    :line($caller-line)
+  );
 }

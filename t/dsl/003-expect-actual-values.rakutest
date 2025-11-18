@@ -1,0 +1,104 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 14;
+
+# Clear any previous failures
+Failures.list = ();
+
+# Test with various actual Raku types (not strings!)
+
+# Test 1: Integers
+{
+  my $actual = 42;
+  my $expected = 42;
+  ok expect($actual).to.be($expected), 'integers: 42 == 42';
+}
+
+# Test 2: Floats/Rats
+{
+  my $actual = 3.14;
+  my $expected = 3.14;
+  ok expect($actual).to.be($expected), 'floats: 3.14 == 3.14';
+}
+
+# Test 3: Strings
+{
+  my $actual = "hello world";
+  my $expected = "hello world";
+  ok expect($actual).to.be($expected), 'strings: "hello world" == "hello world"';
+}
+
+# Test 4: Booleans
+{
+  my $actual = True;
+  my $expected = True;
+  ok expect($actual).to.be($expected), 'booleans: True == True';
+}
+
+# Test 5: Arrays (with smartmatch)
+{
+  my @actual = [1, 2, 3];
+  my @expected = [1, 2, 3];
+  ok expect(@actual).to.be(@expected), 'arrays match via smartmatch';
+}
+
+# Test 6: Integer vs String - smartmatch allows this
+{
+  Failures.list = ();
+  my $actual = 42;
+  my $expected = "42";
+  # Note: Raku's smartmatch is permissive, 42 ~~ "42" returns True
+  ok expect($actual).to.be($expected), 'smartmatch: Int 42 ~~ Str "42" is True';
+  is Failures.list.elems, 0, 'no failure - smartmatch allows numeric string match';
+}
+
+# Test 7: Objects/Classes
+{
+  class Point { has $.x; has $.y; }
+  my $p1 = Point.new(:x(10), :y(20));
+  my $p2 = Point.new(:x(10), :y(20));
+
+  # These won't be equal by default, but smartmatch works differently
+  # This test shows we can pass actual objects
+  my $result = expect($p1).to.be($p1);  # Same object
+  ok $result, 'object identity works';
+}
+
+# Test 8: Nil/undefined
+{
+  my $actual = Nil;
+  my $expected = Nil;
+  ok expect($actual).to.be($expected), 'Nil == Nil';
+}
+
+# Test 9: Numeric comparison via smartmatch
+{
+  my $actual = 100;
+  my $expected = 100;
+  ok expect($actual).to.be($expected), 'numeric equality: 100 == 100';
+}
+
+# Test 10: Negation with actual values
+{
+  my $actual = 42;
+  my $expected = 43;
+  ok expect($actual).to.not.be($expected), 'negation: 42 != 43';
+}
+
+# Test 11: Failure stores actual values (not string representations)
+{
+  Failures.list = ();
+  my $actual = [1, 2, 3];
+  my $expected = [4, 5, 6];
+  expect($actual).to.be($expected);
+
+  is Failures.list.elems, 1, 'array mismatch creates failure';
+  # The failure should store the actual array values
+  ok Failures.list[0].given ~~ Array, 'failure.given is an Array';
+  ok Failures.list[0].expected ~~ Array, 'failure.expected is an Array';
+}

@@ -1,0 +1,53 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 13;
+
+# Clear any previous failures
+Failures.list = ();
+
+# Test 1: expect with actual integer values
+{
+  my $result = expect(42).to.be(42);
+  ok $result, 'expect(42).to.be(42) returns True';
+  is Failures.list.elems, 0, 'no failures recorded for passing expectation';
+}
+
+# Test 2: expect with actual integer values that don't match
+{
+  Failures.list = ();
+  my $result = expect(42).to.be(41);
+  nok $result, 'expect(42).to.be(41) returns False';
+  is Failures.list.elems, 1, 'one failure recorded for failing expectation';
+  is Failures.list[0].given, 42, 'failure records actual given value as Int';
+  is Failures.list[0].expected, 41, 'failure records actual expected value as Int';
+  nok Failures.list[0].negated, 'failure marked as not negated';
+}
+
+# Test 3: expect with .not
+{
+  Failures.list = ();
+  my $result = expect(42).to.not.be(41);
+  ok $result, 'expect(42).to.not.be(41) returns True';
+  is Failures.list.elems, 0, 'no failures for passing negated expectation';
+}
+
+# Test 4: expect with .not that should fail
+{
+  Failures.list = ();
+  my $result = expect(42).to.not.be(42);
+  nok $result, 'expect(42).to.not.be(42) returns False';
+  is Failures.list.elems, 1, 'one failure for failing negated expectation';
+  ok Failures.list[0].negated, 'failure marked as negated';
+}
+
+# Test 5: expect with actual string values
+{
+  Failures.list = ();
+  my $result = expect('hello').to.be('hello');
+  ok $result, 'expect with strings works with actual values';
+}

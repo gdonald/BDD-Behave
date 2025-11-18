@@ -10,6 +10,11 @@ class Failures is export {
       say red("Failures:") ~ "\n";
       for (Failures.list) -> $failure {
         say '  [' ~ red(" ✗ ") ~ '] ' ~ $failure.file ~ ':' ~ $failure.line;
+        if $failure.given.defined || $failure.expected.defined {
+          my $op = $failure.negated ?? "not to be" !! "to be";
+          say "      Expected: " ~ $failure.given.raku;
+          say "      $op: " ~ $failure.expected.raku;
+        }
       }
       say '';
     }
