@@ -3,33 +3,26 @@
   "description": "Behavior driven development framework",
   "version": "0.0.4",
   "perl": "6.d",
-  "authors": [
-    "Greg Donald"
-  ],
+  "authors": ["Greg Donald"],
   "auth": "github:gdonald",
   "depends": [],
   "build-depends": [],
-  "test-depends": [
-    "Test",
-    "Test::META",
-    "Test::Output"
-  ],
+  "test-depends": ["Test", "Test::META", "Test::Output"],
   "provides": {
     "BDD::Behave": "lib/BDD/Behave.rakumod",
-    "BDD::Behave::Actions": "lib/BDD/Behave/Actions.rakumod",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
-    "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.rakumod",
+    "BDD::Behave::DSL": "lib/BDD/Behave/DSL.rakumod",
     "BDD::Behave::Failure": "lib/BDD/Behave/Failure.rakumod",
     "BDD::Behave::Failures": "lib/BDD/Behave/Failures.rakumod",
     "BDD::Behave::Files": "lib/BDD/Behave/Files.rakumod",
     "BDD::Behave::LetRuntime": "lib/BDD/Behave/LetRuntime.rakumod",
-    "BDD::Behave::Grammar": "lib/BDD/Behave/Grammar.rakumod",
-    "BDD::Behave::Indent": "lib/BDD/Behave/Indent.rakumod",
-    "BDD::Behave::Klass": "lib/BDD/Behave/Klass.rakumod",
-    "BDD::Behave::Klasses": "lib/BDD/Behave/Klasses.rakumod",
-    "BDD::Behave::Let": "lib/BDD/Behave/Let.rakumod",
-    "BDD::Behave::Lets": "lib/BDD/Behave/Lets.rakumod",
-    "BDD::Behave::Value": "lib/BDD/Behave/Value.rakumod"
+    "BDD::Behave::Runner": "lib/BDD/Behave/Runner.rakumod",
+    "BDD::Behave::SpecRegistry": "lib/BDD/Behave/SpecRegistry.rakumod",
+    "BDD::Behave::SpecTree": "lib/BDD/Behave/SpecTree.rakumod",
+    "BDD::Behave::SpecTree::Core": "lib/BDD/Behave/SpecTree/Core.rakumod",
+    "BDD::Behave::SpecTree::Example": "lib/BDD/Behave/SpecTree/Example.rakumod",
+    "BDD::Behave::SpecTree::ExampleGroup": "lib/BDD/Behave/SpecTree/ExampleGroup.rakumod",
+    "BDD::Behave::SpecTree::Suite": "lib/BDD/Behave/SpecTree/Suite.rakumod"
   },
   "resources": [],
   "support": {

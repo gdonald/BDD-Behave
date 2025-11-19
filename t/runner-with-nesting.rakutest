@@ -1,0 +1,25 @@
+use Test;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+# Clear the registry first
+BDD::Behave::SpecRegistry::registry().clear;
+
+# Load the nesting spec file
+require "$*CWD/specs/002-nesting-spec.raku";
+
+# Get all suites from the registry
+my $registry = BDD::Behave::SpecRegistry::registry();
+my @suites = $registry.suites;
+
+ok @suites.elems > 0, 'at least one suite was registered';
+
+# Run all suites
+for @suites -> $suite {
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+
+  ok $result.total > 0, 'examples were run';
+}
+
+done-testing;

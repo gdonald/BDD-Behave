@@ -1,7 +1,10 @@
-#!raku
+#!/usr/bin/env raku
 
 use v6.d;
-use BDD::Behave;
+use lib 'lib';
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::Files;
 
 my $verbose = False;
 my @specs = [];
@@ -10,7 +13,7 @@ for @*ARGS -> $arg {
   if $arg ~~ '--help' {
     say qq:to/HERE/;
     Usage: behave [options...] [specs/spec_file.raku]
-      Runs the `behave` program against specs in the local `specs` directory
+      Runs the new tree-based runner against specs in the local `specs` directory
       or against a list of spec files provided on the command line.
 
     Options:
@@ -25,4 +28,66 @@ for @*ARGS -> $arg {
   }
 }
 
-run-behave :$verbose, :@specs;
+# Get list of spec files
+my $files-obj = Files.new;
+my @files = $files-obj.list(@specs);
+
+# Load each spec file
+use MONKEY-SEE-NO-EVAL;
+for @files -> $file {
+  say "\nLoading: $file" if $verbose;
+  try {
+    EVALFILE $file;
+    CATCH {
+      default {
+        note "Warning: Could not load $file: {.message}";
+        note "  (This spec may use legacy syntax incompatible with the new runner)";
+      }
+    }
+  }
+}
+
+# Get all registered suites
+my $registry = BDD::Behave::SpecRegistry::registry();
+my @suites = $registry.suites;
+
+# Run each suite
+my $total-result = BDD::Behave::Runner::RunResult.new;
+
+for @suites -> $suite {
+  # Show which file we're running
+  use BDD::Behave::Colors;
+  say "\n" ~ light-blue($suite.file.basename) if @suites.elems > 1;
+
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+
+  # Aggregate results
+  $total-result = BDD::Behave::Runner::RunResult.new(
+    :total($total-result.total + $result.total),
+    :passed($total-result.passed + $result.passed),
+    :failed($total-result.failed + $result.failed),
+    :pending($total-result.pending + $result.pending),
+  );
+}
+
+# Print overall summary if we ran multiple suites
+if @suites.elems > 1 {
+  say "\n" ~ "=" x 60;
+  say "Overall: {$total-result.total} example" ~ ($total-result.total == 1 ?? '' !! 's');
+  if $total-result.failed > 0 {
+    use BDD::Behave::Colors;
+    say red("  {$total-result.failed} failed");
+  }
+  if $total-result.pending > 0 {
+    use BDD::Behave::Colors;
+    say light-blue("  {$total-result.pending} pending");
+  }
+  if $total-result.passed > 0 {
+    use BDD::Behave::Colors;
+    say green("  {$total-result.passed} passed");
+  }
+}
+
+# Exit with appropriate code
+exit($total-result.success ?? 0 !! 1);

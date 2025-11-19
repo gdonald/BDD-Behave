@@ -1,0 +1,48 @@
+use Test;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+# Create a simple spec tree manually to test the runner
+my $suite = BDD::Behave::SpecTree::Suite.create(
+  :description('Test Suite'),
+  :file($*PROGRAM.IO),
+  :line(1)
+);
+
+my $group = BDD::Behave::SpecTree::ExampleGroup.new(
+  :description('Sample Group'),
+  :file($*PROGRAM.IO),
+  :line(5),
+);
+
+my $passing-example = BDD::Behave::SpecTree::Example.new(
+  :description('passes'),
+  :file($*PROGRAM.IO),
+  :line(10),
+  :block({ True }),
+);
+
+my $failing-example = BDD::Behave::SpecTree::Example.new(
+  :description('fails'),
+  :file($*PROGRAM.IO),
+  :line(15),
+  :block({ die "intentional failure" }),
+);
+
+$group.add-example($passing-example);
+$group.add-example($failing-example);
+$suite.add-group($group);
+
+# Run the suite
+my $runner = BDD::Behave::Runner::Runner.new;
+my $result = $runner.run($suite);
+
+# Test the results
+ok $result.total == 2, 'total count is correct';
+ok $result.passed == 1, 'passed count is correct';
+ok $result.failed == 1, 'failed count is correct';
+ok $result.pending == 0, 'pending count is correct';
+nok $result.success, 'overall result is failure';
+
+done-testing;

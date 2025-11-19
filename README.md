@@ -54,7 +54,7 @@ specs/001-spec.raku
             ⮑  SUCCESS
 
     ⮑  'this final spec'
-        ⮑  'fails at line 12'
+        ⮑  'fails on the next line'
             ⮑  FAILURE
 
 Failures:

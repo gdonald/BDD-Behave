@@ -2,7 +2,7 @@
 use BDD::Behave;
 
 describe 'this spec', {
-  it 'fails at line 6', {
+  it 'fails on the next line', {
     expect(42).to.be(41);
   }
 }

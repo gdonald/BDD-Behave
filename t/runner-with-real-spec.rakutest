@@ -1,0 +1,22 @@
+use Test;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+# Load a real spec file
+require "$*CWD/specs/001-basic-spec.raku";
+
+# Get the suite from the registry
+my $registry = BDD::Behave::SpecRegistry::registry();
+my @suites = $registry.suites;
+
+ok @suites.elems > 0, 'at least one suite was registered';
+
+# Run the first suite
+my $runner = BDD::Behave::Runner::Runner.new;
+my $result = $runner.run(@suites[0]);
+
+ok $result.total > 0, 'examples were run';
+ok $result.passed > 0, 'some examples passed';
+ok $result.failed > 0, 'some examples failed (expected for this spec)';
+
+done-testing;
