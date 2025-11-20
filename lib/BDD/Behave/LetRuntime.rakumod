@@ -17,8 +17,13 @@ class LetDefinition is export {
 }
 
 class LetRuntime is export {
-  has LetDefinition @.definitions;
+  has LetDefinition @.definitions is rw;
   has %.memo;
+
+  method add-definition(LetDefinition $definition) {
+    @!definitions.push($definition);
+    $definition;
+  }
 
   method value(Str $name, *%context) {
     my $key = $name.subst(/^':'/, '');

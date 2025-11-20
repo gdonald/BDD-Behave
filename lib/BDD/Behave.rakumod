@@ -34,10 +34,10 @@ sub let(|args) is export {
   $impl(|args);
 }
 
-sub expect($given) is export {
+sub expect(|args) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');
     ::('BDD::Behave::DSL::&expect');
   };
-  $impl($given);
+  $impl(|args);
 }

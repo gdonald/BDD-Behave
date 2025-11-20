@@ -10,6 +10,8 @@ constant Example = BDD::Behave::SpecTree::Example::Example;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup::ExampleGroup;
 
 our class Suite is SpecNode does Container {
+  has @.lets;
+
   method groups {
     @!children.grep(ExampleGroup);
   }
@@ -29,5 +31,18 @@ our class Suite is SpecNode does Container {
 
   method add-group(ExampleGroup $group --> ExampleGroup) {
     self.add-child($group);
+  }
+
+  method add-example(Example $example --> Example) {
+    self.add-child($example);
+  }
+
+  method add-let($let) {
+    @!lets.push($let);
+    $let;
+  }
+
+  method let-definitions {
+    @!lets // [];
   }
 }

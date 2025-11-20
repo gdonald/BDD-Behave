@@ -14,10 +14,12 @@ let(:foo, { Foo.new(:bar(17)) });
 
 describe 'Foo', {
   it '.bar', {
-    expect(:foo.bar).to.be(17);
+    my $foo = $*LET-RUNTIME.value('foo');
+    expect($foo.bar).to.be(17);
   }
 
   it '.baz', {
-    expect(:foo.baz).to.be(42);
+    my $foo = $*LET-RUNTIME.value('foo');
+    expect($foo.baz).to.be(42);
   }
 }
