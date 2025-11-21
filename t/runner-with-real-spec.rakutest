@@ -3,7 +3,7 @@ use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
 
 # Load a real spec file
-require "$*CWD/specs/001-basic-spec.raku";
+require "$*CWD/specs/core/basic-spec.raku";
 
 # Get the suite from the registry
 my $registry = BDD::Behave::SpecRegistry::registry();

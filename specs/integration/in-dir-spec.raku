@@ -1,4 +1,3 @@
-
 use BDD::Behave;
 
 describe 'this spec', {

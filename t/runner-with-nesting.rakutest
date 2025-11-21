@@ -6,7 +6,7 @@ use BDD::Behave::SpecRegistry;
 BDD::Behave::SpecRegistry::registry().clear;
 
 # Load the nesting spec file
-require "$*CWD/specs/002-nesting-spec.raku";
+require "$*CWD/specs/core/nesting-spec.raku";
 
 # Get all suites from the registry
 my $registry = BDD::Behave::SpecRegistry::registry();

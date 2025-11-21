@@ -1,4 +1,3 @@
-
 use BDD::Behave;
 
 let(:foo, { 42 });
