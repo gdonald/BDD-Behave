@@ -130,14 +130,20 @@ describe 'interaction between let and regular variables', {
   }
 
   it 'can use regular variable to compute let value', {
-    let(:computed, { $regular-var ~ '-computed' });
-    expect(:computed).to.be('from-regular-computed');
+    my $computed := let(:computed, { $regular-var ~ '-computed' });
+    expect($computed).to.be('from-regular-computed');
   }
 
   it 'let is memoized per example, regular is shared', {
-    let(:counter, { $regular-var ~ '-' ~ 1 });
-    expect(:counter).to.be('from-regular-1');
-    expect(:counter).to.be('from-regular-1');
+    my $counter := let(:counter, { $regular-var ~ '-' ~ 1 });
+    expect($counter).to.be('from-regular-1');
+    expect($counter).to.be('from-regular-1');
+  }
+
+  it 'binding syntax provides clean access', {
+    my $lv := let(:let-var, { 'from-let' });
+    expect($lv).to.be('from-let');
+    expect($regular-var).to.be('from-regular');
   }
 
   context 'nested with both types', {
@@ -149,6 +155,13 @@ describe 'interaction between let and regular variables', {
       expect(:nested-let).to.be('nested-let');
       expect($regular-var).to.be('from-regular');
       expect($nested-var).to.be('nested-regular');
+    }
+
+    it 'binding syntax works with nested lets', {
+      my $lv := let(:let-var, { 'from-let' });
+      my $nl := let(:nested-let, { 'nested-let' });
+      expect($lv).to.be('from-let');
+      expect($nl).to.be('nested-let');
     }
   }
 }
@@ -225,12 +238,12 @@ describe 'complex variable scenarios', {
     my $context1 = $base ~ '-context1';
 
     it 'combines variables from different scopes', {
-      let(:computed, { $context1 ~ '-let' });
+      my $computed := let(:computed, { $context1 ~ '-let' });
       my $it-var = $context1 ~ '-it';
 
       expect($base).to.be('base');
       expect($context1).to.be('base-context1');
-      expect(:computed).to.be('base-context1-let');
+      expect($computed).to.be('base-context1-let');
       expect($it-var).to.be('base-context1-it');
     }
   }

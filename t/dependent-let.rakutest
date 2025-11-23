@@ -1,0 +1,32 @@
+use Test;
+use lib 'lib';
+
+plan 3;
+
+use BDD::Behave::LetRuntime;
+
+my $def1 = BDD::Behave::LetRuntime::LetDefinition.new(
+  :name('base'),
+  :block({ 10 }),
+);
+
+my $def2 = BDD::Behave::LetRuntime::LetDefinition.new(
+  :name('derived'),
+  :block({
+    my $b := $*LET-RUNTIME.value('base');
+    $b * 2
+  }),
+);
+
+my $runtime = BDD::Behave::LetRuntime::LetRuntime.new(
+  :definitions([$def1, $def2])
+);
+
+my $*LET-RUNTIME = $runtime;
+
+is $runtime.value('base'), 10, 'base evaluates to 10';
+is $runtime.value('derived'), 20, 'derived evaluates to 20 using dependent let';
+
+# Test with binding syntax like in the specs
+my $b := $runtime.value('base');
+is $b, 10, 'binding syntax works';

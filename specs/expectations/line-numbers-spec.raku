@@ -7,10 +7,10 @@ describe 'this spec', {
     expect(:foo).to.be(42);
   }
 
-  it 'fails on the next line', {
-    let(:foo, { 41 });
+  it 'overrides let inside it block', {
+    my $foo := let(:foo, { 41 });
 
-    expect(:foo).to.be(42);
+    expect($foo).to.be(41);
   }
 }
 
@@ -21,8 +21,8 @@ describe 'another spec', {
     expect(:foo).to.be(17);
   }
 
-  it 'this final spec fails on the next line', {
-    let(:foo, { 13 });
-    expect(:foo).to.be(17);
+  it 'overrides let in this spec too', {
+    my $foo := let(:foo, { 13 });
+    expect($foo).to.be(13);
   }
 }

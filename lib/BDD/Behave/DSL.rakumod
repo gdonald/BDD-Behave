@@ -30,34 +30,50 @@ our multi sub describe(*@) is export {
 our sub context(|c) is export { describe(|c) }
 
 our sub let(|c) is export {
-  my $builder = c.list[0] // die "let expects a block";
-  die "let expects a block" unless $builder ~~ Callable;
-
+  my @pos = c.list;
   my %named = c.hash;
-  my $name = %named.keys.[0] // die "let expects a named argument";
+  my $name;
+  my $block;
 
-  my $file = $builder.file.IO;
-  my $line = $builder.line;
-  my $definition = LetDefinition.new(:name($name.Str), :block($builder), :$file, :$line);
-
-  # Check runtime mode
-  try {
-    if $*LET-RUNTIME.defined {
-      # Inside an executing test, so add to the runtime
-      $*LET-RUNTIME.add-definition($definition);
-      return $definition;
-    }
+  if @pos.elems == 2 && @pos[0] ~~ Str && @pos[1] ~~ Callable {  
+    $name = @pos[0];
+    $block = @pos[1];
+  } elsif @pos.elems == 1 && @pos[0] ~~ Callable && %named.elems == 1 {
+    $block = @pos[0];
+    $name = %named.keys[0].Str;
+  } else {
+    die "let expects either let('name', \{ block \}) or let(:name, \{ block \})";
   }
 
-  # In registration mode, add to the appropriate container
+  my $file = $block.file.IO;
+  my $line = $block.line;
+  my $definition = LetDefinition.new(:name($name), :block($block), :$file, :$line);
+
+  my $in-runtime = False;
+  try {
+    $in-runtime = $*LET-RUNTIME.defined;
+  }
+
+  if $in-runtime {
+    $*LET-RUNTIME.add-definition($definition);
+
+    return Proxy.new(
+      FETCH => method () {
+        $*LET-RUNTIME.value($name);
+      },
+      STORE => method ($new) {
+        die "Let values are read-only";
+      }
+    );
+  }
+
   my $registry = registry();
   my $entry = $registry.current-entry;
+
   if $entry && $entry.stack.elems {
-    # Could be inside a group or an example
     my $current = $entry.stack[*-1];
     $current.add-let($definition);
   } else {
-    # Top level, add to the suite
     my $suite = $registry.suite-for($file);
     $suite.add-let($definition);
   }
@@ -98,8 +114,7 @@ class ExpectationBuilder {
   method be(|c) {
     my @pos = c.list;
     my %named = c.hash;
-
-    # If called with a named parameter, resolve from let runtime
+  
     my $resolved-expected;
     if %named.elems == 1 && @pos.elems == 0 {
       my $key = %named.keys[0];
@@ -113,7 +128,7 @@ class ExpectationBuilder {
       }
     } elsif @pos.elems == 1 {
       my $expected = @pos[0];
-      # If expected is a Pair, resolve it from the let runtime
+    
       $resolved-expected = $expected;
       if $expected ~~ Pair {
         try {
@@ -149,7 +164,6 @@ our sub expect(|c) is export {
   my @pos = c.list;
   my %named = c.hash;
 
-  # If called with a named parameter, resolve from let runtime
   my $resolved-given;
   if %named.elems == 1 && @pos.elems == 0 {
     my $key = %named.keys[0];
@@ -167,7 +181,7 @@ our sub expect(|c) is export {
     }
   } elsif @pos.elems == 1 {
     my $given = @pos[0];
-    # If given is a Pair, resolve it from the let runtime
+  
     $resolved-given = $given;
     if $given ~~ Pair {
       try {

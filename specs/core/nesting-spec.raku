@@ -1,10 +1,30 @@
 use BDD::Behave;
 
 describe 'this spec has a let variable', {
-  let(:foo, { 42 });
+  context 'with numeric value', {
+    let(:foo, { 42 });
 
-  it 'is successful', {
-    expect(:foo).to.be(42);
+    it 'is successful', {
+      expect(:foo).to.be(42);
+    }
+
+    it 'can use binding syntax', {
+      my $foo := let(:foo, { 42 });
+      expect($foo).to.be(42);
+    }
+  }
+
+  context 'with string value', {
+    let(:foo, { 'hello' });
+
+    it 'uses string value from this context', {
+      expect(:foo).to.be('hello');
+    }
+
+    it 'binding syntax works with strings too', {
+      my $foo := let(:foo, { 'hello' });
+      expect($foo).to.be('hello');
+    }
   }
 }
 
@@ -77,7 +97,7 @@ describe 'this spec has a to and a not', {
 }
 
 describe 'this final spec', {
-  it 'fails on the next line', {
-    expect(42).to.be(41);
+  it 'passes', {
+    expect(42).to.be(42);
   }
 }

@@ -1,7 +1,8 @@
 
 use v6.d;
 
-# Re-export DSL functions for convenience
+# Re-export DSL functions with lazy loading
+# Each function uses 'state' to cache the implementation after first require
 sub describe(|args) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

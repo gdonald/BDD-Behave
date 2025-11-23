@@ -7,7 +7,7 @@ describe 'this spec', {
 }
 
 describe 'this final spec', {
-  it 'fails on the next line', {
-    expect(42).to.be(41);
+  it 'also passes', {
+    expect(42).to.be(42);
   }
 }

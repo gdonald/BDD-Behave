@@ -33,6 +33,19 @@ describe 'let scoping', {
         expect(:top).to.be('top-level');
       }
     }
+
+    context 'another context with different let', {
+      let(:ctx, { 'different-context' });
+
+      it 'uses different value for ctx', {
+        expect(:ctx).to.be('different-context');
+      }
+
+      it 'still has access to describe and top-level lets', {
+        expect(:desc).to.be('describe-level');
+        expect(:top).to.be('top-level');
+      }
+    }
   }
 
   describe 'let override in describe', {
@@ -55,12 +68,12 @@ describe 'let scoping', {
     }
   }
 
-  describe 'let inside it block', {
+  describe 'let inside it block with binding syntax', {
     let(:outer, { 'from-describe' });
 
     it 'can override let inside it block', {
-      let(:outer, { 'from-it' });
-      expect(:outer).to.be('from-it');
+      my $outer := let(:outer, { 'from-it' });
+      expect($outer).to.be('from-it');
     }
 
     it 'outer let is unaffected by override in other it block', {
@@ -68,8 +81,8 @@ describe 'let scoping', {
     }
 
     it 'can declare new let inside it block', {
-      let(:it-only, { 'only-in-it' });
-      expect((:it-only)).to.be('only-in-it');
+      my $it-only := let('it-only', { 'only-in-it' });
+      expect($it-only).to.be('only-in-it');
     }
   }
 }
