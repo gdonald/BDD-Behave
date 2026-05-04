@@ -1,0 +1,22 @@
+site_name: BDD::Behave
+site_url: https://gdonald.github.io/BDD-Behave/
+repo_url: https://github.com/gdonald/BDD-Behave
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - DSL:
+    - describe / context: dsl/describe.md
+    - it: dsl/it.md
+    - let: dsl/let.md
+    - Hooks: dsl/hooks.md
+    - expect: dsl/expect.md
+  - Running Specs: running.md
+  - Tests: testing.md
+theme:
+  name: 'material'
+markdown_extensions:
+  - codehilite:
+      linenums: true
+  - admonition
+  - toc:
+      permalink: true
