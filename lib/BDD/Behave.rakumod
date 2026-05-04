@@ -42,3 +42,35 @@ sub expect(|args) is export {
   };
   $impl(|args);
 }
+
+sub before-all(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&before-all');
+  };
+  $impl(|args);
+}
+
+sub after-all(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&after-all');
+  };
+  $impl(|args);
+}
+
+sub before-each(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&before-each');
+  };
+  $impl(|args);
+}
+
+sub after-each(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&after-each');
+  };
+  $impl(|args);
+}

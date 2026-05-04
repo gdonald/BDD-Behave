@@ -1,0 +1,93 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+# Run a suite while suppressing its stdout to keep test output clean
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Registration order is preserved
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @order;
+  describe 'ordering', {
+    before-each { @order.push('first') }
+    before-each { @order.push('second') }
+    after-each  { @order.push('after-1') }
+    after-each  { @order.push('after-2') }
+
+    it 'one', { @order.push('example') }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is-deeply @order, ['first', 'second', 'example', 'after-1', 'after-2'],
+  'before-each and after-each fire in registration order';
+  ok $result.passed == 1, 'example passed';
+}
+
+# Outer hooks wrap inner examples
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @trace;
+  describe 'outer', {
+    before-each { @trace.push('outer-before') }
+    after-each  { @trace.push('outer-after')  }
+
+    context 'inner', {
+      before-each { @trace.push('inner-before') }
+      after-each  { @trace.push('inner-after')  }
+
+      it 'runs', { @trace.push('example') }
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @trace,
+  ['outer-before', 'inner-before', 'example', 'inner-after', 'outer-after'],
+  'before-each runs outer-to-inner; after-each runs inner-to-outer';
+}
+
+# before-all / after-all fire once per group
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $setup = 0;
+  my $teardown = 0;
+  describe 'all-hooks', {
+    before-all { $setup++ }
+    after-all  { $teardown++ }
+
+    it 'a', { True }
+    it 'b', { True }
+    it 'c', { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $setup, 1, 'before-all fires exactly once';
+  is $teardown, 1, 'after-all fires exactly once';
+}
+
+# Hooks must be called inside a describe/context
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  dies-ok { before-each { } }, 'before-each outside describe dies';
+  dies-ok { after-all   { } }, 'after-all outside describe dies';
+}
+
+done-testing;

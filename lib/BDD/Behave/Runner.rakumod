@@ -75,10 +75,17 @@ our class Runner {
       given $child {
         when ExampleGroup { self.run-group($child) }
         when Example {
-          # Run with before-each/after-each hooks
-          self.run-hooks($group, 'before-each');
+          # before-each runs outer-to-inner across the ancestor chain
+          for self.ancestor-groups($child) -> $ancestor {
+            self.run-hooks($ancestor, 'before-each');
+          }
+
           self.run-example($child);
-          self.run-hooks($group, 'after-each');
+          
+          # after-each runs inner-to-outer
+          for self.ancestor-groups($child).reverse -> $ancestor {
+            self.run-hooks($ancestor, 'after-each');
+          }
         }
       }
     }
@@ -134,9 +141,9 @@ our class Runner {
     if $new-failures > 0 {
       # Example failed via expect
       $!result.add-fail(%(
-        description => self.full-description($example),
-        file => $example.file,
-        line => $example.line,
+          description => self.full-description($example),
+          file => $example.file,
+          line => $example.line,
       ));
       self.print-indent;
       say red("    ⮑  FAILURE");
@@ -146,6 +153,10 @@ our class Runner {
       self.print-indent;
       say green("    ⮑  SUCCESS");
     }
+  }
+
+  method ancestor-groups($node) {
+    $node.ancestry.grep(ExampleGroup).List;
   }
 
   method run-hooks(ExampleGroup $group, Str $phase) {

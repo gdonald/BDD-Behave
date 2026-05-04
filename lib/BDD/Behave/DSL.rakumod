@@ -35,7 +35,7 @@ our sub let(|c) is export {
   my $name;
   my $block;
 
-  if @pos.elems == 2 && @pos[0] ~~ Str && @pos[1] ~~ Callable {  
+  if @pos.elems == 2 && @pos[0] ~~ Str && @pos[1] ~~ Callable {
     $name = @pos[0];
     $block = @pos[1];
   } elsif @pos.elems == 1 && @pos[0] ~~ Callable && %named.elems == 1 {
@@ -80,6 +80,24 @@ our sub let(|c) is export {
 
   $definition;
 }
+
+sub register-hook(Str $phase, &block) {
+  my $entry = registry().current-entry;
+
+  unless $entry && $entry.stack.elems {
+    die "$phase must be called inside a describe/context block";
+  }
+
+  my $current = $entry.stack[*-1];
+  $current.add-hook($phase, &block);
+  
+  &block;
+}
+
+our sub before-all(&block) is export { register-hook('before-all', &block) }
+our sub after-all(&block)  is export { register-hook('after-all',  &block) }
+our sub before-each(&block) is export { register-hook('before-each', &block) }
+our sub after-each(&block)  is export { register-hook('after-each',  &block) }
 
 our sub it(Str $description, &block) is export {
   my $file = &block.file.IO;
