@@ -84,7 +84,9 @@ prove6 -Ilib t
 
 #### Documentation
 
-See the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
+Full documentation: [https://gdonald.github.io/BDD-Behave/](https://gdonald.github.io/BDD-Behave/)
+
+See also the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
 
 #### License
 
