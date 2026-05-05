@@ -729,7 +729,7 @@
 <h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <h2 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
 <p>A Behave project keeps spec files in a <code>specs/</code> directory at the project root. The <code>behave</code> runner picks up any file matching <code>spec.raku</code> (e.g. <code>001-basic-spec.raku</code>, <code>users-spec.raku</code>, <code>subdir/admin-spec.raku</code>).</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -743,10 +743,9 @@
     └── users/
         └── auth-spec.raku
 </code></pre></div></td></tr></table></div>
-
 <h2 id="your-first-spec">Your first spec<a class="headerlink" href="#your-first-spec" title="Permanent link">&para;</a></h2>
 <p>Every spec file starts with <code>use BDD::Behave;</code> and then declares one or more top-level <code>describe</code> blocks.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -768,20 +767,16 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="running-specs">Running specs<a class="headerlink" href="#running-specs" title="Permanent link">&para;</a></h2>
 <p>Run all specs found in <code>specs/</code>:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave
 </code></pre></div></td></tr></table></div>
-
 <p>Run a single spec file:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>specs/basic-spec.raku
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>specs/basic-spec.raku
 </code></pre></div></td></tr></table></div>
-
 <p>During local development of an app whose <code>lib/</code> is not yet installed, prefix with <code>raku -Ilib</code>:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave<span class="w"> </span>specs/basic-spec.raku
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave<span class="w"> </span>specs/basic-spec.raku
 </code></pre></div></td></tr></table></div>
-
 <p>See <a href="../running/">Running Specs</a> for the full set of options.</p>
 <h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>

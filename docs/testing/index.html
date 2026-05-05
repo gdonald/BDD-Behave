@@ -731,23 +731,19 @@
 <li><strong>Unit tests in <code>t/</code></strong> — <code>Test</code>-module tests that exercise individual classes (Runner, SpecTree, DSL helpers, etc.), run with <code>prove6</code>.</li>
 </ol>
 <h2 id="running-the-specs">Running the specs<a class="headerlink" href="#running-the-specs" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave
 </code></pre></div></td></tr></table></div>
-
 <p>This loads every <code>*spec.raku</code> file under <code>specs/</code> and runs them through the Behave runner.</p>
 <h2 id="running-the-unit-tests">Running the unit tests<a class="headerlink" href="#running-the-unit-tests" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t
 </code></pre></div></td></tr></table></div>
-
 <p>You can also run a single test file directly:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </span>t/dsl/hooks.rakutest
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </span>t/dsl/hooks.rakutest
 </code></pre></div></td></tr></table></div>
-
 <h2 id="both-at-once">Both at once<a class="headerlink" href="#both-at-once" title="Permanent link">&para;</a></h2>
 <p>When developing Behave itself, run both before considering a change done:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>prove6<span class="w"> </span>-Ilib<span class="w"> </span>t<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave
 </code></pre></div></td></tr></table></div>
-
 <h2 id="continuous-integration">Continuous integration<a class="headerlink" href="#continuous-integration" title="Permanent link">&para;</a></h2>
 <p>Pushes and pull requests run the full suite via the <a href="https://github.com/gdonald/BDD-Behave/blob/main/.github/workflows/raku.yml">GitHub Actions workflow</a>. The same workflow builds and publishes this documentation site to GitHub Pages on every push to <code>main</code>.</p>
 

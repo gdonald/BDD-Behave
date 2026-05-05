@@ -16,8 +16,9 @@ nav:
 theme:
   name: 'material'
 markdown_extensions:
-  - codehilite:
+  - pymdownx.highlight:
       linenums: true
+  - pymdownx.superfences
   - admonition
   - toc:
       permalink: true

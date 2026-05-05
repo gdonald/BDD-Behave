@@ -799,7 +799,7 @@
 <p><code>shared-context</code> and <code>include-context</code> are exported from <code>BDD::Behave</code>.</p>
 <h2 id="defining-a-shared-context">Defining a shared context<a class="headerlink" href="#defining-a-shared-context" title="Permanent link">&para;</a></h2>
 <p><code>shared-context</code> takes a name and a block. The block can call any DSL helper that's legal inside a group — <code>let</code>, <code>before-each</code>, <code>after-each</code>, <code>before-all</code>, <code>after-all</code>, even other <code>include-context</code> calls.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -811,11 +811,10 @@
   <span class="k">let</span>(:<span class="n">count</span>,  { <span class="mi">3</span> });
 };
 </code></pre></div></td></tr></table></div>
-
 <p>A shared context on its own does nothing — it isn't run until a group includes it.</p>
 <h2 id="including-a-shared-context">Including a shared context<a class="headerlink" href="#including-a-shared-context" title="Permanent link">&para;</a></h2>
 <p>Call <code>include-context 'name'</code> from inside a <code>describe</code> or <code>context</code>. The shared block runs in the including group's scope, so its <code>let</code> definitions and hooks become part of that group exactly as if you'd written them inline.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -831,10 +830,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="hooks-contributed-by-a-shared-context">Hooks contributed by a shared context<a class="headerlink" href="#hooks-contributed-by-a-shared-context" title="Permanent link">&para;</a></h2>
 <p>Hooks declared in a shared context fire around the including group's examples like any other hook in that group:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -860,11 +858,10 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <p>Because the hook lives in the including group, it inherits into nested <code>context</code> blocks the same way an inline hook would. See <a href="../hooks/">Hooks</a> for the full ordering rules.</p>
 <h2 id="shadowing">Shadowing<a class="headerlink" href="#shadowing" title="Permanent link">&para;</a></h2>
 <p>A <code>let</code> defined in the including group (or any inner group) shadows a <code>let</code> of the same name from a shared context:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -888,10 +885,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="parameterized-shared-contexts">Parameterized shared contexts<a class="headerlink" href="#parameterized-shared-contexts" title="Permanent link">&para;</a></h2>
 <p>The shared block can take positional parameters; pass them after the name in <code>include-context</code>:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -913,10 +909,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="combining-shared-contexts">Combining shared contexts<a class="headerlink" href="#combining-shared-contexts" title="Permanent link">&para;</a></h2>
 <p>A single group can include any number of shared contexts, and nested groups can include their own on top of what they inherit:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -960,7 +955,6 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Calling <code>include-context</code> with an unregistered name dies with <code>Unknown shared context: '&lt;name&gt;'</code>.</li>

@@ -708,7 +708,7 @@
 
 <h1 id="it">it<a class="headerlink" href="#it" title="Permanent link">&para;</a></h1>
 <p><code>it</code> defines a single example. The first argument is a human-readable description, the second is a block containing the test body.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -718,10 +718,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="multiple-expectations">Multiple expectations<a class="headerlink" href="#multiple-expectations" title="Permanent link">&para;</a></h2>
 <p>An example can contain any number of <code>expect</code> calls. Each failing expectation is recorded; the example fails if at least one expectation fails or the block raises an unhandled exception.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -733,12 +732,11 @@
   <span class="n">expect</span>(<span class="nv">$u</span>.<span class="n">valid</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="pending-examples">Pending examples<a class="headerlink" href="#pending-examples" title="Permanent link">&para;</a></h2>
 <p>You can mark an example as pending by setting its <code>pending</code> flag on the returned object (advanced). The simplest path is to comment out the body or skip writing the assertion until you implement the behavior.</p>
 <h2 id="optional-context-parameter">Optional context parameter<a class="headerlink" href="#optional-context-parameter" title="Permanent link">&para;</a></h2>
 <p>If your example block accepts a positional parameter, Behave passes a context object that lets you reach <code>let</code> values via method-style access:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -752,7 +750,6 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <p>See <a href="../let/"><code>let</code></a> for the various ways to define and consume let values.</p>
 
 

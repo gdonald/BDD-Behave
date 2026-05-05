@@ -753,11 +753,10 @@
 <h1 id="expect">expect<a class="headerlink" href="#expect" title="Permanent link">&para;</a></h1>
 <p><code>expect</code> builds an expectation about an actual value. The current matcher is <code>be</code>, which uses Raku's smartmatch operator (<code>~~</code>).</p>
 <h2 id="basic-form">Basic form<a class="headerlink" href="#basic-form" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="n">actual</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">expected</span>);
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="n">actual</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">expected</span>);
 </code></pre></div></td></tr></table></div>
-
 <p><code>expect</code> returns a builder, <code>.to</code> is a no-op for readability, and <code>.be(expected)</code> performs the comparison.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -767,10 +766,9 @@
   <span class="n">expect</span>(<span class="nv">@list</span>).<span class="nb">to</span>.<span class="n">be</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="smartmatch-semantics">Smartmatch semantics<a class="headerlink" href="#smartmatch-semantics" title="Permanent link">&para;</a></h2>
 <p>Because <code>be</code> uses <code>~~</code>, you can match against types, regexes, ranges, junctions, and anything else Raku smartmatches:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span>);              <span class="c1"># type</span>
@@ -778,15 +776,13 @@
 <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);             <span class="c1"># range</span>
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));     <span class="c1"># junction</span>
 </code></pre></div></td></tr></table></div>
-
 <h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
 <p><code>.not</code> flips the comparison:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">3</span>);
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">3</span>);
 </code></pre></div></td></tr></table></div>
-
 <h2 id="reading-from-let">Reading from <code>let</code><a class="headerlink" href="#reading-from-let" title="Permanent link">&para;</a></h2>
 <p><code>expect</code> recognises a single named-pair argument as a let lookup:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -796,9 +792,8 @@
   <span class="n">expect</span>(:<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
 }
 </code></pre></div></td></tr></table></div>
-
 <p>You can also pass a <code>Pair</code> as the <em>expected</em> value to read from a let:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
@@ -808,7 +803,6 @@
   <span class="n">expect</span>(:<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(:<span class="n">answer</span>);
 }
 </code></pre></div></td></tr></table></div>
-
 <p>For more flexible let access, prefer the binding syntax shown in <a href="../let/"><code>let</code></a>.</p>
 <h2 id="failure-output">Failure output<a class="headerlink" href="#failure-output" title="Permanent link">&para;</a></h2>
 <p>When an expectation fails, the runner records the file and line of the <code>expect</code> call and prints them in the failure summary so you can jump straight to the offending line.</p>

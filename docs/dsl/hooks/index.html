@@ -736,7 +736,7 @@
 </table>
 <p>All four are exported from <code>BDD::Behave</code> and must be called inside a <code>describe</code> or <code>context</code> block.</p>
 <h2 id="basic-example">Basic example<a class="headerlink" href="#basic-example" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -768,10 +768,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="ordering-and-inheritance">Ordering and inheritance<a class="headerlink" href="#ordering-and-inheritance" title="Permanent link">&para;</a></h2>
 <p>Within a group, hooks run in registration order. When examples live in nested groups, outer <code>before-each</code> hooks fire <strong>outer-to-inner</strong>, and outer <code>after-each</code> hooks fire <strong>inner-to-outer</strong>:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -801,10 +800,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-
 <h2 id="before-all-after-all"><code>before-all</code> / <code>after-all</code><a class="headerlink" href="#before-all-after-all" title="Permanent link">&para;</a></h2>
 <p>These fire exactly once per group — useful for expensive shared setup.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -828,7 +826,6 @@
   <span class="n">it</span> <span class="s">&#39;finds a page&#39;</span>, { ... }
 }
 </code></pre></div></td></tr></table></div>
-
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Anything <code>before-all</code> mutates is shared across the group's examples. Prefer <code>before-each</code> for per-example isolation.</p>
