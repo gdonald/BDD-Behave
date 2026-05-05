@@ -32,7 +32,7 @@ describe 'this spec', {
 describe 'this final spec', {
   let(:answer, { 42 });
 
-  it 'fails at line 12', {
+  it 'fails at line 15', {
     expect(:answer).to.be(41);
   }
 }
@@ -54,7 +54,7 @@ specs/001-spec.raku
             ⮑  SUCCESS
 
     ⮑  'this final spec'
-        ⮑  'fails on the next line'
+        ⮑  'fails at line 15'
             ⮑  FAILURE
 
 Failures:
