@@ -5,8 +5,10 @@ use BDD::Behave::Failures;
 
 need BDD::Behave::SpecRegistry;
 need BDD::Behave::LetRuntime;
+need BDD::Behave::SharedContexts;
 
 sub registry() { BDD::Behave::SpecRegistry::registry() }
+sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
 constant LetDefinition = BDD::Behave::LetRuntime::LetDefinition;
 
 our proto sub describe(|) is export {*}
@@ -98,6 +100,21 @@ our sub before-all(&block) is export { register-hook('before-all', &block) }
 our sub after-all(&block)  is export { register-hook('after-all',  &block) }
 our sub before-each(&block) is export { register-hook('before-each', &block) }
 our sub after-each(&block)  is export { register-hook('after-each',  &block) }
+
+our sub shared-context(Str:D $name, &block) is export {
+  shared-context-registry().register($name, &block);
+}
+
+our sub include-context(Str:D $name, |args) is export {
+  my $entry = registry().current-entry;
+
+  unless $entry && $entry.stack.elems {
+    die "include-context must be called inside a describe/context block";
+  }
+
+  my &block = shared-context-registry().lookup($name);
+  block(|args);
+}
 
 our sub it(Str $description, &block) is export {
   my $file = &block.file.IO;

@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/hooks/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/shared-contexts/">
       
       
-        <link rel="prev" href="../let/">
+        <link rel="prev" href="../hooks/">
       
       
-        <link rel="next" href="../shared-contexts/">
+        <link rel="next" href="../expect/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Hooks - BDD::Behave</title>
+        <title>Shared Contexts - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#hooks" class="md-skip">
+        <a href="#shared-contexts" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Hooks
+              Shared Contexts
             
           </span>
         </div>
@@ -406,6 +406,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -425,7 +453,7 @@
   <span class="md-ellipsis">
     
   
-    Hooks
+    Shared Contexts
   
 
     
@@ -443,7 +471,7 @@
   <span class="md-ellipsis">
     
   
-    Hooks
+    Shared Contexts
   
 
     
@@ -469,10 +497,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basic-example" class="md-nav__link">
+  <a href="#defining-a-shared-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic example
+        Defining a shared context
       
     </span>
   </a>
@@ -480,10 +508,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ordering-and-inheritance" class="md-nav__link">
+  <a href="#including-a-shared-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ordering and inheritance
+        Including a shared context
       
     </span>
   </a>
@@ -491,10 +519,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#before-all-after-all" class="md-nav__link">
+  <a href="#hooks-contributed-by-a-shared-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        before-all / after-all
+        Hooks contributed by a shared context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shadowing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shadowing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameterized-shared-contexts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameterized shared contexts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combining-shared-contexts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining shared contexts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -505,34 +577,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../shared-contexts/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Contexts
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -654,10 +698,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basic-example" class="md-nav__link">
+  <a href="#defining-a-shared-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Basic example
+        Defining a shared context
       
     </span>
   </a>
@@ -665,10 +709,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ordering-and-inheritance" class="md-nav__link">
+  <a href="#including-a-shared-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ordering and inheritance
+        Including a shared context
       
     </span>
   </a>
@@ -676,10 +720,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#before-all-after-all" class="md-nav__link">
+  <a href="#hooks-contributed-by-a-shared-context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        before-all / after-all
+        Hooks contributed by a shared context
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shadowing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shadowing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameterized-shared-contexts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameterized shared contexts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combining-shared-contexts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combining shared contexts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Errors
       
     </span>
   </a>
@@ -706,36 +794,128 @@
   
 
 
-<h1 id="hooks">Hooks<a class="headerlink" href="#hooks" title="Permanent link">&para;</a></h1>
-<p>Hooks let you run setup and teardown code around examples. Behave provides four hooks:</p>
-<table>
-<thead>
-<tr>
-<th>Hook</th>
-<th>Fires</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>before-all</code></td>
-<td>Once, before the first example in the group</td>
-</tr>
-<tr>
-<td><code>before-each</code></td>
-<td>Before every example in the group (and inherited by nested groups)</td>
-</tr>
-<tr>
-<td><code>after-each</code></td>
-<td>After every example in the group (and inherited by nested groups)</td>
-</tr>
-<tr>
-<td><code>after-all</code></td>
-<td>Once, after the last example in the group</td>
-</tr>
-</tbody>
-</table>
-<p>All four are exported from <code>BDD::Behave</code> and must be called inside a <code>describe</code> or <code>context</code> block.</p>
-<h2 id="basic-example">Basic example<a class="headerlink" href="#basic-example" title="Permanent link">&para;</a></h2>
+<h1 id="shared-contexts">Shared Contexts<a class="headerlink" href="#shared-contexts" title="Permanent link">&para;</a></h1>
+<p>Shared contexts let you package up <code>let</code> definitions and hooks under a name, then mix them into any number of <code>describe</code> or <code>context</code> groups. They're useful when several specs need the same setup — fixtures, logging, an authenticated user — without copy-paste.</p>
+<p><code>shared-context</code> and <code>include-context</code> are exported from <code>BDD::Behave</code>.</p>
+<h2 id="defining-a-shared-context">Defining a shared context<a class="headerlink" href="#defining-a-shared-context" title="Permanent link">&para;</a></h2>
+<p><code>shared-context</code> takes a name and a block. The block can call any DSL helper that's legal inside a group — <code>let</code>, <code>before-each</code>, <code>after-each</code>, <code>before-all</code>, <code>after-all</code>, even other <code>include-context</code> calls.</p>
+<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+
+<span class="n">shared-context</span> <span class="s">&#39;with widgets&#39;</span>, {
+  <span class="k">let</span>(:<span class="n">widget</span>, { <span class="s">&#39;gadget&#39;</span> });
+  <span class="k">let</span>(:<span class="n">count</span>,  { <span class="mi">3</span> });
+};
+</code></pre></div></td></tr></table></div>
+
+<p>A shared context on its own does nothing — it isn't run until a group includes it.</p>
+<h2 id="including-a-shared-context">Including a shared context<a class="headerlink" href="#including-a-shared-context" title="Permanent link">&para;</a></h2>
+<p>Call <code>include-context 'name'</code> from inside a <code>describe</code> or <code>context</code>. The shared block runs in the including group's scope, so its <code>let</code> definitions and hooks become part of that group exactly as if you'd written them inline.</p>
+<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;shared-context inclusion&#39;</span>, {
+  <span class="n">include-context</span> <span class="s">&#39;with widgets&#39;</span>;
+
+  <span class="n">it</span> <span class="s">&#39;pulls in lets from the shared context&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;gadget&#39;</span>);
+    <span class="n">expect</span>(:<span class="n">count</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">3</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+
+<h2 id="hooks-contributed-by-a-shared-context">Hooks contributed by a shared context<a class="headerlink" href="#hooks-contributed-by-a-shared-context" title="Permanent link">&para;</a></h2>
+<p>Hooks declared in a shared context fire around the including group's examples like any other hook in that group:</p>
+<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-context</span> <span class="s">&#39;with logging&#39;</span>, {
+  <span class="k">my</span> <span class="nv">@log</span>;
+  <span class="o">before-</span><span class="n">each</span> { <span class="nv">@log</span> = [] }
+  <span class="k">let</span>(:<span class="n">log</span>,   { <span class="nv">@log</span> });
+};
+
+<span class="n">describe</span> <span class="s">&#39;shared-context with hooks&#39;</span>, {
+  <span class="n">include-context</span> <span class="s">&#39;with logging&#39;</span>;
+
+  <span class="n">it</span> <span class="s">&#39;starts with an empty log per example&#39;</span>, {
+    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;log&#39;</span>).<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+
+<p>Because the hook lives in the including group, it inherits into nested <code>context</code> blocks the same way an inline hook would. See <a href="../hooks/">Hooks</a> for the full ordering rules.</p>
+<h2 id="shadowing">Shadowing<a class="headerlink" href="#shadowing" title="Permanent link">&para;</a></h2>
+<p>A <code>let</code> defined in the including group (or any inner group) shadows a <code>let</code> of the same name from a shared context:</p>
+<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-context</span> <span class="s">&#39;with default name&#39;</span>, {
+  <span class="k">let</span>(:<span class="n">name</span>, { <span class="s">&#39;default&#39;</span> });
+};
+
+<span class="n">describe</span> <span class="s">&#39;inner let shadows shared-context let&#39;</span>, {
+  <span class="n">include-context</span> <span class="s">&#39;with default name&#39;</span>;
+  <span class="k">let</span>(:<span class="n">name</span>, { <span class="s">&#39;override&#39;</span> });
+
+  <span class="n">it</span> <span class="s">&#39;sees the inner value&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;override&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+
+<h2 id="parameterized-shared-contexts">Parameterized shared contexts<a class="headerlink" href="#parameterized-shared-contexts" title="Permanent link">&para;</a></h2>
+<p>The shared block can take positional parameters; pass them after the name in <code>include-context</code>:</p>
+<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-context</span> <span class="s">&#39;with prefix&#39;</span>, -&gt; <span class="nv">$prefix</span> {
+  <span class="k">let</span>(:<span class="n">greeting</span>, { <span class="s">&quot;$prefix, world&quot;</span> });
+};
+
+<span class="n">describe</span> <span class="s">&#39;parameterized shared context&#39;</span>, {
+  <span class="n">include-context</span> <span class="s">&#39;with prefix&#39;</span>, <span class="s">&#39;hello&#39;</span>;
+
+  <span class="n">it</span> <span class="s">&#39;forwards arguments to the shared block&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">greeting</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, world&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+
+<h2 id="combining-shared-contexts">Combining shared contexts<a class="headerlink" href="#combining-shared-contexts" title="Permanent link">&para;</a></h2>
+<p>A single group can include any number of shared contexts, and nested groups can include their own on top of what they inherit:</p>
 <div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -751,88 +931,41 @@
 <span class="normal">13</span>
 <span class="normal">14</span>
 <span class="normal">15</span>
-<span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="k">my</span> <span class="nv">$count</span>;
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;multiple shared contexts in one group&#39;</span>, {
+  <span class="n">include-context</span> <span class="s">&#39;with widgets&#39;</span>;
+  <span class="n">include-context</span> <span class="s">&#39;with default name&#39;</span>;
 
-  <span class="o">before-</span><span class="n">each</span> {
-    <span class="nv">$count</span> = <span class="mi">0</span>;
-  }
-
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, {
-    <span class="n">expect</span>(<span class="nv">$count</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;is reset between examples&#39;</span>, {
-    <span class="nv">$count</span>++;
-    <span class="n">expect</span>(<span class="nv">$count</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
+  <span class="n">it</span> <span class="s">&#39;merges lets from both shared contexts&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;gadget&#39;</span>);
+    <span class="n">expect</span>(:<span class="n">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;default&#39;</span>);
   }
 }
-</code></pre></div></td></tr></table></div>
 
-<h2 id="ordering-and-inheritance">Ordering and inheritance<a class="headerlink" href="#ordering-and-inheritance" title="Permanent link">&para;</a></h2>
-<p>Within a group, hooks run in registration order. When examples live in nested groups, outer <code>before-each</code> hooks fire <strong>outer-to-inner</strong>, and outer <code>after-each</code> hooks fire <strong>inner-to-outer</strong>:</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {
-  <span class="o">before-</span><span class="n">each</span> { <span class="n">trace</span>(<span class="s">&#39;outer-before&#39;</span>) }
-  <span class="o">after-</span><span class="n">each</span>  { <span class="n">trace</span>(<span class="s">&#39;outer-after&#39;</span>)  }
+<span class="n">describe</span> <span class="s">&#39;nested groups inherit shared-context contributions&#39;</span>, {
+  <span class="n">include-context</span> <span class="s">&#39;with widgets&#39;</span>;
 
-  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
-    <span class="o">before-</span><span class="n">each</span> { <span class="n">trace</span>(<span class="s">&#39;inner-before&#39;</span>) }
-    <span class="o">after-</span><span class="n">each</span>  { <span class="n">trace</span>(<span class="s">&#39;inner-after&#39;</span>)  }
+  <span class="n">context</span> <span class="s">&#39;inner context&#39;</span>, {
+    <span class="n">include-context</span> <span class="s">&#39;with default name&#39;</span>;
 
-    <span class="n">it</span> <span class="s">&#39;runs&#39;</span>, {
-      <span class="c1"># trace so far: outer-before, inner-before</span>
-      <span class="n">trace</span>(<span class="s">&#39;example&#39;</span>);
+    <span class="n">it</span> <span class="s">&#39;sees lets from outer and inner shared contexts&#39;</span>, {
+      <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;gadget&#39;</span>);
+      <span class="n">expect</span>(:<span class="n">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;default&#39;</span>);
     }
-    <span class="c1"># after the example: inner-after, outer-after</span>
   }
 }
 </code></pre></div></td></tr></table></div>
 
-<h2 id="before-all-after-all"><code>before-all</code> / <code>after-all</code><a class="headerlink" href="#before-all-after-all" title="Permanent link">&para;</a></h2>
-<p>These fire exactly once per group — useful for expensive shared setup.</p>
-<div class="codehilite"><table class="codehilitetable"><tr><td class="linenos"><div class="linenodiv"><pre><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;database queries&#39;</span>, {
-  <span class="o">before-</span><span class="n">all</span> {
-    <span class="n">setup-fixture-data</span>;
-  }
-
-  <span class="o">after-</span><span class="n">all</span> {
-    <span class="n">teardown-fixture-data</span>;
-  }
-
-  <span class="n">it</span> <span class="s">&#39;finds a user&#39;</span>, { ... }
-  <span class="n">it</span> <span class="s">&#39;finds a page&#39;</span>, { ... }
-}
-</code></pre></div></td></tr></table></div>
-
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Anything <code>before-all</code> mutates is shared across the group's examples. Prefer <code>before-each</code> for per-example isolation.</p>
-</div>
+<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Calling <code>include-context</code> with an unregistered name dies with <code>Unknown shared context: '&lt;name&gt;'</code>.</li>
+<li>Calling <code>include-context</code> outside a <code>describe</code> or <code>context</code> block dies — shared contexts can only be mixed into a group.</li>
+</ul>
 
 
 

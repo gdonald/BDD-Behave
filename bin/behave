@@ -32,8 +32,15 @@ for @*ARGS -> $arg {
 my $files-obj = Files.new;
 my @files = $files-obj.list(@specs);
 
-# Load each spec file
+# Load and eval spec files
 use MONKEY-SEE-NO-EVAL;
+use BDD::Behave::Colors;
+
+my $registry = BDD::Behave::SpecRegistry::registry();
+my $total-result = BDD::Behave::Runner::RunResult.new;
+my $multi = @files.elems > 1;
+my $suites-run = 0;
+
 for @files -> $file {
   say "\nLoading: $file" if $verbose;
   try {
@@ -45,24 +52,16 @@ for @files -> $file {
       }
     }
   }
-}
 
-# Get all registered suites
-my $registry = BDD::Behave::SpecRegistry::registry();
-my @suites = $registry.suites;
+  my $suite = $registry.suite-for-file($file.IO);
+  next unless $suite.defined;
 
-# Run each suite
-my $total-result = BDD::Behave::Runner::RunResult.new;
-
-for @suites -> $suite {
-  # Show which file we're running
-  use BDD::Behave::Colors;
-  say "\n" ~ light-blue($suite.file.basename) if @suites.elems > 1;
+  say "\n" ~ light-blue($suite.file.basename) if $multi;
 
   my $runner = BDD::Behave::Runner::Runner.new;
   my $result = $runner.run($suite);
+  $suites-run++;
 
-  # Aggregate results
   $total-result = BDD::Behave::Runner::RunResult.new(
     :total($total-result.total + $result.total),
     :passed($total-result.passed + $result.passed),
@@ -71,22 +70,12 @@ for @suites -> $suite {
   );
 }
 
-# Print overall summary if we ran multiple suites
-if @suites.elems > 1 {
+if $suites-run > 1 {
   say "\n" ~ "=" x 60;
   say "Overall: {$total-result.total} example" ~ ($total-result.total == 1 ?? '' !! 's');
-  if $total-result.failed > 0 {
-    use BDD::Behave::Colors;
-    say red("  {$total-result.failed} failed");
-  }
-  if $total-result.pending > 0 {
-    use BDD::Behave::Colors;
-    say light-blue("  {$total-result.pending} pending");
-  }
-  if $total-result.passed > 0 {
-    use BDD::Behave::Colors;
-    say green("  {$total-result.passed} passed");
-  }
+  say red("  {$total-result.failed} failed")           if $total-result.failed > 0;
+  say light-blue("  {$total-result.pending} pending")  if $total-result.pending > 0;
+  say green("  {$total-result.passed} passed")         if $total-result.passed > 0;
 }
 
 # Exit with appropriate code

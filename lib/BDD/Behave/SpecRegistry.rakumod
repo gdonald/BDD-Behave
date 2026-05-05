@@ -51,17 +51,10 @@ class SpecRegistry {
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
     my $example = example-type().new(:$description, :file($path), :$line, :block(&block));
 
-    # Gather lets from suite and all groups
-    my @lets = gather {
-      # Suite-level lets
-      my @suite-lets = $entry.suite.let-definitions;
-      take |@suite-lets if @suite-lets;
-
-      # Group-level lets
-      for $entry.stack.grep(example-group-type()) -> $group {
-        my @definitions = $group.let-definitions;
-        take |@definitions if @definitions;
-      }
+    my @lets;
+    @lets.append: $entry.suite.let-definitions.list;
+    for $entry.stack.grep(example-group-type()) -> $group {
+      @lets.append: $group.let-definitions.list;
     }
     $example.set-metadata(:lets(@lets));
     $parent.add-example($example);

@@ -74,3 +74,19 @@ sub after-each(|args) is export {
   };
   $impl(|args);
 }
+
+sub shared-context(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&shared-context');
+  };
+  $impl(|args);
+}
+
+sub include-context(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&include-context');
+  };
+  $impl(|args);
+}

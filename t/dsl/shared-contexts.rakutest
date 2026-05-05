@@ -1,0 +1,155 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+need BDD::Behave::SharedContexts;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Shared context contributes lets and hooks to including group
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedContexts::registry().clear;
+
+  my @order;
+
+  shared-context 'with widgets', {
+    before-each { @order.push('shared-before') }
+    after-each  { @order.push('shared-after')  }
+    let(:widget, { 'gadget' });
+  };
+
+  describe 'a thing', {
+    include-context 'with widgets';
+
+    it 'sees the let', {
+      @order.push('example');
+      expect(:widget).to.be('gadget');
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @order, ['shared-before', 'example', 'shared-after'],
+  'shared-context hooks fire around including group examples';
+}
+
+# Inner let shadows shared-context let
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedContexts::registry().clear;
+
+  shared-context 'with default name', {
+    let(:name, { 'default' });
+  };
+
+  my $observed;
+
+  describe 'shadowing', {
+    include-context 'with default name';
+    let(:name, { 'override' });
+
+    it 'sees the inner let', {
+      $observed = $*LET-RUNTIME.value('name');
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $observed, 'override', 'inner let shadows shared-context let';
+}
+
+# Multiple includes in nested groups; outer hook still wraps inner example
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedContexts::registry().clear;
+
+  my @trace;
+
+  shared-context 'outer setup', {
+    before-each { @trace.push('outer') }
+  };
+
+  shared-context 'inner setup', {
+    before-each { @trace.push('inner') }
+  };
+
+  describe 'outer', {
+    include-context 'outer setup';
+
+    context 'inner', {
+      include-context 'inner setup';
+      it 'runs', { @trace.push('example') }
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @trace, ['outer', 'inner', 'example'],
+  'shared-context hooks inherit through nested groups';
+}
+
+# Unknown shared context dies clearly
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedContexts::registry().clear;
+
+  my $err;
+  describe 'missing', {
+    try {
+      include-context 'never registered';
+      CATCH { default { $err = .message } }
+    }
+    it 'no-op', { True }
+  }
+
+  ok $err.defined && $err ~~ /'Unknown shared context'/,
+  'include-context with unknown name reports a clear error';
+}
+
+# include-context outside describe dies
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedContexts::registry().clear;
+
+  shared-context 'whatever', { ; };
+  dies-ok { include-context 'whatever' },
+  'include-context outside describe dies';
+}
+
+# Shared context block can accept arguments
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedContexts::registry().clear;
+
+  shared-context 'with value', -> $v {
+    let(:captured, { $v });
+  };
+
+  my $observed;
+
+  describe 'parameterized', {
+    include-context 'with value', 42;
+
+    it 'sees the parameter', {
+      $observed = $*LET-RUNTIME.value('captured');
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $observed, 42, 'include-context forwards arguments to the shared block';
+}
+
+done-testing;

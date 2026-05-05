@@ -9,6 +9,7 @@ nav:
     - it: dsl/it.md
     - let: dsl/let.md
     - Hooks: dsl/hooks.md
+    - Shared Contexts: dsl/shared-contexts.md
     - expect: dsl/expect.md
   - Running Specs: running.md
   - Tests: testing.md

@@ -60,4 +60,5 @@ See [Running Specs](running.md) for the full set of options.
 - [`it`](dsl/it.md) — define an example
 - [`let`](dsl/let.md) — lazy, memoized values per example
 - [Hooks](dsl/hooks.md) — `before-each`, `after-each`, `before-all`, `after-all`
+- [Shared Contexts](dsl/shared-contexts.md) — reusable `let`s and hooks via `shared-context` / `include-context`
 - [`expect`](dsl/expect.md) — assertions
