@@ -55,7 +55,7 @@ specs/001-spec.raku
 
 Failures:
 
-  [ ✗ ] specs/001-spec.raku:12
+  [ ✗ ] specs/001-spec.raku:15
 
 2 examples, 1 failed, 1 passed
 ```

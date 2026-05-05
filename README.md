@@ -59,7 +59,7 @@ specs/001-spec.raku
 
 Failures:
 
-  [ ✗ ] specs/001-spec.raku:12
+  [ ✗ ] specs/001-spec.raku:15
 ```
 
 #### Local Behave development:
