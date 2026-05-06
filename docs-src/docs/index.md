@@ -43,15 +43,12 @@ $ behave specs/001-spec.raku
 Output:
 
 ```
-specs/001-spec.raku
-
 ⮑  'this spec'
   ⮑  'passes'
-      ⮑  SUCCESS
-
+    ⮑  SUCCESS
 ⮑  'this final spec'
   ⮑  'fails at line 15'
-      ⮑  FAILURE
+    ⮑  FAILURE
 
 Failures:
 

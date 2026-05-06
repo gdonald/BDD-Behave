@@ -45,9 +45,9 @@ Output:
 ⮑  'an integer counter'
   ⮑  'behaves like 'a counter''
     ⮑  'starts at zero'
-        ⮑  SUCCESS
+      ⮑  SUCCESS
     ⮑  'has an increment step'
-        ⮑  SUCCESS
+      ⮑  SUCCESS
 ```
 
 The shared examples see `let` definitions, hooks, and shared-context contributions from every ancestor group — including the `describe` they're invoked from — exactly the same way ordinary nested examples do.

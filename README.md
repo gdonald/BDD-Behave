@@ -47,19 +47,18 @@ $ behave specs/001-spec.raku
 Output:
 
 ```raku
-specs/001-spec.raku
-
-    ⮑  'this spec'
-        ⮑  'passes'
-            ⮑  SUCCESS
-
-    ⮑  'this final spec'
-        ⮑  'fails at line 15'
-            ⮑  FAILURE
+⮑  'this spec'
+  ⮑  'passes'
+    ⮑  SUCCESS
+⮑  'this final spec'
+  ⮑  'fails at line 15'
+    ⮑  FAILURE
 
 Failures:
 
   [ ✗ ] specs/001-spec.raku:15
+
+2 examples, 1 failed, 1 passed
 ```
 
 #### Local Behave development:

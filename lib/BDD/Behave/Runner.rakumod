@@ -105,7 +105,7 @@ our class Runner {
       self.print-indent;
       say light-blue("⮑  '{$description}'");
       self.print-indent;
-      say light-blue("    ⮑  PENDING");
+      say light-blue("  ⮑  PENDING");
       $!result.add-pending;
       return;
     }
@@ -129,7 +129,7 @@ our class Runner {
           );
           $!result.add-fail($error);
           self.print-indent;
-          say red("    ⮑  FAILURE");
+          say red("  ⮑  FAILURE");
           return;
         }
       }
@@ -146,12 +146,12 @@ our class Runner {
           line => $example.line,
       ));
       self.print-indent;
-      say red("    ⮑  FAILURE");
+      say red("  ⮑  FAILURE");
     } else {
       # Example passed
       $!result.add-pass;
       self.print-indent;
-      say green("    ⮑  SUCCESS");
+      say green("  ⮑  SUCCESS");
     }
   }
 
