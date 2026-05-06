@@ -6,9 +6,11 @@ use BDD::Behave::Failures;
 need BDD::Behave::SpecRegistry;
 need BDD::Behave::LetRuntime;
 need BDD::Behave::SharedContexts;
+need BDD::Behave::SharedExamples;
 
 sub registry() { BDD::Behave::SpecRegistry::registry() }
 sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
+sub shared-examples-registry() { BDD::Behave::SharedExamples::registry() }
 constant LetDefinition = BDD::Behave::LetRuntime::LetDefinition;
 
 our proto sub describe(|) is export {*}
@@ -114,6 +116,40 @@ our sub include-context(Str:D $name, |args) is export {
 
   my &block = shared-context-registry().lookup($name);
   block(|args);
+}
+
+our sub shared-examples(Str:D $name, &block) is export {
+  shared-examples-registry().register($name, &block);
+}
+
+our sub include-examples(Str:D $name, |args) is export {
+  my $entry = registry().current-entry;
+
+  unless $entry && $entry.stack.elems {
+    die "include-examples must be called inside a describe/context block";
+  }
+
+  my &block = shared-examples-registry().lookup($name);
+  block(|args);
+}
+
+our sub it-behaves-like(Str:D $name, |args) is export {
+  my $entry = registry().current-entry;
+
+  unless $entry && $entry.stack.elems {
+    die "it-behaves-like must be called inside a describe/context block";
+  }
+
+  my $parent-group = $entry.stack[*-1];
+  my &shared-block = shared-examples-registry().lookup($name);
+  my &wrapper = sub { shared-block(|args) };
+
+  registry().register-group(
+    description => "behaves like '$name'",
+    block       => &wrapper,
+    file        => $parent-group.file,
+    line        => &shared-block.line,
+  );
 }
 
 our sub it(Str $description, &block) is export {

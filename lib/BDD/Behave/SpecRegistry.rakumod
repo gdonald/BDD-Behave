@@ -39,7 +39,7 @@ class SpecRegistry {
     $entry.stack.push($group);
     LEAVE {
       $entry.stack.pop;
-      $!current-entry = Nil;
+      $!current-entry = $entry.stack.elems ?? $entry !! Nil;
     }
     block();
     $group;

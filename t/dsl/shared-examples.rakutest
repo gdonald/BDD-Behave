@@ -1,0 +1,146 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+need BDD::Behave::SharedExamples;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+sub reset-registries {
+  BDD::Behave::SpecRegistry::registry().clear;
+  BDD::Behave::SharedExamples::registry().clear;
+}
+
+# include-examples merges its examples into the current group
+{
+  reset-registries();
+
+  my @ran;
+
+  shared-examples 'two checks', {
+    it 'first',  { @ran.push('first')  }
+    it 'second', { @ran.push('second') }
+  };
+
+  describe 'group with include-examples', {
+    include-examples 'two checks';
+    it 'native',     { @ran.push('native') }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.total, 3, 'include-examples adds examples to the current group';
+  is-deeply @ran, ['first', 'second', 'native'],
+  'shared examples run alongside group-native examples in registration order';
+}
+
+# it-behaves-like wraps examples in a nested group with a description
+{
+  reset-registries();
+
+  my @ran;
+
+  shared-examples 'a counter', {
+    it 'increments', { @ran.push('inc') }
+  };
+
+  describe 'group with it-behaves-like', {
+    it-behaves-like 'a counter';
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $suite  = @suites[0];
+
+  is $suite.children.elems, 1, 'suite contains one top-level group';
+  my $top = $suite.children[0];
+  is $top.groups.elems, 1, 'it-behaves-like creates a nested group';
+  is $top.groups[0].description, q[behaves like 'a counter'],
+  'nested group description includes the shared-examples name';
+  is $top.groups[0].examples.elems, 1, 'nested group contains the shared example';
+
+  my $result = capture-run($suite);
+  is $result.total, 1, 'shared example ran exactly once';
+  is-deeply @ran, ['inc'], 'shared example body executed';
+}
+
+# Parameterized shared examples receive arguments
+{
+  reset-registries();
+
+  my @observed;
+
+  shared-examples 'collects', -> $value {
+    it "captures $value", { @observed.push($value) }
+  };
+
+  describe 'parameterized', {
+    it-behaves-like 'collects', 'alpha';
+    it-behaves-like 'collects', 'beta';
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @observed, ['alpha', 'beta'],
+  'it-behaves-like forwards arguments to the shared block';
+}
+
+# Shared examples see lets defined in the including group
+{
+  reset-registries();
+
+  my $observed;
+
+  shared-examples 'reads value', {
+    it 'reads the let', { $observed = $*LET-RUNTIME.value('value') }
+  };
+
+  describe 'with let', {
+    let(:value, { 42 });
+    it-behaves-like 'reads value';
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $observed, 42, 'shared example body sees lets from the including group';
+}
+
+# Unknown shared examples die with a clear message
+{
+  reset-registries();
+
+  my $err;
+  describe 'missing', {
+    try {
+      it-behaves-like 'never registered';
+      CATCH { default { $err = .message } }
+    }
+    it 'no-op', { True }
+  }
+
+  ok $err.defined && $err ~~ /'Unknown shared examples'/,
+  'it-behaves-like with unknown name reports a clear error';
+}
+
+# DSL functions error when called outside a describe block
+{
+  reset-registries();
+
+  shared-examples 'whatever', { ; };
+
+  dies-ok { include-examples 'whatever' },
+  'include-examples outside describe dies';
+  dies-ok { it-behaves-like 'whatever' },
+  'it-behaves-like outside describe dies';
+}
+
+done-testing;

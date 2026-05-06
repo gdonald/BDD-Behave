@@ -90,3 +90,27 @@ sub include-context(|args) is export {
   };
   $impl(|args);
 }
+
+sub shared-examples(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&shared-examples');
+  };
+  $impl(|args);
+}
+
+sub include-examples(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&include-examples');
+  };
+  $impl(|args);
+}
+
+sub it-behaves-like(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&it-behaves-like');
+  };
+  $impl(|args);
+}
