@@ -63,6 +63,16 @@ our class SpecNode {
     self.effective-tags.first(* eq $tag).defined;
   }
 
+  method effective-metadata-value(Str:D $key) {
+    for self.ancestry.reverse -> $node {
+      my %meta := $node.metadata;
+      next unless %meta{$key}:exists;
+      my $value = %meta{$key};
+      return $value if $value.defined;
+    }
+    Nil;
+  }
+
   method skipped(--> Bool) { %!metadata<skipped> ?? True !! False }
 
   method focused(--> Bool) { %!metadata<focused> ?? True !! False }
@@ -90,11 +100,59 @@ our role Container {
   }
 }
 
+sub meta-value-matches($actual, $expected --> Bool) {
+  return False unless $actual.defined;
+  if $expected ~~ Positional {
+    my @actual-list = $actual ~~ Positional ?? $actual.list !! ($actual,);
+    for $expected.list -> $needle {
+      return False unless @actual-list.first(* eq $needle).defined;
+    }
+    return True;
+  }
+  if $actual ~~ Positional {
+    return $actual.list.first(* eq $expected).defined;
+  }
+  $actual eq $expected;
+}
+
+our class Hook {
+  has Callable $.callback is required;
+  has @.include-tags;
+  has @.exclude-tags;
+  has %.meta;
+
+  method has-filter(--> Bool) {
+    @!include-tags.elems > 0 || @!exclude-tags.elems > 0 || %!meta.elems > 0;
+  }
+
+  method matches(SpecNode:D $node --> Bool) {
+    return True unless self.has-filter;
+
+    my @effective-tags = $node.effective-tags;
+
+    for @!include-tags -> $tag {
+      return False unless @effective-tags.first(* eq $tag).defined;
+    }
+
+    for @!exclude-tags -> $tag {
+      return False if @effective-tags.first(* eq $tag).defined;
+    }
+
+    for %!meta.kv -> $key, $expected {
+      my $actual = $node.effective-metadata-value($key);
+      return False unless meta-value-matches($actual, $expected);
+    }
+
+    True;
+  }
+}
+
 sub base-exports() {
   %(
     HookPhase => HookPhase,
     SpecNode => SpecNode,
     Container => Container,
+    Hook => Hook,
   );
 }
 

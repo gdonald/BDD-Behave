@@ -29,18 +29,63 @@ sub normalize-tags(%meta --> List) {
   @tags.unique.List;
 }
 
+constant RESERVED-META = set <tag tags skipped focused>;
+
+sub extract-extra-meta(%meta --> Hash) {
+  my %extra;
+  for %meta.kv -> $key, $value {
+    next if $key (elem) RESERVED-META;
+    %extra{$key} = $value;
+  }
+  %extra;
+}
+
+sub parse-hook-filter(%filter --> Hash) {
+  my @include-tags;
+  my @exclude-tags;
+  my %meta;
+  for %filter.kv -> $key, $value {
+    given $key {
+      when 'tag'|'tags' {
+        if $value ~~ Positional {
+          @include-tags.append: $value.list.map(*.Str);
+        } else {
+          @include-tags.push: $value.Str;
+        }
+      }
+      when 'exclude-tag'|'exclude-tags' {
+        if $value ~~ Positional {
+          @exclude-tags.append: $value.list.map(*.Str);
+        } else {
+          @exclude-tags.push: $value.Str;
+        }
+      }
+      default {
+        %meta{$key} = $value;
+      }
+    }
+  }
+  %(
+    :include-tags(@include-tags.unique.list),
+    :exclude-tags(@exclude-tags.unique.list),
+    :%meta,
+  );
+}
+
 our proto sub describe(|) is export {*}
 
 our multi sub describe(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
   my $line = &block.line;
   my @tags = normalize-tags(%meta);
+  my %extra-meta = extract-extra-meta(%meta);
   registry().register-group(
     :$description,
     :&block,
     :$file,
     :$line,
     :@tags,
+    :%extra-meta,
     :skipped(%meta<skipped> // False),
     :focused(%meta<focused> // False),
   );
@@ -116,7 +161,7 @@ our sub let(|c) is export {
   $definition;
 }
 
-sub register-hook(Str $phase, &block) {
+sub register-hook(Str $phase, &block, *%filter) {
   my $entry = registry().current-entry;
 
   unless $entry && $entry.stack.elems {
@@ -124,15 +169,22 @@ sub register-hook(Str $phase, &block) {
   }
 
   my $current = $entry.stack[*-1];
-  $current.add-hook($phase, &block);
-  
-  &block;
+  my %parsed = parse-hook-filter(%filter);
+  $current.add-hook($phase, &block, |%parsed);
 }
 
-our sub before-all(&block) is export { register-hook('before-all', &block) }
-our sub after-all(&block)  is export { register-hook('after-all',  &block) }
-our sub before-each(&block) is export { register-hook('before-each', &block) }
-our sub after-each(&block)  is export { register-hook('after-each',  &block) }
+our sub before-all(&block, *%filter) is export {
+  register-hook('before-all', &block, |%filter);
+}
+our sub after-all(&block, *%filter) is export {
+  register-hook('after-all', &block, |%filter);
+}
+our sub before-each(&block, *%filter) is export {
+  register-hook('before-each', &block, |%filter);
+}
+our sub after-each(&block, *%filter) is export {
+  register-hook('after-each', &block, |%filter);
+}
 
 our sub shared-context(Str:D $name, &block) is export {
   shared-context-registry().register($name, &block);
@@ -187,12 +239,14 @@ our sub it(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
   my $line = &block.line;
   my @tags = normalize-tags(%meta);
+  my %extra-meta = extract-extra-meta(%meta);
   registry().register-example(
     :$description,
     :&block,
     :$file,
     :$line,
     :@tags,
+    :%extra-meta,
     :skipped(%meta<skipped> // False),
     :focused(%meta<focused> // False),
   );

@@ -115,14 +115,14 @@ our class Runner {
 
     # before-each runs outer-to-inner across the ancestor chain
     for self.ancestor-groups($example) -> $ancestor {
-      self.run-hooks($ancestor, 'before-each');
+      self.run-each-hooks($ancestor, 'before-each', $example);
     }
 
     self.run-example($example);
 
     # after-each runs inner-to-outer
     for self.ancestor-groups($example).reverse -> $ancestor {
-      self.run-hooks($ancestor, 'after-each');
+      self.run-each-hooks($ancestor, 'after-each', $example);
     }
   }
 
@@ -226,9 +226,20 @@ our class Runner {
   }
 
   method run-hooks(ExampleGroup $group, Str $phase) {
-    for $group.hooks($phase) -> $hook {
+    my @hooks = $group.hooks($phase);
+    return unless @hooks.elems;
+    my @runnable;
+    my $runnable-collected = False;
+    for @hooks -> $hook {
+      if $hook.has-filter {
+        unless $runnable-collected {
+          @runnable = self.runnable-examples($group);
+          $runnable-collected = True;
+        }
+        next unless @runnable.first({ $hook.matches($_) }).defined;
+      }
       try {
-        $hook();
+        ($hook.callback)();
         CATCH {
           default {
             warn "Hook $phase failed in {$group.description}: {$_.message}";
@@ -236,6 +247,36 @@ our class Runner {
         }
       }
     }
+  }
+
+  method run-each-hooks(ExampleGroup $group, Str $phase, Example $example) {
+    for $group.hooks($phase) -> $hook {
+      next unless $hook.matches($example);
+      try {
+        ($hook.callback)();
+        CATCH {
+          default {
+            warn "Hook $phase failed in {$group.description}: {$_.message}";
+          }
+        }
+      }
+    }
+  }
+
+  method runnable-examples(ExampleGroup $group --> List) {
+    my @examples;
+    for $group.children -> $child {
+      given $child {
+        when Example {
+          @examples.push($child)
+            if self.example-matches($child) && !$child.effective-skipped;
+        }
+        when ExampleGroup {
+          @examples.append: self.runnable-examples($child);
+        }
+      }
+    }
+    @examples.List;
   }
 
   method full-description(Example $example) {

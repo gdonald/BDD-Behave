@@ -501,6 +501,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#metadata-keyed-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata-keyed hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metadata-keyed hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tag-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arbitrary-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arbitrary metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#and-semantics-across-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AND semantics across keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-all-and-after-all-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        before-all and after-all filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -798,6 +859,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#metadata-keyed-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata-keyed hooks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Metadata-keyed hooks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tag-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tag filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#arbitrary-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arbitrary metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#and-semantics-across-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AND semantics across keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#before-all-and-after-all-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        before-all and after-all filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -942,6 +1064,130 @@
 <p class="admonition-title">Warning</p>
 <p>Anything <code>before-all</code> mutates is shared across the group's examples. Prefer <code>before-each</code> for per-example isolation.</p>
 </div>
+<h2 id="metadata-keyed-hooks">Metadata-keyed hooks<a class="headerlink" href="#metadata-keyed-hooks" title="Permanent link">&para;</a></h2>
+<p>All four hooks accept metadata filters that gate when the hook fires. Filters
+are passed as named arguments before the block:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="o">before-</span><span class="n">each</span> :<span class="n">tag</span><span class="s">&lt;database&gt;</span>, {
+  <span class="n">setup-fixture</span>;
+}
+
+<span class="o">after-</span><span class="n">each</span> :<span class="n">tag</span><span class="s">&lt;database&gt;</span>, {
+  <span class="n">rollback-fixture</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p>The hook only fires for examples whose <strong>effective tags or metadata</strong> match the
+filter. Effective metadata is collected by walking the ancestry from the
+example up through every enclosing <code>describe</code>/<code>context</code>, so a tag on the outer
+group is inherited by every example below it.</p>
+<h3 id="tag-filters">Tag filters<a class="headerlink" href="#tag-filters" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:tag&lt;name&gt;</code></td>
+<td>example must have this tag</td>
+</tr>
+<tr>
+<td><code>:tags&lt;a b c&gt;</code></td>
+<td>example must have <strong>all</strong> of these tags (AND)</td>
+</tr>
+<tr>
+<td><code>:exclude-tag&lt;name&gt;</code></td>
+<td>example must <strong>not</strong> have this tag</td>
+</tr>
+<tr>
+<td><code>:exclude-tags&lt;a b&gt;</code></td>
+<td>example must not have any of these tags</td>
+</tr>
+</tbody>
+</table>
+<h3 id="arbitrary-metadata">Arbitrary metadata<a class="headerlink" href="#arbitrary-metadata" title="Permanent link">&para;</a></h3>
+<p>Any other named argument on <code>it</code> / <code>describe</code> / <code>context</code> becomes example
+metadata, and any other named argument on a hook becomes a metadata filter:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;user-service&#39;</span>, :<span class="n">type</span><span class="s">&lt;model&gt;</span>, {
+  <span class="o">before-</span><span class="n">each</span> :<span class="n">type</span><span class="s">&lt;model&gt;</span>, {
+    <span class="n">seed-models</span>;
+  }
+
+  <span class="n">it</span> <span class="s">&#39;finds a user&#39;</span>, { ... }   <span class="c1"># type&lt;model&gt; inherited; hook fires</span>
+}
+
+<span class="n">context</span> <span class="s">&#39;view layer&#39;</span>, :<span class="n">type</span><span class="s">&lt;view&gt;</span>, {
+  <span class="o">before-</span><span class="n">each</span> :<span class="n">type</span><span class="s">&lt;view&gt;</span>, {
+    <span class="n">setup-renderer</span>;
+  }
+
+  <span class="n">it</span> <span class="s">&#39;renders&#39;</span>, { ... }
+}
+</code></pre></div></td></tr></table></div>
+<p>A filter value that is a list (e.g. <code>:role&lt;admin staff&gt;</code>) matches when the
+example's stored metadata contains any of the listed values.</p>
+<h3 id="and-semantics-across-keys">AND semantics across keys<a class="headerlink" href="#and-semantics-across-keys" title="Permanent link">&para;</a></h3>
+<p>When a hook lists multiple filter keys, every key must match:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># Fires only when an example is tagged :db AND not tagged :read-only</span>
+<span class="o">before-</span><span class="n">each</span> :<span class="n">tag</span><span class="s">&lt;db&gt;</span>, :<span class="n">exclude-tag</span><span class="s">&lt;read-only&gt;</span>, {
+  <span class="n">begin-transaction</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p>To get OR-style behavior, register multiple hooks.</p>
+<h3 id="before-all-and-after-all-filters"><code>before-all</code> and <code>after-all</code> filters<a class="headerlink" href="#before-all-and-after-all-filters" title="Permanent link">&para;</a></h3>
+<p>Filters on <code>before-all</code> / <code>after-all</code> fire once per group, but only when at
+least one descendant example matches. If a tag-filtered <code>before-all</code> has no
+matching descendants — for example because all matching examples were excluded
+by the runner's <code>--tag</code> filter — the hook is skipped entirely along with its
+paired <code>after-all</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;database tests&#39;</span>, {
+  <span class="o">before-</span><span class="n">all</span> :<span class="n">tag</span><span class="s">&lt;expensive&gt;</span>, {
+    <span class="n">seed-large-fixture</span>;   <span class="c1"># only when an :expensive example will run</span>
+  }
+
+  <span class="o">after-</span><span class="n">all</span> :<span class="n">tag</span><span class="s">&lt;expensive&gt;</span>, {
+    <span class="n">drop-large-fixture</span>;
+  }
+
+  <span class="n">it</span> <span class="s">&#39;cheap&#39;</span>,     :<span class="n">tag</span><span class="s">&lt;cheap&gt;</span>,     { ... }   <span class="c1"># hook does not fire</span>
+  <span class="n">it</span> <span class="s">&#39;expensive&#39;</span>, :<span class="n">tag</span><span class="s">&lt;expensive&gt;</span>, { ... }   <span class="c1"># hook fires once for the group</span>
+}
+</code></pre></div></td></tr></table></div>
 
 
 

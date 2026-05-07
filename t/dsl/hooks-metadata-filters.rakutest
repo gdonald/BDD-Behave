@@ -1,0 +1,277 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+sub capture-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Hook with no filter matches every node (backward compatible)
+{
+  registry().clear;
+  my @ran;
+
+  describe 'unfiltered hooks', {
+    before-each { @ran.push('outer-before') }
+    after-each  { @ran.push('outer-after')  }
+
+    it 'one', :tag<x>, { @ran.push('one') }
+    it 'two',          { @ran.push('two') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array,
+    ['outer-before', 'one', 'outer-after',
+     'outer-before', 'two', 'outer-after'],
+    'unfiltered before-each/after-each fire for every example';
+}
+
+# :tag<x> filter fires only for matching examples
+{
+  registry().clear;
+  my @ran;
+
+  describe 'tag-filtered before-each', {
+    before-each :tag<db>, { @ran.push('db-setup') }
+
+    it 'a', :tag<db>, { @ran.push('a') }
+    it 'b',           { @ran.push('b') }
+    it 'c', :tag<db>, { @ran.push('c') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array,
+    ['db-setup', 'a', 'b', 'db-setup', 'c'],
+    'before-each :tag<db> fires only for db-tagged examples';
+}
+
+# :tags<a b> requires ALL tags (AND)
+{
+  registry().clear;
+  my @ran;
+
+  describe 'multi-tag AND filter', {
+    before-each :tags<api integration>, { @ran.push('hook') }
+
+    it 'both tags',     :tags<api integration>, { @ran.push('both')     }
+    it 'one tag',       :tag<api>,              { @ran.push('one')      }
+    it 'other tag',     :tag<integration>,      { @ran.push('other')    }
+    it 'unrelated tag', :tag<unit>,             { @ran.push('unrelated') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array,
+    ['hook', 'both', 'one', 'other', 'unrelated'],
+    ':tags<a b> requires both tags (AND)';
+}
+
+# :exclude-tag drops matching examples; combines AND-style with :tag
+{
+  registry().clear;
+  my @ran;
+
+  describe 'exclusion filter', {
+    before-each :tag<db>, :exclude-tag<read-only>, { @ran.push('write-hook') }
+
+    it 'write',  :tag<db>,                    { @ran.push('write')  }
+    it 'read',   :tags<db read-only>,          { @ran.push('read')   }
+    it 'no tag',                               { @ran.push('no-tag') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array,
+    ['write-hook', 'write', 'read', 'no-tag'],
+    'exclude-tag drops matching examples; AND with include-tag';
+}
+
+# Arbitrary metadata key filter
+{
+  registry().clear;
+  my @ran;
+
+  describe 'metadata-key filter', :type<model>, {
+    before-each :type<model>, { @ran.push('model-hook') }
+
+    it 'inherits type', { @ran.push('inherits') }
+
+    context 'view subgroup', :type<view>, {
+      it 'is a view', { @ran.push('view') }
+    }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array,
+    ['model-hook', 'inherits', 'view'],
+    'arbitrary metadata key filter only matches inherited type=model';
+}
+
+# before-all only fires if a descendant example matches the filter
+{
+  registry().clear;
+  my @log;
+
+  describe 'before-all with no matching descendants', {
+    before-all :tag<missing>, { @log.push('should-not-fire') }
+    after-all  :tag<missing>, { @log.push('should-not-fire-either') }
+
+    it 'a', :tag<other>, { @log.push('a') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array, ['a'],
+    'filtered before-all/after-all skipped when no example matches';
+}
+
+# before-all fires once if at least one descendant matches
+{
+  registry().clear;
+  my @log;
+
+  describe 'before-all with matching descendant', {
+    before-all :tag<expensive>, { @log.push('setup') }
+    after-all  :tag<expensive>, { @log.push('teardown') }
+
+    it 'cheap',     :tag<cheap>,     { @log.push('cheap') }
+    it 'expensive', :tag<expensive>, { @log.push('expensive') }
+    it 'also-cheap',                 { @log.push('also-cheap') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is @log.grep('setup').elems,    1, 'filtered before-all fires once';
+  is @log.grep('teardown').elems, 1, 'filtered after-all fires once';
+  is-deeply @log[0],   'setup',    'before-all fires before first example';
+  is-deeply @log[*-1], 'teardown', 'after-all fires after last example';
+}
+
+# Multiple filtered hooks coexist; each fires for its own match
+{
+  registry().clear;
+  my @log;
+
+  describe 'multiple filtered hooks', {
+    before-each              { @log.push('all-before') }
+    before-each :tag<api>,   { @log.push('api-before') }
+    before-each :tag<slow>,  { @log.push('slow-before') }
+
+    it 'fast api',  :tag<api>,        { @log.push('fast-api')  }
+    it 'slow only', :tag<slow>,       { @log.push('slow-only') }
+    it 'both',      :tags<api slow>,  { @log.push('both')      }
+    it 'neither',                     { @log.push('neither')   }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    [
+      # fast api
+      'all-before', 'api-before', 'fast-api',
+      # slow only
+      'all-before', 'slow-before', 'slow-only',
+      # both
+      'all-before', 'api-before', 'slow-before', 'both',
+      # neither
+      'all-before', 'neither',
+    ],
+    'each filtered hook fires only for its matching examples; ordering preserved';
+}
+
+# Hook records expose filter accessors
+{
+  registry().clear;
+
+  my $captured-hook;
+  describe 'hook accessors', {
+    before-each :tag<api>, :exclude-tag<flaky>, :type<model>, {
+      $captured-hook = $_;
+    }
+    it 'a', :tag<api>, { True }
+  }
+
+  my $group = registry().suites[0].groups[0];
+  my @hooks = $group.hooks('before-each');
+  is @hooks.elems, 1, 'one before-each hook stored';
+
+  my $hook = @hooks[0];
+  isa-ok $hook, BDD::Behave::SpecTree::Hook, 'hook is a Hook record';
+  is-deeply $hook.include-tags.sort.list, ('api',),     'include-tags captured';
+  is-deeply $hook.exclude-tags.sort.list, ('flaky',),   'exclude-tags captured';
+  is-deeply $hook.meta.keys.sort.list,    ('type',),    'meta filter captured';
+  is        $hook.meta<type>,             'model',      'meta value captured';
+  ok        $hook.has-filter,                           'has-filter is True for filtered hook';
+}
+
+# Unfiltered hook reports has-filter False
+{
+  registry().clear;
+
+  describe 'unfiltered', {
+    before-each { True }
+    it 'a', { True }
+  }
+
+  my $group = registry().suites[0].groups[0];
+  my $hook = $group.hooks('before-each')[0];
+  nok $hook.has-filter, 'unfiltered hook has-filter is False';
+}
+
+# effective-metadata-value walks ancestry
+{
+  registry().clear;
+
+  describe 'outer', :role<admin>, {
+    context 'inner', :env<staging>, {
+      it 'leaf', :priority<high>, { True }
+    }
+  }
+
+  my $leaf = registry().suites[0].groups[0].groups[0].examples[0];
+
+  is $leaf.effective-metadata-value('priority'), 'high',     'leaf own metadata';
+  is $leaf.effective-metadata-value('env'),      'staging',  'inherits middle metadata';
+  is $leaf.effective-metadata-value('role'),     'admin',    'inherits outer metadata';
+  ok !$leaf.effective-metadata-value('missing').defined,     'missing key returns Nil';
+}
+
+# Hook.matches respects effective tags from ancestry
+{
+  registry().clear;
+
+  describe 'parent-tagged', :tag<integration>, {
+    it 'leaf example', { True }
+  }
+
+  my $leaf = registry().suites[0].groups[0].examples[0];
+
+  my $matching-hook = BDD::Behave::SpecTree::Hook.new(
+    :callback({ True }),
+    :include-tags(['integration']),
+  );
+  ok $matching-hook.matches($leaf),
+    'hook with :tag<integration> matches inherited tag';
+
+  my $non-matching = BDD::Behave::SpecTree::Hook.new(
+    :callback({ True }),
+    :include-tags(['unit']),
+  );
+  nok $non-matching.matches($leaf),
+    'hook with :tag<unit> does not match';
+}
+
+done-testing;

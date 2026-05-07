@@ -29,7 +29,7 @@ class SpecRegistry {
     self.entry-for($file).suite;
   }
 
-  method register-group(:$description!, :&block!, :$file!, :$line!, :@tags = [], :$skipped, :$focused) {
+  method register-group(:$description!, :&block!, :$file!, :$line!, :@tags = [], :%extra-meta = %(), :$skipped, :$focused) {
     my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
     my $entry = self.entry-for($path);
     $!current-entry = $entry;
@@ -38,6 +38,9 @@ class SpecRegistry {
     $group.set-metadata(:tags(@tags.list)) if @tags.elems;
     $group.set-metadata(:skipped(True))    if $skipped;
     $group.set-metadata(:focused(True))    if $focused;
+    for %extra-meta.kv -> $key, $value {
+      $group.set-metadata(|%($key => $value));
+    }
     $parent.add-group($group);
     $entry.stack.push($group);
     LEAVE {
@@ -48,7 +51,7 @@ class SpecRegistry {
     $group;
   }
 
-  method register-example(:$description!, :&block!, :$file!, :$line!, :@tags = [], :$skipped, :$focused) {
+  method register-example(:$description!, :&block!, :$file!, :$line!, :@tags = [], :%extra-meta = %(), :$skipped, :$focused) {
     my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
     my $entry = self.entry-for($path);
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
@@ -63,6 +66,9 @@ class SpecRegistry {
     $example.set-metadata(:tags(@tags.list)) if @tags.elems;
     $example.set-metadata(:skipped(True))    if $skipped;
     $example.set-metadata(:focused(True))    if $focused;
+    for %extra-meta.kv -> $key, $value {
+      $example.set-metadata(|%($key => $value));
+    }
     $parent.add-example($example);
     $example;
   }
