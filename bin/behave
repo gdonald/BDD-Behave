@@ -8,21 +8,50 @@ use BDD::Behave::Files;
 
 my $verbose = False;
 my @specs = [];
+my @include-tags;
+my @exclude-tags;
 
-for @*ARGS -> $arg {
-  if $arg ~~ '--help' {
-    say qq:to/HERE/;
-    Usage: behave [options...] [specs/spec_file.raku]
-      Runs the new tree-based runner against specs in the local `specs` directory
-      or against a list of spec files provided on the command line.
+sub usage() {
+  say qq:to/HERE/;
+  Usage: behave [options...] [specs/spec_file.raku]
+    Runs the new tree-based runner against specs in the local `specs` directory
+    or against a list of spec files provided on the command line.
 
-    Options:
-      --help          Displays how to run behave.
-      --verbose       Display verbose output during the specs execution.
-    HERE
-    exit
-  } elsif $arg ~~ '--verbose' {
+  Options:
+    --help                   Displays how to run behave.
+    --verbose                Display verbose output during the specs execution.
+    --tag NAME               Run only examples tagged NAME (repeatable; OR semantics).
+    --exclude-tag NAME       Skip examples tagged NAME (repeatable).
+
+  Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
+  --tag when both match the same example.
+  HERE
+}
+
+sub split-eq(Str $arg) {
+  my $eq = $arg.index('=');
+  $eq.defined ?? ($arg.substr(0, $eq), $arg.substr($eq + 1)) !! ($arg, Str);
+}
+
+my @args = @*ARGS;
+while @args {
+  my $arg = @args.shift;
+
+  if $arg eq '--help' {
+    usage;
+    exit;
+  } elsif $arg eq '--verbose' {
     $verbose = True;
+  } elsif $arg eq '--tag' {
+    die "--tag requires a value" unless @args;
+    @include-tags.push: @args.shift;
+  } elsif $arg.starts-with('--tag=') {
+    @include-tags.push: $arg.substr('--tag='.chars);
+  } elsif $arg eq '--exclude-tag' {
+    die "--exclude-tag requires a value" unless @args;
+    @exclude-tags.push: @args.shift;
+  } elsif $arg.starts-with('--exclude-tag=') {
+    @exclude-tags.push: $arg.substr('--exclude-tag='.chars);
   } else {
     @specs.push: $arg;
   }
@@ -58,7 +87,10 @@ for @files -> $file {
 
   say "\n" ~ light-blue($suite.file.basename) if $multi;
 
-  my $runner = BDD::Behave::Runner::Runner.new;
+  my $runner = BDD::Behave::Runner::Runner.new(
+    :include-tags(@include-tags),
+    :exclude-tags(@exclude-tags),
+  );
   my $result = $runner.run($suite);
   $suites-run++;
 

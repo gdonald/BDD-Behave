@@ -13,21 +13,38 @@ sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
 sub shared-examples-registry() { BDD::Behave::SharedExamples::registry() }
 constant LetDefinition = BDD::Behave::LetRuntime::LetDefinition;
 
+sub normalize-tags(%meta --> List) {
+  my @tags;
+  for <tag tags> -> $key {
+    next unless %meta{$key}:exists;
+    my $value = %meta{$key};
+    next unless $value.defined;
+    if $value ~~ Positional {
+      @tags.append: $value.list.map(*.Str);
+    } else {
+      @tags.push: $value.Str;
+    }
+  }
+  @tags.unique.List;
+}
+
 our proto sub describe(|) is export {*}
 
-our multi sub describe(Str $description, &block) is export {
+our multi sub describe(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
   my $line = &block.line;
+  my @tags = normalize-tags(%meta);
   registry().register-group(
     :$description,
     :&block,
     :$file,
-    :$line
+    :$line,
+    :@tags,
   );
   Nil;
 }
 
-our multi sub describe(*@) is export {
+our multi sub describe(*@, *%) is export {
   die "describe expects a description string and a block";
 }
 
@@ -152,14 +169,16 @@ our sub it-behaves-like(Str:D $name, |args) is export {
   );
 }
 
-our sub it(Str $description, &block) is export {
+our sub it(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
   my $line = &block.line;
+  my @tags = normalize-tags(%meta);
   registry().register-example(
     :$description,
     :&block,
     :$file,
-    :$line
+    :$line,
+    :@tags,
   );
   Nil;
 }

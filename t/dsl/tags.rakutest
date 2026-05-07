@@ -1,0 +1,333 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+sub capture-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Tags on it() are stored in metadata and exposed via .tags
+{
+  registry().clear;
+
+  describe 'has tagged examples', {
+    it 'fast example', :tag<fast>, { True }
+    it 'slow example', :tag<slow>, { True }
+    it 'untagged',                 { True }
+  }
+
+  my @suites = registry().suites;
+  my $group = @suites[0].groups[0];
+  my @examples = $group.examples;
+
+  is-deeply @examples[0].tags.list, ('fast',), ':tag<fast> stored on example';
+  is-deeply @examples[1].tags.list, ('slow',), ':tag<slow> stored on example';
+  is @examples[2].tags.elems, 0, 'examples without tags have empty tag list';
+}
+
+# :tags<a b c> stores multiple tags
+{
+  registry().clear;
+
+  describe 'multi-tag', {
+    it 'has two tags', :tags<critical slow>, { True }
+  }
+
+  my $example = registry().suites[0].groups[0].examples[0];
+  is-deeply $example.tags.sort.list, ('critical', 'slow'),
+    ':tags<a b> stores list of tags';
+}
+
+# Tags on describe propagate through effective-tags
+{
+  registry().clear;
+
+  describe 'outer', :tag<integration>, {
+    it 'inherits group tag', { True }
+
+    context 'inner', :tag<network>, {
+      it 'inherits both', :tag<flaky>, { True }
+    }
+  }
+
+  my $outer = registry().suites[0].groups[0];
+  my $inner = $outer.groups[0];
+
+  is-deeply $outer.examples[0].effective-tags.sort.list,
+            ('integration',),
+            'example inherits outer group tag';
+
+  is-deeply $inner.examples[0].effective-tags.sort.list,
+            ('flaky', 'integration', 'network'),
+            'example inherits all ancestor tags plus its own';
+}
+
+# --tag include filter runs only matching examples
+{
+  registry().clear;
+
+  my @ran;
+  describe 'filter include', {
+    it 'fast 1', :tag<fast>, { @ran.push('fast-1') }
+    it 'slow 1', :tag<slow>, { @ran.push('slow-1') }
+    it 'fast 2', :tag<fast>, { @ran.push('fast-2') }
+    it 'untagged',           { @ran.push('untagged') }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['fast']));
+
+  is-deeply @ran.sort.list, ('fast-1', 'fast-2'),
+    '--tag fast runs only fast-tagged examples';
+}
+
+# --exclude-tag drops matching examples; others run
+{
+  registry().clear;
+
+  my @ran;
+  describe 'filter exclude', {
+    it 'fast', :tag<fast>, { @ran.push('fast') }
+    it 'slow', :tag<slow>, { @ran.push('slow') }
+    it 'plain',            { @ran.push('plain') }
+  }
+
+  capture-run(registry().suites[0], :exclude-tags(['slow']));
+
+  is-deeply @ran.sort.list, ('fast', 'plain'),
+    '--exclude-tag slow drops slow examples';
+}
+
+# --exclude-tag wins over --tag for the same example
+{
+  registry().clear;
+
+  my @ran;
+  describe 'precedence', {
+    it 'both',  :tags<fast slow>, { @ran.push('both')  }
+    it 'fast',  :tag<fast>,       { @ran.push('fast')  }
+    it 'slow',  :tag<slow>,       { @ran.push('slow')  }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :include-tags(['fast']),
+    :exclude-tags(['slow']),
+  );
+
+  is @ran.elems, 1, 'exclude takes precedence: only one example ran';
+  is @ran[0], 'fast', 'only fast (without slow tag) ran';
+}
+
+# Group-level tag filtering: tags on describe filter all examples inside
+{
+  registry().clear;
+
+  my @ran;
+  describe 'integration suite', :tag<integration>, {
+    it 'a', { @ran.push('a') }
+    it 'b', { @ran.push('b') }
+  }
+
+  describe 'unit suite', :tag<unit>, {
+    it 'c', { @ran.push('c') }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['integration']));
+
+  is-deeply @ran.sort.list, ('a', 'b'),
+    'group-level :tag filters all descendants';
+}
+
+# Multiple --tag flags use OR semantics
+{
+  registry().clear;
+
+  my @ran;
+  describe 'multi-include', {
+    it 'fast', :tag<fast>, { @ran.push('fast') }
+    it 'slow', :tag<slow>, { @ran.push('slow') }
+    it 'cold', :tag<cold>, { @ran.push('cold') }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['fast', 'slow']));
+
+  is-deeply @ran.sort.list, ('fast', 'slow'),
+    'multiple --tag values match any (OR)';
+}
+
+# Empty filter list runs everything (default behavior preserved)
+{
+  registry().clear;
+
+  my @ran;
+  describe 'no filter', {
+    it 'a', :tag<x>, { @ran.push('a') }
+    it 'b',          { @ran.push('b') }
+  }
+
+  capture-run(registry().suites[0]);
+  is-deeply @ran.sort.list, ('a', 'b'),
+    'no tag filters runs every example';
+}
+
+# Filtering hides empty groups but does not skip groups with mixed children
+{
+  registry().clear;
+
+  my @ran;
+  describe 'mixed', {
+    context 'integration corner', :tag<integration>, {
+      it 'i1', { @ran.push('i1') }
+    }
+    context 'unit corner', {
+      it 'u1', :tag<integration>, { @ran.push('u1') }
+      it 'u2',                    { @ran.push('u2') }
+    }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['integration']));
+
+  is-deeply @ran.sort.list, ('i1', 'u1'),
+    'integration filter pulls examples from any matching subtree';
+}
+
+# has-tag / has-effective-tag helpers
+{
+  registry().clear;
+
+  describe 'tag helpers', :tag<integration>, {
+    context 'inner', :tag<network>, {
+      it 'leaf', :tag<flaky>, { True }
+    }
+  }
+
+  my $outer = registry().suites[0].groups[0];
+  my $inner = $outer.groups[0];
+  my $leaf  = $inner.examples[0];
+
+  ok  $outer.has-tag('integration'),       'has-tag finds direct tag on group';
+  nok $outer.has-tag('network'),           'has-tag does not walk ancestors';
+  ok  $leaf.has-effective-tag('integration'),
+    'has-effective-tag finds tag from outer ancestor';
+  ok  $leaf.has-effective-tag('network'),
+    'has-effective-tag finds tag from middle ancestor';
+  ok  $leaf.has-effective-tag('flaky'),
+    'has-effective-tag finds direct tag on example';
+  nok $leaf.has-effective-tag('missing'),
+    'has-effective-tag returns False for unknown tag';
+}
+
+# Filtered-out groups skip their before-all / after-all hooks
+{
+  registry().clear;
+
+  my @hook-log;
+  my @ran;
+
+  describe 'kept', :tag<integration>, {
+    before-all { @hook-log.push('kept-before-all') }
+    after-all  { @hook-log.push('kept-after-all')  }
+    it 'a', { @ran.push('kept-a') }
+  }
+
+  describe 'dropped', :tag<unit>, {
+    before-all { @hook-log.push('dropped-before-all') }
+    after-all  { @hook-log.push('dropped-after-all')  }
+    it 'b', { @ran.push('dropped-b') }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['integration']));
+
+  is @ran.elems, 1, 'only one example ran under --tag integration';
+  is @ran[0],   'kept-a',   'kept group ran its example';
+  is-deeply @hook-log.Array, ['kept-before-all', 'kept-after-all'],
+    'filtered-out group skips both before-all and after-all';
+}
+
+# Filtered-out groups also skip before-each / after-each
+{
+  registry().clear;
+
+  my @each-log;
+
+  describe 'outer', {
+    before-each { @each-log.push('outer-before-each') }
+    after-each  { @each-log.push('outer-after-each')  }
+
+    context 'kept', :tag<wanted>, {
+      before-each { @each-log.push('kept-before-each') }
+      after-each  { @each-log.push('kept-after-each')  }
+      it 'k', { True }
+    }
+
+    context 'dropped', :tag<other>, {
+      before-each { @each-log.push('dropped-before-each') }
+      after-each  { @each-log.push('dropped-after-each')  }
+      it 'd', { True }
+    }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['wanted']));
+
+  is-deeply @each-log.Array,
+            ['outer-before-each', 'kept-before-each',
+             'kept-after-each', 'outer-after-each'],
+    'filtered-out subtree contributes no per-example hooks';
+}
+
+# CLI argument parsing: --tag NAME, --tag=NAME, --exclude-tag NAME, repeated
+{
+  my $bin   = $*PROGRAM.parent.parent.parent.add('bin/behave');
+  my $spec  = $*PROGRAM.parent.parent.parent.add('specs/tags/tags-spec.raku');
+
+  sub run-behave(*@args) {
+    my $proc = run('raku', '-Ilib', $bin.absolute, |@args, $spec.absolute,
+                   :out, :err);
+    my $out = $proc.out.slurp(:close);
+    $proc.err.slurp(:close);
+    %( :exit($proc.exitcode), :$out );
+  }
+
+  my %r = run-behave('--tag', 'fast');
+  is %r<exit>, 0, '--tag fast exits 0';
+  ok %r<out>.contains('1 example'),
+    '--tag fast runs exactly one example from tags-spec.raku';
+  ok %r<out>.contains('accepts a single :tag'),
+    '--tag fast picked the right example';
+
+  %r = run-behave('--tag=fast');
+  ok %r<out>.contains('1 example'),
+    '--tag=NAME equals form works the same as --tag NAME';
+
+  %r = run-behave('--tag', 'integration');
+  ok %r<out>.contains('2 examples'),
+    'group-level :tag<integration> matches both descendants from CLI';
+
+  %r = run-behave('--tag', 'integration', '--exclude-tag', 'flaky');
+  ok %r<out>.contains('1 example'),
+    'CLI: --exclude-tag drops the flaky descendant';
+
+  %r = run-behave('--tag', 'fast', '--tag', 'integration');
+  ok %r<out>.contains('3 examples'),
+    'CLI: repeated --tag uses OR semantics (1 fast + 2 integration)';
+
+  %r = run-behave('--exclude-tag=flaky');
+  ok %r<out>.contains('5 examples'),
+    'CLI: --exclude-tag=NAME drops only matching examples (6 - 1)';
+
+  %r = run-behave('--tag', 'nonexistent');
+  is %r<exit>, 0, 'CLI: filter that matches nothing still exits 0';
+  ok %r<out>.contains('0 examples'),
+    'CLI: filter that matches nothing reports 0 examples';
+}
+
+done-testing;

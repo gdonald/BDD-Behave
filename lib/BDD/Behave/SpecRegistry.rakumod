@@ -29,12 +29,13 @@ class SpecRegistry {
     self.entry-for($file).suite;
   }
 
-  method register-group(:$description!, :&block!, :$file!, :$line!) {
+  method register-group(:$description!, :&block!, :$file!, :$line!, :@tags = []) {
     my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
     my $entry = self.entry-for($path);
     $!current-entry = $entry;
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
     my $group = example-group-type().new(:$description, :file($path), :$line);
+    $group.set-metadata(:tags(@tags.list)) if @tags.elems;
     $parent.add-group($group);
     $entry.stack.push($group);
     LEAVE {
@@ -45,7 +46,7 @@ class SpecRegistry {
     $group;
   }
 
-  method register-example(:$description!, :&block!, :$file!, :$line!) {
+  method register-example(:$description!, :&block!, :$file!, :$line!, :@tags = []) {
     my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
     my $entry = self.entry-for($path);
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
@@ -57,6 +58,7 @@ class SpecRegistry {
       @lets.append: $group.let-definitions.list;
     }
     $example.set-metadata(:lets(@lets));
+    $example.set-metadata(:tags(@tags.list)) if @tags.elems;
     $parent.add-example($example);
     $example;
   }

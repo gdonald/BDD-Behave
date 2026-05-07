@@ -41,6 +41,28 @@ our class SpecNode {
     %!metadata{$key} // $default;
   }
 
+  method tags(--> List) {
+    my $stored = %!metadata<tags>;
+    return ().List unless $stored.defined;
+    $stored ~~ Positional ?? $stored.list.List !! ($stored,).List;
+  }
+
+  method has-tag(Str:D $tag --> Bool) {
+    self.tags.first(* eq $tag).defined;
+  }
+
+  method effective-tags(--> List) {
+    my @collected;
+    for self.ancestry -> $node {
+      @collected.append: $node.tags;
+    }
+    @collected.unique.List;
+  }
+
+  method has-effective-tag(Str:D $tag --> Bool) {
+    self.effective-tags.first(* eq $tag).defined;
+  }
+
   method depth { self.ancestry.elems - 1 }
 
   method is-root { !self.parent.defined }

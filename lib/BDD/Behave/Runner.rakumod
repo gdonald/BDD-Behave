@@ -40,6 +40,8 @@ our class Runner {
   has Int $!indent = 0;
   has @!description-stack;
   has RunResult $.result .= new;
+  has @.include-tags;
+  has @.exclude-tags;
 
   method run(Suite $suite) {
     self.run-suite($suite);
@@ -52,8 +54,8 @@ our class Runner {
     # Walk all its children (groups and examples)
     for $suite.children -> $child {
       given $child {
-        when ExampleGroup { self.run-group($child) }
-        when Example { self.run-example($child) }
+        when ExampleGroup { self.run-group($child) if self.group-matches($child) }
+        when Example { self.run-example($child) if self.example-matches($child) }
       }
     }
   }
@@ -73,15 +75,17 @@ our class Runner {
     # Process all children
     for $group.children -> $child {
       given $child {
-        when ExampleGroup { self.run-group($child) }
+        when ExampleGroup { self.run-group($child) if self.group-matches($child) }
         when Example {
+          next unless self.example-matches($child);
+
           # before-each runs outer-to-inner across the ancestor chain
           for self.ancestor-groups($child) -> $ancestor {
             self.run-hooks($ancestor, 'before-each');
           }
 
           self.run-example($child);
-          
+
           # after-each runs inner-to-outer
           for self.ancestor-groups($child).reverse -> $ancestor {
             self.run-hooks($ancestor, 'after-each');
@@ -96,6 +100,30 @@ our class Runner {
     # Restore context
     $!indent--;
     @!description-stack.pop;
+  }
+
+  method example-matches(Example $example --> Bool) {
+    my @tags = $example.effective-tags;
+
+    if @!exclude-tags.elems
+       && @tags.first({ $_ ∈ @!exclude-tags }).defined {
+      return False;
+    }
+
+    return True unless @!include-tags.elems;
+    @tags.first({ $_ ∈ @!include-tags }).defined;
+  }
+
+  method group-matches(ExampleGroup $group --> Bool) {
+    return True unless @!include-tags.elems || @!exclude-tags.elems;
+
+    for $group.children -> $child {
+      given $child {
+        when Example       { return True if self.example-matches($child) }
+        when ExampleGroup  { return True if self.group-matches($child)   }
+      }
+    }
+    False;
   }
 
   method run-example(Example $example) {

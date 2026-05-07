@@ -33,6 +33,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | --- | --- |
 | `--help` | Display usage |
 | `--verbose` | Print each spec file as it is loaded |
+| `--tag NAME` | Run only examples tagged `NAME` (repeatable; OR semantics). See [Tags](dsl/tags.md). |
+| `--exclude-tag NAME` | Skip examples tagged `NAME` (repeatable). |
 
 ## Output
 
