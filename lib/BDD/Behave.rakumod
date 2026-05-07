@@ -114,3 +114,51 @@ sub it-behaves-like(|args) is export {
   };
   $impl(|args);
 }
+
+sub fit(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&fit');
+  };
+  $impl(|args);
+}
+
+sub xit(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&xit');
+  };
+  $impl(|args);
+}
+
+sub fdescribe(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&fdescribe');
+  };
+  $impl(|args);
+}
+
+sub xdescribe(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&xdescribe');
+  };
+  $impl(|args);
+}
+
+sub fcontext(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&fcontext');
+  };
+  $impl(|args);
+}
+
+sub xcontext(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&xcontext');
+  };
+  $impl(|args);
+}

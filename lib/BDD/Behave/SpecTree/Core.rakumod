@@ -63,6 +63,18 @@ our class SpecNode {
     self.effective-tags.first(* eq $tag).defined;
   }
 
+  method skipped(--> Bool) { %!metadata<skipped> ?? True !! False }
+
+  method focused(--> Bool) { %!metadata<focused> ?? True !! False }
+
+  method effective-skipped(--> Bool) {
+    self.ancestry.first(*.skipped).defined;
+  }
+
+  method effective-focused(--> Bool) {
+    self.ancestry.first(*.focused).defined;
+  }
+
   method depth { self.ancestry.elems - 1 }
 
   method is-root { !self.parent.defined }

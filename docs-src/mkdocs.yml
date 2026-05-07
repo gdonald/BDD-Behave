@@ -12,6 +12,7 @@ nav:
     - Shared Contexts: dsl/shared-contexts.md
     - Shared Examples: dsl/shared-examples.md
     - Tags: dsl/tags.md
+    - Focus and Skip: dsl/focus-skip.md
     - expect: dsl/expect.md
   - Running Specs: running.md
   - Tests: testing.md

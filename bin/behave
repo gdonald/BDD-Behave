@@ -99,6 +99,7 @@ for @files -> $file {
     :passed($total-result.passed + $result.passed),
     :failed($total-result.failed + $result.failed),
     :pending($total-result.pending + $result.pending),
+    :skipped($total-result.skipped + $result.skipped),
   );
 }
 
@@ -107,6 +108,7 @@ if $suites-run > 1 {
   say "Overall: {$total-result.total} example" ~ ($total-result.total == 1 ?? '' !! 's');
   say red("  {$total-result.failed} failed")           if $total-result.failed > 0;
   say light-blue("  {$total-result.pending} pending")  if $total-result.pending > 0;
+  say light-blue("  {$total-result.skipped} skipped")  if $total-result.skipped > 0;
   say green("  {$total-result.passed} passed")         if $total-result.passed > 0;
 }
 

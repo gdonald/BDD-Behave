@@ -40,6 +40,8 @@ our multi sub describe(Str $description, &block, *%meta) is export {
     :$file,
     :$line,
     :@tags,
+    :skipped(%meta<skipped> // False),
+    :focused(%meta<focused> // False),
   );
   Nil;
 }
@@ -49,6 +51,17 @@ our multi sub describe(*@, *%) is export {
 }
 
 our sub context(|c) is export { describe(|c) }
+
+our sub fdescribe(Str $description, &block, *%meta) is export {
+  describe($description, &block, |%meta, :focused);
+}
+
+our sub xdescribe(Str $description, &block, *%meta) is export {
+  describe($description, &block, |%meta, :skipped);
+}
+
+our sub fcontext(|c) is export { fdescribe(|c) }
+our sub xcontext(|c) is export { xdescribe(|c) }
 
 our sub let(|c) is export {
   my @pos = c.list;
@@ -179,8 +192,18 @@ our sub it(Str $description, &block, *%meta) is export {
     :$file,
     :$line,
     :@tags,
+    :skipped(%meta<skipped> // False),
+    :focused(%meta<focused> // False),
   );
   Nil;
+}
+
+our sub fit(Str $description, &block, *%meta) is export {
+  it($description, &block, |%meta, :focused);
+}
+
+our sub xit(Str $description, &block, *%meta) is export {
+  it($description, &block, |%meta, :skipped);
 }
 
 class ExpectationBuilder {

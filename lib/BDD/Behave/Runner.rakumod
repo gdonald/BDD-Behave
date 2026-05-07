@@ -13,6 +13,7 @@ our class RunResult {
   has Int $.passed = 0;
   has Int $.failed = 0;
   has Int $.pending = 0;
+  has Int $.skipped = 0;
   has @.errors;
 
   method add-pass {
@@ -31,6 +32,11 @@ our class RunResult {
     $!pending++;
   }
 
+  method add-skipped {
+    $!total++;
+    $!skipped++;
+  }
+
   method success {
     $!failed == 0;
   }
@@ -42,11 +48,23 @@ our class Runner {
   has RunResult $.result .= new;
   has @.include-tags;
   has @.exclude-tags;
+  has Bool $!focus-mode = False;
 
   method run(Suite $suite) {
+    $!focus-mode = self.has-focus($suite);
     self.run-suite($suite);
     self.print-summary;
     $!result;
+  }
+
+  method has-focus($node --> Bool) {
+    return True if $node.focused;
+    if $node ~~ Suite | ExampleGroup {
+      for $node.children -> $child {
+        return True if self.has-focus($child);
+      }
+    }
+    False;
   }
 
   method run-suite(Suite $suite) {
@@ -55,7 +73,7 @@ our class Runner {
     for $suite.children -> $child {
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
-        when Example { self.run-example($child) if self.example-matches($child) }
+        when Example      { self.handle-example($child) if self.example-matches($child) }
       }
     }
   }
@@ -69,37 +87,51 @@ our class Runner {
     @!description-stack.push($group.description);
     $!indent++;
 
-    # Run before-all hooks
-    self.run-hooks($group, 'before-all');
+    my $group-skipped = $group.effective-skipped;
+
+    # Skipped groups don't run before-all / after-all
+    self.run-hooks($group, 'before-all') unless $group-skipped;
 
     # Process all children
     for $group.children -> $child {
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
-        when Example {
-          next unless self.example-matches($child);
-
-          # before-each runs outer-to-inner across the ancestor chain
-          for self.ancestor-groups($child) -> $ancestor {
-            self.run-hooks($ancestor, 'before-each');
-          }
-
-          self.run-example($child);
-
-          # after-each runs inner-to-outer
-          for self.ancestor-groups($child).reverse -> $ancestor {
-            self.run-hooks($ancestor, 'after-each');
-          }
-        }
+        when Example      { self.handle-example($child) if self.example-matches($child) }
       }
     }
 
-    # Run after-all hooks
-    self.run-hooks($group, 'after-all');
+    self.run-hooks($group, 'after-all') unless $group-skipped;
 
     # Restore context
     $!indent--;
     @!description-stack.pop;
+  }
+
+  method handle-example(Example $example) {
+    if $example.effective-skipped {
+      self.print-skipped($example);
+      return;
+    }
+
+    # before-each runs outer-to-inner across the ancestor chain
+    for self.ancestor-groups($example) -> $ancestor {
+      self.run-hooks($ancestor, 'before-each');
+    }
+
+    self.run-example($example);
+
+    # after-each runs inner-to-outer
+    for self.ancestor-groups($example).reverse -> $ancestor {
+      self.run-hooks($ancestor, 'after-each');
+    }
+  }
+
+  method print-skipped(Example $example) {
+    self.print-indent;
+    say light-blue("⮑  '{$example.description}'");
+    self.print-indent;
+    say light-blue("  ⮑  SKIPPED");
+    $!result.add-skipped;
   }
 
   method example-matches(Example $example --> Bool) {
@@ -110,12 +142,18 @@ our class Runner {
       return False;
     }
 
+    if $!focus-mode
+       && !$example.effective-focused
+       && !$example.effective-skipped {
+      return False;
+    }
+
     return True unless @!include-tags.elems;
     @tags.first({ $_ ∈ @!include-tags }).defined;
   }
 
   method group-matches(ExampleGroup $group --> Bool) {
-    return True unless @!include-tags.elems || @!exclude-tags.elems;
+    return True unless @!include-tags.elems || @!exclude-tags.elems || $!focus-mode;
 
     for $group.children -> $child {
       given $child {
@@ -220,9 +258,10 @@ our class Runner {
     my $total-msg = "{$!result.total} example" ~ ($!result.total == 1 ?? '' !! 's');
     my $failed-msg = $!result.failed > 0 ?? red("{$!result.failed} failed") !! '';
     my $pending-msg = $!result.pending > 0 ?? light-blue("{$!result.pending} pending") !! '';
+    my $skipped-msg = $!result.skipped > 0 ?? light-blue("{$!result.skipped} skipped") !! '';
     my $passed-msg = $!result.passed > 0 ?? green("{$!result.passed} passed") !! '';
 
-    my @parts = ($total-msg, $failed-msg, $pending-msg, $passed-msg).grep(*.so);
+    my @parts = ($total-msg, $failed-msg, $pending-msg, $skipped-msg, $passed-msg).grep(*.so);
     say @parts.join(', ');
   }
 }

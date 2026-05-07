@@ -29,16 +29,16 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 
 ## Options
 
-| Option | Effect |
-| --- | --- |
-| `--help` | Display usage |
-| `--verbose` | Print each spec file as it is loaded |
-| `--tag NAME` | Run only examples tagged `NAME` (repeatable; OR semantics). See [Tags](dsl/tags.md). |
-| `--exclude-tag NAME` | Skip examples tagged `NAME` (repeatable). |
+| Option               | Effect                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| `--help`             | Display usage                                                                        |
+| `--verbose`          | Print each spec file as it is loaded                                                 |
+| `--tag NAME`         | Run only examples tagged `NAME` (repeatable; OR semantics). See [Tags](dsl/tags.md). |
+| `--exclude-tag NAME` | Skip examples tagged `NAME` (repeatable).                                            |
 
 ## Output
 
-Behave prints each describe/context with a `⮑` marker, indenting nested groups, and reports `SUCCESS` / `FAILURE` / `PENDING` per example. After all suites run it prints a summary like:
+Behave prints each describe/context with a `⮑` marker, indenting nested groups, and reports `SUCCESS` / `FAILURE` / `PENDING` / `SKIPPED` per example. See [Focus and Skip](dsl/focus-skip.md) for `xit` / `fit` / `xdescribe` / `fdescribe`. After all specs run it prints a summary like:
 
 ```
 ============================================================
