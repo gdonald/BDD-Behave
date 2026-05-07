@@ -1,17 +1,12 @@
 on: [push, pull_request]
 jobs:
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Runs tests
-      uses: JJ/raku-test-action@v2
-  specs:
+  test:
     runs-on: ubuntu-latest
     container: ghcr.io/jj/raku-zef-gha
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Runs specs
-      run: raku -Ilib bin/behave
+    - name: Install test deps
+      run: zef install --deps-only --/test .
+    - name: Run prove6 + behave
+      run: ./test.raku

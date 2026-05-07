@@ -155,6 +155,14 @@ sub fcontext(|args) is export {
   $impl(|args);
 }
 
+sub double(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&double');
+  };
+  $impl(|args);
+}
+
 sub xcontext(|args) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

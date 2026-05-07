@@ -7,6 +7,7 @@ need BDD::Behave::SpecRegistry;
 need BDD::Behave::LetRuntime;
 need BDD::Behave::SharedContexts;
 need BDD::Behave::SharedExamples;
+need BDD::Behave::Mock;
 
 sub registry() { BDD::Behave::SpecRegistry::registry() }
 sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
@@ -196,6 +197,10 @@ our sub it(Str $description, &block, *%meta) is export {
     :focused(%meta<focused> // False),
   );
   Nil;
+}
+
+our sub double(|args) is export {
+  BDD::Behave::Mock::double(|args);
 }
 
 our sub fit(Str $description, &block, *%meta) is export {

@@ -1,0 +1,242 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+need BDD::Behave::Mock;
+
+# Ad-hoc double with named-stub returns the stubbed values
+{
+  my $user = double('User', name => 'alice', age => 30);
+
+  is $user.name, 'alice', 'stubbed string method returns the stub value';
+  is $user.age,  30,      'stubbed numeric method returns the stub value';
+}
+
+# Anonymous double has the default name 'anonymous'
+{
+  my $d = double;
+  is $d.double-name, 'anonymous',
+    'calling double() with no args produces an anonymous double';
+}
+
+# Calls are recorded in registration order with method name and args
+{
+  my $d = double('Logger');
+  $d.write('hello');
+  $d.write('world', :level<info>);
+  $d.flush;
+
+  is $d.calls.elems, 3, 'every dispatched method is captured as a call';
+  is $d.calls[0].method, 'write', 'first call records its method name';
+  is-deeply $d.calls[0].args.list.Array, ['hello',],
+    'first call records positional args';
+  is-deeply $d.calls[1].named.hash, { level => 'info' },
+    'second call records named args';
+  is $d.calls[2].method, 'flush', 'argument-less calls are still tracked';
+}
+
+# received() and call-count() report what was dispatched
+{
+  my $d = double('Counter');
+  $d.tick; $d.tick; $d.tock;
+
+  is $d.received('tick'), True,  'received() is True for any call';
+  is $d.received('idle'), False, 'received() is False when never called';
+  is $d.call-count('tick'), 2,   'call-count() returns the number of calls';
+  is $d.call-count('idle'), 0,   'call-count() returns 0 when never called';
+}
+
+# calls-of() returns only the calls for a given method
+{
+  my $d = double('Painter');
+  $d.draw('red');
+  $d.erase;
+  $d.draw('blue');
+
+  is $d.calls-of('draw').elems, 2, 'calls-of returns matching calls only';
+  is-deeply $d.calls-of('draw').map(*.args.list[0]).list, ('red', 'blue'),
+    'calls-of preserves dispatch order';
+  is $d.calls-of('never').elems, 0, 'calls-of returns empty for unused method';
+}
+
+# reset() clears the call history but preserves stubs
+{
+  my $d = double('Cache', get => 'cached');
+  $d.get;
+  is $d.calls.elems, 1, 'call recorded before reset';
+
+  $d.reset;
+  is $d.calls.elems, 0, 'reset clears recorded calls';
+  is $d.get, 'cached', 'stubs survive reset';
+  is $d.calls.elems, 1, 'new calls land in fresh history';
+}
+
+# Callable stubs are invoked with the call arguments
+{
+  my $d = double('Transformer', upcase => -> $s { $s.uc });
+  is $d.upcase('hi'), 'HI', 'callable stubs receive the call args';
+}
+
+# Unstubbed methods on ad-hoc doubles are permissive (return Any/Nil)
+{
+  my $d = double;
+  ok !$d.never-stubbed.defined,
+    'unstubbed methods on ad-hoc doubles return undefined';
+  is $d.received('never-stubbed'), True,
+    'unstubbed call is still tracked for verification';
+}
+
+# add-stub() adds stubs after creation and returns the double for chaining
+{
+  my $d = double('Settings');
+  my $r = $d.add-stub(theme => 'dark', font => 'mono');
+  ok $r === $d, 'add-stub returns the double itself for chaining';
+  is $d.theme, 'dark', 'stub added after creation works';
+  is $d.font,  'mono', 'multiple stubs can be added in one call';
+}
+
+# Class-based doubles verify stubbed methods exist on the class at creation
+{
+  my class Greeter {
+    method hello($name) { "hi $name" }
+    method bye         { 'bye'       }
+  }
+
+  my $d = double(Greeter, hello => 'mocked');
+  is $d.double-class, Greeter, 'class-based double records the class';
+  is $d.double-name,  'Greeter', 'class-based double name defaults to class name';
+  is $d.hello('x'),   'mocked',  'real method names can be stubbed';
+}
+
+# Stubbing a method the class does not have dies at creation time
+{
+  my class Greeter {
+    method hello { 'hi' }
+  }
+
+  dies-ok { double(Greeter, missing => 1) },
+    'double(Class, missing => ...) dies because Class has no such method';
+}
+
+# Calling a method the class does not have on a class-based double dies
+{
+  my class Greeter {
+    method hello { 'hi' }
+  }
+
+  my $d = double(Greeter, hello => 'mocked');
+  dies-ok { $d.bogus },
+    'class-based doubles die on unknown method dispatch';
+
+  is $d.calls-of('bogus').elems, 0,
+    'failed dispatches do not record a call';
+}
+
+# add-stub on a class-based double also verifies the method exists
+{
+  my class Counter {
+    method tick { 1 }
+  }
+  my $d = double(Counter);
+  dies-ok { $d.add-stub(unknown => 1) },
+    'add-stub dies when stubbed method is missing on class';
+  lives-ok { $d.add-stub(tick => 7) },
+    'add-stub succeeds for real methods';
+  is $d.tick, 7, 'newly added stub is dispatched';
+}
+
+# double() rejects more than one positional argument
+{
+  dies-ok { double('Foo', 'Bar') },
+    'double() with two positionals dies';
+}
+
+# Call objects record file and line of the call site
+{
+  my $d = double('Tracer');
+  my $expected-line = $?LINE + 1;
+  $d.touch;
+
+  my $call = $d.calls[0];
+  ok $call.file.IO ~~ IO::Path,    'Call.file is an IO::Path';
+  is $call.line, $expected-line,    'Call.line records the dispatch site';
+}
+
+# stubs() returns a clone — mutating it does not affect the double
+{
+  my $d = double('Cfg', name => 'alice');
+  my %s = $d.stubs;
+  %s<name> = 'bob';
+
+  is $d.name, 'alice', 'mutating the stubs() return value does not change stubs';
+}
+
+# Re-stubbing the same method overwrites the previous value
+{
+  my $d = double('Cfg', name => 'alice');
+  $d.add-stub(name => 'bob');
+
+  is $d.name, 'bob', 'add-stub overwrites a previously-set stub';
+  is $d.stubs.elems, 1, 'overwrite leaves a single stub entry';
+}
+
+# Reserved method names take precedence over stubs
+{
+  my $d = double('Confused');
+  $d.add-stub(reset => 'ignored');
+  $d.touched;
+
+  ok $d.reset === $d,
+    '$d.reset invokes the method, not the stub (returns the double)';
+  is $d.calls.elems, 0,
+    'after reset, no calls remain; the stub was inert';
+}
+
+# Ad-hoc double-class accessor returns Mu
+{
+  my $d = double('Anon');
+  ok $d.double-class === Mu,
+    'ad-hoc doubles report Mu as their double-class';
+}
+
+# Class-based double permits dispatch of real but unstubbed methods
+{
+  my class Greeter {
+    method hello { 'hi' }
+  }
+
+  my $d = double(Greeter);
+  my $r = $d.hello;
+
+  ok !$r.defined, 'unstubbed real method returns Any (does not invoke real impl)';
+  is $d.received('hello'), True, 'the call is still tracked';
+}
+
+# Doubles work inside a describe/it example
+{
+  registry().clear;
+
+  my $captured;
+  describe 'with a double', {
+    it 'dispatches stubs to the example body', {
+      my $repo = double('Repo', find => { id => 42, name => 'thing' });
+      $captured = $repo.find('whatever');
+      expect($repo.received('find')).to.be(True);
+    }
+  }
+
+  use BDD::Behave::Runner;
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run(registry().suites[0]);
+  $sink.close;
+
+  is $result.passed, 1, 'the example used the double and passed';
+  is $captured<id>,  42, 'stub return value reached the example body';
+}
+
+done-testing;

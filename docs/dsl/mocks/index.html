@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/shared-contexts/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/mocks/">
       
       
-        <link rel="prev" href="../hooks/">
+        <link rel="prev" href="../focus-skip/">
       
       
-        <link rel="next" href="../shared-examples/">
+        <link rel="next" href="../expect/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Shared Contexts - BDD::Behave</title>
+        <title>Doubles - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shared-contexts" class="md-skip">
+        <a href="#doubles" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Shared Contexts
+              Doubles
             
           </span>
         </div>
@@ -434,37 +434,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Contexts
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../shared-contexts/" class="md-nav__link">
         
   
   
@@ -480,103 +453,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-a-shared-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining a shared context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#including-a-shared-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Including a shared context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hooks-contributed-by-a-shared-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Hooks contributed by a shared context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shadowing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shadowing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterized-shared-contexts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterized shared contexts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#combining-shared-contexts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Combining shared contexts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -670,10 +546,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../mocks/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doubles
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -689,6 +592,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-an-ad-hoc-double" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating an ad-hoc double
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-unstubbed-methods-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What unstubbed methods do
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callable-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callable stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-stubs-after-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding stubs after creation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying calls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-based-doubles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class-based doubles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reserved-method-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserved method names
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -810,10 +810,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-a-shared-context" class="md-nav__link">
+  <a href="#creating-an-ad-hoc-double" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining a shared context
+        Creating an ad-hoc double
       
     </span>
   </a>
@@ -821,10 +821,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#including-a-shared-context" class="md-nav__link">
+  <a href="#what-unstubbed-methods-do" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Including a shared context
+        What unstubbed methods do
       
     </span>
   </a>
@@ -832,10 +832,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#hooks-contributed-by-a-shared-context" class="md-nav__link">
+  <a href="#callable-stubs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hooks contributed by a shared context
+        Callable stubs
       
     </span>
   </a>
@@ -843,10 +843,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shadowing" class="md-nav__link">
+  <a href="#adding-stubs-after-creation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shadowing
+        Adding stubs after creation
       
     </span>
   </a>
@@ -854,10 +854,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#parameterized-shared-contexts" class="md-nav__link">
+  <a href="#verifying-calls" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameterized shared contexts
+        Verifying calls
       
     </span>
   </a>
@@ -865,10 +865,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#combining-shared-contexts" class="md-nav__link">
+  <a href="#class-based-doubles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Combining shared contexts
+        Class-based doubles
       
     </span>
   </a>
@@ -876,10 +876,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
+  <a href="#reserved-method-names" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Errors
+        Reserved method names
       
     </span>
   </a>
@@ -906,44 +906,115 @@
   
 
 
-<h1 id="shared-contexts">Shared Contexts<a class="headerlink" href="#shared-contexts" title="Permanent link">&para;</a></h1>
-<p>Shared contexts let you package up <code>let</code> definitions and hooks under a name, then mix them into any number of <code>describe</code> or <code>context</code> groups. They're useful when several specs need the same setup — fixtures, logging, an authenticated user — without copy-paste.</p>
-<p><code>shared-context</code> and <code>include-context</code> are exported from <code>BDD::Behave</code>.</p>
-<h2 id="defining-a-shared-context">Defining a shared context<a class="headerlink" href="#defining-a-shared-context" title="Permanent link">&para;</a></h2>
-<p><code>shared-context</code> takes a name and a block. The block can call any DSL helper that's legal inside a group — <code>let</code>, <code>before-each</code>, <code>after-each</code>, <code>before-all</code>, <code>after-all</code>, even other <code>include-context</code> calls.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<h1 id="doubles">Doubles<a class="headerlink" href="#doubles" title="Permanent link">&para;</a></h1>
+<p>A <em>double</em> is a stand-in object you create inside a spec to take the place of a collaborator that's irrelevant, expensive, or inconvenient to construct for real. The double records every method called on it, and any call that has been pre-configured returns the value you supplied.</p>
+<p><code>double</code> is exported from <code>BDD::Behave</code>.</p>
+<p>This page covers the basics: creating doubles, stubbing return values, and asserting which methods were called. More expressive stubbing (<code>allow(...).to.receive(...)</code>) and call-argument matchers will land in later releases.</p>
+<h2 id="creating-an-ad-hoc-double">Creating an ad-hoc double<a class="headerlink" href="#creating-an-ad-hoc-double" title="Permanent link">&para;</a></h2>
+<p>The simplest form takes a name and a list of <code>method =&gt; value</code> pairs:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
 
-<span class="n">shared-context</span> <span class="s">&#39;with widgets&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">widget</span>, { <span class="s">&#39;gadget&#39;</span> });
-  <span class="k">let</span>(:<span class="n">count</span>,  { <span class="mi">3</span> });
-};
-</code></pre></div></td></tr></table></div>
-<p>A shared context on its own does nothing — it isn't run until a group includes it.</p>
-<h2 id="including-a-shared-context">Including a shared context<a class="headerlink" href="#including-a-shared-context" title="Permanent link">&para;</a></h2>
-<p>Call <code>include-context 'name'</code> from inside a <code>describe</code> or <code>context</code>. The shared block runs in the including group's scope, so its <code>let</code> definitions and hooks become part of that group exactly as if you'd written them inline.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;shared-context inclusion&#39;</span>, {
-  <span class="n">include-context</span> <span class="s">&#39;with widgets&#39;</span>;
+<span class="n">describe</span> <span class="s">&#39;order summary&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;reads name and total from a user double&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$user</span> = <span class="n">double</span>(<span class="s">&#39;User&#39;</span>, <span class="nb">name</span> =&gt; <span class="s">&#39;alice&#39;</span>, <span class="nb">total</span> =&gt; <span class="mi">99</span>);
 
-  <span class="n">it</span> <span class="s">&#39;pulls in lets from the shared context&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;gadget&#39;</span>);
-    <span class="n">expect</span>(:<span class="n">count</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">3</span>);
+    <span class="n">expect</span>(<span class="nv">$user</span>.<span class="nb">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;alice&#39;</span>);
+    <span class="n">expect</span>(<span class="nv">$user</span>.<span class="nb">total</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
   }
 }
 </code></pre></div></td></tr></table></div>
-<h2 id="hooks-contributed-by-a-shared-context">Hooks contributed by a shared context<a class="headerlink" href="#hooks-contributed-by-a-shared-context" title="Permanent link">&para;</a></h2>
-<p>Hooks declared in a shared context fire around the including group's examples like any other hook in that group:</p>
+<p>The name is purely cosmetic — it shows up in error messages from the double itself.</p>
+<p><code>double()</code> with no arguments produces an <em>anonymous</em> double:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$d</span> = <span class="n">double</span>;
+<span class="nv">$d</span>.<span class="n">poke</span>;
+<span class="n">expect</span>(<span class="nv">$d</span>.<span class="n">received</span>(<span class="s">&#39;poke&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="what-unstubbed-methods-do">What unstubbed methods do<a class="headerlink" href="#what-unstubbed-methods-do" title="Permanent link">&para;</a></h2>
+<p>Calling a method on an ad-hoc double that you didn't stub returns <code>Any</code>. The call is still recorded, so you can verify it happened:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$log</span> = <span class="n">double</span>(<span class="s">&#39;Logger&#39;</span>);
+<span class="nv">$log</span>.<span class="nb">warn</span>(<span class="s">&#39;careful&#39;</span>);                    <span class="c1"># returns Any</span>
+<span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">received</span>(<span class="s">&#39;warn&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
+</code></pre></div></td></tr></table></div>
+<p>This makes ad-hoc doubles permissive by design — they let you focus on the calls you actually care about.</p>
+<h2 id="callable-stubs">Callable stubs<a class="headerlink" href="#callable-stubs" title="Permanent link">&para;</a></h2>
+<p>If the stub value is a <code>Callable</code>, the double invokes it with the call's arguments and returns the result:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$upper</span> = <span class="n">double</span>(<span class="s">&#39;Upper&#39;</span>, <span class="n">shout</span> =&gt; -&gt; <span class="nv">$s</span> { <span class="nv">$s</span>.<span class="nb">uc</span> });
+
+<span class="n">expect</span>(<span class="nv">$upper</span>.<span class="n">shout</span>(<span class="s">&#39;hi&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;HI&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>This is useful when the return value should depend on the input.</p>
+<h2 id="adding-stubs-after-creation">Adding stubs after creation<a class="headerlink" href="#adding-stubs-after-creation" title="Permanent link">&para;</a></h2>
+<p><code>add-stub</code> accepts the same <code>method =&gt; value</code> pairs as <code>double()</code> and returns the double, so you can chain:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$cfg</span> = <span class="n">double</span>(<span class="s">&#39;Config&#39;</span>).<span class="n">add-stub</span>(<span class="n">theme</span> =&gt; <span class="s">&#39;dark&#39;</span>, <span class="n">font</span> =&gt; <span class="s">&#39;mono&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$cfg</span>.<span class="n">theme</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;dark&#39;</span>);
+<span class="n">expect</span>(<span class="nv">$cfg</span>.<span class="n">font</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;mono&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="verifying-calls">Verifying calls<a class="headerlink" href="#verifying-calls" title="Permanent link">&para;</a></h2>
+<p>Every call is captured. The double exposes a small set of methods for asking what happened:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>received($method)</code></td>
+<td><code>True</code> if <code>$method</code> was called at least once.</td>
+</tr>
+<tr>
+<td><code>call-count($method)</code></td>
+<td>Number of times <code>$method</code> was called.</td>
+</tr>
+<tr>
+<td><code>calls-of($method)</code></td>
+<td>List of <code>Call</code> objects for <code>$method</code>, in the order they happened.</td>
+</tr>
+<tr>
+<td><code>calls</code></td>
+<td>List of every <code>Call</code> made on the double.</td>
+</tr>
+<tr>
+<td><code>reset</code></td>
+<td>Clears the recorded calls (stubs survive).</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>Call</code> exposes <code>method</code>, <code>args</code> (positional), <code>named</code>, <code>file</code>, and <code>line</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$log</span> = <span class="n">double</span>(<span class="s">&#39;Logger&#39;</span>);
+<span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;starting&#39;</span>);
+<span class="nv">$log</span>.<span class="nb">warn</span>(<span class="s">&#39;careful&#39;</span>, :<span class="n">reason</span><span class="s">&lt;low-disk&gt;</span>);
+
+<span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">call-count</span>(<span class="s">&#39;info&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
+<span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">calls-of</span>(<span class="s">&#39;warn&#39;</span>)[<span class="mi">0</span>].<span class="nb">named</span><span class="s">&lt;reason&gt;</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;low-disk&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="class-based-doubles">Class-based doubles<a class="headerlink" href="#class-based-doubles" title="Permanent link">&para;</a></h2>
+<p>Pass a class as the first argument and the double becomes <em>verifying</em>: every stubbed method must exist on the class, and dispatching a method the class doesn't have dies. This catches typos and stubs that drift out of sync with the real implementation.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -956,122 +1027,30 @@
 <span class="normal">10</span>
 <span class="normal">11</span>
 <span class="normal">12</span>
-<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-context</span> <span class="s">&#39;with logging&#39;</span>, {
-  <span class="k">my</span> <span class="nv">@log</span>;
-  <span class="o">before-</span><span class="n">each</span> { <span class="nv">@log</span> = [] }
-  <span class="k">let</span>(:<span class="n">log</span>,   { <span class="nv">@log</span> });
-};
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Greeter</span> {
+  <span class="k">method</span> <span class="n">hello</span>(<span class="nv">$name</span>) { <span class="s">&quot;hello, $name&quot;</span> }
+}
 
-<span class="n">describe</span> <span class="s">&#39;shared-context with hooks&#39;</span>, {
-  <span class="n">include-context</span> <span class="s">&#39;with logging&#39;</span>;
+<span class="n">describe</span> <span class="s">&#39;class-based double&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;stubs only methods that exist on the class&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$g</span> = <span class="n">double</span>(<span class="n">Greeter</span>, <span class="n">hello</span> =&gt; <span class="s">&#39;mocked&#39;</span>);
 
-  <span class="n">it</span> <span class="s">&#39;starts with an empty log per example&#39;</span>, {
-    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;log&#39;</span>).<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;world&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;mocked&#39;</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">double-class</span> === <span class="n">Greeter</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">double-name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;Greeter&#39;</span>);
   }
 }
 </code></pre></div></td></tr></table></div>
-<p>Because the hook lives in the including group, it inherits into nested <code>context</code> blocks the same way an inline hook would. See <a href="../hooks/">Hooks</a> for the full ordering rules.</p>
-<h2 id="shadowing">Shadowing<a class="headerlink" href="#shadowing" title="Permanent link">&para;</a></h2>
-<p>A <code>let</code> defined in the including group (or any inner group) shadows a <code>let</code> of the same name from a shared context:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-context</span> <span class="s">&#39;with default name&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">name</span>, { <span class="s">&#39;default&#39;</span> });
-};
-
-<span class="n">describe</span> <span class="s">&#39;inner let shadows shared-context let&#39;</span>, {
-  <span class="n">include-context</span> <span class="s">&#39;with default name&#39;</span>;
-  <span class="k">let</span>(:<span class="n">name</span>, { <span class="s">&#39;override&#39;</span> });
-
-  <span class="n">it</span> <span class="s">&#39;sees the inner value&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;override&#39;</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="parameterized-shared-contexts">Parameterized shared contexts<a class="headerlink" href="#parameterized-shared-contexts" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name in <code>include-context</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-context</span> <span class="s">&#39;with prefix&#39;</span>, -&gt; <span class="nv">$prefix</span> {
-  <span class="k">let</span>(:<span class="n">greeting</span>, { <span class="s">&quot;$prefix, world&quot;</span> });
-};
-
-<span class="n">describe</span> <span class="s">&#39;parameterized shared context&#39;</span>, {
-  <span class="n">include-context</span> <span class="s">&#39;with prefix&#39;</span>, <span class="s">&#39;hello&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;forwards arguments to the shared block&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">greeting</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, world&#39;</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="combining-shared-contexts">Combining shared contexts<a class="headerlink" href="#combining-shared-contexts" title="Permanent link">&para;</a></h2>
-<p>A single group can include any number of shared contexts, and nested groups can include their own on top of what they inherit:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;multiple shared contexts in one group&#39;</span>, {
-  <span class="n">include-context</span> <span class="s">&#39;with widgets&#39;</span>;
-  <span class="n">include-context</span> <span class="s">&#39;with default name&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;merges lets from both shared contexts&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;gadget&#39;</span>);
-    <span class="n">expect</span>(:<span class="n">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;default&#39;</span>);
-  }
-}
-
-<span class="n">describe</span> <span class="s">&#39;nested groups inherit shared-context contributions&#39;</span>, {
-  <span class="n">include-context</span> <span class="s">&#39;with widgets&#39;</span>;
-
-  <span class="n">context</span> <span class="s">&#39;inner context&#39;</span>, {
-    <span class="n">include-context</span> <span class="s">&#39;with default name&#39;</span>;
-
-    <span class="n">it</span> <span class="s">&#39;sees lets from outer and inner shared contexts&#39;</span>, {
-      <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;gadget&#39;</span>);
-      <span class="n">expect</span>(:<span class="n">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;default&#39;</span>);
-    }
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p>What you can't do with a class-based double:</p>
 <ul>
-<li>Calling <code>include-context</code> with an unregistered name dies with <code>Unknown shared context: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>include-context</code> outside a <code>describe</code> or <code>context</code> block dies — shared contexts can only be mixed into a group.</li>
+<li>Stub a method the class doesn't define — <code>double(Greeter, missing =&gt; 1)</code> dies at creation.</li>
+<li>Call a method the class doesn't define — <code>$g.bogus</code> dies at dispatch.</li>
 </ul>
+<p>The double does <em>not</em> invoke the real implementation; the class is only consulted for validation.</p>
+<h2 id="reserved-method-names">Reserved method names<a class="headerlink" href="#reserved-method-names" title="Permanent link">&para;</a></h2>
+<p>Because <code>Double</code> exposes the verification API on the same object you call stubbed methods on, a handful of method names are reserved and cannot be used as stub keys:</p>
+<p><code>add-stub</code>, <code>call-count</code>, <code>calls</code>, <code>calls-of</code>, <code>double-class</code>, <code>double-name</code>, <code>received</code>, <code>reset</code>, <code>stubs</code>.</p>
+<p>If your real collaborator uses one of these names, you'll need to assert the call indirectly (e.g. by routing the dispatch through a wrapper) until 4.4.2 lands more flexible stubbing.</p>
 
 
 
