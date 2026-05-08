@@ -185,6 +185,12 @@ our sub before-each(&block, *%filter) is export {
 our sub after-each(&block, *%filter) is export {
   register-hook('after-each', &block, |%filter);
 }
+our sub around-each(&block, *%filter) is export {
+  register-hook('around-each', &block, |%filter);
+}
+our sub around-all(&block, *%filter) is export {
+  register-hook('around-all', &block, |%filter);
+}
 
 our sub shared-context(Str:D $name, &block) is export {
   shared-context-registry().register($name, &block);

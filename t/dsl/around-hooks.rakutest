@@ -1,0 +1,302 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+sub capture-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# around-each wraps the example body and before/after-each
+{
+  registry().clear;
+  my @log;
+
+  describe 'around-each basic', {
+    before-each { @log.push('before') }
+    after-each  { @log.push('after')  }
+
+    around-each -> &continue {
+      @log.push('around-start');
+      continue();
+      @log.push('around-end');
+    }
+
+    it 'runs', { @log.push('example') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    ['around-start', 'before', 'example', 'after', 'around-end'],
+    'around-each wraps before-each, example, and after-each';
+}
+
+# Multiple around-each hooks compose in registration order (outer wraps inner)
+{
+  registry().clear;
+  my @log;
+
+  describe 'around-each composition', {
+    around-each -> &continue {
+      @log.push('a-start');
+      continue();
+      @log.push('a-end');
+    }
+    around-each -> &continue {
+      @log.push('b-start');
+      continue();
+      @log.push('b-end');
+    }
+
+    it 'runs', { @log.push('example') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    ['a-start', 'b-start', 'example', 'b-end', 'a-end'],
+    'first-registered around-each is outermost';
+}
+
+# Outer-group around-each wraps inner-group around-each
+{
+  registry().clear;
+  my @log;
+
+  describe 'outer', {
+    around-each -> &continue {
+      @log.push('outer-start');
+      continue();
+      @log.push('outer-end');
+    }
+
+    context 'inner', {
+      around-each -> &continue {
+        @log.push('inner-start');
+        continue();
+        @log.push('inner-end');
+      }
+
+      it 'runs', { @log.push('example') }
+    }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    ['outer-start', 'inner-start', 'example', 'inner-end', 'outer-end'],
+    'outer-group around-each wraps inner-group around-each';
+}
+
+# Skipping the continuation marks the example as skipped
+{
+  registry().clear;
+  my @log;
+
+  describe 'skipping continuation', {
+    around-each -> &continue {
+      @log.push('start');
+      # do not call continue
+      @log.push('end');
+    }
+
+    it 'never runs', { @log.push('example') }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @log.Array, ['start', 'end'], 'example body did not execute';
+  is $result.skipped, 1, 'unrun example counted as skipped';
+  is $result.passed,  0, 'no examples passed';
+  is $result.failed,  0, 'no examples failed';
+}
+
+# Exception in around-each before continuation marks example as failure
+{
+  registry().clear;
+
+  describe 'around-each throws before continue', {
+    around-each -> &continue {
+      die 'setup boom';
+    }
+
+    it 'never runs', { True }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is $result.failed, 1, 'example marked as failed';
+  is $result.passed, 0, 'no examples passed';
+  is $result.skipped, 0, 'not skipped';
+}
+
+# LEAVE block in around-each fires for cleanup even when example fails
+{
+  registry().clear;
+  my @log;
+
+  describe 'LEAVE-style cleanup', {
+    around-each -> &continue {
+      @log.push('acquire');
+      LEAVE @log.push('release');
+      continue();
+    }
+
+    it 'fails inside', { die 'boom' }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @log.Array, ['acquire', 'release'],
+    'LEAVE in around-each runs even when example body fails';
+  is $result.failed, 1, 'failing example still recorded as failure';
+}
+
+# around-each respects :tag filters
+{
+  registry().clear;
+  my @log;
+
+  describe 'tag-filtered around-each', {
+    around-each :tag<db>, -> &continue {
+      @log.push('db-start');
+      continue();
+      @log.push('db-end');
+    }
+
+    it 'with db', :tag<db>, { @log.push('a') }
+    it 'without',           { @log.push('b') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    ['db-start', 'a', 'db-end', 'b'],
+    ':tag-filtered around-each only fires for matching examples';
+}
+
+# around-all wraps before-all + body + after-all
+{
+  registry().clear;
+  my @log;
+
+  describe 'around-all basic', {
+    before-all { @log.push('before-all') }
+    after-all  { @log.push('after-all')  }
+
+    around-all -> &continue {
+      @log.push('around-start');
+      continue();
+      @log.push('around-end');
+    }
+
+    it 'a', { @log.push('a') }
+    it 'b', { @log.push('b') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    ['around-start', 'before-all', 'a', 'b', 'after-all', 'around-end'],
+    'around-all wraps before-all, body, and after-all';
+}
+
+# Skipping around-all continuation marks all leaf examples as skipped
+{
+  registry().clear;
+  my @log;
+
+  describe 'around-all skips group', {
+    around-all -> &continue {
+      @log.push('start');
+      # do not call continue
+    }
+
+    before-all { @log.push('before-all') }
+
+    it 'a', { @log.push('a') }
+    it 'b', { @log.push('b') }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @log.Array, ['start'], 'before-all and examples did not run';
+  is $result.skipped, 2, 'both examples counted as skipped';
+}
+
+# around-all only fires when at least one descendant matches a filter
+{
+  registry().clear;
+  my @log;
+
+  describe 'around-all filtered, no match', {
+    around-all :tag<expensive>, -> &continue {
+      @log.push('start');
+      continue();
+      @log.push('end');
+    }
+
+    it 'cheap', :tag<cheap>, { @log.push('cheap') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array, ['cheap'],
+    'tag-filtered around-all is bypassed when no descendants match';
+}
+
+{
+  registry().clear;
+  my @log;
+
+  describe 'around-all filtered, match', {
+    around-all :tag<expensive>, -> &continue {
+      @log.push('start');
+      continue();
+      @log.push('end');
+    }
+
+    it 'cheap',     :tag<cheap>,     { @log.push('cheap') }
+    it 'expensive', :tag<expensive>, { @log.push('expensive') }
+  }
+
+  capture-run(registry().suites[0]);
+
+  is-deeply @log.Array,
+    ['start', 'cheap', 'expensive', 'end'],
+    'tag-filtered around-all fires once when at least one descendant matches';
+}
+
+# Hooks must be called inside a describe/context
+{
+  registry().clear;
+  dies-ok { around-each -> &c { c() } }, 'around-each outside describe dies';
+  dies-ok { around-all  -> &c { c() } }, 'around-all outside describe dies';
+}
+
+# Hook records expose around phase
+{
+  registry().clear;
+
+  describe 'around-each records', {
+    around-each -> &c { c() }
+    it 'a', { True }
+  }
+
+  my $group = registry().suites[0].groups[0];
+  my @hooks = $group.hooks('around-each');
+  is @hooks.elems, 1, 'one around-each hook stored';
+  isa-ok @hooks[0], BDD::Behave::SpecTree::Hook, 'is a Hook record';
+}
+
+done-testing;

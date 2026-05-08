@@ -14,6 +14,8 @@ our class ExampleGroup is SpecNode does Container {
   has Hook @.after-all-hooks;
   has Hook @.before-each-hooks;
   has Hook @.after-each-hooks;
+  has Hook @.around-all-hooks;
+  has Hook @.around-each-hooks;
   has @.lets;
 
   method groups {
@@ -55,6 +57,8 @@ our class ExampleGroup is SpecNode does Container {
       when 'after-all'   { @!after-all-hooks.push($hook) }
       when 'before-each' { @!before-each-hooks.push($hook) }
       when 'after-each'  { @!after-each-hooks.push($hook) }
+      when 'around-all'  { @!around-all-hooks.push($hook) }
+      when 'around-each' { @!around-each-hooks.push($hook) }
     }
     $hook;
   }
@@ -65,6 +69,8 @@ our class ExampleGroup is SpecNode does Container {
       when 'after-all'   { @!after-all-hooks.List }
       when 'before-each' { @!before-each-hooks.List }
       when 'after-each'  { @!after-each-hooks.List }
+      when 'around-all'  { @!around-all-hooks.List }
+      when 'around-each' { @!around-each-hooks.List }
     }
   }
 }

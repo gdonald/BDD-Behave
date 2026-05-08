@@ -1,6 +1,6 @@
 # Hooks
 
-Hooks let you run setup and teardown code around examples. Behave provides four hooks:
+Hooks let you run setup and teardown code around examples. Behave provides six hooks:
 
 | Hook | Fires |
 | --- | --- |
@@ -8,8 +8,10 @@ Hooks let you run setup and teardown code around examples. Behave provides four 
 | `before-each` | Before every example in the group (and inherited by nested groups) |
 | `after-each`  | After every example in the group (and inherited by nested groups) |
 | `after-all`   | Once, after the last example in the group |
+| `around-each` | Wraps each example *and* its `before-each` / `after-each` hooks |
+| `around-all`  | Wraps the entire group, including `before-all` / `after-all` |
 
-All four are exported from `BDD::Behave` and must be called inside a `describe` or `context` block.
+All six are exported from `BDD::Behave` and must be called inside a `describe` or `context` block.
 
 ## Basic example
 
@@ -75,6 +77,117 @@ describe 'database queries', {
 
 !!! warning
     Anything `before-all` mutates is shared across the group's examples. Prefer `before-each` for per-example isolation.
+
+## `around-each` and `around-all`
+
+Around hooks receive a continuation — a `Callable` that runs everything inside
+the wrapper. The hook is responsible for invoking it. This makes around hooks
+the right tool for *paired* setup/teardown that must bracket the example, even
+across exceptions.
+
+`around-each` wraps each example, including its `before-each` and `after-each`
+hooks:
+
+```raku
+describe 'users repository', {
+  around-each -> &continue {
+    begin-transaction;
+    LEAVE rollback-transaction;
+    continue();
+  }
+
+  it 'creates a user', { ... }
+  it 'finds a user',   { ... }
+}
+```
+
+`around-all` wraps the entire group, including `before-all` and `after-all`:
+
+```raku
+describe 'expensive integration suite', {
+  around-all -> &continue {
+    boot-fixture-server;
+    LEAVE shutdown-fixture-server;
+    continue();
+  }
+
+  before-all { ... }   # runs *inside* the around-all wrapper
+  it 'a',     { ... }
+  it 'b',     { ... }
+}
+```
+
+Either form of around hook can also be written as a bare block that uses the
+implicit `$_`:
+
+```raku
+around-each {
+  setup-context;
+  $_();
+  teardown-context;
+}
+```
+
+### Composition order
+
+When a single group registers multiple around hooks, the **first-registered
+hook is outermost** — the second is wrapped by the first, and so on. Across
+nested groups, outer-group around hooks wrap inner-group around hooks:
+
+```raku
+describe 'outer', {
+  around-each -> &c { trace('outer-start'); c(); trace('outer-end') }
+
+  context 'inner', {
+    around-each -> &c { trace('inner-start'); c(); trace('inner-end') }
+
+    it 'runs', { trace('body') }
+    # trace: outer-start, inner-start, body, inner-end, outer-end
+  }
+}
+```
+
+### Skipping the continuation
+
+If an around hook returns without invoking the continuation, the example (or
+group) is reported as **skipped** and counted in the suite's `skipped` total.
+This lets you write conditional skips inline:
+
+```raku
+around-each -> &continue {
+  unless $env-supports-feature {
+    return;   # example is recorded as skipped
+  }
+  continue();
+}
+```
+
+### Exceptions
+
+If an around hook throws **before** invoking the continuation, the example is
+recorded as a failure and the exception is captured. If a hook throws
+**after** the continuation completes, Behave prints a warning but does not
+overwrite the example's already-recorded result.
+
+Exceptions raised inside the example body are still handled by Behave's
+existing `expect` / `Failures` machinery and *do not* propagate up through the
+continuation — wrap the example body with the relevant matcher instead.
+
+### Metadata filters
+
+Around hooks accept the same metadata filters as the other hook phases (see
+below):
+
+```raku
+around-each :tag<db>, -> &continue {
+  begin-transaction;
+  LEAVE rollback-transaction;
+  continue();
+}
+```
+
+For `around-all`, the hook fires only when at least one descendant example
+matches the filter — mirroring `before-all` / `after-all` filter semantics.
 
 ## Metadata-keyed hooks
 

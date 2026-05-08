@@ -1,6 +1,6 @@
 unit module BDD::Behave::SpecTree::Core;
 
-subset HookPhase of Str where { $_ eq any(<before-all after-all before-each after-each>) };
+subset HookPhase of Str where { $_ eq any(<before-all after-all before-each after-each around-all around-each>) };
 
 our class SpecNode {
   has Str $.description is required;

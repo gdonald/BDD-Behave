@@ -502,6 +502,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#around-each-and-around-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        around-each and around-all
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="around-each and around-all">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#composition-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composition order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skipping-the-continuation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skipping the continuation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metadata-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#metadata-keyed-hooks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -860,6 +921,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#around-each-and-around-all" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        around-each and around-all
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="around-each and around-all">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#composition-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composition order
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skipping-the-continuation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skipping the continuation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exceptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metadata-filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata filters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#metadata-keyed-hooks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -941,7 +1063,7 @@
 
 
 <h1 id="hooks">Hooks<a class="headerlink" href="#hooks" title="Permanent link">&para;</a></h1>
-<p>Hooks let you run setup and teardown code around examples. Behave provides four hooks:</p>
+<p>Hooks let you run setup and teardown code around examples. Behave provides six hooks:</p>
 <table>
 <thead>
 <tr>
@@ -966,9 +1088,17 @@
 <td><code>after-all</code></td>
 <td>Once, after the last example in the group</td>
 </tr>
+<tr>
+<td><code>around-each</code></td>
+<td>Wraps each example <em>and</em> its <code>before-each</code> / <code>after-each</code> hooks</td>
+</tr>
+<tr>
+<td><code>around-all</code></td>
+<td>Wraps the entire group, including <code>before-all</code> / <code>after-all</code></td>
+</tr>
 </tbody>
 </table>
-<p>All four are exported from <code>BDD::Behave</code> and must be called inside a <code>describe</code> or <code>context</code> block.</p>
+<p>All six are exported from <code>BDD::Behave</code> and must be called inside a <code>describe</code> or <code>context</code> block.</p>
 <h2 id="basic-example">Basic example<a class="headerlink" href="#basic-example" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1064,6 +1194,131 @@
 <p class="admonition-title">Warning</p>
 <p>Anything <code>before-all</code> mutates is shared across the group's examples. Prefer <code>before-each</code> for per-example isolation.</p>
 </div>
+<h2 id="around-each-and-around-all"><code>around-each</code> and <code>around-all</code><a class="headerlink" href="#around-each-and-around-all" title="Permanent link">&para;</a></h2>
+<p>Around hooks receive a continuation — a <code>Callable</code> that runs everything inside
+the wrapper. The hook is responsible for invoking it. This makes around hooks
+the right tool for <em>paired</em> setup/teardown that must bracket the example, even
+across exceptions.</p>
+<p><code>around-each</code> wraps each example, including its <code>before-each</code> and <code>after-each</code>
+hooks:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;users repository&#39;</span>, {
+  <span class="n">around-each</span> -&gt; <span class="nv">&amp;continue</span> {
+    <span class="n">begin-transaction</span>;
+    <span class="k">LEAVE</span> <span class="n">rollback-transaction</span>;
+    <span class="n">continue</span>();
+  }
+
+  <span class="n">it</span> <span class="s">&#39;creates a user&#39;</span>, { ... }
+  <span class="n">it</span> <span class="s">&#39;finds a user&#39;</span>,   { ... }
+}
+</code></pre></div></td></tr></table></div>
+<p><code>around-all</code> wraps the entire group, including <code>before-all</code> and <code>after-all</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;expensive integration suite&#39;</span>, {
+  <span class="n">around-all</span> -&gt; <span class="nv">&amp;continue</span> {
+    <span class="n">boot-fixture-server</span>;
+    <span class="k">LEAVE</span> <span class="n">shutdown-fixture-server</span>;
+    <span class="n">continue</span>();
+  }
+
+  <span class="o">before-</span><span class="n">all</span> { ... }   <span class="c1"># runs *inside* the around-all wrapper</span>
+  <span class="n">it</span> <span class="s">&#39;a&#39;</span>,     { ... }
+  <span class="n">it</span> <span class="s">&#39;b&#39;</span>,     { ... }
+}
+</code></pre></div></td></tr></table></div>
+<p>Either form of around hook can also be written as a bare block that uses the
+implicit <code>$_</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">around-each</span> {
+  <span class="n">setup-context</span>;
+  <span class="nv">$_</span>();
+  <span class="n">teardown-context</span>;
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="composition-order">Composition order<a class="headerlink" href="#composition-order" title="Permanent link">&para;</a></h3>
+<p>When a single group registers multiple around hooks, the <strong>first-registered
+hook is outermost</strong> — the second is wrapped by the first, and so on. Across
+nested groups, outer-group around hooks wrap inner-group around hooks:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {
+  <span class="n">around-each</span> -&gt; <span class="nv">&amp;c</span> { <span class="n">trace</span>(<span class="s">&#39;outer-start&#39;</span>); <span class="n">c</span>(); <span class="n">trace</span>(<span class="s">&#39;outer-end&#39;</span>) }
+
+  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
+    <span class="n">around-each</span> -&gt; <span class="nv">&amp;c</span> { <span class="n">trace</span>(<span class="s">&#39;inner-start&#39;</span>); <span class="n">c</span>(); <span class="n">trace</span>(<span class="s">&#39;inner-end&#39;</span>) }
+
+    <span class="n">it</span> <span class="s">&#39;runs&#39;</span>, { <span class="n">trace</span>(<span class="s">&#39;body&#39;</span>) }
+    <span class="c1"># trace: outer-start, inner-start, body, inner-end, outer-end</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="skipping-the-continuation">Skipping the continuation<a class="headerlink" href="#skipping-the-continuation" title="Permanent link">&para;</a></h3>
+<p>If an around hook returns without invoking the continuation, the example (or
+group) is reported as <strong>skipped</strong> and counted in the suite's <code>skipped</code> total.
+This lets you write conditional skips inline:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">around-each</span> -&gt; <span class="nv">&amp;continue</span> {
+  <span class="k">unless</span> <span class="nv">$env-supports-feature</span> {
+    <span class="k">return</span>;   <span class="c1"># example is recorded as skipped</span>
+  }
+  <span class="n">continue</span>();
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="exceptions">Exceptions<a class="headerlink" href="#exceptions" title="Permanent link">&para;</a></h3>
+<p>If an around hook throws <strong>before</strong> invoking the continuation, the example is
+recorded as a failure and the exception is captured. If a hook throws
+<strong>after</strong> the continuation completes, Behave prints a warning but does not
+overwrite the example's already-recorded result.</p>
+<p>Exceptions raised inside the example body are still handled by Behave's
+existing <code>expect</code> / <code>Failures</code> machinery and <em>do not</em> propagate up through the
+continuation — wrap the example body with the relevant matcher instead.</p>
+<h3 id="metadata-filters">Metadata filters<a class="headerlink" href="#metadata-filters" title="Permanent link">&para;</a></h3>
+<p>Around hooks accept the same metadata filters as the other hook phases (see
+below):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">around-each</span> :<span class="n">tag</span><span class="s">&lt;db&gt;</span>, -&gt; <span class="nv">&amp;continue</span> {
+  <span class="n">begin-transaction</span>;
+  <span class="k">LEAVE</span> <span class="n">rollback-transaction</span>;
+  <span class="n">continue</span>();
+}
+</code></pre></div></td></tr></table></div>
+<p>For <code>around-all</code>, the hook fires only when at least one descendant example
+matches the filter — mirroring <code>before-all</code> / <code>after-all</code> filter semantics.</p>
 <h2 id="metadata-keyed-hooks">Metadata-keyed hooks<a class="headerlink" href="#metadata-keyed-hooks" title="Permanent link">&para;</a></h2>
 <p>All four hooks accept metadata filters that gate when the hook fires. Filters
 are passed as named arguments before the block:</p>

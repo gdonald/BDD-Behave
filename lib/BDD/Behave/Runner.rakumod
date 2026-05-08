@@ -79,32 +79,62 @@ our class Runner {
   }
 
   method run-group(ExampleGroup $group) {
-    # Print the group description with arrow
     self.print-indent;
     say "⮑  '{$group.description}'";
 
-    # Track description for nested context
     @!description-stack.push($group.description);
     $!indent++;
 
     my $group-skipped = $group.effective-skipped;
 
-    # Skipped groups don't run before-all / after-all
-    self.run-hooks($group, 'before-all') unless $group-skipped;
+    if $group-skipped {
+      self.run-group-body($group);
+    } else {
+      my @around-hooks = self.runnable-around-all-hooks($group);
 
-    # Process all children
+      my $continuation-called = False;
+      my &core = sub {
+        $continuation-called = True;
+        self.run-hooks($group, 'before-all');
+        self.run-group-body($group);
+        self.run-hooks($group, 'after-all');
+      };
+
+      if @around-hooks.elems {
+        my &chain = &core;
+        for @around-hooks.reverse -> $hook {
+          my &next = &chain;
+          &chain = sub { ($hook.callback)(&next) };
+        }
+
+        try {
+          chain();
+          CATCH {
+            default {
+              warn "around-all hook failed in {$group.description}: {.message}";
+            }
+          }
+        }
+
+        unless $continuation-called {
+          self.mark-around-all-skipped($group);
+        }
+      } else {
+        core();
+      }
+    }
+
+    $!indent--;
+    @!description-stack.pop;
+  }
+
+  method run-group-body(ExampleGroup $group) {
     for $group.children -> $child {
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
         when Example      { self.handle-example($child) if self.example-matches($child) }
       }
     }
-
-    self.run-hooks($group, 'after-all') unless $group-skipped;
-
-    # Restore context
-    $!indent--;
-    @!description-stack.pop;
   }
 
   method handle-example(Example $example) {
@@ -113,16 +143,106 @@ our class Runner {
       return;
     }
 
-    # before-each runs outer-to-inner across the ancestor chain
+    my @around-hooks = self.matching-around-each-hooks($example);
+
+    my $continuation-called = False;
+    my &core = sub {
+      $continuation-called = True;
+      self.run-each-and-example($example);
+    };
+
+    if !@around-hooks.elems {
+      core();
+      return;
+    }
+
+    my &chain = &core;
+    for @around-hooks.reverse -> $hook {
+      my &next = &chain;
+      &chain = sub { ($hook.callback)(&next) };
+    }
+
+    try {
+      chain();
+      CATCH {
+        default {
+          if $continuation-called {
+            warn "around-each hook raised after example: {.message}";
+          } else {
+            self.print-indent;
+            say "⮑  '{$example.description}'";
+            $!result.add-fail(%(
+              description => self.full-description($example),
+              file        => $example.file,
+              line        => $example.line,
+              exception   => $_,
+            ));
+            self.print-indent;
+            say red("  ⮑  FAILURE");
+          }
+          return;
+        }
+      }
+    }
+
+    unless $continuation-called {
+      self.print-around-skipped($example);
+    }
+  }
+
+  method run-each-and-example(Example $example) {
     for self.ancestor-groups($example) -> $ancestor {
       self.run-each-hooks($ancestor, 'before-each', $example);
     }
 
     self.run-example($example);
 
-    # after-each runs inner-to-outer
     for self.ancestor-groups($example).reverse -> $ancestor {
       self.run-each-hooks($ancestor, 'after-each', $example);
+    }
+  }
+
+  method matching-around-each-hooks(Example $example --> List) {
+    my @hooks;
+    for self.ancestor-groups($example) -> $group {
+      for $group.hooks('around-each') -> $hook {
+        @hooks.push($hook) if $hook.matches($example);
+      }
+    }
+    @hooks.List;
+  }
+
+  method runnable-around-all-hooks(ExampleGroup $group --> List) {
+    my @hooks;
+    my @runnable;
+    my $runnable-collected = False;
+    for $group.hooks('around-all') -> $hook {
+      if $hook.has-filter {
+        unless $runnable-collected {
+          @runnable = self.runnable-examples($group);
+          $runnable-collected = True;
+        }
+        next unless @runnable.first({ $hook.matches($_) }).defined;
+      }
+      @hooks.push($hook);
+    }
+    @hooks.List;
+  }
+
+  method print-around-skipped(Example $example) {
+    self.print-indent;
+    say light-blue("⮑  '{$example.description}'");
+    self.print-indent;
+    say light-blue("  ⮑  SKIPPED (around-each did not invoke continuation)");
+    $!result.add-skipped;
+  }
+
+  method mark-around-all-skipped(ExampleGroup $group) {
+    self.print-indent;
+    say light-blue("⮑  SKIPPED (around-all did not invoke continuation)");
+    for self.runnable-examples($group) -> $example {
+      next if $example.effective-skipped;
+      $!result.add-skipped;
     }
   }
 
