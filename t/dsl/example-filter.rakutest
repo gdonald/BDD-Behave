@@ -1,0 +1,292 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+sub capture-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# No --example argument runs everything (existing behavior preserved).
+{
+  registry().clear;
+
+  my @ran;
+  describe 'outer', {
+    it 'one', { @ran.push('one') }
+    it 'two', { @ran.push('two') }
+  }
+
+  capture-run(registry().suites[0]);
+  is-deeply @ran.sort.list, ('one', 'two'),
+    'no --example pattern runs every example';
+}
+
+# --example matches against the full nested description (group + example).
+{
+  registry().clear;
+
+  my @ran;
+  describe 'User signup', {
+    it 'creates a new account',  { @ran.push('signup-create') }
+    it 'rejects duplicate emails', { @ran.push('signup-reject') }
+  }
+
+  describe 'Order checkout', {
+    it 'computes the total', { @ran.push('order-total') }
+  }
+
+  capture-run(registry().suites[0], :example-patterns(['User signup']));
+
+  is-deeply @ran.sort.list, ('signup-create', 'signup-reject'),
+    'group description substring pulls every example in that group';
+}
+
+# --example matches an example description directly.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'mixed', {
+    it 'apple',  { @ran.push('apple')  }
+    it 'banana', { @ran.push('banana') }
+    it 'cherry', { @ran.push('cherry') }
+  }
+
+  capture-run(registry().suites[0], :example-patterns(['banana']));
+
+  is-deeply @ran.sort.list, ('banana',),
+    'example description substring picks exactly that example';
+}
+
+# --example matches against nested context descriptions.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'User signup', {
+    it 'top-level example', { @ran.push('top') }
+
+    context 'with a referral code', {
+      it 'awards bonus credits', { @ran.push('bonus') }
+      it 'rejects expired codes', { @ran.push('expired') }
+    }
+  }
+
+  capture-run(registry().suites[0], :example-patterns(['referral code']));
+
+  is-deeply @ran.sort.list, ('bonus', 'expired'),
+    'inner context description pulls all of its examples';
+}
+
+# Multiple --example flags compose with OR semantics.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'group', {
+    it 'alpha', { @ran.push('alpha') }
+    it 'bravo', { @ran.push('bravo') }
+    it 'charlie', { @ran.push('charlie') }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :example-patterns(['alpha', 'charlie']),
+  );
+
+  is-deeply @ran.sort.list, ('alpha', 'charlie'),
+    'multiple --example patterns match either (OR)';
+}
+
+# --example AND --tag: must match both filters.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'User signup', {
+    it 'fast happy path', :tag<fast>,           { @ran.push('signup-fast') }
+    it 'slow integration', :tag<slow>,          { @ran.push('signup-slow') }
+  }
+
+  describe 'Order checkout', {
+    it 'fast happy path', :tag<fast>,           { @ran.push('checkout-fast') }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :example-patterns(['User signup']),
+    :include-tags(['fast']),
+  );
+
+  is-deeply @ran.sort.list, ('signup-fast',),
+    '--example AND --tag both required (AND semantics)';
+}
+
+# --example AND --exclude-tag: filter both ways.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'User signup', {
+    it 'happy', :tag<fast>,  { @ran.push('happy') }
+    it 'flaky', :tag<flaky>, { @ran.push('flaky') }
+    it 'plain',              { @ran.push('plain') }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :example-patterns(['User signup']),
+    :exclude-tags(['flaky']),
+  );
+
+  is-deeply @ran.sort.list, ('happy', 'plain'),
+    '--exclude-tag still drops examples even when --example matches';
+}
+
+# Regex syntax: /pattern/ wraps a Raku regex.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'numbers', {
+    it 'returns 42', { @ran.push('42')  }
+    it 'returns 100', { @ran.push('100') }
+    it 'returns abc', { @ran.push('abc') }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :example-patterns(['/\d+/']),
+  );
+
+  is-deeply @ran.sort.list, ('100', '42'),
+    '/regex/ form matches by Raku regex';
+}
+
+# Regex with metacharacters: whitespace inside /.../ follows Raku regex rules
+# (spaces in source are not significant — use \s or '...' to match whitespace).
+{
+  registry().clear;
+
+  my @ran;
+  describe 'shapes', {
+    it 'square count is 1',   { @ran.push('square')   }
+    it 'triangle count is 3', { @ran.push('triangle') }
+    it 'sphere is round',     { @ran.push('sphere')   }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :example-patterns([Q[/count\s+is\s+\d/]]),
+  );
+
+  is-deeply @ran.sort.list, ('square', 'triangle'),
+    '/regex/ supports escaped metacharacters and \s for whitespace';
+}
+
+# Pattern that matches nothing yields zero examples.
+{
+  registry().clear;
+
+  my @ran;
+  describe 'group', {
+    it 'a', { @ran.push('a') }
+    it 'b', { @ran.push('b') }
+  }
+
+  my $result = capture-run(
+    registry().suites[0],
+    :example-patterns(['nonexistent']),
+  );
+
+  is @ran.elems, 0, 'no example runs when no description matches';
+  is $result.total, 0, 'RunResult total is 0 when nothing matches';
+}
+
+# Filtered-out groups skip their before-all / after-all hooks.
+{
+  registry().clear;
+
+  my @hook-log;
+  my @ran;
+
+  describe 'kept group', {
+    before-all { @hook-log.push('kept-before-all') }
+    after-all  { @hook-log.push('kept-after-all')  }
+    it 'survives', { @ran.push('survives') }
+  }
+
+  describe 'dropped group', {
+    before-all { @hook-log.push('dropped-before-all') }
+    after-all  { @hook-log.push('dropped-after-all')  }
+    it 'gone', { @ran.push('gone') }
+  }
+
+  capture-run(
+    registry().suites[0],
+    :example-patterns(['kept group']),
+  );
+
+  is-deeply @ran.sort.list, ('survives',),
+    '--example only ran the matching group';
+  is-deeply @hook-log.Array,
+            ['kept-before-all', 'kept-after-all'],
+            'filtered-out group skips both before-all and after-all hooks';
+}
+
+# CLI argument parsing: --example NAME, --example=NAME, -e NAME, -e=NAME, repeated.
+{
+  my $bin   = $*PROGRAM.parent.parent.parent.add('bin/behave');
+  my $spec  = $*PROGRAM.parent.parent.parent.add(
+    'specs/example-filter/example-filter-spec.raku'
+  );
+
+  sub run-behave(*@args) {
+    my $proc = run('raku', '-Ilib', $bin.absolute, |@args, $spec.absolute,
+                   :out, :err);
+    my $out = $proc.out.slurp(:close);
+    $proc.err.slurp(:close);
+    %( :exit($proc.exitcode), :$out );
+  }
+
+  my %r = run-behave('--example', 'User signup');
+  is %r<exit>, 0, '--example "User signup" exits 0';
+  ok %r<out>.contains('3 examples'),
+    '--example "User signup" runs the 3 examples in that describe block';
+
+  %r = run-behave('--example=Order checkout');
+  ok %r<out>.contains('2 examples'),
+    '--example=NAME equals form works';
+
+  %r = run-behave('-e', 'rejects duplicate');
+  ok %r<out>.contains('1 example'),
+    '-e shorthand picks a single example by description substring';
+
+  %r = run-behave('-e=referral');
+  ok %r<out>.contains('1 example'),
+    '-e=NAME equals form works';
+
+  %r = run-behave('--example', 'User signup', '--example', 'Order checkout');
+  ok %r<out>.contains('5 examples'),
+    'CLI: repeated --example uses OR semantics (3 + 2)';
+
+  %r = run-behave('--example', '/duplicate|discount/');
+  ok %r<out>.contains('2 examples'),
+    'CLI: /regex/ form matches multiple examples';
+
+  %r = run-behave('--example', 'no-such-thing');
+  is %r<exit>, 0, 'CLI: pattern that matches nothing still exits 0';
+  ok %r<out>.contains('0 examples'),
+    'CLI: pattern that matches nothing reports 0 examples';
+}
+
+done-testing;

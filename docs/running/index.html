@@ -714,6 +714,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#filtering-examples-by-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering examples by description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -841,6 +852,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#filtering-examples-by-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering examples by description
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#output" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -923,8 +945,42 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 <td><code>--exclude-tag NAME</code></td>
 <td>Skip examples tagged <code>NAME</code> (repeatable).</td>
 </tr>
+<tr>
+<td><code>--example PATTERN</code></td>
+<td>Run only examples whose full nested description matches <code>PATTERN</code> (substring; or <code>/regex/</code>). Repeatable; OR semantics.</td>
+</tr>
+<tr>
+<td><code>-e PATTERN</code></td>
+<td>Alias for <code>--example</code>.</td>
+</tr>
 </tbody>
 </table>
+<h2 id="filtering-examples-by-description">Filtering examples by description<a class="headerlink" href="#filtering-examples-by-description" title="Permanent link">&para;</a></h2>
+<p><code>--example PATTERN</code> (alias <code>-e PATTERN</code>) runs only examples whose full nested description matches <code>PATTERN</code>. The full nested description joins every enclosing <code>describe</code> / <code>context</code> description with the <code>it</code> description, separated by spaces:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;User signup&#39;</span>, {
+  <span class="n">context</span> <span class="s">&#39;with a referral code&#39;</span>, {
+    <span class="n">it</span> <span class="s">&#39;awards bonus credits&#39;</span>, { ... }    <span class="c1"># full description: &quot;User signup with a referral code awards bonus credits&quot;</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>By default <code>PATTERN</code> is a substring:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;User signup&#39;</span><span class="w">           </span><span class="c1"># every example under User signup</span>
+$<span class="w"> </span>behave<span class="w"> </span>-e<span class="w"> </span><span class="s1">&#39;awards bonus&#39;</span><span class="w">                 </span><span class="c1"># the single example</span>
+</code></pre></div></td></tr></table></div>
+<p>Wrap <code>PATTERN</code> in <code>/.../</code> to use a Raku regex. Standard regex rules apply, so use <code>\s</code> (or quote literal text) for whitespace:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;/\d+/&#39;</span><span class="w">                 </span><span class="c1"># every example whose description has a digit</span>
+$<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;/User\s+signup/&#39;</span><span class="w">       </span><span class="c1"># User-signup-related examples via regex</span>
+</code></pre></div></td></tr></table></div>
+<p>Repeat the flag for OR semantics:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;User signup&#39;</span><span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;Order checkout&#39;</span>
+</code></pre></div></td></tr></table></div>
+<p><code>--example</code> combines with <code>--tag</code>, <code>--exclude-tag</code>, and focused/skipped examples using AND semantics — an example must satisfy every active filter to run. Groups whose subtrees contain no matching examples are skipped, including their <code>before-all</code> / <code>after-all</code> / <code>around-all</code> hooks.</p>
 <h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">&para;</a></h2>
 <p>Behave prints each describe/context with a <code>⮑</code> marker, indenting nested groups, and reports <code>SUCCESS</code> / <code>FAILURE</code> / <code>PENDING</code> / <code>SKIPPED</code> per example. See <a href="../dsl/focus-skip/">Focus and Skip</a> for <code>xit</code> / <code>fit</code> / <code>xdescribe</code> / <code>fdescribe</code>. After all specs run it prints a summary like:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>

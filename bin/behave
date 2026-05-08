@@ -10,6 +10,7 @@ my $verbose = False;
 my @specs = [];
 my @include-tags;
 my @exclude-tags;
+my @example-patterns;
 
 sub usage() {
   say qq:to/HERE/;
@@ -22,9 +23,14 @@ sub usage() {
     --verbose                Display verbose output during the specs execution.
     --tag NAME               Run only examples tagged NAME (repeatable; OR semantics).
     --exclude-tag NAME       Skip examples tagged NAME (repeatable).
+    --example PATTERN        Run only examples whose full nested description
+                             matches PATTERN (substring; or /regex/ when
+                             wrapped in slashes). Repeatable; OR semantics.
+    -e PATTERN               Alias for --example.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
-  --tag when both match the same example.
+  --tag when both match the same example. --tag, --exclude-tag, --example, and
+  focused examples combine with AND semantics.
   HERE
 }
 
@@ -52,6 +58,13 @@ while @args {
     @exclude-tags.push: @args.shift;
   } elsif $arg.starts-with('--exclude-tag=') {
     @exclude-tags.push: $arg.substr('--exclude-tag='.chars);
+  } elsif $arg eq '--example' | '-e' {
+    die "$arg requires a value" unless @args;
+    @example-patterns.push: @args.shift;
+  } elsif $arg.starts-with('--example=') {
+    @example-patterns.push: $arg.substr('--example='.chars);
+  } elsif $arg.starts-with('-e=') {
+    @example-patterns.push: $arg.substr('-e='.chars);
   } else {
     @specs.push: $arg;
   }
@@ -90,6 +103,7 @@ for @files -> $file {
   my $runner = BDD::Behave::Runner::Runner.new(
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
+    :example-patterns(@example-patterns),
   );
   my $result = $runner.run($suite);
   $suites-run++;

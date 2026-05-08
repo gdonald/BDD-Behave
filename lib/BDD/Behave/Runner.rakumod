@@ -48,6 +48,7 @@ our class Runner {
   has RunResult $.result .= new;
   has @.include-tags;
   has @.exclude-tags;
+  has @.example-patterns;
   has Bool $!focus-mode = False;
 
   method run(Suite $suite) {
@@ -268,12 +269,21 @@ our class Runner {
       return False;
     }
 
-    return True unless @!include-tags.elems;
-    @tags.first({ $_ ∈ @!include-tags }).defined;
+    if @!include-tags.elems
+       && !@tags.first({ $_ ∈ @!include-tags }).defined {
+      return False;
+    }
+
+    return False unless self.description-matches($example);
+
+    True;
   }
 
   method group-matches(ExampleGroup $group --> Bool) {
-    return True unless @!include-tags.elems || @!exclude-tags.elems || $!focus-mode;
+    return True unless @!include-tags.elems
+                    || @!exclude-tags.elems
+                    || @!example-patterns.elems
+                    || $!focus-mode;
 
     for $group.children -> $child {
       given $child {
@@ -282,6 +292,32 @@ our class Runner {
       }
     }
     False;
+  }
+
+  method description-matches(Example $example --> Bool) {
+    return True unless @!example-patterns.elems;
+    my $description = self.full-nested-description($example);
+    for @!example-patterns -> $pattern {
+      return True if self.match-pattern($description, $pattern);
+    }
+    False;
+  }
+
+  method full-nested-description(Example $example --> Str) {
+    my @parts = $example.ancestry.grep(ExampleGroup).map(*.description);
+    @parts.push($example.description);
+    @parts.join(' ');
+  }
+
+  method match-pattern(Str $description, Str $pattern --> Bool) {
+    if $pattern.chars > 2
+       && $pattern.starts-with('/')
+       && $pattern.ends-with('/') {
+      my $body = $pattern.substr(1, $pattern.chars - 2);
+      my $rx = / <{ $body }> /;
+      return so $description.match($rx);
+    }
+    $description.contains($pattern);
   }
 
   method run-example(Example $example) {
