@@ -1,10 +1,11 @@
-# Doubles
+# Doubles & Stubbing
 
-A *double* is a stand-in object you create inside a spec to take the place of a collaborator that's irrelevant, expensive, or inconvenient to construct for real. The double records every method called on it, and any call that has been pre-configured returns the value you supplied.
+Behave gives you two complementary ways to stand in for collaborators:
 
-`double` is exported from `BDD::Behave`.
+- **`double(...)`** creates a *new* stand-in object from scratch — useful when there's no real implementation to lean on.
+- **`allow(obj).to.receive('method')`** *stubs a method on an existing object or class*, so the real type stays in play but specific calls are intercepted.
 
-This page covers the basics: creating doubles, stubbing return values, and asserting which methods were called. More expressive stubbing (`allow(...).to.receive(...)`) and call-argument matchers will land in later releases.
+Both are exported from `BDD::Behave`. Stubs installed via `allow(...)` are automatically uninstalled at the end of each example, so they never leak between specs.
 
 ## Creating an ad-hoc double
 
@@ -124,4 +125,112 @@ Because `Double` exposes the verification API on the same object you call stubbe
 
 `add-stub`, `call-count`, `calls`, `calls-of`, `double-class`, `double-name`, `received`, `reset`, `stubs`.
 
-If your real collaborator uses one of these names, you'll need to assert the call indirectly (e.g. by routing the dispatch through a wrapper) until 4.4.2 lands more flexible stubbing.
+If your real collaborator uses one of these names, stub the method directly on a real instance with `allow(obj).to.receive(...)` instead.
+
+# Stubbing real objects with `allow`
+
+`allow($target).to.receive('method')` installs a temporary stub on a method of an existing class or instance. The stub is automatically uninstalled when the example ends, so the original implementation is restored before the next example runs.
+
+The target can be:
+
+- An **instance** — only that one instance gets the stub; sibling instances dispatch normally.
+- A **class** (type object) — affects dispatch through the class itself (typically class methods).
+- A **`Double`** — the stub is wired through the double's stub table.
+
+## Return values
+
+```raku
+class Greeter {
+  method hello($name) { "hello, $name" }
+}
+
+describe 'allow + and-return', {
+  it 'stubs hello on this one instance', {
+    my $g = Greeter.new;
+    allow($g).to.receive('hello').and-return('STUB');
+
+    expect($g.hello('alice')).to.be('STUB');
+    expect(Greeter.new.hello('bob')).to.be('hello, bob');
+  }
+}
+```
+
+`.and-return` is optional — calling `allow($g).to.receive('hello')` with no follow-up stubs the method to return `Any`.
+
+## Raising exceptions
+
+`.and-raise` makes the stubbed method throw the supplied exception:
+
+```raku
+allow($repo).to.receive('find').and-raise(X::AdHoc.new(payload => 'not found'));
+
+my $msg = '';
+try { $repo.find(7); CATCH { default { $msg = .message } } }
+expect($msg).to.be('not found');
+```
+
+## Delegating to the real implementation
+
+`.and-call-original` makes the stubbed method delegate back to the original. The most common use is "re-stubbing" a method back to its real behavior after a previous `allow` set up a return value:
+
+```raku
+allow($g).to.receive('hello').and-return('mocked');
+expect($g.hello('a')).to.be('mocked');
+
+allow($g).to.receive('hello').and-call-original;
+expect($g.hello('a')).to.be('hello, a');
+```
+
+`.and-call-original` is not supported on a `Double` — there is no original implementation to call back to.
+
+## Dynamic stubs
+
+`.and-do(&callable)` invokes the supplied callable with the call's positional arguments. The callable's return value becomes the stubbed method's return value:
+
+```raku
+allow($g).to.receive('hello').and-do(-> $name { "STUB($name.uc())" });
+
+expect($g.hello('alice')).to.be('STUB(ALICE)');
+```
+
+## Replacement semantics
+
+A second `allow($t).to.receive('m')` on the same target+method pair *replaces* the first stub. Only one allow-stub per `(target, method)` is active at a time:
+
+```raku
+allow($g).to.receive('hello').and-return('first');
+allow($g).to.receive('hello').and-return('second');
+
+expect($g.hello('a')).to.be('second');
+```
+
+## Stubs in `before-all` vs `before-each`
+
+Auto-cleanup is per-example: a stub installed inside an `it` (or in `before-each`) is removed before the next example. A stub installed in `before-all` lives for the entire `describe` it sits in:
+
+```raku
+describe 'group-wide stub', {
+  before-all {
+    allow(Repo).to.receive('find').and-return('group-stub');
+  }
+
+  it 'first example sees it', { expect(Repo.find(1)).to.be('group-stub') }
+  it 'second example also sees it', { expect(Repo.find(2)).to.be('group-stub') }
+}
+```
+
+## Verifying stubs
+
+`allow($t).to.receive('m')` rejects method names that don't exist on the target's class. This catches typos and stubs that drift out of sync with the real implementation:
+
+```raku
+allow($g).to.receive('imaginary');   # dies — no such method on Greeter
+allow(Greeter).to.receive('also-no'); # dies — same check on the class
+```
+
+For a class-based `Double`, the stubbed method must exist on the wrapped class.
+
+## Limits
+
+- `allow($obj).to.receive('m')` only stubs `$obj`. To stub the same instance method across **all** instances of a class, pass the class type object instead — but that affects dispatch through the class itself, which mostly matches class-method semantics. A dedicated `allow_any_instance_of`-style helper isn't yet implemented.
+- Argument matching (`.with(...)`), call-count expectations (`.times(...)`), and spies (`expect(obj).to.have_received(...)`) are not yet supported. Those land in later milestones.

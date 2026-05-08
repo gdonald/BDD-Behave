@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#doubles" class="md-skip">
+        <a href="#doubles-stubbing" class="md-skip">
           Skip to content
         </a>
       
@@ -906,10 +906,13 @@
   
 
 
-<h1 id="doubles">Doubles<a class="headerlink" href="#doubles" title="Permanent link">&para;</a></h1>
-<p>A <em>double</em> is a stand-in object you create inside a spec to take the place of a collaborator that's irrelevant, expensive, or inconvenient to construct for real. The double records every method called on it, and any call that has been pre-configured returns the value you supplied.</p>
-<p><code>double</code> is exported from <code>BDD::Behave</code>.</p>
-<p>This page covers the basics: creating doubles, stubbing return values, and asserting which methods were called. More expressive stubbing (<code>allow(...).to.receive(...)</code>) and call-argument matchers will land in later releases.</p>
+<h1 id="doubles-stubbing">Doubles &amp; Stubbing<a class="headerlink" href="#doubles-stubbing" title="Permanent link">&para;</a></h1>
+<p>Behave gives you two complementary ways to stand in for collaborators:</p>
+<ul>
+<li><strong><code>double(...)</code></strong> creates a <em>new</em> stand-in object from scratch — useful when there's no real implementation to lean on.</li>
+<li><strong><code>allow(obj).to.receive('method')</code></strong> <em>stubs a method on an existing object or class</em>, so the real type stays in play but specific calls are intercepted.</li>
+</ul>
+<p>Both are exported from <code>BDD::Behave</code>. Stubs installed via <code>allow(...)</code> are automatically uninstalled at the end of each example, so they never leak between specs.</p>
 <h2 id="creating-an-ad-hoc-double">Creating an ad-hoc double<a class="headerlink" href="#creating-an-ad-hoc-double" title="Permanent link">&para;</a></h2>
 <p>The simplest form takes a name and a list of <code>method =&gt; value</code> pairs:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1050,7 +1053,116 @@
 <h2 id="reserved-method-names">Reserved method names<a class="headerlink" href="#reserved-method-names" title="Permanent link">&para;</a></h2>
 <p>Because <code>Double</code> exposes the verification API on the same object you call stubbed methods on, a handful of method names are reserved and cannot be used as stub keys:</p>
 <p><code>add-stub</code>, <code>call-count</code>, <code>calls</code>, <code>calls-of</code>, <code>double-class</code>, <code>double-name</code>, <code>received</code>, <code>reset</code>, <code>stubs</code>.</p>
-<p>If your real collaborator uses one of these names, you'll need to assert the call indirectly (e.g. by routing the dispatch through a wrapper) until 4.4.2 lands more flexible stubbing.</p>
+<p>If your real collaborator uses one of these names, stub the method directly on a real instance with <code>allow(obj).to.receive(...)</code> instead.</p>
+<h1 id="stubbing-real-objects-with-allow">Stubbing real objects with <code>allow</code><a class="headerlink" href="#stubbing-real-objects-with-allow" title="Permanent link">&para;</a></h1>
+<p><code>allow($target).to.receive('method')</code> installs a temporary stub on a method of an existing class or instance. The stub is automatically uninstalled when the example ends, so the original implementation is restored before the next example runs.</p>
+<p>The target can be:</p>
+<ul>
+<li>An <strong>instance</strong> — only that one instance gets the stub; sibling instances dispatch normally.</li>
+<li>A <strong>class</strong> (type object) — affects dispatch through the class itself (typically class methods).</li>
+<li>A <strong><code>Double</code></strong> — the stub is wired through the double's stub table.</li>
+</ul>
+<h2 id="return-values">Return values<a class="headerlink" href="#return-values" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Greeter</span> {
+  <span class="k">method</span> <span class="n">hello</span>(<span class="nv">$name</span>) { <span class="s">&quot;hello, $name&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;allow + and-return&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;stubs hello on this one instance&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$g</span> = <span class="n">Greeter</span>.<span class="nb">new</span>;
+    <span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;STUB&#39;</span>);
+
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;alice&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;STUB&#39;</span>);
+    <span class="n">expect</span>(<span class="n">Greeter</span>.<span class="nb">new</span>.<span class="n">hello</span>(<span class="s">&#39;bob&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, bob&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p><code>.and-return</code> is optional — calling <code>allow($g).to.receive('hello')</code> with no follow-up stubs the method to return <code>Any</code>.</p>
+<h2 id="raising-exceptions">Raising exceptions<a class="headerlink" href="#raising-exceptions" title="Permanent link">&para;</a></h2>
+<p><code>.and-raise</code> makes the stubbed method throw the supplied exception:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">raise</span>(<span class="o">X</span>::<span class="n">AdHoc</span>.<span class="nb">new</span>(<span class="nb">payload</span> =&gt; <span class="s">&#39;not found&#39;</span>));
+
+<span class="k">my</span> <span class="nv">$msg</span> = <span class="s">&#39;&#39;</span>;
+<span class="k">try</span> { <span class="nv">$repo</span>.<span class="n">find</span>(<span class="mi">7</span>); <span class="k">CATCH</span> { <span class="k">default</span> { <span class="nv">$msg</span> = .<span class="nb">message</span> } } }
+<span class="n">expect</span>(<span class="nv">$msg</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;not found&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="delegating-to-the-real-implementation">Delegating to the real implementation<a class="headerlink" href="#delegating-to-the-real-implementation" title="Permanent link">&para;</a></h2>
+<p><code>.and-call-original</code> makes the stubbed method delegate back to the original. The most common use is "re-stubbing" a method back to its real behavior after a previous <code>allow</code> set up a return value:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;mocked&#39;</span>);
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;mocked&#39;</span>);
+
+<span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">call-original</span>;
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, a&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>.and-call-original</code> is not supported on a <code>Double</code> — there is no original implementation to call back to.</p>
+<h2 id="dynamic-stubs">Dynamic stubs<a class="headerlink" href="#dynamic-stubs" title="Permanent link">&para;</a></h2>
+<p><code>.and-do(&amp;callable)</code> invokes the supplied callable with the call's positional arguments. The callable's return value becomes the stubbed method's return value:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">do</span>(-&gt; <span class="nv">$name</span> { <span class="s">&quot;STUB($name.uc())&quot;</span> });
+
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;alice&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;STUB(ALICE)&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="replacement-semantics">Replacement semantics<a class="headerlink" href="#replacement-semantics" title="Permanent link">&para;</a></h2>
+<p>A second <code>allow($t).to.receive('m')</code> on the same target+method pair <em>replaces</em> the first stub. Only one allow-stub per <code>(target, method)</code> is active at a time:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;first&#39;</span>);
+<span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;second&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;second&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="stubs-in-before-all-vs-before-each">Stubs in <code>before-all</code> vs <code>before-each</code><a class="headerlink" href="#stubs-in-before-all-vs-before-each" title="Permanent link">&para;</a></h2>
+<p>Auto-cleanup is per-example: a stub installed inside an <code>it</code> (or in <code>before-each</code>) is removed before the next example. A stub installed in <code>before-all</code> lives for the entire <code>describe</code> it sits in:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;group-wide stub&#39;</span>, {
+  <span class="o">before-</span><span class="n">all</span> {
+    <span class="n">allow</span>(<span class="n">Repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;group-stub&#39;</span>);
+  }
+
+  <span class="n">it</span> <span class="s">&#39;first example sees it&#39;</span>, { <span class="n">expect</span>(<span class="n">Repo</span>.<span class="n">find</span>(<span class="mi">1</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;group-stub&#39;</span>) }
+  <span class="n">it</span> <span class="s">&#39;second example also sees it&#39;</span>, { <span class="n">expect</span>(<span class="n">Repo</span>.<span class="n">find</span>(<span class="mi">2</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;group-stub&#39;</span>) }
+}
+</code></pre></div></td></tr></table></div>
+<h2 id="verifying-stubs">Verifying stubs<a class="headerlink" href="#verifying-stubs" title="Permanent link">&para;</a></h2>
+<p><code>allow($t).to.receive('m')</code> rejects method names that don't exist on the target's class. This catches typos and stubs that drift out of sync with the real implementation:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;imaginary&#39;</span>);   <span class="c1"># dies — no such method on Greeter</span>
+<span class="n">allow</span>(<span class="n">Greeter</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;also-no&#39;</span>); <span class="c1"># dies — same check on the class</span>
+</code></pre></div></td></tr></table></div>
+<p>For a class-based <code>Double</code>, the stubbed method must exist on the wrapped class.</p>
+<h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>allow($obj).to.receive('m')</code> only stubs <code>$obj</code>. To stub the same instance method across <strong>all</strong> instances of a class, pass the class type object instead — but that affects dispatch through the class itself, which mostly matches class-method semantics. A dedicated <code>allow_any_instance_of</code>-style helper isn't yet implemented.</li>
+<li>Argument matching (<code>.with(...)</code>), call-count expectations (<code>.times(...)</code>), and spies (<code>expect(obj).to.have_received(...)</code>) are not yet supported. Those land in later milestones.</li>
+</ul>
 
 
 

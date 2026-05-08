@@ -179,6 +179,14 @@ sub double(|args) is export {
   $impl(|args);
 }
 
+sub allow(Mu \target) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&allow');
+  };
+  $impl(target);
+}
+
 sub xcontext(|args) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

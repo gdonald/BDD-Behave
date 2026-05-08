@@ -4,6 +4,8 @@ use BDD::Behave::Colors;
 use BDD::Behave::Failures;
 use BDD::Behave::SpecTree;
 
+need BDD::Behave::Mock;
+
 constant Suite = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example = BDD::Behave::SpecTree::Example;
@@ -142,6 +144,13 @@ our class Runner {
     if $example.effective-skipped {
       self.print-skipped($example);
       return;
+    }
+
+    my Int $stub-snapshot = BDD::Behave::Mock::StubRegistry.active-count;
+    LEAVE {
+      if $stub-snapshot.defined {
+        BDD::Behave::Mock::StubRegistry.clear-since($stub-snapshot);
+      }
     }
 
     my @around-hooks = self.matching-around-each-hooks($example);

@@ -263,6 +263,10 @@ our sub double(|args) is export {
   BDD::Behave::Mock::double(|args);
 }
 
+our sub allow(Mu \target) is export {
+  BDD::Behave::Mock::allow(target);
+}
+
 our sub fit(Str $description, &block, *%meta) is export {
   it($description, &block, |%meta, :focused);
 }

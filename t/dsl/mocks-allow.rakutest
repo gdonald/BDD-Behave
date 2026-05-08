@@ -1,0 +1,252 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+need BDD::Behave::Mock;
+
+# allow(instance).to.receive(name).and-return(value) stubs that one instance
+{
+  my class Greeter { method hello($n) { "hello, $n" } }
+
+  my $a = Greeter.new;
+  my $b = Greeter.new;
+
+  allow($a).to.receive('hello').and-return('STUB');
+  is $a.hello('alice'), 'STUB',     'instance-stub returns the stubbed value';
+  is $b.hello('bob'),   'hello, bob', 'sibling instance is unaffected';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is $a.hello('alice'), 'hello, alice', 'clear-all restores original behavior';
+}
+
+# allow(class).to.receive('m') stubs the class itself (e.g. class methods)
+{
+  my class Repo {
+    method find($id) { "real:$id" }
+  }
+
+  allow(Repo).to.receive('find').and-return('mocked');
+  is Repo.find(42), 'mocked', 'class-level stub intercepts dispatch through the class';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is Repo.find(42), 'real:42', 'class-level stub is removed after clear-all';
+}
+
+# repeated allow on same target+method replaces the previous stub
+{
+  my class C { method foo { 'orig' } }
+  my $c = C.new;
+
+  allow($c).to.receive('foo').and-return('first');
+  is $c.foo, 'first', 'first stub takes effect';
+
+  allow($c).to.receive('foo').and-return('second');
+  is $c.foo, 'second', 'second stub replaces first';
+
+  is BDD::Behave::Mock::StubRegistry.active-count, 1,
+    'only one stub is active for a given target+method';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# .and-call-original delegates to the real implementation while still stubbing
+{
+  my class C { method foo { 'orig' } }
+  my $c = C.new;
+
+  allow($c).to.receive('foo').and-return('stubbed');
+  is $c.foo, 'stubbed', 'first stub returns stubbed';
+
+  allow($c).to.receive('foo').and-call-original;
+  is $c.foo, 'orig',
+    '.and-call-original on a re-stubbed method delegates to the original';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# .and-raise raises the supplied exception
+{
+  my class C { method bang { 'never' } }
+  my $c = C.new;
+
+  allow($c).to.receive('bang').and-raise(X::AdHoc.new(payload => 'kaboom'));
+
+  my $err = '';
+  try { $c.bang; CATCH { default { $err = .message } } }
+  is $err, 'kaboom', '.and-raise propagates the exception';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# allow on a non-existent method dies at .receive time
+{
+  my class C { method real { 1 } }
+  my $c = C.new;
+  dies-ok { allow($c).to.receive('imaginary') },
+    'allow().receive(unknown) dies before installation';
+  dies-ok { allow(C).to.receive('imaginary') },
+    'allow(class).receive(unknown) dies before installation';
+}
+
+# default behavior (no .and-* call) returns Nil/Any
+{
+  my class C { method foo { 'orig' } }
+  my $c = C.new;
+
+  allow($c).to.receive('foo');
+  ok !$c.foo.defined, 'allow().receive() with no follow-up returns Any';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is $c.foo, 'orig', 'cleared cleanly';
+}
+
+# allow on a Double routes through add-stub
+{
+  my $d = double('Repo');
+  allow($d).to.receive('find').and-return('via-allow');
+  is $d.find(7), 'via-allow', 'allow() works on a Double';
+  is $d.received('find'), True, 'Double still records the call';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  ok $d.stubs<find>:!exists, 'Double stub removed after clear-all';
+}
+
+# allow on a Double preserves prior add-stub when the allow is cleared
+{
+  my $d = double('Repo', find => 'preset');
+  is $d.find(1), 'preset', 'preset stub is in effect';
+
+  allow($d).to.receive('find').and-return('overridden');
+  is $d.find(2), 'overridden', 'allow overrides the preset stub';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is $d.find(3), 'preset', 'preset stub is restored after clear-all';
+}
+
+# allow on a class-based Double validates against the wrapped class
+{
+  my class Greeter { method hello { 'hi' } }
+  my $d = double(Greeter);
+  dies-ok { allow($d).to.receive('bogus') },
+    'allow on class-based double dies for non-existent method';
+  lives-ok { allow($d).to.receive('hello').and-return('h') },
+    'allow on class-based double accepts real methods';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# .and-call-original on a Double dies — there is no original to call
+{
+  my $d = double('Cfg');
+  my $setup = allow($d).to.receive('foo');
+  dies-ok { $setup.and-call-original },
+    '.and-call-original on a Double dies';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# Inside a runner-driven example, stubs auto-clear after each example
+{
+  my class Counter { method count { 0 } }
+  my $obj = Counter.new;
+
+  registry().clear;
+
+  describe 'auto-clear', {
+    it 'first example installs a stub', {
+      allow($obj).to.receive('count').and-return(99);
+      expect($obj.count).to.be(99);
+    }
+    it 'second example sees the original (stub was auto-cleared)', {
+      expect($obj.count).to.be(0);
+    }
+  }
+
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run(registry().suites[0]);
+  $sink.close;
+
+  is $result.passed, 2, 'both examples passed';
+  is $result.failed, 0, 'no failures';
+}
+
+# before-all stubs survive across examples in the same group
+{
+  my class Service { method name { 'real' } }
+  my $svc = Service.new;
+
+  registry().clear;
+
+  describe 'before-all stub survives across examples', {
+    before-all {
+      allow($svc).to.receive('name').and-return('mocked-name');
+    }
+
+    it 'first example sees the before-all stub', {
+      expect($svc.name).to.be('mocked-name');
+    }
+    it 'second example also sees the before-all stub', {
+      expect($svc.name).to.be('mocked-name');
+    }
+  }
+
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run(registry().suites[0]);
+  $sink.close;
+
+  is $result.passed, 2, 'before-all stub persists across both examples';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# clear-since only pops stubs registered after the snapshot
+{
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  my class C { method m { 'orig' } }
+
+  allow(C).to.receive('m').and-return('outer');
+  my $snap = BDD::Behave::Mock::StubRegistry.active-count;
+
+  my $inner = C.new;
+  allow($inner).to.receive('m').and-return('inner');
+
+  is $inner.m,    'inner', 'inner stub takes precedence';
+  is C.new.m,     'outer', 'outer stub still applies to other instances';
+
+  BDD::Behave::Mock::StubRegistry.clear-since($snap);
+  is $inner.m,    'outer', 'inner stub removed; outer still active';
+  is C.new.m,     'outer', 'outer stub survives clear-since';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is C.new.m,     'orig', 'clear-all removes outer stub too';
+}
+
+# stubs can be added by routing through add-stub on a Double via allow().and-do
+{
+  my $d = double('Repo');
+  allow($d).to.receive('compute').and-do(-> $x { $x * 10 });
+  is $d.compute(7), 70, 'and-do callable receives args and returns its result';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# and-do on a real class invokes the callable with method args (no self)
+{
+  my class C { method greet($name) { "hi $name" } }
+  my $c = C.new;
+
+  allow($c).to.receive('greet').and-do(-> $name { "STUB($name)" });
+  is $c.greet('alice'), 'STUB(alice)',
+    '.and-do on a class invokes the callable with the method args';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+done-testing;
