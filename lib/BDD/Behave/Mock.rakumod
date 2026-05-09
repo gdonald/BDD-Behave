@@ -426,6 +426,13 @@ our sub allow(Mu \target) is export {
   AllowBuilder.new(:target(target));
 }
 
+our sub allow-any-instance-of(Mu \cls) is export {
+  if cls.defined && cls.DEFINITE {
+    die "allow-any-instance-of(): expected a type object (class), got an instance of {cls.^name}";
+  }
+  AllowBuilder.new(:target(cls));
+}
+
 our sub double(|args) is export {
   my @pos   = args.list;
   my %named = args.hash;

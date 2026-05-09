@@ -1059,9 +1059,46 @@
 <p>The target can be:</p>
 <ul>
 <li>An <strong>instance</strong> — only that one instance gets the stub; sibling instances dispatch normally.</li>
-<li>A <strong>class</strong> (type object) — affects dispatch through the class itself (typically class methods).</li>
+<li>A <strong>class</strong> (type object) — affects dispatch through the class's method table, so <em>every</em> instance of the class sees the stub. Use <code>allow-any-instance-of(Class)</code> for the same effect with clearer intent.</li>
 <li>A <strong><code>Double</code></strong> — the stub is wired through the double's stub table.</li>
 </ul>
+<h2 id="partial-mocking">Partial mocking<a class="headerlink" href="#partial-mocking" title="Permanent link">&para;</a></h2>
+<p><code>allow($obj).to.receive('m')</code> only replaces <code>m</code> — every other method on the same instance keeps its real behavior, including methods that read or mutate state. This is the core of partial mocking: stub the collaborator boundaries, leave the rest of the object alone.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Account</span> {
+  <span class="k">has</span> <span class="nb">Int</span> <span class="nv">$.balance</span> <span class="k">is</span> <span class="k">rw</span> = <span class="mi">0</span>;
+  <span class="k">method</span> <span class="n">deposit</span>(<span class="nv">$n</span>) { <span class="nv">$!balance</span> += <span class="nv">$n</span>; <span class="nv">$!balance</span> }
+  <span class="k">method</span> <span class="n">label</span>       { <span class="s">&quot;Account($!balance)&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;partial mock&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;stubs label but lets deposit run for real&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$a</span> = <span class="n">Account</span>.<span class="nb">new</span>(<span class="n">balance</span> =&gt; <span class="mi">100</span>);
+
+    <span class="n">allow</span>(<span class="nv">$a</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;label&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;STUB&#39;</span>);
+
+    <span class="n">expect</span>(<span class="nv">$a</span>.<span class="n">label</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;STUB&#39;</span>);         <span class="c1"># stubbed</span>
+    <span class="n">expect</span>(<span class="nv">$a</span>.<span class="n">deposit</span>(<span class="mi">50</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">150</span>);      <span class="c1"># real implementation</span>
+    <span class="n">expect</span>(<span class="nv">$a</span>.<span class="n">balance</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">150</span>);          <span class="c1"># real state mutation</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>You can stub multiple methods on the same instance independently — each stub is tracked separately and removed at the end of the example.</p>
 <h2 id="return-values">Return values<a class="headerlink" href="#return-values" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1133,6 +1170,34 @@
 
 <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;second&#39;</span>);
 </code></pre></div></td></tr></table></div>
+<h2 id="stubbing-across-every-instance-allow-any-instance-of">Stubbing across every instance: <code>allow-any-instance-of</code><a class="headerlink" href="#stubbing-across-every-instance-allow-any-instance-of" title="Permanent link">&para;</a></h2>
+<p><code>allow-any-instance-of(Class).to.receive('m')</code> stubs an instance method at the class's method-table level, so every instance — existing or future — dispatches into the stub for the rest of the example.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Repo</span> {
+  <span class="k">method</span> <span class="n">find</span>(<span class="nv">$id</span>) { <span class="s">&quot;real:$id&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;stub on every instance&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;affects every instance of Repo for the duration of the example&#39;</span>, {
+    <span class="n">allow-any-instance-of</span>(<span class="n">Repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;stub&#39;</span>);
+
+    <span class="n">expect</span>(<span class="n">Repo</span>.<span class="nb">new</span>.<span class="n">find</span>(<span class="mi">1</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;stub&#39;</span>);
+    <span class="n">expect</span>(<span class="n">Repo</span>.<span class="nb">new</span>.<span class="n">find</span>(<span class="mi">2</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;stub&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>A per-instance <code>allow($obj).to.receive('m')</code> for the same method takes precedence over <code>allow-any-instance-of(Class)</code>; only that one instance sees the instance-specific stub, and other instances continue to see the class-wide one.</p>
+<p><code>allow-any-instance-of</code> requires a type object — passing an instance dies with a clear error. The same method-existence validation as <code>allow(...)</code> applies: stubbing a method the class doesn't define dies before any wrap is installed. The full <code>.and-return</code> / <code>.and-raise</code> / <code>.and-call-original</code> / <code>.and-do</code> chain works the same way as on <code>allow(...)</code>.</p>
 <h2 id="stubs-in-before-all-vs-before-each">Stubs in <code>before-all</code> vs <code>before-each</code><a class="headerlink" href="#stubs-in-before-all-vs-before-each" title="Permanent link">&para;</a></h2>
 <p>Auto-cleanup is per-example: a stub installed inside an <code>it</code> (or in <code>before-each</code>) is removed before the next example. A stub installed in <code>before-all</code> lives for the entire <code>describe</code> it sits in:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1348,7 +1413,6 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>allow($obj).to.receive('m')</code> only stubs <code>$obj</code>. To stub the same instance method across <strong>all</strong> instances of a class, pass the class type object instead — but that affects dispatch through the class itself, which mostly matches class-method semantics. A dedicated <code>allow_any_instance_of</code>-style helper isn't yet implemented.</li>
 <li><code>spy($real-instance)</code> wraps user-defined methods; methods inherited from <code>Mu</code>/<code>Any</code> and submethods (e.g. <code>BUILD</code>, <code>POPULATE</code>) are not wrapped.</li>
 </ul>
 

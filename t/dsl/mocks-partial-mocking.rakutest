@@ -1,0 +1,148 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+need BDD::Behave::Mock;
+
+# Stubbing one method on an instance leaves other methods real
+{
+  my class Account {
+    has Int $.balance is rw = 0;
+    method deposit($n) { $!balance += $n; $!balance }
+    method label       { "Account($!balance)" }
+  }
+
+  my $a = Account.new(balance => 100);
+  allow($a).to.receive('label').and-return('STUB');
+
+  is $a.label,        'STUB',          'stubbed method returns stubbed value';
+  is $a.deposit(50),  150,             'unstubbed method on same instance still works';
+  is $a.balance,      150,             'state-mutating real method actually mutated state';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# Multiple methods stubbed on the same instance are independent
+{
+  my class Repo {
+    method find($id)  { "real:$id"   }
+    method save($obj) { "saved:$obj" }
+  }
+  my $r = Repo.new;
+
+  allow($r).to.receive('find').and-return('stub-find');
+  allow($r).to.receive('save').and-return('stub-save');
+
+  is $r.find(1), 'stub-find', 'first stub takes effect';
+  is $r.save('x'), 'stub-save', 'second stub takes effect';
+  is BDD::Behave::Mock::StubRegistry.active-count, 2,
+    'both stubs are tracked in the registry';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# allow-any-instance-of(Class) stubs the method on every instance
+{
+  my class Service { method tick { 'real' } }
+
+  allow-any-instance-of(Service).to.receive('tick').and-return('STUB');
+
+  is Service.new.tick, 'STUB', 'first instance sees the stub';
+  is Service.new.tick, 'STUB', 'second instance also sees the stub';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is Service.new.tick, 'real', 'cleared cleanly';
+}
+
+# allow-any-instance-of rejects an instance
+{
+  my class C { method m { 1 } }
+  my $c = C.new;
+  dies-ok { allow-any-instance-of($c).to.receive('m') },
+    'allow-any-instance-of dies when given an instance';
+}
+
+# allow-any-instance-of rejects a method the class does not define
+{
+  my class C { method real { 1 } }
+  dies-ok { allow-any-instance-of(C).to.receive('imaginary') },
+    'allow-any-instance-of dies for non-existent methods';
+}
+
+# Per-instance allow takes precedence over allow-any-instance-of
+{
+  my class C { method m { 'real' } }
+  my $a = C.new;
+  my $b = C.new;
+
+  allow-any-instance-of(C).to.receive('m').and-return('class-wide');
+  allow($a).to.receive('m').and-return('instance-specific');
+
+  is $a.m, 'instance-specific', 'instance-specific stub wins for $a';
+  is $b.m, 'class-wide',        'sibling instance still gets the class-wide stub';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+  is C.new.m, 'real', 'all stubs cleared';
+}
+
+# Auto-cleanup inside the runner: stubs do not leak across examples
+{
+  my class Counter { method count { 0 } }
+
+  registry().clear;
+
+  describe 'partial-mock auto-cleanup', {
+    it 'first example installs an instance stub', {
+      my $c = Counter.new;
+      allow($c).to.receive('count').and-return(99);
+      expect($c.count).to.be(99);
+    }
+
+    it 'first example installs a class-wide stub', {
+      allow-any-instance-of(Counter).to.receive('count').and-return(42);
+      expect(Counter.new.count).to.be(42);
+    }
+
+    it 'third example sees the original method', {
+      expect(Counter.new.count).to.be(0);
+    }
+  }
+
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run(registry().suites[0]);
+  $sink.close;
+
+  is $result.passed, 3, 'all three examples passed (no stub leakage)';
+  is $result.failed, 0, 'no failures';
+
+  is BDD::Behave::Mock::StubRegistry.active-count, 0,
+    'no stubs remain after the runner finishes the suite';
+}
+
+# allow-any-instance-of supports the same .and-* chain as allow
+{
+  my class C { method m { 'real' } }
+
+  allow-any-instance-of(C).to.receive('m').and-raise(X::AdHoc.new(payload => 'boom'));
+  my $err = '';
+  try { C.new.m; CATCH { default { $err = .message } } }
+  is $err, 'boom', '.and-raise propagates from any instance';
+  BDD::Behave::Mock::StubRegistry.clear-all;
+
+  allow-any-instance-of(C).to.receive('m').and-do(-> { 'computed' });
+  is C.new.m, 'computed', '.and-do invokes the callable';
+  BDD::Behave::Mock::StubRegistry.clear-all;
+
+  allow-any-instance-of(C).to.receive('m').and-return('overridden');
+  is C.new.m, 'overridden', '.and-return supplies the value';
+  allow-any-instance-of(C).to.receive('m').and-call-original;
+  is C.new.m, 'real', '.and-call-original delegates to the real method';
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+done-testing;

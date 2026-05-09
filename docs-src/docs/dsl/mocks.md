@@ -134,8 +134,34 @@ If your real collaborator uses one of these names, stub the method directly on a
 The target can be:
 
 - An **instance** — only that one instance gets the stub; sibling instances dispatch normally.
-- A **class** (type object) — affects dispatch through the class itself (typically class methods).
+- A **class** (type object) — affects dispatch through the class's method table, so *every* instance of the class sees the stub. Use `allow-any-instance-of(Class)` for the same effect with clearer intent.
 - A **`Double`** — the stub is wired through the double's stub table.
+
+## Partial mocking
+
+`allow($obj).to.receive('m')` only replaces `m` — every other method on the same instance keeps its real behavior, including methods that read or mutate state. This is the core of partial mocking: stub the collaborator boundaries, leave the rest of the object alone.
+
+```raku
+class Account {
+  has Int $.balance is rw = 0;
+  method deposit($n) { $!balance += $n; $!balance }
+  method label       { "Account($!balance)" }
+}
+
+describe 'partial mock', {
+  it 'stubs label but lets deposit run for real', {
+    my $a = Account.new(balance => 100);
+
+    allow($a).to.receive('label').and-return('STUB');
+
+    expect($a.label).to.be('STUB');         # stubbed
+    expect($a.deposit(50)).to.be(150);      # real implementation
+    expect($a.balance).to.be(150);          # real state mutation
+  }
+}
+```
+
+You can stub multiple methods on the same instance independently — each stub is tracked separately and removed at the end of the example.
 
 ## Return values
 
@@ -203,6 +229,29 @@ allow($g).to.receive('hello').and-return('second');
 
 expect($g.hello('a')).to.be('second');
 ```
+
+## Stubbing across every instance: `allow-any-instance-of`
+
+`allow-any-instance-of(Class).to.receive('m')` stubs an instance method at the class's method-table level, so every instance — existing or future — dispatches into the stub for the rest of the example.
+
+```raku
+class Repo {
+  method find($id) { "real:$id" }
+}
+
+describe 'stub on every instance', {
+  it 'affects every instance of Repo for the duration of the example', {
+    allow-any-instance-of(Repo).to.receive('find').and-return('stub');
+
+    expect(Repo.new.find(1)).to.be('stub');
+    expect(Repo.new.find(2)).to.be('stub');
+  }
+}
+```
+
+A per-instance `allow($obj).to.receive('m')` for the same method takes precedence over `allow-any-instance-of(Class)`; only that one instance sees the instance-specific stub, and other instances continue to see the class-wide one.
+
+`allow-any-instance-of` requires a type object — passing an instance dies with a clear error. The same method-existence validation as `allow(...)` applies: stubbing a method the class doesn't define dies before any wrap is installed. The full `.and-return` / `.and-raise` / `.and-call-original` / `.and-do` chain works the same way as on `allow(...)`.
 
 ## Stubs in `before-all` vs `before-each`
 
@@ -357,5 +406,4 @@ expect($log).to.have-received('info').with(
 
 ## Limits
 
-- `allow($obj).to.receive('m')` only stubs `$obj`. To stub the same instance method across **all** instances of a class, pass the class type object instead — but that affects dispatch through the class itself, which mostly matches class-method semantics. A dedicated `allow_any_instance_of`-style helper isn't yet implemented.
 - `spy($real-instance)` wraps user-defined methods; methods inherited from `Mu`/`Any` and submethods (e.g. `BUILD`, `POPULATE`) are not wrapped.

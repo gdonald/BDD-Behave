@@ -195,6 +195,14 @@ sub allow(Mu \target) is export {
   $impl(target);
 }
 
+sub allow-any-instance-of(Mu \cls) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&allow-any-instance-of');
+  };
+  $impl(cls);
+}
+
 sub anything() is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

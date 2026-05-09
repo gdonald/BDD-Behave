@@ -271,6 +271,10 @@ our sub allow(Mu \target) is export {
   BDD::Behave::Mock::allow(target);
 }
 
+our sub allow-any-instance-of(Mu \cls) is export {
+  BDD::Behave::Mock::allow-any-instance-of(cls);
+}
+
 our sub anything()              is export { BDD::Behave::Mock::anything() }
 our sub instance-of(Mu \type)   is export { BDD::Behave::Mock::instance-of(type) }
 our sub hash-including(*%pairs) is export { BDD::Behave::Mock::hash-including(|%pairs) }
