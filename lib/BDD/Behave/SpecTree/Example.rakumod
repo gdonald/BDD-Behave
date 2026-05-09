@@ -20,11 +20,21 @@ our class Example is SpecNode {
   has Bool $.pending is rw = False;
 
   method execute(*%context) {
-    my @lets = self.get-metadata('lets', :default([])).flat.List;
-    my $runtime = LetRuntime.new(:definitions(@lets));
-    my $*LET-RUNTIME = $runtime;
-    my $ctx = LetContext.new;
+    my $existing;
+    try { $existing = $*LET-RUNTIME if $*LET-RUNTIME.defined }
 
+    if $existing.defined {
+      self!run-block(|%context);
+    } else {
+      my @lets = self.get-metadata('lets', :default([])).flat.List;
+      my $runtime = LetRuntime.new(:definitions(@lets));
+      my $*LET-RUNTIME = $runtime;
+      self!run-block(|%context);
+    }
+  }
+
+  method !run-block(*%context) {
+    my $ctx = LetContext.new;
     my $sig = $!block.signature;
     if $sig.params.elems > 0 && !$sig.params[0].named {
       $!block($ctx, |%context);

@@ -5,10 +5,12 @@ use BDD::Behave::Failures;
 use BDD::Behave::SpecTree;
 
 need BDD::Behave::Mock;
+need BDD::Behave::LetRuntime;
 
 constant Suite = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example = BDD::Behave::SpecTree::Example;
+constant LetRuntime = BDD::Behave::LetRuntime::LetRuntime;
 
 our class RunResult {
   has Int $.total = 0;
@@ -145,6 +147,9 @@ our class Runner {
       self.print-skipped($example);
       return;
     }
+
+    my @lets = $example.get-metadata('lets', :default([])).flat.List;
+    my $*LET-RUNTIME = LetRuntime.new(:definitions(@lets));
 
     my Int $stub-snapshot = BDD::Behave::Mock::StubRegistry.active-count;
     LEAVE {

@@ -162,6 +162,26 @@ our sub let(|c) is export {
   $definition;
 }
 
+our sub let-bang(|c) is export {
+  my $entry = registry().current-entry;
+
+  unless $entry && $entry.stack.elems {
+    die "let-bang must be called inside a describe/context block";
+  }
+
+  my $definition = let(|c);
+  unless $definition ~~ LetDefinition {
+    die "let-bang must be called inside a describe/context block";
+  }
+
+  my $name = $definition.name.subst(/^':'/, '');
+  my $current = $entry.stack[*-1];
+  my &force-block = sub { $*LET-RUNTIME.value($name) if $*LET-RUNTIME.defined };
+  $current.add-hook('before-each', &force-block);
+
+  $definition;
+}
+
 sub register-hook(Str $phase, &block, *%filter) {
   my $entry = registry().current-entry;
 

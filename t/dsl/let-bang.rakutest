@@ -1,0 +1,177 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Eager evaluation: side effects happen before the example body
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  my @observed;
+  describe 'eager', {
+    let-bang(:counter, { ++$hits });
+
+    it 'sees value already computed', {
+      @observed.push($hits);
+    }
+
+    it 'sees value already computed for second example too', {
+      @observed.push($hits);
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 2, 'both examples passed';
+  is-deeply @observed, [1, 2], 'let-bang ran before each example body';
+  is $hits, 2, 'block invoked exactly once per example';
+}
+
+# Memoization within a single example
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'memoize', {
+    let-bang(:value, { ++$hits });
+
+    it 'evaluates exactly once per example', { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 1, 'eager block ran once, not twice (no double-eval)';
+}
+
+# Multiple let-bangs in declaration order
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @order;
+  describe 'multi', {
+    let-bang(:a, { @order.push('a') });
+    let-bang(:b, { @order.push('b') });
+    let-bang(:c, { @order.push('c') });
+
+    it 'first',  { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @order, ['a', 'b', 'c'],
+    'multiple let-bangs evaluate in declaration order';
+}
+
+# Let-bang interleaved with before-each preserves registration order
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @log;
+  describe 'mixed', {
+    before-each { @log.push('be1') }
+    let-bang(:eager, { @log.push('let!') });
+    before-each { @log.push('be2') }
+
+    it 'runs',   { @log.push('example') }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @log, ['be1', 'let!', 'be2', 'example'],
+    'let-bang fires in registration order alongside before-each';
+}
+
+# Inheritance: outer let-bang fires for inner examples
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'outer', {
+    let-bang(:value, { ++$hits });
+
+    context 'inner', {
+      it 'inherits eager evaluation', { True }
+      it 'and again',                  { True }
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 2, 'outer let-bang fires for each inner example';
+}
+
+# let-bang outside describe/context dies
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+  dies-ok { let-bang(:foo, { 1 }) },
+    'let-bang outside describe/context raises';
+}
+
+# Returns a LetDefinition just like let
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $captured;
+  describe 'returns def', {
+    $captured = let-bang(:thing, { 7 });
+    it 'placeholder', { True }
+  }
+
+  isa-ok $captured, BDD::Behave::LetRuntime::LetDefinition,
+    'let-bang returns a LetDefinition';
+  is $captured.name, 'thing', 'definition name preserved';
+}
+
+# String-name form works
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'string name', {
+    let-bang('eagerly', { ++$hits });
+    it 'fires',  { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 1, 'let-bang(\'name\', { ... }) form works';
+}
+
+# Difference between let and let-bang: lazy is not invoked unless read
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $eager-hits = 0;
+  my $lazy-hits  = 0;
+
+  describe 'compare', {
+    let-bang(:eager, { ++$eager-hits });
+    let(:lazy,       { ++$lazy-hits });
+
+    it 'reads neither directly', { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $eager-hits, 1, 'let-bang fires even when not read';
+  is $lazy-hits,  0, 'let stays unevaluated when not read';
+}
+
+done-testing;

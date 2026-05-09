@@ -87,3 +87,93 @@ describe 'shadowing', {
   }
 }
 ```
+
+## `let-bang` (eager evaluation)
+
+`let-bang` is the Raku-friendly spelling of RSpec's `let!`. It defines the same kind of memoized value as `let`, but it is **forced before every example body** so any side effects in the block run whether or not the example reads the value.
+
+`let-bang` is sugar for:
+
+```raku
+let(:user, { User.create });
+before-each { let-runtime-force(:user) };   # conceptually
+```
+
+It registers the let definition and a `before-each` hook in the current group. The two forms accepted are the same as `let`:
+
+```raku
+let-bang('user', { User.create });
+let-bang(:user,  { User.create });
+```
+
+### When to use `let-bang`
+
+Use `let-bang` when the *creation* of a value is itself the test setup — typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain `let` is preferred because it stays cheap when the example doesn't actually read the value.
+
+```raku
+describe 'invoices index', {
+  let-bang(:invoice, { Invoice.create(:amount(100)) });
+
+  it 'returns invoices', {
+    expect(Invoice.all.elems).to.be(1);   # passes even though we never read :invoice
+  }
+}
+```
+
+### Memoization is the same as `let`
+
+Within an example, the block runs at most once. Reads after the eager force return the cached value:
+
+```raku
+let-bang(:counter, { ++$n });
+
+it 'is forced once per example', {
+  expect(:counter).to.be(:counter);   # one increment, two reads
+}
+```
+
+Between examples the cache is reset, so the block runs once per example.
+
+### Ordering
+
+`let-bang` registers a real `before-each` hook on the surrounding group, so it composes with `before-each` in **declaration order**:
+
+```raku
+describe 'order', {
+  before-each   { say 'be1' };
+  let-bang(:x,  { say 'eager' });
+  before-each   { say 'be2' };
+
+  it 'runs', { say 'body' };
+}
+# Output per example:
+# be1
+# eager
+# be2
+# body
+```
+
+Multiple `let-bang` declarations evaluate in the order they appear.
+
+### Inheritance and shadowing
+
+Outer `let-bang` definitions are inherited by inner `describe`/`context` blocks. If an inner group shadows the same name with another `let` (or `let-bang`), reads see the inner value, and the inner block is what gets forced:
+
+```raku
+describe 'outer', {
+  let-bang(:value, { 'outer' });
+
+  context 'inner', {
+    let(:value, { 'inner' });
+
+    it 'sees inner', {
+      expect(:value).to.be('inner');   # outer block does not run
+    }
+  }
+}
+```
+
+### Restrictions
+
+- `let-bang` must be called inside a `describe` or `context`. At the top-level (suite scope) only plain `let` is supported.
+- Inside an `it` block, use plain `let` with binding (`my $x := let(:name, { ... })`); eager forcing is meaningless once you're already in the example body.

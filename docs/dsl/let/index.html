@@ -523,6 +523,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#let-bang-eager-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        let-bang (eager evaluation)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="let-bang (eager evaluation)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-let-bang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use let-bang
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memoization-is-the-same-as-let" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memoization is the same as let
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inheritance-and-shadowing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inheritance and shadowing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -954,6 +1026,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#let-bang-eager-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        let-bang (eager evaluation)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="let-bang (eager evaluation)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-let-bang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use let-bang
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memoization-is-the-same-as-let" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memoization is the same as let
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inheritance-and-shadowing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inheritance and shadowing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1067,6 +1211,103 @@
   }
 }
 </code></pre></div></td></tr></table></div>
+<h2 id="let-bang-eager-evaluation"><code>let-bang</code> (eager evaluation)<a class="headerlink" href="#let-bang-eager-evaluation" title="Permanent link">&para;</a></h2>
+<p><code>let-bang</code> is the Raku-friendly spelling of RSpec's <code>let!</code>. It defines the same kind of memoized value as <code>let</code>, but it is <strong>forced before every example body</strong> so any side effects in the block run whether or not the example reads the value.</p>
+<p><code>let-bang</code> is sugar for:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(:<span class="n">user</span>, { <span class="n">User</span>.<span class="n">create</span> });
+<span class="o">before-</span><span class="n">each</span> { <span class="n">let-runtime-force</span>(:<span class="n">user</span>) };   <span class="c1"># conceptually</span>
+</code></pre></div></td></tr></table></div>
+<p>It registers the let definition and a <code>before-each</code> hook in the current group. The two forms accepted are the same as <code>let</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">let-bang</span>(<span class="s">&#39;user&#39;</span>, { <span class="n">User</span>.<span class="n">create</span> });
+<span class="n">let-bang</span>(:<span class="n">user</span>,  { <span class="n">User</span>.<span class="n">create</span> });
+</code></pre></div></td></tr></table></div>
+<h3 id="when-to-use-let-bang">When to use <code>let-bang</code><a class="headerlink" href="#when-to-use-let-bang" title="Permanent link">&para;</a></h3>
+<p>Use <code>let-bang</code> when the <em>creation</em> of a value is itself the test setup — typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain <code>let</code> is preferred because it stays cheap when the example doesn't actually read the value.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;invoices index&#39;</span>, {
+  <span class="n">let-bang</span>(:<span class="n">invoice</span>, { <span class="n">Invoice</span>.<span class="n">create</span>(:<span class="n">amount</span>(<span class="mi">100</span>)) });
+
+  <span class="n">it</span> <span class="s">&#39;returns invoices&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">Invoice</span>.<span class="nb">all</span>.<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);   <span class="c1"># passes even though we never read :invoice</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="memoization-is-the-same-as-let">Memoization is the same as <code>let</code><a class="headerlink" href="#memoization-is-the-same-as-let" title="Permanent link">&para;</a></h3>
+<p>Within an example, the block runs at most once. Reads after the eager force return the cached value:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">let-bang</span>(:<span class="n">counter</span>, { ++<span class="nv">$n</span> });
+
+<span class="n">it</span> <span class="s">&#39;is forced once per example&#39;</span>, {
+  <span class="n">expect</span>(:<span class="n">counter</span>).<span class="nb">to</span>.<span class="n">be</span>(:<span class="n">counter</span>);   <span class="c1"># one increment, two reads</span>
+}
+</code></pre></div></td></tr></table></div>
+<p>Between examples the cache is reset, so the block runs once per example.</p>
+<h3 id="ordering">Ordering<a class="headerlink" href="#ordering" title="Permanent link">&para;</a></h3>
+<p><code>let-bang</code> registers a real <code>before-each</code> hook on the surrounding group, so it composes with <code>before-each</code> in <strong>declaration order</strong>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;order&#39;</span>, {
+  <span class="o">before-</span><span class="n">each</span>   { <span class="nb">say</span> <span class="s">&#39;be1&#39;</span> };
+  <span class="n">let-bang</span>(:<span class="o">x</span>,  { <span class="nb">say</span> <span class="s">&#39;eager&#39;</span> });
+  <span class="o">before-</span><span class="n">each</span>   { <span class="nb">say</span> <span class="s">&#39;be2&#39;</span> };
+
+  <span class="n">it</span> <span class="s">&#39;runs&#39;</span>, { <span class="nb">say</span> <span class="s">&#39;body&#39;</span> };
+}
+<span class="c1"># Output per example:</span>
+<span class="c1"># be1</span>
+<span class="c1"># eager</span>
+<span class="c1"># be2</span>
+<span class="c1"># body</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple <code>let-bang</code> declarations evaluate in the order they appear.</p>
+<h3 id="inheritance-and-shadowing">Inheritance and shadowing<a class="headerlink" href="#inheritance-and-shadowing" title="Permanent link">&para;</a></h3>
+<p>Outer <code>let-bang</code> definitions are inherited by inner <code>describe</code>/<code>context</code> blocks. If an inner group shadows the same name with another <code>let</code> (or <code>let-bang</code>), reads see the inner value, and the inner block is what gets forced:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {
+  <span class="n">let-bang</span>(:<span class="n">value</span>, { <span class="s">&#39;outer&#39;</span> });
+
+  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
+    <span class="k">let</span>(:<span class="n">value</span>, { <span class="s">&#39;inner&#39;</span> });
+
+    <span class="n">it</span> <span class="s">&#39;sees inner&#39;</span>, {
+      <span class="n">expect</span>(:<span class="n">value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;inner&#39;</span>);   <span class="c1"># outer block does not run</span>
+    }
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>let-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope) only plain <code>let</code> is supported.</li>
+<li>Inside an <code>it</code> block, use plain <code>let</code> with binding (<code>my $x := let(:name, { ... })</code>); eager forcing is meaningless once you're already in the example body.</li>
+</ul>
 
 
 
