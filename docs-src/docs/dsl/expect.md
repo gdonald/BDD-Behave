@@ -64,3 +64,5 @@ For more flexible let access, prefer the binding syntax shown in [`let`](let.md)
 ## Failure output
 
 When an expectation fails, the runner records the file and line of the `expect` call and prints them in the failure summary so you can jump straight to the offending line.
+
+For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure block also includes a colorized `Diff:` section that highlights only the changed regions. See [Diff Output](diff.md) for the full conventions.

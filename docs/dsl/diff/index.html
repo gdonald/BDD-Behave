@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/it/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/diff/">
       
       
-        <link rel="prev" href="../describe/">
+        <link rel="prev" href="../expect/">
       
       
-        <link rel="next" href="../let/">
+        <link rel="next" href="../../running/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>it - BDD::Behave</title>
+        <title>Diff Output - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#it" class="md-skip">
+        <a href="#diff-output" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              it
+              Diff Output
             
           </span>
         </div>
@@ -350,37 +350,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    it
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../it/" class="md-nav__link">
         
   
   
@@ -396,59 +369,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#multiple-expectations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multiple expectations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#pending-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Pending examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#optional-context-parameter" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Optional context parameter
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -682,10 +602,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../diff/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diff Output
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -701,6 +648,92 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-a-diff-is-produced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When a diff is produced
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#string-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String diffs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structural-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structural diffs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negated-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negated expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -794,10 +827,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#multiple-expectations" class="md-nav__link">
+  <a href="#conventions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Multiple expectations
+        Conventions
       
     </span>
   </a>
@@ -805,10 +838,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#pending-examples" class="md-nav__link">
+  <a href="#when-a-diff-is-produced" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Pending examples
+        When a diff is produced
       
     </span>
   </a>
@@ -816,10 +849,43 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-context-parameter" class="md-nav__link">
+  <a href="#string-diffs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional context parameter
+        String diffs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structural-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structural diffs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negated-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negated expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module surface
       
     </span>
   </a>
@@ -846,51 +912,118 @@
   
 
 
-<h1 id="it">it<a class="headerlink" href="#it" title="Permanent link">&para;</a></h1>
-<p><code>it</code> defines a single example. The first argument is a human-readable description, the second is a block containing the test body.</p>
+<h1 id="diff-output">Diff Output<a class="headerlink" href="#diff-output" title="Permanent link">&para;</a></h1>
+<p>When an expectation fails, BDD::Behave produces a structured, colorized diff between the actual and expected values whenever both are of a "diffable" shape. The diff is shape-aware: strings are compared character-by-character (single line) or line-by-line (multi line); arrays, hashes, sets, bags, and mixes are rendered as multi-line JSON-style structures and compared with a longest-common-subsequence algorithm.</p>
+<h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Lines marked with red <code>-</code> are values that were <em>expected</em> but not present in the actual.</li>
+<li>Lines marked with green <code>+</code> are values that were <em>received</em> but not in the expected.</li>
+<li>Unmarked lines are unchanged context.</li>
+</ul>
+<p>This matches the <code>--Expected</code> / <code>++Received</code> convention used by Jest and similar runners.</p>
+<h2 id="when-a-diff-is-produced">When a diff is produced<a class="headerlink" href="#when-a-diff-is-produced" title="Permanent link">&para;</a></h2>
+<p>A diff is rendered when both values share one of these shapes:</p>
+<table>
+<thead>
+<tr>
+<th>Shape</th>
+<th>Trigger</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Str</code></td>
+<td>both values are <code>Str</code></td>
+</tr>
+<tr>
+<td><code>Array</code></td>
+<td>both do <code>Positional</code></td>
+</tr>
+<tr>
+<td><code>Hash</code></td>
+<td>both do <code>Associative</code></td>
+</tr>
+<tr>
+<td><code>Set</code></td>
+<td>both are <code>Set</code> or <code>SetHash</code></td>
+</tr>
+<tr>
+<td><code>Bag</code></td>
+<td>both are <code>Bag</code> or <code>BagHash</code></td>
+</tr>
+<tr>
+<td><code>Mix</code></td>
+<td>both are <code>Mix</code> or <code>MixHash</code></td>
+</tr>
+</tbody>
+</table>
+<p>Plain scalars (<code>Int</code>, <code>Bool</code>, <code>Rat</code>, etc.) keep the existing <code>Expected:</code> / <code>to be:</code> lines without a diff section, since the two <code>.raku</code> representations already make the difference obvious.</p>
+<h2 id="string-diffs">String diffs<a class="headerlink" href="#string-diffs" title="Permanent link">&para;</a></h2>
+<p>For single-line strings, the differing region is highlighted in place using common prefix/suffix detection:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>- &#39;hello earth&#39;
++ &#39;hello world&#39;
+</code></pre></div></td></tr></table></div>
+<p>The non-matching characters (<code>earth</code> and <code>world</code>) are colorized red and green respectively.</p>
+<p>For multi-line strings, the diff drops to line-level:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Array&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;reports its element count&#39;</span>, {
-    <span class="n">expect</span>((<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>).<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">3</span>);
-  }
-}
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>  foo
+- QUX
++ bar
+  baz
 </code></pre></div></td></tr></table></div>
-<h2 id="multiple-expectations">Multiple expectations<a class="headerlink" href="#multiple-expectations" title="Permanent link">&para;</a></h2>
-<p>An example can contain any number of <code>expect</code> calls. Each failing expectation is recorded; the example fails if at least one expectation fails or the block raises an unhandled exception.</p>
+<h2 id="structural-diffs">Structural diffs<a class="headerlink" href="#structural-diffs" title="Permanent link">&para;</a></h2>
+<p>Hashes, arrays, sets, bags, and mixes are pretty-printed in JSON-style and then compared line-by-line:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">it</span> <span class="s">&#39;a User is valid after construction&#39;</span>, {
-  <span class="k">my</span> <span class="nv">$u</span> = <span class="n">User</span>.<span class="nb">new</span>(:<span class="n">name</span><span class="s">&lt;Ada&gt;</span>, :<span class="n">age</span>(<span class="mi">36</span>));
-  <span class="n">expect</span>(<span class="nv">$u</span>.<span class="nb">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;Ada&#39;</span>);
-  <span class="n">expect</span>(<span class="nv">$u</span>.<span class="n">age</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">36</span>);
-  <span class="n">expect</span>(<span class="nv">$u</span>.<span class="n">valid</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="pending-examples">Pending examples<a class="headerlink" href="#pending-examples" title="Permanent link">&para;</a></h2>
-<p>You can mark an example as pending by setting its <code>pending</code> flag on the returned object (advanced). The simplest path is to comment out the body or skip writing the assertion until you implement the behavior.</p>
-<h2 id="optional-context-parameter">Optional context parameter<a class="headerlink" href="#optional-context-parameter" title="Permanent link">&para;</a></h2>
-<p>If your example block accepts a positional parameter, Behave passes a context object that lets you reach <code>let</code> values via method-style access:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">context</span> <span class="s">&#39;with a let context parameter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">88</span>)) });
-
-  <span class="n">it</span> <span class="s">&#39;reads the widget via .&#39;</span>, -&gt; <span class="nv">$_</span> {
-    <span class="n">expect</span>(.<span class="n">widget</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">88</span>);
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>  {
+    &quot;name&quot; =&gt; &quot;alice&quot;,
+-   &quot;age&quot; =&gt; 31,
++   &quot;age&quot; =&gt; 30,
+    &quot;city&quot; =&gt; &quot;paris&quot;,
   }
-}
 </code></pre></div></td></tr></table></div>
-<p>See <a href="../let/"><code>let</code></a> for the various ways to define and consume let values.</p>
+<p>Hash keys are sorted alphabetically for stable, reviewable output. Nested structures recurse and preserve indentation:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code>  {
+    &quot;tags&quot; =&gt; [
+      &quot;x&quot;,
+-     &quot;z&quot;,
++     &quot;y&quot;,
+    ],
+    &quot;user&quot; =&gt; {
+      &quot;age&quot; =&gt; 30,
+-     &quot;name&quot; =&gt; &quot;bob&quot;,
++     &quot;name&quot; =&gt; &quot;alice&quot;,
+    },
+  }
+</code></pre></div></td></tr></table></div>
+<h2 id="negated-expectations">Negated expectations<a class="headerlink" href="#negated-expectations" title="Permanent link">&para;</a></h2>
+<p><code>expect(...).not.to.be(...)</code> failures don't render a diff: when the comparison was supposed to <em>fail</em> and didn't, both values match exactly, so a diff would be empty. The standard <code>Expected:</code> / <code>not to be:</code> lines are sufficient.</p>
+<h2 id="module-surface">Module surface<a class="headerlink" href="#module-surface" title="Permanent link">&para;</a></h2>
+<p>The diff machinery lives in <code>BDD::Behave::Diff</code>. The exported functions are:</p>
+<ul>
+<li><code>diff-shape($value --&gt; Str)</code> — <code>'Str'</code>, <code>'Array'</code>, <code>'Hash'</code>, <code>'Set'</code>, <code>'Bag'</code>, <code>'Mix'</code>, <code>'Scalar'</code>, or <code>'Undef'</code>.</li>
+<li><code>diffable($given, $expected --&gt; Bool)</code> — <code>True</code> when both values share a structural shape worth diffing.</li>
+<li><code>render-diff($given, $expected --&gt; Str)</code> — produces the colorized diff string. Always returns a single string (multi-line for structural diffs).</li>
+<li><code>pretty-lines($value, :$indent --&gt; List)</code> — exposes the underlying pretty-printer for advanced use.</li>
+</ul>
+<p>You normally don't need to call these directly; failure output uses them automatically.</p>
 
 
 
