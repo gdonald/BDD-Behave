@@ -179,12 +179,52 @@ sub double(|args) is export {
   $impl(|args);
 }
 
+sub spy(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&spy');
+  };
+  $impl(|args);
+}
+
 sub allow(Mu \target) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');
     ::('BDD::Behave::DSL::&allow');
   };
   $impl(target);
+}
+
+sub anything() is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&anything');
+  };
+  $impl();
+}
+
+sub instance-of(Mu \type) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&instance-of');
+  };
+  $impl(type);
+}
+
+sub hash-including(*%pairs) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&hash-including');
+  };
+  $impl(|%pairs);
+}
+
+sub array-including(*@items) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&array-including');
+  };
+  $impl(|@items);
 }
 
 sub xcontext(|args) is export {

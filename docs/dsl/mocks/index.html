@@ -1158,10 +1158,198 @@
 <span class="n">allow</span>(<span class="n">Greeter</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;also-no&#39;</span>); <span class="c1"># dies — same check on the class</span>
 </code></pre></div></td></tr></table></div>
 <p>For a class-based <code>Double</code>, the stubbed method must exist on the wrapped class.</p>
+<h1 id="spies-and-have-received">Spies and <code>have-received</code><a class="headerlink" href="#spies-and-have-received" title="Permanent link">&para;</a></h1>
+<p>Doubles record their calls automatically. To record calls on a <em>real</em> object, install an <code>allow(...).to.receive(...)</code> stub or use <code>spy(...)</code>. Then verify with <code>expect(obj).to.have-received('method')</code>.</p>
+<h2 id="spy-pass-through-recorder"><code>spy(...)</code> — pass-through recorder<a class="headerlink" href="#spy-pass-through-recorder" title="Permanent link">&para;</a></h2>
+<p><code>spy()</code> has three forms:</p>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spy()</code> / <code>spy('Name')</code></td>
+<td>Same as <code>double()</code> / <code>double('Name')</code>. Permissive recording double.</td>
+</tr>
+<tr>
+<td><code>spy(SomeClass)</code></td>
+<td>Same as <code>double(SomeClass)</code>. Class-based verifying double.</td>
+</tr>
+<tr>
+<td><code>spy($real-instance)</code></td>
+<td>Wraps each user-defined method on the instance with a recording stub that delegates to the real implementation. Returns the same instance.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Greeter</span> { <span class="k">method</span> <span class="n">hello</span>(<span class="nv">$name</span>) { <span class="s">&quot;hello, $name&quot;</span> } }
+
+<span class="n">describe</span> <span class="s">&#39;spying on a real object&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;records calls without changing behavior&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$g</span> = <span class="n">Greeter</span>.<span class="nb">new</span>;
+    <span class="n">spy</span>(<span class="nv">$g</span>);
+
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;alice&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, alice&#39;</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;hello&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>A spy on a real instance only affects that one instance — sibling instances dispatch normally. Stubs installed by <code>spy(...)</code> are auto-cleaned at end of example, like <code>allow(...)</code> stubs.</p>
+<h2 id="expectobjtohave-receivedmethod"><code>expect(obj).to.have-received('method')</code><a class="headerlink" href="#expectobjtohave-receivedmethod" title="Permanent link">&para;</a></h2>
+<p><code>have-received</code> checks call records on a Double, on a <code>spy(...)</code>-wrapped instance, or on any object whose method has been stubbed via <code>allow(...)</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$log</span> = <span class="n">double</span>(<span class="s">&#39;Logger&#39;</span>);
+<span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;starting&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>);     <span class="c1"># at least one call</span>
+</code></pre></div></td></tr></table></div>
+<p>For real objects, you must install a recorder first (via <code>allow(...)</code> or <code>spy(...)</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$repo</span> = <span class="n">Repo</span>.<span class="nb">new</span>;
+<span class="n">allow</span>(<span class="nv">$repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">call-original</span>;
+
+<span class="nv">$repo</span>.<span class="n">find</span>(<span class="mi">7</span>);
+<span class="n">expect</span>(<span class="nv">$repo</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;find&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>If no stub is installed when verifying a real object, <code>have-received</code> records a clear failure asking you to set one up.</p>
+<p><code>expect(obj).not.to.have-received('m')</code> asserts the method was <em>not</em> called.</p>
+<h2 id="call-count-modifiers">Call-count modifiers<a class="headerlink" href="#call-count-modifiers" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Modifier</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.once</code></td>
+<td>exactly 1 call</td>
+</tr>
+<tr>
+<td><code>.twice</code></td>
+<td>exactly 2 calls</td>
+</tr>
+<tr>
+<td><code>.thrice</code></td>
+<td>exactly 3 calls</td>
+</tr>
+<tr>
+<td><code>.times(n)</code></td>
+<td>exactly N calls</td>
+</tr>
+<tr>
+<td><code>.exactly(n)</code></td>
+<td>alias for <code>.times(n)</code></td>
+</tr>
+<tr>
+<td><code>.at-least(n)</code></td>
+<td>N or more calls</td>
+</tr>
+<tr>
+<td><code>.at-most(n)</code></td>
+<td>N or fewer calls</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="n">twice</span>;
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="n">at-least</span>(<span class="mi">2</span>);
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="n">at-most</span>(<span class="mi">3</span>);
+</code></pre></div></td></tr></table></div>
+<p>Each chained modifier <em>replaces</em> any failure recorded by the previous step, so chains like <code>.have-received('m').with('a').twice</code> produce at most one failure even if the first check would have failed on its own.</p>
+<h2 id="argument-matching-with">Argument matching: <code>.with(...)</code><a class="headerlink" href="#argument-matching-with" title="Permanent link">&para;</a></h2>
+<p><code>.with(args)</code> filters the recorded calls and only counts those whose args match.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;starting&#39;</span>);
+<span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;done&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="s">&#39;starting&#39;</span>);     <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="s">&#39;starting&#39;</span>).<span class="n">once</span>; <span class="c1"># passes</span>
+</code></pre></div></td></tr></table></div>
+<p>Both positional and named args are supported:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;greet&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;hi&#39;</span>);
+<span class="nv">$g</span>.<span class="n">greet</span>(:<span class="n">lang</span><span class="s">&lt;en&gt;</span>);
+<span class="n">expect</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;greet&#39;</span>).<span class="k">with</span>(:<span class="n">lang</span><span class="s">&lt;en&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="argument-matchers">Argument matchers<a class="headerlink" href="#argument-matchers" title="Permanent link">&para;</a></h2>
+<p>For each positional or named arg, you can supply a matcher object instead of a literal value:</p>
+<table>
+<thead>
+<tr>
+<th>Matcher</th>
+<th>Matches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anything</code></td>
+<td>Any value, including undefined.</td>
+</tr>
+<tr>
+<td><code>instance-of(Type)</code></td>
+<td>Anything for which <code>$arg ~~ Type</code> is true.</td>
+</tr>
+<tr>
+<td><code>hash-including(:k&lt;v&gt;, ...)</code></td>
+<td>Any <code>Associative</code> containing the listed key/value pairs.</td>
+</tr>
+<tr>
+<td><code>array-including(item, ...)</code></td>
+<td>Any <code>Positional</code> containing all the listed items.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;hello&#39;</span>, <span class="mi">42</span>);
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="n">instance-of</span>(<span class="nb">Str</span>), <span class="n">instance-of</span>(<span class="nb">Int</span>));
+
+<span class="nv">$log</span>.<span class="n">info</span>({ <span class="n">user</span> =&gt; <span class="s">&#39;alice&#39;</span>, <span class="n">region</span> =&gt; <span class="s">&#39;us&#39;</span>, <span class="o">extra</span> =&gt; <span class="mi">1</span> });
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="n">hash-including</span>(<span class="n">user</span> =&gt; <span class="s">&#39;alice&#39;</span>));
+
+<span class="nv">$log</span>.<span class="n">info</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>, <span class="mi">4</span>, <span class="mi">5</span>]);
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="n">array-including</span>(<span class="mi">2</span>, <span class="mi">4</span>));
+</code></pre></div></td></tr></table></div>
+<p>Matchers nest inside <code>hash-including</code> and <code>array-including</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(
+  <span class="n">hash-including</span>(<span class="n">user</span> =&gt; <span class="n">instance-of</span>(<span class="nb">Str</span>), <span class="nb">count</span> =&gt; <span class="n">anything</span>)
+);
+</code></pre></div></td></tr></table></div>
 <h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>allow($obj).to.receive('m')</code> only stubs <code>$obj</code>. To stub the same instance method across <strong>all</strong> instances of a class, pass the class type object instead — but that affects dispatch through the class itself, which mostly matches class-method semantics. A dedicated <code>allow_any_instance_of</code>-style helper isn't yet implemented.</li>
-<li>Argument matching (<code>.with(...)</code>), call-count expectations (<code>.times(...)</code>), and spies (<code>expect(obj).to.have_received(...)</code>) are not yet supported. Those land in later milestones.</li>
+<li><code>spy($real-instance)</code> wraps user-defined methods; methods inherited from <code>Mu</code>/<code>Any</code> and submethods (e.g. <code>BUILD</code>, <code>POPULATE</code>) are not wrapped.</li>
 </ul>
 
 

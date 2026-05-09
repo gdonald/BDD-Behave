@@ -263,9 +263,18 @@ our sub double(|args) is export {
   BDD::Behave::Mock::double(|args);
 }
 
+our sub spy(|args) is export {
+  BDD::Behave::Mock::spy(|args);
+}
+
 our sub allow(Mu \target) is export {
   BDD::Behave::Mock::allow(target);
 }
+
+our sub anything()              is export { BDD::Behave::Mock::anything() }
+our sub instance-of(Mu \type)   is export { BDD::Behave::Mock::instance-of(type) }
+our sub hash-including(*%pairs) is export { BDD::Behave::Mock::hash-including(|%pairs) }
+our sub array-including(*@items) is export { BDD::Behave::Mock::array-including(|@items) }
 
 our sub fit(Str $description, &block, *%meta) is export {
   it($description, &block, |%meta, :focused);
@@ -336,6 +345,18 @@ class ExpectationBuilder {
     }
 
     $result;
+  }
+
+  method have-received(Str:D $method-name) {
+    my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
+      :target($!given),
+      :$method-name,
+      :negated($!negated),
+      :file($!file),
+      :line($!line),
+    );
+    $expectation.validate;
+    $expectation;
   }
 }
 

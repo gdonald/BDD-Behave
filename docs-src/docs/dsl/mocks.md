@@ -230,7 +230,132 @@ allow(Greeter).to.receive('also-no'); # dies — same check on the class
 
 For a class-based `Double`, the stubbed method must exist on the wrapped class.
 
+# Spies and `have-received`
+
+Doubles record their calls automatically. To record calls on a *real* object, install an `allow(...).to.receive(...)` stub or use `spy(...)`. Then verify with `expect(obj).to.have-received('method')`.
+
+## `spy(...)` — pass-through recorder
+
+`spy()` has three forms:
+
+| Form                          | Result                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------- |
+| `spy()` / `spy('Name')`       | Same as `double()` / `double('Name')`. Permissive recording double.     |
+| `spy(SomeClass)`              | Same as `double(SomeClass)`. Class-based verifying double.              |
+| `spy($real-instance)`         | Wraps each user-defined method on the instance with a recording stub that delegates to the real implementation. Returns the same instance. |
+
+```raku
+class Greeter { method hello($name) { "hello, $name" } }
+
+describe 'spying on a real object', {
+  it 'records calls without changing behavior', {
+    my $g = Greeter.new;
+    spy($g);
+
+    expect($g.hello('alice')).to.be('hello, alice');
+    expect($g).to.have-received('hello');
+  }
+}
+```
+
+A spy on a real instance only affects that one instance — sibling instances dispatch normally. Stubs installed by `spy(...)` are auto-cleaned at end of example, like `allow(...)` stubs.
+
+## `expect(obj).to.have-received('method')`
+
+`have-received` checks call records on a Double, on a `spy(...)`-wrapped instance, or on any object whose method has been stubbed via `allow(...)`.
+
+```raku
+my $log = double('Logger');
+$log.info('starting');
+
+expect($log).to.have-received('info');     # at least one call
+```
+
+For real objects, you must install a recorder first (via `allow(...)` or `spy(...)`):
+
+```raku
+my $repo = Repo.new;
+allow($repo).to.receive('find').and-call-original;
+
+$repo.find(7);
+expect($repo).to.have-received('find');
+```
+
+If no stub is installed when verifying a real object, `have-received` records a clear failure asking you to set one up.
+
+`expect(obj).not.to.have-received('m')` asserts the method was *not* called.
+
+## Call-count modifiers
+
+| Modifier        | Meaning                              |
+| --------------- | ------------------------------------ |
+| `.once`         | exactly 1 call                       |
+| `.twice`        | exactly 2 calls                      |
+| `.thrice`       | exactly 3 calls                      |
+| `.times(n)`     | exactly N calls                      |
+| `.exactly(n)`   | alias for `.times(n)`                |
+| `.at-least(n)`  | N or more calls                      |
+| `.at-most(n)`   | N or fewer calls                     |
+
+```raku
+expect($log).to.have-received('info').twice;
+expect($log).to.have-received('info').at-least(2);
+expect($log).to.have-received('info').at-most(3);
+```
+
+Each chained modifier *replaces* any failure recorded by the previous step, so chains like `.have-received('m').with('a').twice` produce at most one failure even if the first check would have failed on its own.
+
+## Argument matching: `.with(...)`
+
+`.with(args)` filters the recorded calls and only counts those whose args match.
+
+```raku
+$log.info('starting');
+$log.info('done');
+
+expect($log).to.have-received('info').with('starting');     # passes
+expect($log).to.have-received('info').with('starting').once; # passes
+```
+
+Both positional and named args are supported:
+
+```raku
+allow($g).to.receive('greet').and-return('hi');
+$g.greet(:lang<en>);
+expect($g).to.have-received('greet').with(:lang<en>);
+```
+
+## Argument matchers
+
+For each positional or named arg, you can supply a matcher object instead of a literal value:
+
+| Matcher                          | Matches                                                          |
+| -------------------------------- | ---------------------------------------------------------------- |
+| `anything`                       | Any value, including undefined.                                  |
+| `instance-of(Type)`              | Anything for which `$arg ~~ Type` is true.                       |
+| `hash-including(:k<v>, ...)`     | Any `Associative` containing the listed key/value pairs.         |
+| `array-including(item, ...)`     | Any `Positional` containing all the listed items.                |
+
+```raku
+$log.info('hello', 42);
+expect($log).to.have-received('info').with(instance-of(Str), instance-of(Int));
+
+$log.info({ user => 'alice', region => 'us', extra => 1 });
+expect($log).to.have-received('info').with(hash-including(user => 'alice'));
+
+$log.info([1, 2, 3, 4, 5]);
+expect($log).to.have-received('info').with(array-including(2, 4));
+```
+
+Matchers nest inside `hash-including` and `array-including`:
+
+```raku
+expect($log).to.have-received('info').with(
+  hash-including(user => instance-of(Str), count => anything)
+);
+```
+
 ## Limits
 
 - `allow($obj).to.receive('m')` only stubs `$obj`. To stub the same instance method across **all** instances of a class, pass the class type object instead — but that affects dispatch through the class itself, which mostly matches class-method semantics. A dedicated `allow_any_instance_of`-style helper isn't yet implemented.
-- Argument matching (`.with(...)`), call-count expectations (`.times(...)`), and spies (`expect(obj).to.have_received(...)`) are not yet supported. Those land in later milestones.
+- `spy($real-instance)` wraps user-defined methods; methods inherited from `Mu`/`Any` and submethods (e.g. `BUILD`, `POPULATE`) are not wrapped.

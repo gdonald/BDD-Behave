@@ -1,0 +1,274 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+need BDD::Behave::Mock;
+
+sub clear-failures() {
+  while Failures.list.elems {
+    Failures.list.pop;
+  }
+}
+
+# expect(double).to.have-received('m') passes when called
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('starting');
+  expect($log).to.have-received('info');
+  is Failures.list.elems, 0, 'no failure recorded for matching double call';
+}
+
+# expect(double).to.have-received('m') fails when not called
+{
+  clear-failures;
+  my $log = double('Logger');
+  expect($log).to.have-received('info');
+  is Failures.list.elems, 1, 'failure recorded when method not called';
+  like Failures.list[0].message,
+       /'have been called'/,
+       'failure message mentions have been called';
+  clear-failures;
+}
+
+# expect(real-obj).to.have-received works when allow() is in place
+{
+  clear-failures;
+  my class G { method hello { 'h' } }
+  my $g = G.new;
+  allow($g).to.receive('hello').and-call-original;
+  $g.hello;
+  expect($g).to.have-received('hello');
+  is Failures.list.elems, 0, 'allow().and-call-original tracked the call';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# expect(real-obj).to.have-received without allow records a clear failure
+{
+  clear-failures;
+  my class G { method hello { 'h' } }
+  my $g = G.new;
+  expect($g).to.have-received('hello');
+  is Failures.list.elems, 1, 'failure recorded when no recorder is installed';
+  like Failures.list[0].message,
+       /'no stub installed'/,
+       'failure message mentions missing stub';
+  clear-failures;
+}
+
+# .not.to.have-received passes when method was not called
+{
+  clear-failures;
+  my $log = double('Logger');
+  expect($log).not.to.have-received('info');
+  is Failures.list.elems, 0, 'negated have-received passes for zero calls';
+}
+
+# .not.to.have-received fails when method WAS called
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  expect($log).not.to.have-received('info');
+  is Failures.list.elems, 1, 'negated have-received fails when called';
+  clear-failures;
+}
+
+# .with(args) filters by positional args (passes)
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('starting');
+  $log.info('done');
+  expect($log).to.have-received('info').with('starting');
+  is Failures.list.elems, 0, '.with passes when an arg-matching call exists';
+}
+
+# .with(args) filters and records a single replacement failure when nothing matches
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  expect($log).to.have-received('info').with('not-this');
+  is Failures.list.elems, 1, '.with records a single failure (replacement)';
+  like Failures.list[0].message,
+       /'not-this'/,
+       '.with failure message includes the expected args';
+  clear-failures;
+}
+
+# .with(named) filters by named args
+{
+  clear-failures;
+  my class G { method farewell(:$lang!) { "bye $lang" } }
+  my $g = G.new;
+  allow($g).to.receive('farewell').and-return('bye');
+  $g.farewell(:lang<en>);
+  expect($g).to.have-received('farewell').with(:lang<en>);
+  is Failures.list.elems, 0, '.with(named) matches';
+
+  BDD::Behave::Mock::StubRegistry.clear-all;
+}
+
+# .times(n) checks exact count
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  $log.info('b');
+  expect($log).to.have-received('info').times(2);
+  is Failures.list.elems, 0, '.times(2) passes for two calls';
+}
+
+# .times(n) fails when count differs
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  $log.info('b');
+  expect($log).to.have-received('info').once;
+  is Failures.list.elems, 1, '.once fails for two calls';
+  like Failures.list[0].message,
+       /'exactly once'/,
+       'failure message describes the expected count';
+  clear-failures;
+}
+
+# .at-least passes when count >= n
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  $log.info('b');
+  $log.info('c');
+  expect($log).to.have-received('info').at-least(2);
+  is Failures.list.elems, 0, '.at-least(2) passes for three calls';
+}
+
+# .at-least fails when count < n
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  expect($log).to.have-received('info').at-least(5);
+  is Failures.list.elems, 1, '.at-least fails when below threshold';
+  clear-failures;
+}
+
+# .at-most passes when count <= n
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  expect($log).to.have-received('info').at-most(3);
+  is Failures.list.elems, 0, '.at-most(3) passes for one call';
+}
+
+# .at-most fails when count > n
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  $log.info('b');
+  $log.info('c');
+  $log.info('d');
+  expect($log).to.have-received('info').at-most(2);
+  is Failures.list.elems, 1, '.at-most fails when above threshold';
+  clear-failures;
+}
+
+# Chaining replaces the prior failure (no double-counting)
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+
+  # .have-received passes (one call), but .with('b') fails, then .twice fails
+  expect($log).to.have-received('info').with('b').twice;
+  is Failures.list.elems, 1,
+    'chained modifiers replace each others failures (only one stays)';
+  clear-failures;
+}
+
+# .with combined with .times only counts matching calls
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  $log.info('a');
+  $log.info('b');
+  expect($log).to.have-received('info').with('a').twice;
+  is Failures.list.elems, 0, '.with then .twice passes for two matching calls';
+}
+
+# Argument matchers — anything
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('hello', 42);
+  expect($log).to.have-received('info').with(anything, anything);
+  is Failures.list.elems, 0, 'anything matcher works';
+}
+
+# Argument matchers — instance-of
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('hello', 42);
+  expect($log).to.have-received('info').with(instance-of(Str), instance-of(Int));
+  is Failures.list.elems, 0, 'instance-of matcher works';
+
+  expect($log).to.have-received('info').with(instance-of(Int), anything);
+  is Failures.list.elems, 1, 'instance-of fails when types do not match';
+  clear-failures;
+}
+
+# Argument matchers — hash-including
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info({ user => 'alice', region => 'us', extra => 1 });
+  expect($log).to.have-received('info').with(hash-including(user => 'alice'));
+  is Failures.list.elems, 0, 'hash-including matches partial hash';
+
+  expect($log).to.have-received('info').with(hash-including(user => 'bob'));
+  is Failures.list.elems, 1, 'hash-including fails when value differs';
+  clear-failures;
+}
+
+# Argument matchers — array-including
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info([1, 2, 3, 4, 5]);
+  expect($log).to.have-received('info').with(array-including(2, 4));
+  is Failures.list.elems, 0, 'array-including matches subset';
+
+  expect($log).to.have-received('info').with(array-including(99));
+  is Failures.list.elems, 1, 'array-including fails when item missing';
+  clear-failures;
+}
+
+# anything as a single value matcher works on its own
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info(42);
+  expect($log).to.have-received('info').with(anything);
+  is Failures.list.elems, 0, 'anything as a single arg matcher passes';
+}
+
+# negated have-received with .with: passes when no matching call
+{
+  clear-failures;
+  my $log = double('Logger');
+  $log.info('a');
+  expect($log).not.to.have-received('info').with('b');
+  is Failures.list.elems, 0,
+    'negated have-received.with passes when no matching call';
+}
+
+done-testing;
