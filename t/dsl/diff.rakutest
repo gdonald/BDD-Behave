@@ -1,7 +1,6 @@
 use v6.d;
 use lib 'lib';
 use Test;
-use Test::Output;
 
 use BDD::Behave::Diff;
 use BDD::Behave::Failure;
@@ -10,6 +9,19 @@ use BDD::Behave::Failures;
 
 sub strip-ansi(Str $s --> Str) {
   $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+sub capture-stdout(&block --> Str) {
+  my $tmp = $*TMPDIR.add("behave-diff-test-{$*PID}-{(now * 1e6).Int}.out");
+  {
+    my $fh = $tmp.open(:w);
+    my $*OUT = $fh;
+    block();
+    $fh.close;
+  }
+  my $captured = $tmp.slurp;
+  $tmp.unlink;
+  $captured;
 }
 
 # diff-shape
@@ -123,7 +135,7 @@ nok diffable(Nil, [1]),     'Nil + Array not diffable';
     :given([1, 2, 3]),
     :expected([1, 9, 3]),
   ));
-  my $out = output-from { Failures.say };
+  my $out = capture-stdout({ Failures.say });
   Failures.list = ();
   ok $out.contains('Diff:'),           'Failures.say emits Diff: section for diffable values';
   ok strip-ansi($out).contains('-   9,'), 'Failures.say diff has expected minus line';
@@ -138,7 +150,7 @@ nok diffable(Nil, [1]),     'Nil + Array not diffable';
     :given(42),
     :expected(41),
   ));
-  my $out = output-from { Failures.say };
+  my $out = capture-stdout({ Failures.say });
   Failures.list = ();
   nok $out.contains('Diff:'), 'Failures.say omits Diff: for plain scalars';
 }
@@ -152,7 +164,7 @@ nok diffable(Nil, [1]),     'Nil + Array not diffable';
     :expected([1]),
     :negated(True),
   ));
-  my $out = output-from { Failures.say };
+  my $out = capture-stdout({ Failures.say });
   Failures.list = ();
   nok $out.contains('Diff:'), 'Failures.say omits Diff: for negated expectations';
 }
