@@ -15,6 +15,7 @@ nav:
     - Focus and Skip: dsl/focus-skip.md
     - Doubles: dsl/mocks.md
     - expect: dsl/expect.md
+    - Matchers: dsl/matchers.md
     - Diff Output: dsl/diff.md
   - Running Specs: running.md
   - Tests: testing.md

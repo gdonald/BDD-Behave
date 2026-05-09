@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/getting-started/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dsl/matchers/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../expect/">
       
       
-        <link rel="next" href="../dsl/describe/">
+        <link rel="next" href="../diff/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Getting Started - BDD::Behave</title>
+        <title>Matchers - BDD::Behave</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -48,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started" class="md-skip">
+        <a href="#matcher-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+    <a href="../.." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              Matchers
             
           </span>
         </div>
@@ -192,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+    <a href="../.." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -222,7 +222,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -246,37 +246,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -292,70 +265,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Project layout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#your-first-spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Your first spec
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-specs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running specs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Where to go next
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -364,18 +273,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -396,7 +307,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -414,7 +325,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/describe/" class="md-nav__link">
+      <a href="../describe/" class="md-nav__link">
         
   
   
@@ -442,7 +353,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/it/" class="md-nav__link">
+      <a href="../it/" class="md-nav__link">
         
   
   
@@ -470,7 +381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/let/" class="md-nav__link">
+      <a href="../let/" class="md-nav__link">
         
   
   
@@ -498,7 +409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/hooks/" class="md-nav__link">
+      <a href="../hooks/" class="md-nav__link">
         
   
   
@@ -526,7 +437,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/shared-contexts/" class="md-nav__link">
+      <a href="../shared-contexts/" class="md-nav__link">
         
   
   
@@ -554,7 +465,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/shared-examples/" class="md-nav__link">
+      <a href="../shared-examples/" class="md-nav__link">
         
   
   
@@ -582,7 +493,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/tags/" class="md-nav__link">
+      <a href="../tags/" class="md-nav__link">
         
   
   
@@ -610,7 +521,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/focus-skip/" class="md-nav__link">
+      <a href="../focus-skip/" class="md-nav__link">
         
   
   
@@ -638,7 +549,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/mocks/" class="md-nav__link">
+      <a href="../mocks/" class="md-nav__link">
         
   
   
@@ -666,7 +577,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/expect/" class="md-nav__link">
+      <a href="../expect/" class="md-nav__link">
         
   
   
@@ -691,10 +602,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../dsl/matchers/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matchers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -710,6 +648,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-matcher-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Matcher role
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-a-custom-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing a custom matcher
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-seam-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this seam exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -722,7 +735,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dsl/diff/" class="md-nav__link">
+      <a href="../diff/" class="md-nav__link">
         
   
   
@@ -757,7 +770,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../running/" class="md-nav__link">
+      <a href="../../running/" class="md-nav__link">
         
   
   
@@ -784,7 +797,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../testing/" class="md-nav__link">
+      <a href="../../testing/" class="md-nav__link">
         
   
   
@@ -831,10 +844,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#the-matcher-role" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project layout
+        The Matcher role
       
     </span>
   </a>
@@ -842,10 +855,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#your-first-spec" class="md-nav__link">
+  <a href="#bematcher-built-in" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Your first spec
+        BeMatcher (built-in)
       
     </span>
   </a>
@@ -853,10 +866,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-specs" class="md-nav__link">
+  <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running specs
+        Writing a custom matcher
       
     </span>
   </a>
@@ -864,10 +877,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
+  <a href="#negation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where to go next
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-seam-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this seam exists
       
     </span>
   </a>
@@ -894,25 +918,86 @@
   
 
 
-<h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
-<h2 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
-<p>A Behave project keeps spec files in a <code>specs/</code> directory at the project root. The <code>behave</code> runner picks up any file matching <code>spec.raku</code> (e.g. <code>001-basic-spec.raku</code>, <code>users-spec.raku</code>, <code>subdir/admin-spec.raku</code>).</p>
+<h1 id="matcher-architecture">Matcher Architecture<a class="headerlink" href="#matcher-architecture" title="Permanent link">&para;</a></h1>
+<p><code>expect(...).to.be(...)</code> is built on top of a small <code>Matcher</code> role. The expected
+value passed to <code>.be(...)</code> is either:</p>
+<ul>
+<li><strong>a plain value</strong> — wrapped in the built-in <code>BeMatcher</code> (smartmatch), or</li>
+<li><strong>a <code>Matcher</code>-doing object</strong> — used directly.</li>
+</ul>
+<p>This is the seam every built-in matcher and every user-defined matcher plugs
+into.</p>
+<h2 id="the-matcher-role">The Matcher role<a class="headerlink" href="#the-matcher-role" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>my-project/
-├── lib/
-│   └── MyApp.rakumod
-└── specs/
-    ├── basic-spec.raku
-    └── users/
-        └── auth-spec.raku
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">unit</span> <span class="k">module</span> <span class="n">BDD::Behave::Matcher</span>;
+
+<span class="k">role</span> <span class="n">Matcher</span> <span class="k">is</span> <span class="k">export</span> {
+  <span class="k">method</span> <span class="n">matches</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Bool</span>) { ... }
+  <span class="k">method</span> <span class="n">failure-message</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) { <span class="nb">Str</span> }
+  <span class="k">method</span> <span class="n">failure-message-negated</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) { <span class="nb">Str</span> }
+  <span class="k">method</span> <span class="n">expected-value</span>(--&gt; <span class="nb">Mu</span>) { <span class="nb">Nil</span> }
+  <span class="k">method</span> <span class="n">description</span>(--&gt; <span class="nb">Str</span>) { <span class="nb">self</span>.^<span class="nb">name</span> }
+}
 </code></pre></div></td></tr></table></div>
-<h2 id="your-first-spec">Your first spec<a class="headerlink" href="#your-first-spec" title="Permanent link">&para;</a></h2>
-<p>Every spec file starts with <code>use BDD::Behave;</code> and then declares one or more top-level <code>describe</code> blocks.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Required?</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>matches($actual)</code></td>
+<td>yes</td>
+<td>Return <code>True</code> / <code>False</code> for whether <code>$actual</code> matches.</td>
+</tr>
+<tr>
+<td><code>failure-message($actual)</code></td>
+<td>no</td>
+<td>Message rendered when the expectation fails (positive form). Default: undefined <code>Str</code> (falls back to <code>Expected:</code> / <code>to be:</code> rendering).</td>
+</tr>
+<tr>
+<td><code>failure-message-negated($actual)</code></td>
+<td>no</td>
+<td>Message rendered when a <code>.not</code> expectation fails. Default: undefined <code>Str</code>.</td>
+</tr>
+<tr>
+<td><code>expected-value</code></td>
+<td>no</td>
+<td>The value stored in <code>Failure.expected</code> for tooling.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>no</td>
+<td>Human-readable description, useful for error reporting and reflection.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="bematcher-built-in">BeMatcher (built-in)<a class="headerlink" href="#bematcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>BeMatcher</code> wraps Raku's smartmatch operator (<code>~~</code>). When you write:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
+<span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="sr">/hell/</span>);
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);
+<span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
+</code></pre></div></td></tr></table></div>
+<p>…the runner constructs <code>BeMatcher.new(:expected(...))</code> under the hood. Because
+<code>BeMatcher</code> deliberately leaves <code>failure-message</code> undefined, failure rendering
+keeps the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized <code>Diff:</code>
+section described in <a href="../diff/">Diff Output</a>.</p>
+<h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
+<p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -923,38 +1008,52 @@
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::Matcher</span>;
 
-<span class="n">describe</span> <span class="s">&#39;arithmetic&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;adds integers&#39;</span>, {
-    <span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">2</span>);
+<span class="k">class</span> <span class="n">EvenMatcher</span> <span class="k">does</span> <span class="n">Matcher</span> {
+  <span class="k">method</span> <span class="n">matches</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Bool</span>) { ?(<span class="nv">$actual</span> %% <span class="mi">2</span>) }
+  <span class="k">method</span> <span class="n">failure-message</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) {
+    <span class="s">&quot;expected $actual to be even&quot;</span>;
   }
+  <span class="k">method</span> <span class="n">failure-message-negated</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) {
+    <span class="s">&quot;expected $actual not to be even&quot;</span>;
+  }
+  <span class="k">method</span> <span class="n">expected-value</span>(--&gt; <span class="nb">Mu</span>) { <span class="s">&#39;an even number&#39;</span> }
+}
 
-  <span class="n">it</span> <span class="s">&#39;multiplies integers&#39;</span>, {
-    <span class="n">expect</span>(<span class="mi">3</span> * <span class="mi">4</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">12</span>);
-  }
+<span class="n">it</span> <span class="s">&#39;is even&#39;</span>, {
+  <span class="n">expect</span>(<span class="mi">4</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">EvenMatcher</span>.<span class="nb">new</span>);          <span class="c1"># passes</span>
+  <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="n">EvenMatcher</span>.<span class="nb">new</span>);      <span class="c1"># passes</span>
 }
 </code></pre></div></td></tr></table></div>
-<h2 id="running-specs">Running specs<a class="headerlink" href="#running-specs" title="Permanent link">&para;</a></h2>
-<p>Run all specs found in <code>specs/</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave
-</code></pre></div></td></tr></table></div>
-<p>Run a single spec file:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>specs/basic-spec.raku
-</code></pre></div></td></tr></table></div>
-<p>During local development of an app whose <code>lib/</code> is not yet installed, prefix with <code>raku -Ilib</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave<span class="w"> </span>specs/basic-spec.raku
-</code></pre></div></td></tr></table></div>
-<p>See <a href="../running/">Running Specs</a> for the full set of options.</p>
-<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
+<p>When the matcher reports a failure:</p>
 <ul>
-<li><a href="../dsl/describe/"><code>describe</code> / <code>context</code></a> — group related examples</li>
-<li><a href="../dsl/it/"><code>it</code></a> — define an example</li>
-<li><a href="../dsl/let/"><code>let</code></a> — lazy, memoized values per example</li>
-<li><a href="../dsl/hooks/">Hooks</a> — <code>before-each</code>, <code>after-each</code>, <code>before-all</code>, <code>after-all</code></li>
-<li><a href="../dsl/shared-contexts/">Shared Contexts</a> — reusable <code>let</code>s and hooks via <code>shared-context</code> / <code>include-context</code></li>
-<li><a href="../dsl/expect/"><code>expect</code></a> — assertions</li>
+<li>The matcher's <code>failure-message($actual)</code> (or <code>failure-message-negated($actual)</code>
+  for <code>.not</code>) becomes <code>Failure.message</code> and is what the failure summary prints.</li>
+<li><code>Failure.given</code> holds the actual value, <code>Failure.expected</code> holds
+  <code>expected-value</code>. Both are still useful for programmatic consumers and for
+  alternate formatters.</li>
 </ul>
+<h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
+<p><code>.not</code> flips the boolean result of <code>matches</code> <em>before</em> the framework decides
+whether to record a failure. Matchers do not need to special-case negation;
+they only need to return a sensible message from <code>failure-message-negated</code> for
+when <code>.not</code> fails (i.e., the matcher matched but should not have).</p>
+<h2 id="why-this-seam-exists">Why this seam exists<a class="headerlink" href="#why-this-seam-exists" title="Permanent link">&para;</a></h2>
+<p>The pre-4.5.2 implementation hard-coded smartmatch into
+<code>ExpectationBuilder.be</code> and pushed a <code>Failure</code> directly. The Matcher role
+turns that path into a tiny protocol so the milestone-5 built-in matchers
+(<code>include</code>, <code>be-a</code>, <code>match</code>, <code>raise-error</code>, …) and user-supplied matchers
+(milestone 5.9) all plug in the same way without re-touching the expectation
+builder.</p>
 
 
 
@@ -1004,10 +1103,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

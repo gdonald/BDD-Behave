@@ -14,7 +14,7 @@
         <link rel="prev" href="../mocks/">
       
       
-        <link rel="next" href="../diff/">
+        <link rel="next" href="../matchers/">
       
       
         
@@ -691,10 +691,49 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#custom-matchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom matchers
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -870,6 +909,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#custom-matchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Custom matchers
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -907,7 +957,7 @@
 }
 </code></pre></div></td></tr></table></div>
 <h2 id="smartmatch-semantics">Smartmatch semantics<a class="headerlink" href="#smartmatch-semantics" title="Permanent link">&para;</a></h2>
-<p>Because <code>be</code> uses <code>~~</code>, you can match against types, regexes, ranges, junctions, and anything else Raku smartmatches:</p>
+<p>Because <code>be</code> uses <code>~~</code> (via the built-in <code>BeMatcher</code>), you can match against types, regexes, ranges, junctions, and anything else Raku smartmatches:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -916,6 +966,7 @@
 <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);             <span class="c1"># range</span>
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));     <span class="c1"># junction</span>
 </code></pre></div></td></tr></table></div>
+<p>Plain values are wrapped in <code>BeMatcher</code> automatically. To plug in your own logic, pass any object that does the <a href="../matchers/"><code>Matcher</code></a> role.</p>
 <h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
 <p><code>.not</code> flips the comparison:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">3</span>);
@@ -947,6 +998,8 @@
 <h2 id="failure-output">Failure output<a class="headerlink" href="#failure-output" title="Permanent link">&para;</a></h2>
 <p>When an expectation fails, the runner records the file and line of the <code>expect</code> call and prints them in the failure summary so you can jump straight to the offending line.</p>
 <p>For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure block also includes a colorized <code>Diff:</code> section that highlights only the changed regions. See <a href="../diff/">Diff Output</a> for the full conventions.</p>
+<h2 id="custom-matchers">Custom matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h2>
+<p><code>be</code> accepts any object that does the <a href="../matchers/"><code>Matcher</code></a> role. The matcher's <code>matches</code>, <code>failure-message</code>, and <code>failure-message-negated</code> methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.</p>
 
 
 

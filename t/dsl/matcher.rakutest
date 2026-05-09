@@ -1,0 +1,97 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 30;
+
+# 1. Role contract: a class that does Matcher must implement matches; the
+#    failure-message hooks have undefined Str defaults.
+{
+  my class TrivialMatcher does Matcher {
+    method matches($actual --> Bool) { True }
+  }
+
+  my $m = TrivialMatcher.new;
+  ok $m ~~ Matcher, 'TrivialMatcher does the Matcher role';
+  ok $m.matches('anything'), 'matches returns Bool';
+  nok $m.failure-message('x').defined, 'default failure-message is undefined Str';
+  nok $m.failure-message-negated('x').defined, 'default failure-message-negated is undefined Str';
+}
+
+# 2. BeMatcher wraps smartmatch.
+{
+  my $m = BeMatcher.new(:expected(42));
+  ok $m ~~ Matcher, 'BeMatcher does Matcher';
+  ok $m.matches(42), 'BeMatcher matches equal value';
+  nok $m.matches(41), 'BeMatcher does not match unequal value';
+  is $m.expected, 42, 'BeMatcher.expected exposes the expected value';
+  is $m.expected-value, 42, 'BeMatcher.expected-value matches expected';
+}
+
+# 3. BeMatcher honours full smartmatch semantics (types, regex, ranges, junctions).
+{
+  ok BeMatcher.new(:expected(Int)).matches(7), 'BeMatcher matches type';
+  ok BeMatcher.new(:expected(/hell/)).matches('hello'), 'BeMatcher matches regex';
+  ok BeMatcher.new(:expected(1..10)).matches(5), 'BeMatcher matches range';
+  ok BeMatcher.new(:expected(any(1, 2, 3))).matches(2), 'BeMatcher matches junction';
+}
+
+# 4. Custom matcher plugs into expect(...).to.be(...) via the role.
+{
+  my class EvenMatcher does Matcher {
+    method matches($actual --> Bool) { ?($actual %% 2) }
+    method failure-message($actual --> Str) {
+      "expected $actual to be even";
+    }
+    method failure-message-negated($actual --> Str) {
+      "expected $actual not to be even";
+    }
+    method expected-value(--> Mu) { 'an even number' }
+  }
+
+  Failures.list = ();
+
+  ok expect(4).to.be(EvenMatcher.new), 'custom matcher passes for matching value';
+  is Failures.list.elems, 0, 'no failure recorded on success';
+
+  Failures.list = ();
+  nok expect(5).to.be(EvenMatcher.new), 'custom matcher fails for non-matching value';
+  is Failures.list.elems, 1, 'one failure recorded on miss';
+  is Failures.list[0].message, 'expected 5 to be even', 'failure carries matcher message';
+  is Failures.list[0].given, 5, 'failure preserves actual value';
+  is Failures.list[0].expected, 'an even number', 'failure expected mirrors matcher.expected-value';
+}
+
+# 5. Negation routes through failure-message-negated.
+{
+  my class TruthyMatcher does Matcher {
+    method matches($actual --> Bool) { ?$actual }
+    method failure-message($actual --> Str) { "expected truthy, got " ~ $actual.raku }
+    method failure-message-negated($actual --> Str) { "expected falsy, got " ~ $actual.raku }
+  }
+
+  Failures.list = ();
+  ok expect(0).to.not.be(TruthyMatcher.new), '.not flips matcher result';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(1).to.not.be(TruthyMatcher.new), '.not failure path';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message, 'expected falsy, got 1', 'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+}
+
+# 6. BeMatcher path leaves the structured given/expected rendering untouched
+#    (no message set so Failures.say falls back to Expected:/to be: lines).
+{
+  Failures.list = ();
+  expect(42).to.be(41);
+  is Failures.list.elems, 1, 'BeMatcher records a failure';
+  nok Failures.list[0].message.defined, 'BeMatcher leaves message undefined for legacy rendering';
+  is Failures.list[0].given, 42, 'given preserved';
+  is Failures.list[0].expected, 41, 'expected preserved';
+}

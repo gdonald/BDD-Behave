@@ -2,6 +2,7 @@ unit module BDD::Behave::DSL;
 
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
+use BDD::Behave::Matcher;
 
 need BDD::Behave::SpecRegistry;
 need BDD::Behave::LetRuntime;
@@ -334,21 +335,34 @@ class ExpectationBuilder {
       die "be requires either a positional argument or a single named argument";
     }
 
-    my $result = $!given ~~ $resolved-expected;
-    $result = $!negated ?? !$result !! $result;
+    my $matcher = $resolved-expected ~~ Matcher
+      ?? $resolved-expected
+      !! BeMatcher.new(:expected($resolved-expected));
 
-    if !$result {
+    my $matched = ?$matcher.matches($!given);
+    my $passed  = $!negated ?? !$matched !! $matched;
+
+    if !$passed {
+      my $message = $!negated
+        ?? $matcher.failure-message-negated($!given)
+        !! $matcher.failure-message($!given);
+
+      my $expected-for-failure = $matcher ~~ BeMatcher
+        ?? $matcher.expected
+        !! $matcher.expected-value;
+
       my $failure = Failure.new(
         :file($!file),
         :line($!line),
         :given($!given),
-        :expected($resolved-expected),
-        :negated($!negated)
+        :expected($expected-for-failure),
+        :negated($!negated),
+        :message($message),
       );
       Failures.list.push($failure);
     }
 
-    $result;
+    $passed;
   }
 
   method have-received(Str:D $method-name) {
