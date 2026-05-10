@@ -30,7 +30,7 @@ sub normalize-tags(%meta --> List) {
   @tags.unique.List;
 }
 
-constant RESERVED-META = set <tag tags skipped focused>;
+constant RESERVED-META = set <tag tags skipped focused auto-description>;
 
 sub extract-extra-meta(%meta --> Hash) {
   my %extra;
@@ -323,7 +323,9 @@ our sub it-behaves-like(Str:D $name, |args) is export {
   );
 }
 
-our sub it(Str $description, &block, *%meta) is export {
+our proto sub it(|) is export {*}
+
+our multi sub it(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
   my $line = &block.line;
   my @tags = normalize-tags(%meta);
@@ -338,6 +340,26 @@ our sub it(Str $description, &block, *%meta) is export {
     :skipped(%meta<skipped> // False),
     :focused(%meta<focused> // False),
   );
+  Nil;
+}
+
+our multi sub it(&block, *%meta) is export {
+  my $file = &block.file.IO;
+  my $line = &block.line;
+  my $description = "example at {$file.basename}:$line";
+  my @tags = normalize-tags(%meta);
+  my %extra-meta = extract-extra-meta(%meta);
+  my $example = registry().register-example(
+    :$description,
+    :&block,
+    :$file,
+    :$line,
+    :@tags,
+    :%extra-meta,
+    :skipped(%meta<skipped> // False),
+    :focused(%meta<focused> // False),
+  );
+  $example.set-metadata(:auto-description(True));
   Nil;
 }
 
@@ -362,12 +384,24 @@ our sub instance-of(Mu \type)   is export { BDD::Behave::Mock::instance-of(type)
 our sub hash-including(*%pairs) is export { BDD::Behave::Mock::hash-including(|%pairs) }
 our sub array-including(*@items) is export { BDD::Behave::Mock::array-including(|@items) }
 
-our sub fit(Str $description, &block, *%meta) is export {
+our proto sub fit(|) is export {*}
+
+our multi sub fit(Str $description, &block, *%meta) is export {
   it($description, &block, |%meta, :focused);
 }
 
-our sub xit(Str $description, &block, *%meta) is export {
+our multi sub fit(&block, *%meta) is export {
+  it(&block, |%meta, :focused);
+}
+
+our proto sub xit(|) is export {*}
+
+our multi sub xit(Str $description, &block, *%meta) is export {
   it($description, &block, |%meta, :skipped);
+}
+
+our multi sub xit(&block, *%meta) is export {
+  it(&block, |%meta, :skipped);
 }
 
 class ExpectationBuilder {
@@ -420,6 +454,12 @@ class ExpectationBuilder {
       ?? $resolved-expected
       !! BeMatcher.new(:expected($resolved-expected));
 
+    try {
+      if $*BEHAVE-AUTO-MATCHERS.defined {
+        $*BEHAVE-AUTO-MATCHERS.push(%(:$matcher, :negated($!negated)));
+      }
+    }
+
     my $matched = ?$matcher.matches($!given);
     my $passed  = $!negated ?? !$matched !! $matched;
 
@@ -457,6 +497,33 @@ class ExpectationBuilder {
     $expectation.validate;
     $expectation;
   }
+}
+
+our sub is-expected() is export {
+  my $caller-file = callframe(1).file.Str;
+  my $caller-line = callframe(1).line.Int;
+
+  my $rt;
+  try { $rt = $*LET-RUNTIME if $*LET-RUNTIME.defined }
+  unless $rt.defined {
+    die "is-expected must be called inside an example";
+  }
+
+  my $resolved-given;
+  try {
+    $resolved-given = $rt.value('subject');
+    CATCH {
+      default {
+        die "is-expected requires a subject (define one with `subject`)";
+      }
+    }
+  }
+
+  ExpectationBuilder.new(
+    :given($resolved-given),
+    :file($caller-file),
+    :line($caller-line)
+  );
 }
 
 our sub expect(|c) is export {

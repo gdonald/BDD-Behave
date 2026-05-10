@@ -10,6 +10,20 @@ describe 'Array', {
 }
 ```
 
+## One-liner form
+
+The description is optional. When omitted, Behave derives the description from the first matcher used in the block:
+
+```raku
+describe 'Array', {
+  subject({ (1, 2, 3) });
+
+  it { is-expected.to.be((1, 2, 3)) }
+}
+```
+
+renders as `⮑  'should be (1, 2, 3)'`. If no matcher runs in the block, Behave falls back to a placeholder of the form `example at <basename>:<line>`. See [`subject` / `is-expected`](../let/subject.md#one-liner-it-form) for details.
+
 ## Multiple expectations
 
 An example can contain any number of `expect` calls. Each failing expectation is recorded; the example fails if at least one expectation fails or the block raises an unhandled exception.

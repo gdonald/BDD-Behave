@@ -672,6 +672,62 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#is-expected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is-expected
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="is-expected">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#restrictions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-liner-it-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-liner it form
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="One-liner it form">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#comparison-with-let" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1254,6 +1310,62 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#is-expected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is-expected
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="is-expected">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#restrictions_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-liner-it-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-liner it form
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="One-liner it form">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#comparison-with-let" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1428,6 +1540,57 @@
 <li><code>subject-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope), only plain <code>subject</code> is supported.</li>
 <li>Inside an <code>it</code> block, use <code>subject()</code> or <code>expect(:subject)</code> to read the value; eager forcing is meaningless once you're already in the example body.</li>
 </ul>
+<h2 id="is-expected"><code>is-expected</code><a class="headerlink" href="#is-expected" title="Permanent link">&para;</a></h2>
+<p><code>is-expected</code> is a helper that builds an <code>expect</code> against the current <code>:subject</code>. It is the Behave equivalent of RSpec's <code>is_expected</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;a Widget&#39;</span>, {
+  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+
+  <span class="n">it</span> <span class="s">&#39;is a Widget&#39;</span>,     { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>) }
+  <span class="n">it</span> <span class="s">&#39;is not a Gadget&#39;</span>, { <span class="n">is-expected</span>.<span class="nb">not</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Gadget</span>) }
+}
+</code></pre></div></td></tr></table></div>
+<p><code>is-expected</code> reads the memoized subject value via <code>$*LET-RUNTIME</code> and returns an <code>ExpectationBuilder</code>, so the same <code>.to</code> / <code>.not.to</code> chain that you use with <code>expect</code> applies. Multiple calls within the same example share the subject's memoization — the subject block runs at most once per example.</p>
+<h3 id="restrictions_1">Restrictions<a class="headerlink" href="#restrictions_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>is-expected</code> must be called inside an example body.</li>
+<li>A <code>subject</code> (or <code>subject-bang</code>) must be defined in the enclosing <code>describe</code>/<code>context</code> chain. Calling <code>is-expected</code> without one raises a clear error.</li>
+</ul>
+<h2 id="one-liner-it-form">One-liner <code>it</code> form<a class="headerlink" href="#one-liner-it-form" title="Permanent link">&para;</a></h2>
+<p>For terse, single-expectation examples you can omit the description:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;a Widget&#39;</span>, {
+  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+
+  <span class="n">it</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>) }
+  <span class="n">it</span> { <span class="n">is-expected</span>.<span class="nb">not</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Gadget</span>) }
+}
+</code></pre></div></td></tr></table></div>
+<p>When <code>it</code> is called with only a block, Behave generates the description from the <strong>first matcher</strong> invoked in the example. The above renders as:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;should be Widget&#39;
+  ⮑  SUCCESS
+⮑  &#39;should not be Gadget&#39;
+  ⮑  SUCCESS
+</code></pre></div></td></tr></table></div>
+<p>Negation (<code>expect(...).not.to.be(...)</code> or <code>is-expected.not.to.be(...)</code>) flips the verb to <code>should not</code>. If the block runs no matchers — for example, <code>it { 1 + 1 }</code> — Behave falls back to a placeholder of the form <code>example at &lt;basename&gt;:&lt;line&gt;</code>.</p>
+<p>The block-only form composes with <code>fit</code> and <code>xit</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">fit</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>) }   <span class="c1"># focused one-liner</span>
+<span class="n">xit</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>) }   <span class="c1"># skipped one-liner</span>
+</code></pre></div></td></tr></table></div>
+<h3 id="description-filtering">Description filtering<a class="headerlink" href="#description-filtering" title="Permanent link">&para;</a></h3>
+<p><code>--example PATTERN</code> matches against the description that was registered with the example, which for block-only <code>it { ... }</code> is the placeholder (e.g. <code>example at foo-spec.raku:42</code>), not the matcher-derived rendering. To filter on the rendered description, use a regular <code>it 'should be X', { ... }</code> form instead.</p>
 <h2 id="comparison-with-let">Comparison with <code>let</code><a class="headerlink" href="#comparison-with-let" title="Permanent link">&para;</a></h2>
 <p><code>subject</code> is sugar around <code>let(:subject, ...)</code>. The two are interchangeable when reading via <code>:subject</code>, but <code>subject</code> makes the intent — "this is what I'm testing" — explicit and adds the dual-name alias when you give it a name. Use <code>subject</code> for the value under test and <code>let</code> for everything else (inputs, fixtures, helpers).</p>
 

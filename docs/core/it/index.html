@@ -440,6 +440,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#one-liner-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-liner form
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#multiple-expectations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1032,6 +1043,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#one-liner-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-liner form
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#multiple-expectations" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1096,6 +1118,19 @@
   }
 }
 </code></pre></div></td></tr></table></div>
+<h2 id="one-liner-form">One-liner form<a class="headerlink" href="#one-liner-form" title="Permanent link">&para;</a></h2>
+<p>The description is optional. When omitted, Behave derives the description from the first matcher used in the block:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Array&#39;</span>, {
+  <span class="n">subject</span>({ (<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>) });
+
+  <span class="n">it</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>((<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>)) }
+}
+</code></pre></div></td></tr></table></div>
+<p>renders as <code>⮑  'should be (1, 2, 3)'</code>. If no matcher runs in the block, Behave falls back to a placeholder of the form <code>example at &lt;basename&gt;:&lt;line&gt;</code>. See <a href="../../let/subject/#one-liner-it-form"><code>subject</code> / <code>is-expected</code></a> for details.</p>
 <h2 id="multiple-expectations">Multiple expectations<a class="headerlink" href="#multiple-expectations" title="Permanent link">&para;</a></h2>
 <p>An example can contain any number of <code>expect</code> calls. Each failing expectation is recorded; the example fails if at least one expectation fails or the block raises an unhandled exception.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>

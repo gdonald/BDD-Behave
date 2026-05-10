@@ -335,6 +335,7 @@ our class Runner {
   }
 
   method run-example(Example $example) {
+    my Bool $auto = ?$example.get-metadata('auto-description', :default(False));
     my $description = $example.description;
 
     if $example.pending {
@@ -348,34 +349,47 @@ our class Runner {
 
     my $initial-failure-count = Failures.list.elems;
 
-    # Print the example description
-    self.print-indent;
-    say "⮑  '{$description}'";
+    if !$auto {
+      self.print-indent;
+      say "⮑  '{$description}'";
+    }
 
-    try {
-      $example.execute;
-      CATCH {
-        default {
-          # Capture the exception
-          my $error = %(
-            description => self.full-description($example),
-            file => $example.file,
-            line => $example.line,
-            exception => $_,
-          );
-          $!result.add-fail($error);
-          self.print-indent;
-          say red("  ⮑  FAILURE");
-          return;
+    my @captured-matchers;
+    my $error;
+    {
+      my $*BEHAVE-AUTO-MATCHERS = $auto ?? @captured-matchers !! Array;
+      try {
+        $example.execute;
+        CATCH {
+          default {
+            $error = $_;
+          }
         }
       }
     }
 
-    # Check if any failures were recorded during execution
+    if $auto {
+      my $derived = self.derive-auto-description(@captured-matchers);
+      $description = $derived if $derived.defined;
+      self.print-indent;
+      say "⮑  '{$description}'";
+    }
+
+    if $error.defined {
+      $!result.add-fail(%(
+        description => self.full-description($example),
+        file => $example.file,
+        line => $example.line,
+        exception => $error,
+      ));
+      self.print-indent;
+      say red("  ⮑  FAILURE");
+      return;
+    }
+
     my $new-failures = Failures.list.elems - $initial-failure-count;
 
     if $new-failures > 0 {
-      # Example failed via expect
       $!result.add-fail(%(
           description => self.full-description($example),
           file => $example.file,
@@ -384,11 +398,21 @@ our class Runner {
       self.print-indent;
       say red("  ⮑  FAILURE");
     } else {
-      # Example passed
       $!result.add-pass;
       self.print-indent;
       say green("  ⮑  SUCCESS");
     }
+  }
+
+  method derive-auto-description(@captured) {
+    return Nil unless @captured.elems;
+    my %first = @captured[0];
+    my $matcher = %first<matcher>;
+    my $negated = ?%first<negated>;
+    my $desc = $matcher.description;
+    return Nil unless $desc.defined && $desc.chars;
+    my $verb = $negated ?? 'should not' !! 'should';
+    "{$verb} {$desc}";
   }
 
   method ancestor-groups($node) {

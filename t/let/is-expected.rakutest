@@ -1,0 +1,257 @@
+use Test;
+use Test::Output;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::LetRuntime;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# is-expected reads :subject for assertions
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'reader', {
+    subject({ 42 });
+    it 'matches via is-expected', {
+      is-expected.to.be(42);
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'is-expected matched the subject value';
+  is $result.failed, 0, 'no failures';
+}
+
+# is-expected supports negation
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'negation', {
+    subject({ 'hello' });
+    it 'negates correctly', {
+      is-expected.not.to.be('goodbye');
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'is-expected.not.to.be(...) supported';
+}
+
+# is-expected memoizes across multiple reads in one example
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'memo', {
+    subject({ ++$hits });
+    it 'evaluates subject once', {
+      is-expected.to.be(1);
+      is-expected.to.be(1);
+      is-expected.to.be(1);
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 1, 'subject block evaluated once across multiple is-expected calls';
+}
+
+# is-expected outside an example raises
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  dies-ok { is-expected() }, 'is-expected outside an example dies';
+}
+
+# is-expected without a subject raises
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $caught;
+  describe 'no subject', {
+    it 'tries is-expected without a subject', {
+      try {
+        is-expected();
+        CATCH { default { $caught = .message } }
+      }
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  ok $caught.defined, 'is-expected raised without a subject';
+  ok $caught.contains('subject'), 'error message mentions subject';
+}
+
+# it { ... } block-only form runs and passes
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'one-liner', {
+    subject({ 99 });
+    it { is-expected.to.be(99) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'block-only it executed and passed';
+  is $result.failed, 0, 'no failures';
+}
+
+# it { ... } block-only sets auto-description metadata
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'auto-desc-metadata', {
+    it { expect(1).to.be(1) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $group = @suites[0].children[0];
+  my $example = $group.children[0];
+
+  ok $example.get-metadata('auto-description'), 'auto-description metadata is set';
+  ok $example.description.contains('example at'),
+    'auto description has placeholder location text';
+}
+
+# it { ... } block-only with non-block-only sibling
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'mixed', {
+    subject({ 7 });
+    it 'has a description',  { is-expected.to.be(7) }
+    it { is-expected.to.be(7) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 2, 'both styles run together';
+  is $result.failed, 0, 'no failures';
+}
+
+# fit { ... } block-only is focused
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'focus block-only', {
+    it 'unfocused', { expect(1).to.be(1) }
+    fit { expect(2).to.be(2) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'only focused example ran';
+  is $result.failed, 0, 'no failures';
+}
+
+# xit { ... } block-only is skipped
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'skip block-only', {
+    it 'runs',     { expect(1).to.be(1) }
+    xit { expect(2).to.be(99) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'one example passed';
+  is $result.skipped, 1, 'block-only xit was skipped';
+  is $result.failed, 0, 'no failures';
+}
+
+# it { ... } derives a "should ..." description from the matcher
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'derived', {
+    subject({ 5 });
+    it { is-expected.to.be(5) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $output = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new;
+    $runner.run(@suites[0]);
+  };
+
+  ok $output.contains('should be 5'),
+    'auto description renders as "should be 5" using BeMatcher.description';
+}
+
+# it { is-expected.not.to.be(...) } derives "should not ..." description
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'derived negated', {
+    subject({ 'hello' });
+    it { is-expected.not.to.be('goodbye') }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $output = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new;
+    $runner.run(@suites[0]);
+  };
+
+  ok $output.contains('should not be "goodbye"'),
+    'negated auto description renders as "should not ..."';
+}
+
+# it { ... } with no matchers in the block falls back to the placeholder description
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'no-matchers', {
+    it { 1 + 1 }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $output = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new;
+    $runner.run(@suites[0]);
+  };
+
+  ok $output.contains('example at'),
+    'placeholder description is used when no matchers ran';
+}
+
+# Multiple expectations: derived description uses the first matcher
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  describe 'first-matcher', {
+    subject({ 'value' });
+    it {
+      is-expected.to.be('value');
+      expect(1 + 1).to.be(2);
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'multi-expectation auto-described example passed';
+}
+
+done-testing;
