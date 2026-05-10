@@ -20,6 +20,56 @@ class BeMatcher does Matcher is export {
   method description(--> Str) { 'be ' ~ $!expected.raku }
 }
 
+class EqMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    ?($actual eqv $!expected);
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'eq ' ~ $!expected.raku }
+}
+
+class ContainExactlyMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Positional | Iterable;
+
+    my @remaining = $actual.list;
+
+    for $!expected.list -> $item {
+      my $idx = @remaining.first({ $_ eqv $item }, :k);
+      if $idx.defined {
+        @remaining.splice($idx, 1);
+      } else {
+        return False;
+      }
+    }
+
+    @remaining.elems == 0;
+  }
+
+  method format-expected(--> Str) {
+    $!expected.list.map(*.raku).join(', ');
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to contain exactly " ~ self.format-expected;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to contain exactly " ~ self.format-expected;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'contain exactly ' ~ self.format-expected }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

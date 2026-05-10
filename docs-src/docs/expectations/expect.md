@@ -76,9 +76,15 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | Matcher | Purpose |
 | --- | --- |
 | `be` | Smartmatch (`~~`) against the expected value. |
+| `eq` | Order-dependent structural equality via `eqv`. See [Matchers › EqMatcher](matchers.md#eqmatcher-built-in). |
+| `contain-exactly` | Order-independent multiset equality on arrays / lists. See [Matchers › ContainExactlyMatcher](matchers.md#containexactlymatcher-built-in). |
+| `match-array` | Single-array alias for `contain-exactly`. |
 | `include` | Membership check across arrays, hashes, sets/bags, strings, and ranges. See [Matchers › IncludeMatcher](matchers.md#includematcher-built-in). |
 
 ```raku
+expect([1, 2, 3]).to.eq([1, 2, 3]);
+expect([1, 2, 3]).to.contain-exactly(3, 1, 2);
+expect([1, 2, 3]).to.match-array([3, 1, 2]);
 expect([1, 2, 3]).to.include(2);
 expect({ a => 1 }).to.include(:a(1));
 expect('hello').to.include('ell');

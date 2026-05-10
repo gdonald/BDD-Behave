@@ -871,6 +871,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#eqmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EqMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#containexactlymatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContainExactlyMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#includematcher-built-in" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1076,6 +1098,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#eqmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EqMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#containexactlymatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContainExactlyMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#includematcher-built-in" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1206,6 +1250,63 @@ into.</p>
 <code>BeMatcher</code> deliberately leaves <code>failure-message</code> undefined, failure rendering
 keeps the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized <code>Diff:</code>
 section described in <a href="../../diff/diff/">Diff Output</a>.</p>
+<h2 id="eqmatcher-built-in">EqMatcher (built-in)<a class="headerlink" href="#eqmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>eq</code> checks order-dependent structural equality using Raku's <code>eqv</code> operator.
+It's invoked via <code>expect(...).to.eq(...)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);            <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);            <span class="c1"># fails (order matters)</span>
+
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="o">eq</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> });  <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">42</span>);                          <span class="c1"># passes</span>
+</code></pre></div></td></tr></table></div>
+<p><code>eqv</code> is type-strict, so an <code>Array</code> is not equivalent to a <code>List</code> with the same
+elements:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>((<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));            <span class="c1"># fails (Array vs List)</span>
+</code></pre></div></td></tr></table></div>
+<p><code>EqMatcher</code> deliberately leaves <code>failure-message</code> undefined, so failures fall
+through to the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized
+<code>Diff:</code> section described in <a href="../../diff/diff/">Diff Output</a>.</p>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">not</span>.<span class="o">eq</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);
+</code></pre></div></td></tr></table></div>
+<h2 id="containexactlymatcher-built-in">ContainExactlyMatcher (built-in)<a class="headerlink" href="#containexactlymatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>contain-exactly</code> checks order-independent multiset equality on arrays / lists.
+Each item in <code>actual</code> must correspond to one item in the expected list (matched
+by <code>eqv</code>), with counts and totals matching:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>);   <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">1</span>);   <span class="c1"># passes (multiset)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>);      <span class="c1"># fails (counts differ)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>);      <span class="c1"># fails (extra in actual)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>);      <span class="c1"># fails (missing)</span>
+</code></pre></div></td></tr></table></div>
+<p>Items are passed as individual positional arguments. The slurp is
+non-flattening, so passing a single array (<code>contain-exactly([1, 2])</code>) looks for
+that array as one element. To spread an existing array, use <code>|@arr</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">@want</span> = <span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>;
+<span class="n">expect</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(|<span class="nv">@want</span>);
+</code></pre></div></td></tr></table></div>
+<p>The empty form passes for an empty array:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([]).<span class="nb">to</span>.<span class="n">contain-exactly</span>();
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to contain exactly &lt;items&gt;</code> (or
+<code>not to contain exactly</code> under <code>.not</code>).</p>
+<p><code>match-array</code> is the array-form alias — it takes a single array argument and
+delegates to the same matcher:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);   <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">1</span>, <span class="mi">2</span>]);      <span class="c1"># fails</span>
+</code></pre></div></td></tr></table></div>
+<p><code>match-array</code> requires its argument to be an array / list; passing a scalar
+dies with <code>match-array requires an array argument</code>.</p>
 <h2 id="includematcher-built-in">IncludeMatcher (built-in)<a class="headerlink" href="#includematcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>include</code> checks membership across arrays, hashes, sets, bags, ranges, and
 strings. It's invoked via <code>expect(...).to.include(...)</code>:</p>

@@ -499,6 +499,21 @@ class ExpectationBuilder {
     self!apply-matcher(IncludeMatcher.new(:expected(@expected)));
   }
 
+  method eq($expected) {
+    self!apply-matcher(EqMatcher.new(:expected($expected)));
+  }
+
+  method contain-exactly(**@items) {
+    self!apply-matcher(ContainExactlyMatcher.new(:expected(@items)));
+  }
+
+  method match-array($expected) {
+    unless $expected ~~ Positional | Iterable {
+      die "match-array requires an array argument";
+    }
+    self!apply-matcher(ContainExactlyMatcher.new(:expected($expected.list)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),

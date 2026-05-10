@@ -1245,6 +1245,18 @@
 <td>Smartmatch (<code>~~</code>) against the expected value.</td>
 </tr>
 <tr>
+<td><code>eq</code></td>
+<td>Order-dependent structural equality via <code>eqv</code>. See <a href="../matchers/#eqmatcher-built-in">Matchers › EqMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>contain-exactly</code></td>
+<td>Order-independent multiset equality on arrays / lists. See <a href="../matchers/#containexactlymatcher-built-in">Matchers › ContainExactlyMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>match-array</code></td>
+<td>Single-array alias for <code>contain-exactly</code>.</td>
+</tr>
+<tr>
 <td><code>include</code></td>
 <td>Membership check across arrays, hashes, sets/bags, strings, and ranges. See <a href="../matchers/#includematcher-built-in">Matchers › IncludeMatcher</a>.</td>
 </tr>
@@ -1252,7 +1264,13 @@
 </table>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>);
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>]);
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);
 <span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span> }).<span class="nb">to</span>.<span class="n">include</span>(:<span class="n">a</span>(<span class="mi">1</span>));
 <span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;ell&#39;</span>);
 </code></pre></div></td></tr></table></div>

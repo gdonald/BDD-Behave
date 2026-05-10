@@ -1,0 +1,232 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 73;
+
+# EqMatcher does the Matcher role.
+{
+  my $m = EqMatcher.new(:expected([1, 2, 3]));
+  ok $m ~~ Matcher, 'EqMatcher does Matcher';
+}
+
+# EqMatcher: Array equality (order-dependent).
+{
+  my $m = EqMatcher.new(:expected([1, 2, 3]));
+  ok $m.matches([1, 2, 3]), 'matches identical array';
+  nok $m.matches([3, 2, 1]), 'rejects same elements in different order';
+  nok $m.matches([1, 2]), 'rejects shorter array';
+  nok $m.matches([1, 2, 3, 4]), 'rejects longer array';
+  nok $m.matches([1, 2, 4]), 'rejects when an element differs';
+}
+
+# EqMatcher: nested structures.
+{
+  my $m = EqMatcher.new(:expected([[1, 2], [3, 4]]));
+  ok $m.matches([[1, 2], [3, 4]]), 'matches nested arrays';
+  nok $m.matches([[1, 2], [3, 5]]), 'rejects nested-element diff';
+}
+
+# EqMatcher: hashes.
+{
+  my $m = EqMatcher.new(:expected({ a => 1, b => 2 }));
+  ok $m.matches({ a => 1, b => 2 }), 'matches hash by eqv';
+  nok $m.matches({ a => 1, b => 3 }), 'rejects hash with differing value';
+}
+
+# EqMatcher: Range vs List distinguishes via eqv.
+{
+  my $m = EqMatcher.new(:expected(1..3));
+  nok $m.matches((1, 2, 3)), 'List is not eqv to Range';
+  ok $m.matches(1..3), 'Range matches itself';
+}
+
+# EqMatcher: Array vs List distinguishes via eqv.
+{
+  my $m = EqMatcher.new(:expected([1, 2, 3]));
+  nok $m.matches((1, 2, 3)), 'List is not eqv to Array';
+  my $m2 = EqMatcher.new(:expected((1, 2, 3)));
+  nok $m2.matches([1, 2, 3]), 'Array is not eqv to List';
+}
+
+# EqMatcher: scalars.
+{
+  ok EqMatcher.new(:expected(42)).matches(42), 'matches Int';
+  ok EqMatcher.new(:expected('hi')).matches('hi'), 'matches Str';
+  nok EqMatcher.new(:expected(42)).matches(43), 'rejects different Int';
+}
+
+# EqMatcher: leaves failure-message undefined so structured rendering kicks in.
+{
+  my $m = EqMatcher.new(:expected([1, 2, 3]));
+  nok $m.failure-message([1, 2, 4]).defined, 'failure-message is undefined Str';
+  nok $m.failure-message-negated([1, 2, 3]).defined, 'failure-message-negated is undefined Str';
+}
+
+# EqMatcher: expected-value and description.
+{
+  my $m = EqMatcher.new(:expected([1, 2]));
+  is-deeply $m.expected-value, [1, 2], 'expected-value returns the expected value';
+  is $m.description, 'eq $[1, 2]', 'description summarises the expected';
+}
+
+# expect(...).to.eq(...) integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.eq([1, 2, 3]), 'expect.to.eq passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.eq([3, 2, 1]), 'expect.to.eq fails on order diff';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply Failures.list[0].expected.Array, [3, 2, 1], 'failure expected preserved';
+  Failures.list = ();
+}
+
+# expect(...).to.not.eq(...) negation.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.not.eq([3, 2, 1]), '.not passes when values differ';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.not.eq([1, 2, 3]), '.not fails when values equal';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# ContainExactlyMatcher does the Matcher role.
+{
+  my $m = ContainExactlyMatcher.new(:expected([1, 2, 3]));
+  ok $m ~~ Matcher, 'ContainExactlyMatcher does Matcher';
+}
+
+# ContainExactlyMatcher: order-independent equality.
+{
+  my $m = ContainExactlyMatcher.new(:expected([1, 2, 3]));
+  ok $m.matches([1, 2, 3]), 'matches same elements same order';
+  ok $m.matches([3, 2, 1]), 'matches same elements different order';
+  ok $m.matches([2, 3, 1]), 'matches another permutation';
+  nok $m.matches([1, 2]), 'rejects when actual is shorter';
+  nok $m.matches([1, 2, 3, 4]), 'rejects when actual is longer';
+  nok $m.matches([1, 2, 4]), 'rejects when an element differs';
+}
+
+# ContainExactlyMatcher: multiset semantics (duplicates).
+{
+  my $m = ContainExactlyMatcher.new(:expected([1, 1, 2]));
+  ok $m.matches([1, 1, 2]), 'matches with duplicates same order';
+  ok $m.matches([2, 1, 1]), 'matches with duplicates different order';
+  nok $m.matches([1, 2, 2]), 'rejects when duplicate counts differ';
+  nok $m.matches([1, 2]), 'rejects when a duplicate is missing';
+}
+
+# ContainExactlyMatcher: nested structures via eqv.
+{
+  my $m = ContainExactlyMatcher.new(:expected([[1, 2], [3, 4]]));
+  ok $m.matches([[3, 4], [1, 2]]), 'matches nested elements regardless of order';
+  nok $m.matches([[1, 2], [3, 5]]), 'rejects when nested element differs';
+}
+
+# ContainExactlyMatcher: empty list matches empty actual.
+{
+  my $m = ContainExactlyMatcher.new(:expected([]));
+  ok $m.matches([]), 'empty expected matches empty array';
+  nok $m.matches([1]), 'empty expected rejects non-empty';
+}
+
+# ContainExactlyMatcher: type guards.
+{
+  my $m = ContainExactlyMatcher.new(:expected([1]));
+  nok $m.matches(Any), 'rejects undefined actual';
+  nok $m.matches(42), 'rejects non-iterable actual';
+  nok $m.matches('hello'), 'rejects string actual';
+}
+
+# ContainExactlyMatcher: failure messages.
+{
+  my $m = ContainExactlyMatcher.new(:expected([1, 2]));
+  is $m.failure-message([1, 2, 3]),
+     'expected $[1, 2, 3] to contain exactly 1, 2',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated([2, 1]),
+     'expected $[2, 1] not to contain exactly 1, 2',
+     'failure-message-negated renders given and expected';
+}
+
+# ContainExactlyMatcher: expected-value and description.
+{
+  my $m = ContainExactlyMatcher.new(:expected([1, 2]));
+  is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
+  is $m.description, 'contain exactly 1, 2', 'description summarises items';
+}
+
+# expect(...).to.contain-exactly(...) integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.contain-exactly(3, 1, 2), 'expect.to.contain-exactly passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.contain-exactly(1, 2), 'expect.to.contain-exactly fails on count diff';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message,
+     'expected $[1, 2, 3] to contain exactly 1, 2',
+     'failure message preserved';
+  Failures.list = ();
+}
+
+# expect(...).to.not.contain-exactly(...) negation.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.not.contain-exactly(1, 2), '.not passes when elements differ';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.not.contain-exactly(3, 2, 1), '.not fails when elements match';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message,
+     'expected $[1, 2, 3] not to contain exactly 3, 2, 1',
+     'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# expect(...).to.contain-exactly() with empty list passes for empty actual.
+{
+  Failures.list = ();
+  ok expect([]).to.contain-exactly(), 'empty contain-exactly matches empty array';
+  is Failures.list.elems, 0, 'no failure on empty match';
+  Failures.list = ();
+}
+
+# match-array integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.match-array([3, 2, 1]), 'match-array passes for permutation';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.match-array([1, 2]), 'match-array fails on length diff';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message,
+     'expected $[1, 2, 3] to contain exactly 1, 2',
+     'match-array shares failure format with contain-exactly';
+  Failures.list = ();
+}
+
+# match-array requires an array argument.
+{
+  my $error;
+  try {
+    expect([1, 2, 3]).to.match-array(42);
+    CATCH { default { $error = .message } }
+  }
+  is $error, 'match-array requires an array argument', 'non-array dies clearly';
+}
