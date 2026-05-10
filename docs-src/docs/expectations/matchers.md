@@ -47,6 +47,41 @@ expect($x).to.be(any(1, 2, 3));
 keeps the structured `Expected:` / `to be:` block plus the colorized `Diff:`
 section described in [Diff Output](../diff/diff.md).
 
+## IncludeMatcher (built-in)
+
+`include` checks membership across arrays, hashes, sets, bags, ranges, and
+strings. It's invoked via `expect(...).to.include(...)`:
+
+```raku
+expect([1, 2, 3]).to.include(2);              # array element
+expect([1, 2, 3]).to.include(1, 3);           # multiple elements (AND)
+expect([[1, 2], [3, 4]]).to.include([1, 2]);  # nested element via eqv
+
+expect({ a => 1, b => 2 }).to.include('a');         # hash key
+expect({ a => 1, b => 2 }).to.include(a => 1);      # hash key + value
+expect({ a => 1, b => 2 }).to.include(:a(1));       # named-pair shorthand
+
+expect('hello world').to.include('world');    # string substring
+expect('hello world').to.include('hello', 'world');
+
+expect(set('a', 'b')).to.include('a');        # Set / Bag membership
+expect(1..10).to.include(5);                  # Range membership
+```
+
+Multiple items are combined with AND semantics: every item must be present
+for the matcher to pass. The slurp is non-flattening, so passing a single
+array argument (`include([1, 2])`) looks for that array as one element rather
+than spreading it. To spread an existing array, use `|@arr`.
+
+Negation works the usual way:
+
+```raku
+expect([1, 2, 3]).to.not.include(99);
+```
+
+Failure messages render as `expected <actual> to include <items>` (or `not
+to include` under `.not`).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

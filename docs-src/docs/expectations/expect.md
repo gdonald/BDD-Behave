@@ -69,6 +69,21 @@ When an expectation fails, the runner records the file and line of the `expect` 
 
 For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure block also includes a colorized `Diff:` section that highlights only the changed regions. See [Diff Output](../diff/diff.md) for the full conventions.
 
+## Built-in matchers beyond `be`
+
+`expect(...).to.<matcher>(...)` is the general form. The current built-ins:
+
+| Matcher | Purpose |
+| --- | --- |
+| `be` | Smartmatch (`~~`) against the expected value. |
+| `include` | Membership check across arrays, hashes, sets/bags, strings, and ranges. See [Matchers › IncludeMatcher](matchers.md#includematcher-built-in). |
+
+```raku
+expect([1, 2, 3]).to.include(2);
+expect({ a => 1 }).to.include(:a(1));
+expect('hello').to.include('ell');
+```
+
 ## Custom matchers
 
 `be` accepts any object that does the [`Matcher`](matchers.md) role. The matcher's `matches`, `failure-message`, and `failure-message-negated` methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.

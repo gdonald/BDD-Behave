@@ -871,6 +871,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#includematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IncludeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1065,6 +1076,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#includematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IncludeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1184,6 +1206,44 @@ into.</p>
 <code>BeMatcher</code> deliberately leaves <code>failure-message</code> undefined, failure rendering
 keeps the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized <code>Diff:</code>
 section described in <a href="../../diff/diff/">Diff Output</a>.</p>
+<h2 id="includematcher-built-in">IncludeMatcher (built-in)<a class="headerlink" href="#includematcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>include</code> checks membership across arrays, hashes, sets, bags, ranges, and
+strings. It's invoked via <code>expect(...).to.include(...)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);              <span class="c1"># array element</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">1</span>, <span class="mi">3</span>);           <span class="c1"># multiple elements (AND)</span>
+<span class="n">expect</span>([[<span class="mi">1</span>, <span class="mi">2</span>], [<span class="mi">3</span>, <span class="mi">4</span>]]).<span class="nb">to</span>.<span class="n">include</span>([<span class="mi">1</span>, <span class="mi">2</span>]);  <span class="c1"># nested element via eqv</span>
+
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;a&#39;</span>);         <span class="c1"># hash key</span>
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="n">include</span>(<span class="n">a</span> =&gt; <span class="mi">1</span>);      <span class="c1"># hash key + value</span>
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="n">include</span>(:<span class="n">a</span>(<span class="mi">1</span>));       <span class="c1"># named-pair shorthand</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;world&#39;</span>);    <span class="c1"># string substring</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;hello&#39;</span>, <span class="s">&#39;world&#39;</span>);
+
+<span class="n">expect</span>(<span class="n">set</span>(<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>)).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;a&#39;</span>);        <span class="c1"># Set / Bag membership</span>
+<span class="n">expect</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">5</span>);                  <span class="c1"># Range membership</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple items are combined with AND semantics: every item must be present
+for the matcher to pass. The slurp is non-flattening, so passing a single
+array argument (<code>include([1, 2])</code>) looks for that array as one element rather
+than spreading it. To spread an existing array, use <code>|@arr</code>.</p>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">include</span>(<span class="mi">99</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to include &lt;items&gt;</code> (or <code>not
+to include</code> under <code>.not</code>).</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

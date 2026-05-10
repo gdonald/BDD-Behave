@@ -876,6 +876,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#built-in-matchers-beyond-be" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in matchers beyond be
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#custom-matchers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1120,6 +1131,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#built-in-matchers-beyond-be" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Built-in matchers beyond be
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#custom-matchers" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1208,6 +1230,32 @@
 <h2 id="failure-output">Failure output<a class="headerlink" href="#failure-output" title="Permanent link">&para;</a></h2>
 <p>When an expectation fails, the runner records the file and line of the <code>expect</code> call and prints them in the failure summary so you can jump straight to the offending line.</p>
 <p>For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure block also includes a colorized <code>Diff:</code> section that highlights only the changed regions. See <a href="../../diff/diff/">Diff Output</a> for the full conventions.</p>
+<h2 id="built-in-matchers-beyond-be">Built-in matchers beyond <code>be</code><a class="headerlink" href="#built-in-matchers-beyond-be" title="Permanent link">&para;</a></h2>
+<p><code>expect(...).to.&lt;matcher&gt;(...)</code> is the general form. The current built-ins:</p>
+<table>
+<thead>
+<tr>
+<th>Matcher</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>be</code></td>
+<td>Smartmatch (<code>~~</code>) against the expected value.</td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td>Membership check across arrays, hashes, sets/bags, strings, and ranges. See <a href="../matchers/#includematcher-built-in">Matchers › IncludeMatcher</a>.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span> }).<span class="nb">to</span>.<span class="n">include</span>(:<span class="n">a</span>(<span class="mi">1</span>));
+<span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;ell&#39;</span>);
+</code></pre></div></td></tr></table></div>
 <h2 id="custom-matchers">Custom matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h2>
 <p><code>be</code> accepts any object that does the <a href="../matchers/"><code>Matcher</code></a> role. The matcher's <code>matches</code>, <code>failure-message</code>, and <code>failure-message-negated</code> methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.</p>
 

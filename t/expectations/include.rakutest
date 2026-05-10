@@ -1,0 +1,151 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 43;
+
+# IncludeMatcher does the Matcher role.
+{
+  my $m = IncludeMatcher.new(:expected([1]));
+  ok $m ~~ Matcher, 'IncludeMatcher does Matcher';
+}
+
+# Array membership: single and multiple items.
+{
+  my $m1 = IncludeMatcher.new(:expected([2]));
+  ok $m1.matches([1, 2, 3]), 'matches single-item array membership';
+  nok $m1.matches([1, 3]), 'rejects when item missing';
+
+  my $m2 = IncludeMatcher.new(:expected([1, 3]));
+  ok $m2.matches([1, 2, 3]), 'matches multi-item membership';
+  nok $m2.matches([1, 2]), 'rejects when one of multiple items missing';
+}
+
+# Nested structures via eqv.
+{
+  my @outer = ([1, 2],);
+  my $m = IncludeMatcher.new(:expected(@outer));
+  ok $m.matches([[1, 2], [3, 4]]), 'matches nested array element via eqv';
+  nok $m.matches([[1, 3], [3, 4]]), 'rejects when nested element differs';
+}
+
+# Hash key existence.
+{
+  my $m = IncludeMatcher.new(:expected(['a']));
+  ok $m.matches({ a => 1, b => 2 }), 'matches hash key by string';
+  nok $m.matches({ b => 2 }), 'rejects when hash key missing';
+
+  my $multi = IncludeMatcher.new(:expected(['a', 'b']));
+  ok $multi.matches({ a => 1, b => 2, c => 3 }), 'matches multiple hash keys';
+}
+
+# Hash key=>value pair.
+{
+  my $m = IncludeMatcher.new(:expected([a => 1]));
+  ok $m.matches({ a => 1, b => 2 }), 'matches hash pair';
+  nok $m.matches({ a => 2, b => 2 }), 'rejects when value differs';
+  nok $m.matches({ b => 2 }), 'rejects when key missing';
+}
+
+# String substring.
+{
+  my $m = IncludeMatcher.new(:expected(['world']));
+  ok $m.matches('hello world'), 'matches single substring';
+  nok $m.matches('hello there'), 'rejects when substring missing';
+
+  my $multi = IncludeMatcher.new(:expected(['hello', 'world']));
+  ok $multi.matches('hello world'), 'matches multiple substrings';
+  nok $multi.matches('hello there'), 'rejects when one substring missing';
+}
+
+# Set / Bag membership.
+{
+  my $sm = IncludeMatcher.new(:expected(['a']));
+  ok $sm.matches(set('a', 'b', 'c')), 'matches Set element';
+  nok $sm.matches(set('b', 'c')), 'rejects when Set element missing';
+
+  my $bm = IncludeMatcher.new(:expected(['a']));
+  ok $bm.matches(bag('a', 'a', 'b')), 'matches Bag element';
+}
+
+# Range support.
+{
+  my $m = IncludeMatcher.new(:expected([3]));
+  ok $m.matches(1..5), 'matches Range membership';
+  nok $m.matches(1..2), 'rejects when value outside Range';
+}
+
+# Undefined actual.
+{
+  my $m = IncludeMatcher.new(:expected([1]));
+  nok $m.matches(Any), 'rejects undefined actual';
+}
+
+# Failure messages.
+{
+  my $m = IncludeMatcher.new(:expected([99]));
+  is $m.failure-message([1, 2, 3]),
+     'expected $[1, 2, 3] to include 99',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated([1, 99, 3]),
+     'expected $[1, 99, 3] not to include 99',
+     'failure-message-negated renders given and expected';
+}
+
+# expected-value and description.
+{
+  my $m = IncludeMatcher.new(:expected([1, 2]));
+  is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
+  is $m.description, 'include 1, 2', 'description summarises items';
+}
+
+# expect(...).to.include(...) integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.include(2), 'expect.to.include passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.include(99), 'expect.to.include fails for missing';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected $[1, 2, 3] to include 99', 'failure message preserved';
+  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply Failures.list[0].expected.Array, [99], 'failure expected preserved';
+  Failures.list = ();
+}
+
+# Negation flow.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.not.include(99), '.not passes when item absent';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.not.include(2), '.not fails when item present';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message, 'expected $[1, 2, 3] not to include 2', 'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# Empty arg list dies.
+{
+  my $error;
+  try {
+    expect([1, 2, 3]).to.include();
+    CATCH { default { $error = .message } }
+  }
+  is $error, 'include requires at least one item', 'empty include() dies';
+}
+
+# Hash form via named pair argument.
+{
+  Failures.list = ();
+  ok expect({ a => 1, b => 2 }).to.include(:a(1)), 'named-pair form passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+  Failures.list = ();
+}

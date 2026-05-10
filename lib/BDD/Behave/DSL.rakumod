@@ -422,38 +422,7 @@ class ExpectationBuilder {
     $new;
   }
 
-  method be(|c) {
-    my @pos = c.list;
-    my %named = c.hash;
-  
-    my $resolved-expected;
-    if %named.elems == 1 && @pos.elems == 0 {
-      my $key = %named.keys[0];
-      try {
-        $resolved-expected = $*LET-RUNTIME.value($key) if $*LET-RUNTIME.defined;
-        CATCH {
-          default {
-            die "Unknown let(:$key)";
-          }
-        }
-      }
-    } elsif @pos.elems == 1 {
-      my $expected = @pos[0];
-    
-      $resolved-expected = $expected;
-      if $expected ~~ Pair {
-        try {
-          $resolved-expected = $*LET-RUNTIME.value($expected.key) if $*LET-RUNTIME.defined;
-        }
-      }
-    } else {
-      die "be requires either a positional argument or a single named argument";
-    }
-
-    my $matcher = $resolved-expected ~~ Matcher
-      ?? $resolved-expected
-      !! BeMatcher.new(:expected($resolved-expected));
-
+  method !apply-matcher($matcher) {
     try {
       if $*BEHAVE-AUTO-MATCHERS.defined {
         $*BEHAVE-AUTO-MATCHERS.push(%(:$matcher, :negated($!negated)));
@@ -484,6 +453,50 @@ class ExpectationBuilder {
     }
 
     $passed;
+  }
+
+  method be(|c) {
+    my @pos = c.list;
+    my %named = c.hash;
+
+    my $resolved-expected;
+    if %named.elems == 1 && @pos.elems == 0 {
+      my $key = %named.keys[0];
+      try {
+        $resolved-expected = $*LET-RUNTIME.value($key) if $*LET-RUNTIME.defined;
+        CATCH {
+          default {
+            die "Unknown let(:$key)";
+          }
+        }
+      }
+    } elsif @pos.elems == 1 {
+      my $expected = @pos[0];
+
+      $resolved-expected = $expected;
+      if $expected ~~ Pair {
+        try {
+          $resolved-expected = $*LET-RUNTIME.value($expected.key) if $*LET-RUNTIME.defined;
+        }
+      }
+    } else {
+      die "be requires either a positional argument or a single named argument";
+    }
+
+    my $matcher = $resolved-expected ~~ Matcher
+      ?? $resolved-expected
+      !! BeMatcher.new(:expected($resolved-expected));
+
+    self!apply-matcher($matcher);
+  }
+
+  method include(**@items, *%pairs) {
+    my @expected = @items;
+    @expected.append: %pairs.pairs;
+    if @expected.elems == 0 {
+      die "include requires at least one item";
+    }
+    self!apply-matcher(IncludeMatcher.new(:expected(@expected)));
   }
 
   method have-received(Str:D $method-name) {
