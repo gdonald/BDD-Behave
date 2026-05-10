@@ -43,6 +43,22 @@ sub let-bang(|args) is export {
   $impl(|args);
 }
 
+sub subject(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&subject');
+  };
+  $impl(|args);
+}
+
+sub subject-bang(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&subject-bang');
+  };
+  $impl(|args);
+}
+
 sub expect(|args) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

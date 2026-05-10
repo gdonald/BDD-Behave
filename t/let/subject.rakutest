@@ -1,0 +1,212 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::LetRuntime;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Anonymous subject: readable via :subject and via subject() reader
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @observed;
+  describe 'anon', {
+    subject({ 42 });
+    it 'reads via reader',  { @observed.push(subject()) }
+    it 'reads via :subject', { @observed.push($*LET-RUNTIME.value('subject')) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 2, 'both examples passed';
+  is-deeply @observed, [42, 42], 'subject reader and :subject return same value';
+}
+
+# Named subject: accessible by both name and :subject
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @observed;
+  describe 'named', {
+    subject(:widget, { 'w' });
+    it 'reads via :widget',  { @observed.push($*LET-RUNTIME.value('widget'))  }
+    it 'reads via :subject', { @observed.push($*LET-RUNTIME.value('subject')) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 2, 'both examples passed';
+  is-deeply @observed, ['w', 'w'],
+    'named subject is accessible by both name and :subject';
+}
+
+# Memoization within an example
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'memo', {
+    subject({ ++$hits });
+    it 'evaluates once', {
+      subject(); subject(); subject();
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 1, 'subject block ran once per example, even when read multiple times';
+}
+
+# Lazy by default
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'lazy', {
+    subject({ ++$hits });
+    it 'never reads', { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 0, 'lazy subject is not evaluated when not read';
+}
+
+# subject-bang eager evaluation
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  describe 'eager', {
+    subject-bang({ ++$hits });
+    it 'a', { True }
+    it 'b', { True }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 2, 'subject-bang fires once per example, even when not read';
+}
+
+# subject-bang named: alias is also forced
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  my @observed-subject;
+  my @observed-name;
+  describe 'eager named', {
+    subject-bang(:user, { ++$hits; 'alice' });
+    it 'reads :user',     { @observed-name.push($*LET-RUNTIME.value('user'))     }
+    it 'reads :subject',  { @observed-subject.push($*LET-RUNTIME.value('subject')) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 2, 'subject-bang fired once per example';
+  is-deeply @observed-name,    ['alice'], ':user reads forced value';
+  is-deeply @observed-subject, ['alice'], ':subject alias reads forced value';
+}
+
+# subject string-name form
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $hits = 0;
+  my @observed;
+  describe 'string', {
+    subject('user', { ++$hits; 'bob' });
+    it 'reads', {
+      @observed.push($*LET-RUNTIME.value('user'));
+      @observed.push($*LET-RUNTIME.value('subject'));
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is $hits, 1, 'string-name subject runs once per example, even read by both names';
+  is-deeply @observed, ['bob', 'bob'], 'both names return the same memoized value';
+}
+
+# Inner subject shadows outer
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @observed;
+  describe 'shadow', {
+    subject({ 'outer' });
+    context 'inner', {
+      subject({ 'inner' });
+      it 'sees inner', { @observed.push($*LET-RUNTIME.value('subject')) }
+    }
+    it 'sees outer', { @observed.push($*LET-RUNTIME.value('subject')) }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  capture-run(@suites[0]);
+
+  is-deeply @observed, ['inner', 'outer'],
+    'inner subject shadows outer for inner examples; outer scope still sees outer';
+}
+
+# subject() reader outside an example dies
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  dies-ok { subject() }, 'subject() with no args dies outside an example';
+}
+
+# subject-bang outside describe/context dies
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  dies-ok { subject-bang({ 1 }) },
+    'subject-bang outside describe/context raises';
+}
+
+# subject returns a LetDefinition
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $captured;
+  describe 'returns def', {
+    $captured = subject({ 7 });
+    it 'placeholder', { True }
+  }
+
+  isa-ok $captured, BDD::Behave::LetRuntime::LetDefinition,
+    'subject returns the underlying LetDefinition';
+  is $captured.name, 'subject', 'anonymous subject is registered as :subject';
+}
+
+# Named subject returns the primary LetDefinition (not the alias)
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $captured;
+  describe 'returns named def', {
+    $captured = subject(:user, { 'alice' });
+    it 'placeholder', { True }
+  }
+
+  isa-ok $captured, BDD::Behave::LetRuntime::LetDefinition,
+    'subject(:name, ...) returns a LetDefinition';
+  is $captured.name, 'user', 'named subject returns the primary definition (not :subject alias)';
+}
+
+done-testing;

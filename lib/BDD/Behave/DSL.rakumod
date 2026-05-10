@@ -182,6 +182,67 @@ our sub let-bang(|c) is export {
   $definition;
 }
 
+sub register-subject(Str:D $name, &block, Bool :$is-named) {
+  my $primary = let($name, &block);
+  if $is-named {
+    let('subject', sub { $*LET-RUNTIME.value($name) });
+  }
+  $primary;
+}
+
+sub install-subject-eager-hook(Str $caller-name) {
+  my $entry = registry().current-entry;
+  unless $entry && $entry.stack.elems {
+    die "$caller-name must be called inside a describe/context block";
+  }
+  my $current = $entry.stack[*-1];
+  my &force-block = sub { $*LET-RUNTIME.value('subject') if $*LET-RUNTIME.defined };
+  $current.add-hook('before-each', &force-block);
+}
+
+our proto sub subject(|) is export {*}
+
+our multi sub subject(--> Mu) {
+  my $rt;
+  try { $rt = $*LET-RUNTIME if $*LET-RUNTIME.defined }
+  unless $rt.defined {
+    die "subject() with no arguments must be called inside an example";
+  }
+  $rt.value('subject');
+}
+
+our multi sub subject(Str:D $name, &block) {
+  register-subject($name, &block, :is-named);
+}
+
+our multi sub subject(&block, *%named) {
+  if %named.elems == 0 {
+    register-subject('subject', &block);
+  } elsif %named.elems == 1 {
+    register-subject(%named.keys[0].Str, &block, :is-named);
+  } else {
+    die "subject expects at most one named argument";
+  }
+}
+
+our proto sub subject-bang(|) is export {*}
+
+our multi sub subject-bang(Str:D $name, &block) {
+  install-subject-eager-hook('subject-bang');
+  register-subject($name, &block, :is-named);
+}
+
+our multi sub subject-bang(&block, *%named) {
+  install-subject-eager-hook('subject-bang');
+  if %named.elems == 0 {
+    register-subject('subject', &block);
+  } elsif %named.elems == 1 {
+    register-subject(%named.keys[0].Str, &block, :is-named);
+  } else {
+    die "subject-bang expects at most one named argument";
+  }
+}
+
 sub register-hook(Str $phase, &block, *%filter) {
   my $entry = registry().current-entry;
 

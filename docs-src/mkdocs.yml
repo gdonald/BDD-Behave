@@ -8,7 +8,9 @@ nav:
   - Core:
     - describe / context: core/describe.md
     - it: core/it.md
-  - let: let/let.md
+  - let:
+    - let / let-bang: let/let.md
+    - subject / subject-bang: let/subject.md
   - Hooks: hooks/hooks.md
   - Shared Contexts: shared-contexts/shared-contexts.md
   - Shared Examples: shared-examples/shared-examples.md

@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/diff/diff/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/let/subject/">
       
       
-        <link rel="prev" href="../../expectations/matchers/">
+        <link rel="prev" href="../let/">
       
       
-        <link rel="next" href="../../classes/classes/">
+        <link rel="next" href="../../hooks/hooks/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Diff Output - BDD::Behave</title>
+        <title>subject / subject-bang - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#diff-output" class="md-skip">
+        <a href="#subject" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Diff Output
+              subject / subject-bang
             
           </span>
         </div>
@@ -410,18 +410,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -442,7 +444,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -460,7 +462,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../let/let/" class="md-nav__link">
+      <a href="../let/" class="md-nav__link">
         
   
   
@@ -485,10 +487,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../let/subject/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subject / subject-bang
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -504,6 +533,159 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#defining-a-subject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defining a subject
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-subject" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the subject
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reading the subject">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-the-subject-reader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The subject() reader
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-named-argument-form-in-expect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Named-argument form in expect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-through-the-given-name-when-subjectname-is-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Through the given name when subject(:name, ...) is used
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memoization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memoization
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#shadowing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shadowing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subject-bang-eager-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        subject-bang (eager evaluation)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="subject-bang (eager evaluation)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-subject-bang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use subject-bang
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restrictions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restrictions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-with-let" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison with let
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -819,37 +1001,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diff Output
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../diff/diff/" class="md-nav__link">
         
   
   
@@ -865,92 +1020,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#conventions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Conventions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-a-diff-is-produced" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When a diff is produced
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#string-diffs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        String diffs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#structural-diffs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Structural diffs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#negated-expectations" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Negated expectations
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#module-surface" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Module surface
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1063,10 +1132,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conventions" class="md-nav__link">
+  <a href="#defining-a-subject" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Conventions
+        Defining a subject
       
     </span>
   </a>
@@ -1074,10 +1143,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-a-diff-is-produced" class="md-nav__link">
+  <a href="#reading-the-subject" class="md-nav__link">
     <span class="md-ellipsis">
       
-        When a diff is produced
+        Reading the subject
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reading the subject">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-the-subject-reader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. The subject() reader
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-named-argument-form-in-expect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Named-argument form in expect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-through-the-given-name-when-subjectname-is-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Through the given name when subject(:name, ...) is used
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memoization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memoization
       
     </span>
   </a>
@@ -1085,10 +1204,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#string-diffs" class="md-nav__link">
+  <a href="#shadowing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        String diffs
+        Shadowing
       
     </span>
   </a>
@@ -1096,32 +1215,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#structural-diffs" class="md-nav__link">
+  <a href="#subject-bang-eager-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Structural diffs
+        subject-bang (eager evaluation)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="subject-bang (eager evaluation)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-subject-bang" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to use subject-bang
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#negated-expectations" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#restrictions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Negated expectations
+        Restrictions
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#module-surface" class="md-nav__link">
+  <a href="#comparison-with-let" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Module surface
+        Comparison with let
       
     </span>
   </a>
@@ -1148,83 +1284,53 @@
   
 
 
-<h1 id="diff-output">Diff Output<a class="headerlink" href="#diff-output" title="Permanent link">&para;</a></h1>
-<p>When an expectation fails, BDD::Behave produces a structured, colorized diff between the actual and expected values whenever both are of a "diffable" shape. The diff is shape-aware: strings are compared character-by-character (single line) or line-by-line (multi line); arrays, hashes, sets, bags, and mixes are rendered as multi-line JSON-style structures and compared with a longest-common-subsequence algorithm.</p>
-<h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Lines marked with red <code>-</code> are values that were <em>expected</em> but not present in the actual.</li>
-<li>Lines marked with green <code>+</code> are values that were <em>received</em> but not in the expected.</li>
-<li>Unmarked lines are unchanged context.</li>
-</ul>
-<p>This matches the <code>--Expected</code> / <code>++Received</code> convention used by Jest and similar runners.</p>
-<h2 id="when-a-diff-is-produced">When a diff is produced<a class="headerlink" href="#when-a-diff-is-produced" title="Permanent link">&para;</a></h2>
-<p>A diff is rendered when both values share one of these shapes:</p>
-<table>
-<thead>
-<tr>
-<th>Shape</th>
-<th>Trigger</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Str</code></td>
-<td>both values are <code>Str</code></td>
-</tr>
-<tr>
-<td><code>Array</code></td>
-<td>both do <code>Positional</code></td>
-</tr>
-<tr>
-<td><code>Hash</code></td>
-<td>both do <code>Associative</code></td>
-</tr>
-<tr>
-<td><code>Set</code></td>
-<td>both are <code>Set</code> or <code>SetHash</code></td>
-</tr>
-<tr>
-<td><code>Bag</code></td>
-<td>both are <code>Bag</code> or <code>BagHash</code></td>
-</tr>
-<tr>
-<td><code>Mix</code></td>
-<td>both are <code>Mix</code> or <code>MixHash</code></td>
-</tr>
-</tbody>
-</table>
-<p>Plain scalars (<code>Int</code>, <code>Bool</code>, <code>Rat</code>, etc.) keep the existing <code>Expected:</code> / <code>to be:</code> lines without a diff section, since the two <code>.raku</code> representations already make the difference obvious.</p>
-<h2 id="string-diffs">String diffs<a class="headerlink" href="#string-diffs" title="Permanent link">&para;</a></h2>
-<p>For single-line strings, the differing region is highlighted in place using common prefix/suffix detection:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>- &#39;hello earth&#39;
-+ &#39;hello world&#39;
-</code></pre></div></td></tr></table></div>
-<p>The non-matching characters (<code>earth</code> and <code>world</code>) are colorized red and green respectively.</p>
-<p>For multi-line strings, the diff drops to line-level:</p>
+<h1 id="subject">subject<a class="headerlink" href="#subject" title="Permanent link">&para;</a></h1>
+<p><code>subject</code> defines the primary value under test in a <code>describe</code> or <code>context</code> block. It is implemented as a <a href="../let/"><code>let</code></a> under the name <code>:subject</code>, so all of <code>let</code>'s lazy-and-memoized semantics apply.</p>
+<p>Use <code>subject</code> when you want to name "the thing this group is about" once and refer to it across many examples.</p>
+<h2 id="defining-a-subject">Defining a subject<a class="headerlink" href="#defining-a-subject" title="Permanent link">&para;</a></h2>
+<p>Three forms are accepted:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>  foo
-- QUX
-+ bar
-  baz
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });          <span class="c1"># anonymous, registered as :subject</span>
+<span class="n">subject</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) }); <span class="c1"># named, also aliased as :subject</span>
+<span class="n">subject</span>(<span class="s">&#39;widget&#39;</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) }); <span class="c1"># string-name form, also aliased as :subject</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="structural-diffs">Structural diffs<a class="headerlink" href="#structural-diffs" title="Permanent link">&para;</a></h2>
-<p>Hashes, arrays, sets, bags, and mixes are pretty-printed in JSON-style and then compared line-by-line:</p>
+<p>When a name is given, the value is reachable through both the given name and <code>:subject</code> — they share a single memoized evaluation per example.</p>
+<h2 id="reading-the-subject">Reading the subject<a class="headerlink" href="#reading-the-subject" title="Permanent link">&para;</a></h2>
+<p>There are three ways to read the subject:</p>
+<h3 id="1-the-subject-reader">1. The <code>subject()</code> reader<a class="headerlink" href="#1-the-subject-reader" title="Permanent link">&para;</a></h3>
+<p>Inside an example, calling <code>subject()</code> with no arguments returns the memoized value:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>  {
-    &quot;name&quot; =&gt; &quot;alice&quot;,
--   &quot;age&quot; =&gt; 31,
-+   &quot;age&quot; =&gt; 30,
-    &quot;city&quot; =&gt; &quot;paris&quot;,
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
+  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+
+  <span class="n">it</span> <span class="s">&#39;has the right bar&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">subject</span>().<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
   }
+}
 </code></pre></div></td></tr></table></div>
-<p>Hash keys are sorted alphabetically for stable, reviewable output. Nested structures recurse and preserve indentation:</p>
+<p><code>subject()</code> outside an example body raises an error.</p>
+<h3 id="2-named-argument-form-in-expect">2. Named-argument form in <code>expect</code><a class="headerlink" href="#2-named-argument-form-in-expect" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
+  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+
+  <span class="n">it</span> <span class="s">&#39;is a Widget&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="3-through-the-given-name-when-subjectname-is-used">3. Through the given name when <code>subject(:name, ...)</code> is used<a class="headerlink" href="#3-through-the-given-name-when-subjectname-is-used" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1235,31 +1341,95 @@
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code>  {
-    &quot;tags&quot; =&gt; [
-      &quot;x&quot;,
--     &quot;z&quot;,
-+     &quot;y&quot;,
-    ],
-    &quot;user&quot; =&gt; {
-      &quot;age&quot; =&gt; 30,
--     &quot;name&quot; =&gt; &quot;bob&quot;,
-+     &quot;name&quot; =&gt; &quot;alice&quot;,
-    },
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
+  <span class="n">subject</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+
+  <span class="n">it</span> <span class="s">&#39;is reachable as :widget&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>);
   }
+
+  <span class="n">it</span> <span class="s">&#39;and as :subject&#39;</span>, {
+    <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>);
+  }
+}
 </code></pre></div></td></tr></table></div>
-<h2 id="negated-expectations">Negated expectations<a class="headerlink" href="#negated-expectations" title="Permanent link">&para;</a></h2>
-<p><code>expect(...).not.to.be(...)</code> failures don't render a diff: when the comparison was supposed to <em>fail</em> and didn't, both values match exactly, so a diff would be empty. The standard <code>Expected:</code> / <code>not to be:</code> lines are sufficient.</p>
-<h2 id="module-surface">Module surface<a class="headerlink" href="#module-surface" title="Permanent link">&para;</a></h2>
-<p>The diff machinery lives in <code>BDD::Behave::Diff</code>. The exported functions are:</p>
+<h2 id="memoization">Memoization<a class="headerlink" href="#memoization" title="Permanent link">&para;</a></h2>
+<p><code>subject</code> is <strong>lazy</strong>: the block runs the first time it's read in an example, and the value is cached for subsequent reads in the same example. Between examples the cache is reset.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$hits</span> = <span class="mi">0</span>;
+<span class="n">describe</span> <span class="s">&#39;memo&#39;</span>, {
+  <span class="n">subject</span>({ ++<span class="nv">$hits</span> });
+
+  <span class="n">it</span> <span class="s">&#39;evaluates once&#39;</span>, {
+    <span class="n">subject</span>(); <span class="n">subject</span>(); <span class="n">subject</span>();
+    <span class="n">expect</span>(<span class="nv">$hits</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h2 id="shadowing">Shadowing<a class="headerlink" href="#shadowing" title="Permanent link">&para;</a></h2>
+<p>Inner <code>subject</code> definitions shadow outer ones for examples in the inner group:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {
+  <span class="n">subject</span>({ <span class="s">&#39;outer&#39;</span> });
+
+  <span class="n">it</span> <span class="s">&#39;sees outer&#39;</span>, { <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;outer&#39;</span>) }
+
+  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
+    <span class="n">subject</span>({ <span class="s">&#39;inner&#39;</span> });
+
+    <span class="n">it</span> <span class="s">&#39;sees inner&#39;</span>, { <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;inner&#39;</span>) }
+  }
+}
+</code></pre></div></td></tr></table></div>
+<h2 id="subject-bang-eager-evaluation"><code>subject-bang</code> (eager evaluation)<a class="headerlink" href="#subject-bang-eager-evaluation" title="Permanent link">&para;</a></h2>
+<p><code>subject-bang</code> is the Raku-friendly spelling of RSpec's <code>subject!</code>. It defines a subject like <code>subject</code> does, but the block is <strong>forced before every example body</strong> so any side effects in the block run whether or not the example reads the value.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;invoices index&#39;</span>, {
+  <span class="n">subject-bang</span>(:<span class="n">invoice</span>, { <span class="n">Invoice</span>.<span class="n">create</span>(:<span class="n">amount</span>(<span class="mi">100</span>)) });
+
+  <span class="n">it</span> <span class="s">&#39;returns invoices&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">Invoice</span>.<span class="nb">all</span>.<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);   <span class="c1"># passes even though we never read :invoice</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p><code>subject-bang</code> accepts the same three forms as <code>subject</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">subject-bang</span>({ <span class="n">User</span>.<span class="n">create</span> });
+<span class="n">subject-bang</span>(:<span class="n">user</span>,  { <span class="n">User</span>.<span class="n">create</span> });
+<span class="n">subject-bang</span>(<span class="s">&#39;user&#39;</span>, { <span class="n">User</span>.<span class="n">create</span> });
+</code></pre></div></td></tr></table></div>
+<p>It registers the let definition(s) and a <code>before-each</code> hook in the current group that forces <code>:subject</code>. Memoization is the same as <code>subject</code> — the block runs at most once per example.</p>
+<h3 id="when-to-use-subject-bang">When to use <code>subject-bang</code><a class="headerlink" href="#when-to-use-subject-bang" title="Permanent link">&para;</a></h3>
+<p>Use <code>subject-bang</code> when the <em>creation</em> of the subject is itself the test setup — typically for inserting database rows or otherwise mutating state that the example depends on existing before it runs. For pure values, plain <code>subject</code> is preferred because it stays cheap when the example doesn't actually read the value.</p>
+<h3 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>diff-shape($value --&gt; Str)</code> — <code>'Str'</code>, <code>'Array'</code>, <code>'Hash'</code>, <code>'Set'</code>, <code>'Bag'</code>, <code>'Mix'</code>, <code>'Scalar'</code>, or <code>'Undef'</code>.</li>
-<li><code>diffable($given, $expected --&gt; Bool)</code> — <code>True</code> when both values share a structural shape worth diffing.</li>
-<li><code>render-diff($given, $expected --&gt; Str)</code> — produces the colorized diff string. Always returns a single string (multi-line for structural diffs).</li>
-<li><code>pretty-lines($value, :$indent --&gt; List)</code> — exposes the underlying pretty-printer for advanced use.</li>
+<li><code>subject-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope), only plain <code>subject</code> is supported.</li>
+<li>Inside an <code>it</code> block, use <code>subject()</code> or <code>expect(:subject)</code> to read the value; eager forcing is meaningless once you're already in the example body.</li>
 </ul>
-<p>You normally don't need to call these directly; failure output uses them automatically.</p>
+<h2 id="comparison-with-let">Comparison with <code>let</code><a class="headerlink" href="#comparison-with-let" title="Permanent link">&para;</a></h2>
+<p><code>subject</code> is sugar around <code>let(:subject, ...)</code>. The two are interchangeable when reading via <code>:subject</code>, but <code>subject</code> makes the intent — "this is what I'm testing" — explicit and adds the dual-name alias when you give it a name. Use <code>subject</code> for the value under test and <code>let</code> for everything else (inputs, fixtures, helpers).</p>
 
 
 
