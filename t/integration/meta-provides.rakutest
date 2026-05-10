@@ -1,0 +1,56 @@
+use v6.d;
+use Test;
+
+# Walk lib/ for every .rakumod and assert it is declared in META6.json.
+
+sub parse-provides(IO::Path $path) {
+  my %out;
+  my $in-provides = False;
+
+  for $path.lines -> $line {
+    if !$in-provides {
+      $in-provides = True if $line ~~ /'"provides"' \s* ':' \s* '{'/;
+      next;
+    }
+    last if $line ~~ /^ \s* '}'/;
+      if $line ~~ / '"' (<-["]>+) '"' \s* ':' \s* '"' (<-["]>+) '"' / {
+        %out{ ~$0 } = ~$1;
+      }
+    }
+    %out;
+  }
+
+  sub walk-rakumod(IO::Path $dir) {
+    gather for $dir.dir -> $entry {
+      if $entry.d {
+        take $_ for walk-rakumod($entry);
+      } elsif $entry.f && $entry.basename.ends-with('.rakumod') {
+        take $entry;
+      }
+    }
+  }
+
+  sub module-name-from-path(IO::Path $path, IO::Path $lib) {
+    my $rel = $path.absolute.substr($lib.absolute.chars + 1);
+    $rel .= subst(/'.rakumod'$/, '');
+    $rel.split('/').join('::');
+  }
+
+  my $repo     = $*PROGRAM.parent.parent.parent.absolute.IO;
+  my $lib      = $repo.add('lib');
+  my %provides = parse-provides($repo.add('META6.json'));
+
+  my @declared = %provides.keys.sort;
+  my @on-disk  = walk-rakumod($lib).map({ module-name-from-path($_, $lib) }).sort;
+
+  for @on-disk -> $module {
+    ok %provides{$module}:exists, "META6.json provides declares $module";
+  }
+
+  for @declared -> $module {
+    my $declared-path = $repo.add(%provides{$module}).absolute.IO;
+    ok $declared-path.f,
+    "provides path for $module exists on disk: {%provides{$module}}";
+  }
+
+  done-testing;

@@ -1,0 +1,161 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Top-level my-variables are visible inside describes and examples
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $top = 'top-level';
+  my @top-arr = (1, 2, 3);
+  my %top-hash = (a => 1, b => 2);
+  my @observed;
+
+  describe 'top-level access', {
+    it 'reads scalars, arrays, hashes', {
+      @observed.push: $top;
+      @observed.push: @top-arr[2];
+      @observed.push: %top-hash<b>;
+    }
+  }
+
+  my $result = capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is $result.passed, 1, 'top-level access example passed';
+  is-deeply @observed, ['top-level', 3, 2],
+    'all three sigils reachable from inside an it block';
+}
+
+# Variables declared inside a describe block are shared across its examples
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @counts;
+
+  describe 'shared describe-level state', {
+    my $counter = 0;
+    it 'a', { @counts.push: ++$counter }
+    it 'b', { @counts.push: ++$counter }
+    it 'c', { @counts.push: ++$counter }
+  }
+
+  capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is-deeply @counts, [1, 2, 3],
+    'describe-level lexical is shared and accumulates across examples';
+}
+
+# Variables in nested contexts shadow describe-level variables
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @log;
+
+  describe 'shadowing', {
+    my $value = 'outer';
+
+    it 'outer 1', { @log.push: "outer1=$value" }
+
+    context 'inner', {
+      my $value = 'inner';
+      it 'inner', { @log.push: "inner=$value" }
+    }
+
+    it 'outer 2', { @log.push: "outer2=$value" }
+  }
+
+  capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is-deeply @log, ['outer1=outer', 'inner=inner', 'outer2=outer'],
+    'inner my-variable shadows outer; outer unaffected after inner block';
+}
+
+# Variables declared inside an `it` block are example-local
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @captures;
+
+  describe 'it-local vars', {
+    it 'first',  { my $x = 'first';  @captures.push: $x }
+    it 'second', { my $x = 'second'; @captures.push: $x }
+  }
+
+  capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is-deeply @captures, ['first', 'second'],
+    'each it-block creates an independent lexical';
+}
+
+# let and regular variables coexist
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @observed;
+
+  describe 'let with regular var', {
+    let(:from-let, { 'from-let' });
+    my $regular = 'from-regular';
+
+    it 'reads both', {
+      @observed.push: $regular;
+      my $f := let(:from-let, { 'from-let' });
+      @observed.push: $f;
+      my $computed := let(:computed, { $regular ~ '-computed' });
+      @observed.push: $computed;
+    }
+  }
+
+  capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is-deeply @observed, ['from-regular', 'from-let', 'from-regular-computed'],
+    'let and lexical variables are reachable side-by-side';
+}
+
+# enums declared in a describe are visible in examples
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @observed;
+
+  describe 'enums', {
+    enum Color <Red Green Blue>;
+    it 'uses enum', { @observed.push: (Red.Int, Green.Int, Blue.Int) }
+  }
+
+  capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is-deeply @observed[0].list, (0, 1, 2),
+    'enum declared in describe is reachable and ordinals are correct';
+}
+
+# roles defined in a describe can be composed by classes also defined there
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @observed;
+
+  describe 'roles', {
+    role Greet { method hi { 'hi-from-role' } }
+    class WithGreet does Greet { }
+
+    it 'composes role', { @observed.push: WithGreet.new.hi }
+  }
+
+  capture-run(BDD::Behave::SpecRegistry::registry().suites[0]);
+
+  is-deeply @observed, ['hi-from-role'],
+    'roles defined inside a describe compose into classes inside the same describe';
+}
+
+done-testing;

@@ -1,0 +1,22 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+{
+  my $out = strip-ansi(render-diff([1, 2, 3, 4], [1, 2, 9, 4]));
+  is $out, "  [\n    1,\n    2,\n-   9,\n+   3,\n    4,\n  ]", 'array diff';
+}
+
+{
+  my $out = strip-ansi(render-diff([1, 2], []));
+  ok $out.contains('+   1,'), 'expected-empty/given-populated marks +1';
+  ok $out.contains('+   2,'), 'expected-empty/given-populated marks +2';
+}
+
+done-testing;

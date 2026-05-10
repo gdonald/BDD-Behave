@@ -1,0 +1,162 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::LetRuntime;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# Top-level let is reachable from a describe-level example
+{
+  registry().clear;
+
+  let(:top, { 'top-level' });
+
+  describe 'access top-level let', {
+    it 'reads :top', { True }
+  }
+
+  my $example = registry().suites[0].groups[0].examples[0];
+  my @lets = $example.get-metadata('lets').flat;
+
+  is @lets.first(*.name eq 'top').defined, True,
+    'top-level let is attached to the example metadata';
+
+  my $runtime = BDD::Behave::LetRuntime::LetRuntime.new(:definitions(@lets));
+  is $runtime.value('top'), 'top-level',
+    'top-level let resolves correctly';
+}
+
+# Nested describe sees both its own and outer lets
+{
+  registry().clear;
+
+  describe 'outer', {
+    let(:desc, { 'describe-level' });
+
+    context 'inner', {
+      let(:ctx, { 'context-level' });
+
+      it 'reads', { True }
+    }
+  }
+
+  my $example = registry().suites[0].groups[0].groups[0].examples[0];
+  my @lets    = $example.get-metadata('lets').flat;
+
+  is @lets.elems, 2, 'inner example sees 2 lets (describe + context)';
+
+  my $runtime = BDD::Behave::LetRuntime::LetRuntime.new(:definitions(@lets));
+  is $runtime.value('desc'), 'describe-level', 'describe-level reachable from context';
+  is $runtime.value('ctx'),  'context-level',  'context-level reachable from context';
+}
+
+# Inner let shadows outer let with the same name
+{
+  registry().clear;
+
+  describe 'outer', {
+    let(:value, { 'outer' });
+
+    context 'inner', {
+      let(:value, { 'inner' });
+
+      it 'sees inner', { True }
+    }
+  }
+
+  my $example = registry().suites[0].groups[0].groups[0].examples[0];
+  my $runtime = BDD::Behave::LetRuntime::LetRuntime.new(
+    :definitions($example.get-metadata('lets').flat),
+  );
+
+  is $runtime.value('value'), 'inner',
+    'inner let shadows outer let with the same name';
+}
+
+# Sibling contexts have independent let definitions
+{
+  registry().clear;
+
+  describe 'siblings', {
+    context 'first', {
+      let(:value, { 'first' });
+      it 'a', { True }
+    }
+    context 'second', {
+      let(:value, { 'second' });
+      it 'b', { True }
+    }
+  }
+
+  my $first  = registry().suites[0].groups[0].groups[0].examples[0];
+  my $second = registry().suites[0].groups[0].groups[1].examples[0];
+
+  my $rt1 = BDD::Behave::LetRuntime::LetRuntime.new(
+    :definitions($first.get-metadata('lets').flat),
+  );
+  my $rt2 = BDD::Behave::LetRuntime::LetRuntime.new(
+    :definitions($second.get-metadata('lets').flat),
+  );
+
+  is $rt1.value('value'), 'first',  'first sibling sees its own value';
+  is $rt2.value('value'), 'second', 'second sibling sees its own value';
+}
+
+# Across-describe override: an outer top-level let stays valid in a separate describe
+{
+  registry().clear;
+
+  let(:top, { 'top-level' });
+
+  describe 'overrides top', {
+    let(:top, { 'override-top' });
+    it 'a', { True }
+  }
+
+  describe 'inherits top', {
+    it 'b', { True }
+  }
+
+  my $first  = registry().suites[0].groups[0].examples[0];
+  my $second = registry().suites[0].groups[1].examples[0];
+
+  my $rt1 = BDD::Behave::LetRuntime::LetRuntime.new(
+    :definitions($first.get-metadata('lets').flat),
+  );
+  my $rt2 = BDD::Behave::LetRuntime::LetRuntime.new(
+    :definitions($second.get-metadata('lets').flat),
+  );
+
+  is $rt1.value('top'), 'override-top',
+    'first describe overrides the top-level let';
+  is $rt2.value('top'), 'top-level',
+    'second describe sees the original top-level let';
+}
+
+# Memoization is per-example (fresh runtime each time)
+{
+  registry().clear;
+
+  my $hits = 0;
+  describe 'memoize', {
+    let(:counter, { ++$hits });
+    it 'a', { my $c := let(:counter, { ++$hits }); $c }
+    it 'b', { my $c := let(:counter, { ++$hits }); $c }
+  }
+
+  capture-run(registry().suites[0]);
+  is $hits, 2, 'each example invokes the let block once (fresh runtime per example)';
+}
+
+done-testing;

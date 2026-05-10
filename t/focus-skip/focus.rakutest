@@ -1,0 +1,140 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+sub capture-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# fit focuses a single example: only it runs, others are filtered
+{
+  registry().clear;
+
+  my @ran;
+  describe 'focused single', {
+    it  'plain 1', { @ran.push('plain-1') }
+    fit 'focused',  { @ran.push('focused') }
+    it  'plain 2', { @ran.push('plain-2') }
+  }
+
+  my $example = registry().suites[0].groups[0].examples[1];
+  ok $example.focused, 'fit marks the example as focused';
+  ok $example.effective-focused, 'fit propagates as effective-focused';
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array, ['focused',], 'fit ran only the focused example';
+  is $result.passed,   1,              'one passed example reported';
+  is $result.total,    1,              'non-focused examples are filtered, not counted';
+}
+
+# fdescribe focuses every example inside; sibling groups are filtered
+{
+  registry().clear;
+
+  my @ran;
+  fdescribe 'focused group', {
+    it 'a', { @ran.push('a') }
+    it 'b', { @ran.push('b') }
+  }
+
+  describe 'sibling group', {
+    it 'c', { @ran.push('c') }
+  }
+
+  my $group = registry().suites[0].groups[0];
+  ok $group.focused, 'fdescribe sets focused on the group';
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @ran.sort.list, ('a', 'b'),
+    'fdescribe runs every example inside; siblings are filtered';
+  is $result.total, 2, 'sibling group is not counted';
+}
+
+# Without any focused node, focus mode is off and all examples run
+{
+  registry().clear;
+
+  my @ran;
+  describe 'no focus anywhere', {
+    it 'a', { @ran.push('a') }
+    it 'b', { @ran.push('b') }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @ran.sort.list, ('a', 'b'),
+    'with no fit/fdescribe, every example runs';
+  is $result.total, 2, 'totals reflect all examples';
+}
+
+# xit inside an fdescribe is reported as skipped, not run
+{
+  registry().clear;
+
+  my @ran;
+  fdescribe 'focused with skip', {
+    it  'runs', { @ran.push('runs') }
+    xit 'never', { @ran.push('never') }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array, ['runs',], 'xit inside fdescribe still does not run';
+  is $result.skipped, 1, 'xit shows up as skipped even in focus mode';
+  is $result.passed,  1, 'focused non-skipped example passed';
+}
+
+# fcontext / xcontext aliases work the same as fdescribe / xdescribe
+{
+  registry().clear;
+
+  my @ran;
+  describe 'aliases', {
+    fcontext 'focused via fcontext', {
+      it 'runs', { @ran.push('focused') }
+    }
+    xcontext 'skipped via xcontext', {
+      it 'never', { @ran.push('skipped') }
+    }
+    context 'plain', {
+      it 'filtered out by focus mode', { @ran.push('plain') }
+    }
+  }
+
+  my $result = capture-run(registry().suites[0]);
+
+  is-deeply @ran.Array, ['focused',],
+    'fcontext focuses, xcontext skips, plain context is filtered out';
+  is $result.skipped, 1, 'xcontext example reported as skipped';
+  is $result.passed,  1, 'fcontext example reported as passed';
+}
+
+# Focus + tag filter compose: must be both focused AND tag-matched
+{
+  registry().clear;
+
+  my @ran;
+  describe 'focus and tags', {
+    fit 'focused fast', :tag<fast>, { @ran.push('focused-fast') }
+    fit 'focused slow', :tag<slow>, { @ran.push('focused-slow') }
+    it  'plain fast',   :tag<fast>, { @ran.push('plain-fast')   }
+  }
+
+  capture-run(registry().suites[0], :include-tags(['fast']));
+
+  is-deeply @ran.Array, ['focused-fast',],
+    'with focus mode on, --tag still filters: only focused-and-tagged runs';
+}
+
+done-testing;

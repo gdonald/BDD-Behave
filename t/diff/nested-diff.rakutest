@@ -1,0 +1,21 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+{
+  my $a = {user => {name => 'alice', age => 30}};
+  my $b = {user => {name => 'bob',   age => 30}};
+  my $out = strip-ansi(render-diff($a, $b));
+  ok $out.contains('"user" => {'),                'nested hash header rendered';
+  ok $out.contains('-     "name" => "bob"'),      'nested hash diff: minus line';
+  ok $out.contains('+     "name" => "alice"'),    'nested hash diff: plus line';
+  ok $out.contains('      "age" => 30'),          'nested hash diff: context line';
+}
+
+done-testing;

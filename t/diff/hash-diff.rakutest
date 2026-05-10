@@ -1,0 +1,19 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+{
+  my $out = strip-ansi(render-diff({a => 1, b => 2}, {a => 1, b => 3, c => 4}));
+  ok $out.contains('"a" => 1'),     'shared hash keys appear';
+  ok $out.contains('-   "b" => 3'), 'expected-only value marked with -';
+  ok $out.contains('+   "b" => 2'), 'given-only value marked with +';
+  ok $out.contains('-   "c" => 4'), 'extra expected key marked with -';
+}
+
+done-testing;

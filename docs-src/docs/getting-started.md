@@ -56,9 +56,9 @@ See [Running Specs](running.md) for the full set of options.
 
 ## Where to go next
 
-- [`describe` / `context`](dsl/describe.md) — group related examples
-- [`it`](dsl/it.md) — define an example
-- [`let`](dsl/let.md) — lazy, memoized values per example
-- [Hooks](dsl/hooks.md) — `before-each`, `after-each`, `before-all`, `after-all`
-- [Shared Contexts](dsl/shared-contexts.md) — reusable `let`s and hooks via `shared-context` / `include-context`
-- [`expect`](dsl/expect.md) — assertions
+- [`describe` / `context`](core/describe.md) — group related examples
+- [`it`](core/it.md) — define an example
+- [`let`](let/let.md) — lazy, memoized values per example
+- [Hooks](hooks/hooks.md) — `before-each`, `after-each`, `before-all`, `after-all`
+- [Shared Contexts](shared-contexts/shared-contexts.md) — reusable `let`s and hooks via `shared-context` / `include-context`
+- [`expect`](expectations/expect.md) — assertions

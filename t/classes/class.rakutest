@@ -1,0 +1,158 @@
+use Test;
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+sub capture-run($suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $sink.close;
+  $result;
+}
+
+# A class defined inside a describe block is reachable from its examples
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $bar;
+  my $baz;
+
+  describe 'class in describe', {
+    class Widget {
+      has $.bar;
+      has $.baz;
+
+      submethod BUILD(:$!bar) {
+        $!baz = 42;
+      }
+    }
+
+    it 'instantiates and reads attrs', {
+      my $w = Widget.new(:bar(17));
+      $bar = $w.bar;
+      $baz = $w.baz;
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'example using describe-scoped class passed';
+  is $bar, 17, 'BUILD-time positional attribute set';
+  is $baz, 42, 'BUILD-time defaulted attribute set';
+}
+
+# Class can be stored via let binding and memoized per example
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $first-bar;
+  my $second-bar;
+  my $build-count = 0;
+
+  describe 'class via let', {
+    class Thing {
+      has $.bar;
+      submethod BUILD(:$!bar) { $build-count++ }
+    }
+
+    it 'uses binding twice in one example', {
+      my $w := let(:thing, { Thing.new(:bar(99)) });
+      $first-bar = $w.bar;
+      my $again := let(:thing, { Thing.new(:bar(99)) });
+      $second-bar = $again.bar;
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'example passed';
+  is $first-bar, 99, 'first read returns expected value';
+  is $second-bar, 99, 'second read returns same value';
+  is $build-count, 1, 'BUILD ran exactly once thanks to let memoization';
+}
+
+# Each example gets a fresh let-memoized instance
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @ids;
+  describe 'fresh instance per example', {
+    class Item {
+      has $.id;
+    }
+
+    let(:item, { Item.new(:id(rand)) });
+
+    it 'first',  { @ids.push: $*LET-RUNTIME.value('item').id }
+    it 'second', { @ids.push: $*LET-RUNTIME.value('item').id }
+    it 'third',  { @ids.push: $*LET-RUNTIME.value('item').id }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 3, 'all three examples passed';
+  is @ids.elems, 3, 'three ids collected';
+  is @ids.unique.elems, 3, 'each example sees a different instance';
+}
+
+# Class methods callable from let-bound subject
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my @results;
+  describe 'class methods', {
+    class Calc {
+      method add($a, $b) { $a + $b }
+      method mul($a, $b) { $a * $b }
+    }
+
+    let(:calc, { Calc.new });
+
+    it 'add', {
+      my $c := let(:calc, { Calc.new });
+      @results.push: $c.add(2, 3);
+    }
+
+    it 'mul', {
+      my $c := let(:calc, { Calc.new });
+      @results.push: $c.mul(4, 5);
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 2, 'both examples passed';
+  is-deeply @results, [5, 20], 'class methods dispatch correctly via let-bound instance';
+}
+
+# context-parameter form exposes let-bound class instance
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $observed-bar;
+  describe 'context param', {
+    class Box {
+      has $.bar;
+    }
+
+    let(:box, { Box.new(:bar(88)) });
+
+    it 'reads .box.bar via context param', -> $_ {
+      $observed-bar = .box.bar;
+    }
+  }
+
+  my @suites = BDD::Behave::SpecRegistry::registry().suites;
+  my $result = capture-run(@suites[0]);
+
+  is $result.passed, 1, 'context-param example passed';
+  is $observed-bar, 88, 'class instance reachable via context-param method';
+}
+
+done-testing;

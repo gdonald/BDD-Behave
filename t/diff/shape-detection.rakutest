@@ -1,0 +1,92 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+sub capture-stdout(&block --> Str) {
+  my $tmp = $*TMPDIR.add("behave-diff-shape-{$*PID}-{(now * 1e6).Int}.out");
+  {
+    my $fh = $tmp.open(:w);
+    my $*OUT = $fh;
+    block();
+    $fh.close;
+  }
+  my $captured = $tmp.slurp;
+  $tmp.unlink;
+  $captured;
+}
+
+# diff-shape
+
+is diff-shape('hello'), 'Str',  'Str detected';
+is diff-shape([1, 2]),  'Array', 'Array detected';
+is diff-shape({a => 1}), 'Hash', 'Hash detected';
+is diff-shape(set <a b>), 'Set', 'Set detected';
+is diff-shape(bag <a a>), 'Bag', 'Bag detected';
+is diff-shape(Mix.new-from-pairs((a => 1.5))), 'Mix', 'Mix detected';
+is diff-shape(42), 'Scalar', 'Scalar detected';
+is diff-shape(Nil), 'Undef', 'Undef detected';
+
+# diffable
+
+ok  diffable('a', 'b'),     'Str + Str diffable';
+ok  diffable([1], [2]),     'Array + Array diffable';
+ok  diffable({}, {}),       'Hash + Hash diffable';
+ok  diffable((set <a>), (set <b>)), 'Set + Set diffable';
+nok diffable(1, 2),         'Scalar + Scalar not diffable';
+nok diffable('a', [1]),     'Str + Array not diffable';
+nok diffable(Nil, [1]),     'Nil + Array not diffable';
+
+# Failures.say integration: diffable shapes emit a Diff: section,
+# plain scalars and negated expectations do not
+
+{
+  Failures.list = ();
+  Failures.list.push(Failure.new(
+    :file('foo.raku'),
+    :line(10),
+    :given([1, 2, 3]),
+    :expected([1, 9, 3]),
+  ));
+  my $out = capture-stdout({ Failures.say });
+  Failures.list = ();
+  ok $out.contains('Diff:'),              'Failures.say emits Diff: section for diffable values';
+  ok strip-ansi($out).contains('-   9,'), 'Failures.say diff has expected minus line';
+  ok strip-ansi($out).contains('+   2,'), 'Failures.say diff has given plus line';
+}
+
+{
+  Failures.list = ();
+  Failures.list.push(Failure.new(
+    :file('foo.raku'),
+    :line(10),
+    :given(42),
+    :expected(41),
+  ));
+  my $out = capture-stdout({ Failures.say });
+  Failures.list = ();
+  nok $out.contains('Diff:'), 'Failures.say omits Diff: for plain scalars';
+}
+
+{
+  Failures.list = ();
+  Failures.list.push(Failure.new(
+    :file('foo.raku'),
+    :line(10),
+    :given([1]),
+    :expected([1]),
+    :negated(True),
+  ));
+  my $out = capture-stdout({ Failures.say });
+  Failures.list = ();
+  nok $out.contains('Diff:'), 'Failures.say omits Diff: for negated expectations';
+}
+
+done-testing;

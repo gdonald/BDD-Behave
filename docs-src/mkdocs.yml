@@ -4,21 +4,25 @@ repo_url: https://github.com/gdonald/BDD-Behave
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
-  - DSL:
-    - describe / context: dsl/describe.md
-    - it: dsl/it.md
-    - let: dsl/let.md
-    - Hooks: dsl/hooks.md
-    - Shared Contexts: dsl/shared-contexts.md
-    - Shared Examples: dsl/shared-examples.md
-    - Tags: dsl/tags.md
-    - Focus and Skip: dsl/focus-skip.md
-    - Doubles: dsl/mocks.md
-    - expect: dsl/expect.md
-    - Matchers: dsl/matchers.md
-    - Diff Output: dsl/diff.md
   - Running Specs: running.md
-  - Tests: testing.md
+  - Core:
+    - describe / context: core/describe.md
+    - it: core/it.md
+  - let: let/let.md
+  - Hooks: hooks/hooks.md
+  - Shared Contexts: shared-contexts/shared-contexts.md
+  - Shared Examples: shared-examples/shared-examples.md
+  - Tags: tags/tags.md
+  - Focus and Skip: focus-skip/focus-skip.md
+  - Example Filter: example-filter/example-filter.md
+  - Mocks: mocks/mocks.md
+  - Expectations:
+    - expect: expectations/expect.md
+    - Matchers: expectations/matchers.md
+  - Diff Output: diff/diff.md
+  - Classes in specs: classes/classes.md
+  - Variables in specs: variables/variables.md
+  - Contributing: contributing.md
 theme:
   name: 'material'
 markdown_extensions:

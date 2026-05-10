@@ -1,0 +1,29 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+{
+  my $out = strip-ansi(render-diff('hello world', 'hello earth'));
+  is $out, "- 'hello earth'\n+ 'hello world'", 'char-level string diff';
+}
+
+{
+  my $out = render-diff('hello world', 'hello earth');
+  ok $out.contains("\e[31m"), 'string diff includes red ANSI';
+  ok $out.contains("\e[32m"), 'string diff includes green ANSI';
+}
+
+{
+  my $given    = "foo\nbar\nbaz";
+  my $expected = "foo\nQUX\nbaz";
+  my $out      = strip-ansi(render-diff($given, $expected));
+  is $out, "  foo\n- QUX\n+ bar\n  baz", 'multi-line string diff';
+}
+
+done-testing;

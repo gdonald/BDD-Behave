@@ -1,0 +1,2029 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/mocks/mocks/">
+      
+      
+        <link rel="prev" href="../../example-filter/example-filter/">
+      
+      
+        <link rel="next" href="../../expectations/expect/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Mocks - BDD::Behave</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#doubles-stubbing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BDD::Behave
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Mocks
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gdonald/BDD-Behave" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BDD::Behave
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gdonald/BDD-Behave" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running Specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/describe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    describe / context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/it/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    it
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../let/let/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    let
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hooks/hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shared-contexts/shared-contexts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contexts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags/tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../focus-skip/focus-skip/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Focus and Skip
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../example-filter/example-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mocks
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-an-ad-hoc-double" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating an ad-hoc double
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-unstubbed-methods-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What unstubbed methods do
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callable-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callable stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-stubs-after-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding stubs after creation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying calls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-based-doubles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class-based doubles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reserved-method-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserved method names
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stubbing-real-objects-with-allow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stubbing real objects with allow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#partial-mocking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partial mocking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raising-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raising exceptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delegating-to-the-real-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delegating to the real implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamic-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacement-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replacement semantics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stubbing-across-every-instance-allow-any-instance-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stubbing across every instance: allow-any-instance-of
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stubs-in-before-all-vs-before-each" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stubs in before-all vs before-each
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spies-and-have-received" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spies and have-received
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spy-pass-through-recorder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        spy(...) — pass-through recorder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expectobjtohave-receivedmethod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        expect(obj).to.have-received('method')
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#call-count-modifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Call-count modifiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#argument-matching-with" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument matching: .with(...)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#argument-matchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument matchers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expectations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Expectations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/expect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../diff/diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diff Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/classes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classes in specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../variables/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables in specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#creating-an-ad-hoc-double" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating an ad-hoc double
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-unstubbed-methods-do" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What unstubbed methods do
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#callable-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callable stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-stubs-after-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding stubs after creation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying calls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-based-doubles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class-based doubles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reserved-method-names" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserved method names
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stubbing-real-objects-with-allow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stubbing real objects with allow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#partial-mocking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partial mocking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#return-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Return values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raising-exceptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raising exceptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delegating-to-the-real-implementation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delegating to the real implementation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dynamic-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dynamic stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replacement-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replacement semantics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stubbing-across-every-instance-allow-any-instance-of" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stubbing across every instance: allow-any-instance-of
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stubs-in-before-all-vs-before-each" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stubs in before-all vs before-each
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verifying-stubs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying stubs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spies-and-have-received" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Spies and have-received
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spy-pass-through-recorder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        spy(...) — pass-through recorder
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#expectobjtohave-receivedmethod" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        expect(obj).to.have-received('method')
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#call-count-modifiers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Call-count modifiers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#argument-matching-with" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument matching: .with(...)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#argument-matchers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument matchers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="doubles-stubbing">Doubles &amp; Stubbing<a class="headerlink" href="#doubles-stubbing" title="Permanent link">&para;</a></h1>
+<p>Behave gives you two complementary ways to stand in for collaborators:</p>
+<ul>
+<li><strong><code>double(...)</code></strong> creates a <em>new</em> stand-in object from scratch — useful when there's no real implementation to lean on.</li>
+<li><strong><code>allow(obj).to.receive('method')</code></strong> <em>stubs a method on an existing object or class</em>, so the real type stays in play but specific calls are intercepted.</li>
+</ul>
+<p>Both are exported from <code>BDD::Behave</code>. Stubs installed via <code>allow(...)</code> are automatically uninstalled at the end of each example, so they never leak between specs.</p>
+<h2 id="creating-an-ad-hoc-double">Creating an ad-hoc double<a class="headerlink" href="#creating-an-ad-hoc-double" title="Permanent link">&para;</a></h2>
+<p>The simplest form takes a name and a list of <code>method =&gt; value</code> pairs:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+
+<span class="n">describe</span> <span class="s">&#39;order summary&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;reads name and total from a user double&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$user</span> = <span class="n">double</span>(<span class="s">&#39;User&#39;</span>, <span class="nb">name</span> =&gt; <span class="s">&#39;alice&#39;</span>, <span class="nb">total</span> =&gt; <span class="mi">99</span>);
+
+    <span class="n">expect</span>(<span class="nv">$user</span>.<span class="nb">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;alice&#39;</span>);
+    <span class="n">expect</span>(<span class="nv">$user</span>.<span class="nb">total</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>The name is purely cosmetic — it shows up in error messages from the double itself.</p>
+<p><code>double()</code> with no arguments produces an <em>anonymous</em> double:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$d</span> = <span class="n">double</span>;
+<span class="nv">$d</span>.<span class="n">poke</span>;
+<span class="n">expect</span>(<span class="nv">$d</span>.<span class="n">received</span>(<span class="s">&#39;poke&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="what-unstubbed-methods-do">What unstubbed methods do<a class="headerlink" href="#what-unstubbed-methods-do" title="Permanent link">&para;</a></h2>
+<p>Calling a method on an ad-hoc double that you didn't stub returns <code>Any</code>. The call is still recorded, so you can verify it happened:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$log</span> = <span class="n">double</span>(<span class="s">&#39;Logger&#39;</span>);
+<span class="nv">$log</span>.<span class="nb">warn</span>(<span class="s">&#39;careful&#39;</span>);                    <span class="c1"># returns Any</span>
+<span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">received</span>(<span class="s">&#39;warn&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
+</code></pre></div></td></tr></table></div>
+<p>This makes ad-hoc doubles permissive by design — they let you focus on the calls you actually care about.</p>
+<h2 id="callable-stubs">Callable stubs<a class="headerlink" href="#callable-stubs" title="Permanent link">&para;</a></h2>
+<p>If the stub value is a <code>Callable</code>, the double invokes it with the call's arguments and returns the result:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$upper</span> = <span class="n">double</span>(<span class="s">&#39;Upper&#39;</span>, <span class="n">shout</span> =&gt; -&gt; <span class="nv">$s</span> { <span class="nv">$s</span>.<span class="nb">uc</span> });
+
+<span class="n">expect</span>(<span class="nv">$upper</span>.<span class="n">shout</span>(<span class="s">&#39;hi&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;HI&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>This is useful when the return value should depend on the input.</p>
+<h2 id="adding-stubs-after-creation">Adding stubs after creation<a class="headerlink" href="#adding-stubs-after-creation" title="Permanent link">&para;</a></h2>
+<p><code>add-stub</code> accepts the same <code>method =&gt; value</code> pairs as <code>double()</code> and returns the double, so you can chain:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$cfg</span> = <span class="n">double</span>(<span class="s">&#39;Config&#39;</span>).<span class="n">add-stub</span>(<span class="n">theme</span> =&gt; <span class="s">&#39;dark&#39;</span>, <span class="n">font</span> =&gt; <span class="s">&#39;mono&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$cfg</span>.<span class="n">theme</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;dark&#39;</span>);
+<span class="n">expect</span>(<span class="nv">$cfg</span>.<span class="n">font</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;mono&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="verifying-calls">Verifying calls<a class="headerlink" href="#verifying-calls" title="Permanent link">&para;</a></h2>
+<p>Every call is captured. The double exposes a small set of methods for asking what happened:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>received($method)</code></td>
+<td><code>True</code> if <code>$method</code> was called at least once.</td>
+</tr>
+<tr>
+<td><code>call-count($method)</code></td>
+<td>Number of times <code>$method</code> was called.</td>
+</tr>
+<tr>
+<td><code>calls-of($method)</code></td>
+<td>List of <code>Call</code> objects for <code>$method</code>, in the order they happened.</td>
+</tr>
+<tr>
+<td><code>calls</code></td>
+<td>List of every <code>Call</code> made on the double.</td>
+</tr>
+<tr>
+<td><code>reset</code></td>
+<td>Clears the recorded calls (stubs survive).</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>Call</code> exposes <code>method</code>, <code>args</code> (positional), <code>named</code>, <code>file</code>, and <code>line</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$log</span> = <span class="n">double</span>(<span class="s">&#39;Logger&#39;</span>);
+<span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;starting&#39;</span>);
+<span class="nv">$log</span>.<span class="nb">warn</span>(<span class="s">&#39;careful&#39;</span>, :<span class="n">reason</span><span class="s">&lt;low-disk&gt;</span>);
+
+<span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">call-count</span>(<span class="s">&#39;info&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
+<span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">calls-of</span>(<span class="s">&#39;warn&#39;</span>)[<span class="mi">0</span>].<span class="nb">named</span><span class="s">&lt;reason&gt;</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;low-disk&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="class-based-doubles">Class-based doubles<a class="headerlink" href="#class-based-doubles" title="Permanent link">&para;</a></h2>
+<p>Pass a class as the first argument and the double becomes <em>verifying</em>: every stubbed method must exist on the class, and dispatching a method the class doesn't have dies. This catches typos and stubs that drift out of sync with the real implementation.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Greeter</span> {
+  <span class="k">method</span> <span class="n">hello</span>(<span class="nv">$name</span>) { <span class="s">&quot;hello, $name&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;class-based double&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;stubs only methods that exist on the class&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$g</span> = <span class="n">double</span>(<span class="n">Greeter</span>, <span class="n">hello</span> =&gt; <span class="s">&#39;mocked&#39;</span>);
+
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;world&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;mocked&#39;</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">double-class</span> === <span class="n">Greeter</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">double-name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;Greeter&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>What you can't do with a class-based double:</p>
+<ul>
+<li>Stub a method the class doesn't define — <code>double(Greeter, missing =&gt; 1)</code> dies at creation.</li>
+<li>Call a method the class doesn't define — <code>$g.bogus</code> dies at dispatch.</li>
+</ul>
+<p>The double does <em>not</em> invoke the real implementation; the class is only consulted for validation.</p>
+<h2 id="reserved-method-names">Reserved method names<a class="headerlink" href="#reserved-method-names" title="Permanent link">&para;</a></h2>
+<p>Because <code>Double</code> exposes the verification API on the same object you call stubbed methods on, a handful of method names are reserved and cannot be used as stub keys:</p>
+<p><code>add-stub</code>, <code>call-count</code>, <code>calls</code>, <code>calls-of</code>, <code>double-class</code>, <code>double-name</code>, <code>received</code>, <code>reset</code>, <code>stubs</code>.</p>
+<p>If your real collaborator uses one of these names, stub the method directly on a real instance with <code>allow(obj).to.receive(...)</code> instead.</p>
+<h2 id="stubbing-real-objects-with-allow">Stubbing real objects with <code>allow</code><a class="headerlink" href="#stubbing-real-objects-with-allow" title="Permanent link">&para;</a></h2>
+<p><code>allow($target).to.receive('method')</code> installs a temporary stub on a method of an existing class or instance. The stub is automatically uninstalled when the example ends, so the original implementation is restored before the next example runs.</p>
+<p>The target can be:</p>
+<ul>
+<li>An <strong>instance</strong> — only that one instance gets the stub; sibling instances dispatch normally.</li>
+<li>A <strong>class</strong> (type object) — affects dispatch through the class's method table, so <em>every</em> instance of the class sees the stub. Use <code>allow-any-instance-of(Class)</code> for the same effect with clearer intent.</li>
+<li>A <strong><code>Double</code></strong> — the stub is wired through the double's stub table.</li>
+</ul>
+<h2 id="partial-mocking">Partial mocking<a class="headerlink" href="#partial-mocking" title="Permanent link">&para;</a></h2>
+<p><code>allow($obj).to.receive('m')</code> only replaces <code>m</code> — every other method on the same instance keeps its real behavior, including methods that read or mutate state. This is the core of partial mocking: stub the collaborator boundaries, leave the rest of the object alone.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Account</span> {
+  <span class="k">has</span> <span class="nb">Int</span> <span class="nv">$.balance</span> <span class="k">is</span> <span class="k">rw</span> = <span class="mi">0</span>;
+  <span class="k">method</span> <span class="n">deposit</span>(<span class="nv">$n</span>) { <span class="nv">$!balance</span> += <span class="nv">$n</span>; <span class="nv">$!balance</span> }
+  <span class="k">method</span> <span class="n">label</span>       { <span class="s">&quot;Account($!balance)&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;partial mock&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;stubs label but lets deposit run for real&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$a</span> = <span class="n">Account</span>.<span class="nb">new</span>(<span class="n">balance</span> =&gt; <span class="mi">100</span>);
+
+    <span class="n">allow</span>(<span class="nv">$a</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;label&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;STUB&#39;</span>);
+
+    <span class="n">expect</span>(<span class="nv">$a</span>.<span class="n">label</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;STUB&#39;</span>);         <span class="c1"># stubbed</span>
+    <span class="n">expect</span>(<span class="nv">$a</span>.<span class="n">deposit</span>(<span class="mi">50</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">150</span>);      <span class="c1"># real implementation</span>
+    <span class="n">expect</span>(<span class="nv">$a</span>.<span class="n">balance</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">150</span>);          <span class="c1"># real state mutation</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>You can stub multiple methods on the same instance independently — each stub is tracked separately and removed at the end of the example.</p>
+<h2 id="return-values">Return values<a class="headerlink" href="#return-values" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Greeter</span> {
+  <span class="k">method</span> <span class="n">hello</span>(<span class="nv">$name</span>) { <span class="s">&quot;hello, $name&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;allow + and-return&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;stubs hello on this one instance&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$g</span> = <span class="n">Greeter</span>.<span class="nb">new</span>;
+    <span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;STUB&#39;</span>);
+
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;alice&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;STUB&#39;</span>);
+    <span class="n">expect</span>(<span class="n">Greeter</span>.<span class="nb">new</span>.<span class="n">hello</span>(<span class="s">&#39;bob&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, bob&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p><code>.and-return</code> is optional — calling <code>allow($g).to.receive('hello')</code> with no follow-up stubs the method to return <code>Any</code>.</p>
+<h2 id="raising-exceptions">Raising exceptions<a class="headerlink" href="#raising-exceptions" title="Permanent link">&para;</a></h2>
+<p><code>.and-raise</code> makes the stubbed method throw the supplied exception:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">raise</span>(<span class="o">X</span>::<span class="n">AdHoc</span>.<span class="nb">new</span>(<span class="nb">payload</span> =&gt; <span class="s">&#39;not found&#39;</span>));
+
+<span class="k">my</span> <span class="nv">$msg</span> = <span class="s">&#39;&#39;</span>;
+<span class="k">try</span> { <span class="nv">$repo</span>.<span class="n">find</span>(<span class="mi">7</span>); <span class="k">CATCH</span> { <span class="k">default</span> { <span class="nv">$msg</span> = .<span class="nb">message</span> } } }
+<span class="n">expect</span>(<span class="nv">$msg</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;not found&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="delegating-to-the-real-implementation">Delegating to the real implementation<a class="headerlink" href="#delegating-to-the-real-implementation" title="Permanent link">&para;</a></h2>
+<p><code>.and-call-original</code> makes the stubbed method delegate back to the original. The most common use is "re-stubbing" a method back to its real behavior after a previous <code>allow</code> set up a return value:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;mocked&#39;</span>);
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;mocked&#39;</span>);
+
+<span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">call-original</span>;
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, a&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p><code>.and-call-original</code> is not supported on a <code>Double</code> — there is no original implementation to call back to.</p>
+<h2 id="dynamic-stubs">Dynamic stubs<a class="headerlink" href="#dynamic-stubs" title="Permanent link">&para;</a></h2>
+<p><code>.and-do(&amp;callable)</code> invokes the supplied callable with the call's positional arguments. The callable's return value becomes the stubbed method's return value:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">do</span>(-&gt; <span class="nv">$name</span> { <span class="s">&quot;STUB($name.uc())&quot;</span> });
+
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;alice&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;STUB(ALICE)&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="replacement-semantics">Replacement semantics<a class="headerlink" href="#replacement-semantics" title="Permanent link">&para;</a></h2>
+<p>A second <code>allow($t).to.receive('m')</code> on the same target+method pair <em>replaces</em> the first stub. Only one allow-stub per <code>(target, method)</code> is active at a time:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;first&#39;</span>);
+<span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;hello&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;second&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;a&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;second&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="stubbing-across-every-instance-allow-any-instance-of">Stubbing across every instance: <code>allow-any-instance-of</code><a class="headerlink" href="#stubbing-across-every-instance-allow-any-instance-of" title="Permanent link">&para;</a></h2>
+<p><code>allow-any-instance-of(Class).to.receive('m')</code> stubs an instance method at the class's method-table level, so every instance — existing or future — dispatches into the stub for the rest of the example.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Repo</span> {
+  <span class="k">method</span> <span class="n">find</span>(<span class="nv">$id</span>) { <span class="s">&quot;real:$id&quot;</span> }
+}
+
+<span class="n">describe</span> <span class="s">&#39;stub on every instance&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;affects every instance of Repo for the duration of the example&#39;</span>, {
+    <span class="n">allow-any-instance-of</span>(<span class="n">Repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;stub&#39;</span>);
+
+    <span class="n">expect</span>(<span class="n">Repo</span>.<span class="nb">new</span>.<span class="n">find</span>(<span class="mi">1</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;stub&#39;</span>);
+    <span class="n">expect</span>(<span class="n">Repo</span>.<span class="nb">new</span>.<span class="n">find</span>(<span class="mi">2</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;stub&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>A per-instance <code>allow($obj).to.receive('m')</code> for the same method takes precedence over <code>allow-any-instance-of(Class)</code>; only that one instance sees the instance-specific stub, and other instances continue to see the class-wide one.</p>
+<p><code>allow-any-instance-of</code> requires a type object — passing an instance dies with a clear error. The same method-existence validation as <code>allow(...)</code> applies: stubbing a method the class doesn't define dies before any wrap is installed. The full <code>.and-return</code> / <code>.and-raise</code> / <code>.and-call-original</code> / <code>.and-do</code> chain works the same way as on <code>allow(...)</code>.</p>
+<h2 id="stubs-in-before-all-vs-before-each">Stubs in <code>before-all</code> vs <code>before-each</code><a class="headerlink" href="#stubs-in-before-all-vs-before-each" title="Permanent link">&para;</a></h2>
+<p>Auto-cleanup is per-example: a stub installed inside an <code>it</code> (or in <code>before-each</code>) is removed before the next example. A stub installed in <code>before-all</code> lives for the entire <code>describe</code> it sits in:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;group-wide stub&#39;</span>, {
+  <span class="o">before-</span><span class="n">all</span> {
+    <span class="n">allow</span>(<span class="n">Repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;group-stub&#39;</span>);
+  }
+
+  <span class="n">it</span> <span class="s">&#39;first example sees it&#39;</span>, { <span class="n">expect</span>(<span class="n">Repo</span>.<span class="n">find</span>(<span class="mi">1</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;group-stub&#39;</span>) }
+  <span class="n">it</span> <span class="s">&#39;second example also sees it&#39;</span>, { <span class="n">expect</span>(<span class="n">Repo</span>.<span class="n">find</span>(<span class="mi">2</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;group-stub&#39;</span>) }
+}
+</code></pre></div></td></tr></table></div>
+<h2 id="verifying-stubs">Verifying stubs<a class="headerlink" href="#verifying-stubs" title="Permanent link">&para;</a></h2>
+<p><code>allow($t).to.receive('m')</code> rejects method names that don't exist on the target's class. This catches typos and stubs that drift out of sync with the real implementation:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;imaginary&#39;</span>);   <span class="c1"># dies — no such method on Greeter</span>
+<span class="n">allow</span>(<span class="n">Greeter</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;also-no&#39;</span>); <span class="c1"># dies — same check on the class</span>
+</code></pre></div></td></tr></table></div>
+<p>For a class-based <code>Double</code>, the stubbed method must exist on the wrapped class.</p>
+<h2 id="spies-and-have-received">Spies and <code>have-received</code><a class="headerlink" href="#spies-and-have-received" title="Permanent link">&para;</a></h2>
+<p>Doubles record their calls automatically. To record calls on a <em>real</em> object, install an <code>allow(...).to.receive(...)</code> stub or use <code>spy(...)</code>. Then verify with <code>expect(obj).to.have-received('method')</code>.</p>
+<h2 id="spy-pass-through-recorder"><code>spy(...)</code> — pass-through recorder<a class="headerlink" href="#spy-pass-through-recorder" title="Permanent link">&para;</a></h2>
+<p><code>spy()</code> has three forms:</p>
+<table>
+<thead>
+<tr>
+<th>Form</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spy()</code> / <code>spy('Name')</code></td>
+<td>Same as <code>double()</code> / <code>double('Name')</code>. Permissive recording double.</td>
+</tr>
+<tr>
+<td><code>spy(SomeClass)</code></td>
+<td>Same as <code>double(SomeClass)</code>. Class-based verifying double.</td>
+</tr>
+<tr>
+<td><code>spy($real-instance)</code></td>
+<td>Wraps each user-defined method on the instance with a recording stub that delegates to the real implementation. Returns the same instance.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Greeter</span> { <span class="k">method</span> <span class="n">hello</span>(<span class="nv">$name</span>) { <span class="s">&quot;hello, $name&quot;</span> } }
+
+<span class="n">describe</span> <span class="s">&#39;spying on a real object&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;records calls without changing behavior&#39;</span>, {
+    <span class="k">my</span> <span class="nv">$g</span> = <span class="n">Greeter</span>.<span class="nb">new</span>;
+    <span class="n">spy</span>(<span class="nv">$g</span>);
+
+    <span class="n">expect</span>(<span class="nv">$g</span>.<span class="n">hello</span>(<span class="s">&#39;alice&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hello, alice&#39;</span>);
+    <span class="n">expect</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;hello&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>A spy on a real instance only affects that one instance — sibling instances dispatch normally. Stubs installed by <code>spy(...)</code> are auto-cleaned at end of example, like <code>allow(...)</code> stubs.</p>
+<h2 id="expectobjtohave-receivedmethod"><code>expect(obj).to.have-received('method')</code><a class="headerlink" href="#expectobjtohave-receivedmethod" title="Permanent link">&para;</a></h2>
+<p><code>have-received</code> checks call records on a Double, on a <code>spy(...)</code>-wrapped instance, or on any object whose method has been stubbed via <code>allow(...)</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$log</span> = <span class="n">double</span>(<span class="s">&#39;Logger&#39;</span>);
+<span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;starting&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>);     <span class="c1"># at least one call</span>
+</code></pre></div></td></tr></table></div>
+<p>For real objects, you must install a recorder first (via <code>allow(...)</code> or <code>spy(...)</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$repo</span> = <span class="n">Repo</span>.<span class="nb">new</span>;
+<span class="n">allow</span>(<span class="nv">$repo</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;find&#39;</span>).<span class="o">and-</span><span class="n">call-original</span>;
+
+<span class="nv">$repo</span>.<span class="n">find</span>(<span class="mi">7</span>);
+<span class="n">expect</span>(<span class="nv">$repo</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;find&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>If no stub is installed when verifying a real object, <code>have-received</code> records a clear failure asking you to set one up.</p>
+<p><code>expect(obj).not.to.have-received('m')</code> asserts the method was <em>not</em> called.</p>
+<h2 id="call-count-modifiers">Call-count modifiers<a class="headerlink" href="#call-count-modifiers" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Modifier</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.once</code></td>
+<td>exactly 1 call</td>
+</tr>
+<tr>
+<td><code>.twice</code></td>
+<td>exactly 2 calls</td>
+</tr>
+<tr>
+<td><code>.thrice</code></td>
+<td>exactly 3 calls</td>
+</tr>
+<tr>
+<td><code>.times(n)</code></td>
+<td>exactly N calls</td>
+</tr>
+<tr>
+<td><code>.exactly(n)</code></td>
+<td>alias for <code>.times(n)</code></td>
+</tr>
+<tr>
+<td><code>.at-least(n)</code></td>
+<td>N or more calls</td>
+</tr>
+<tr>
+<td><code>.at-most(n)</code></td>
+<td>N or fewer calls</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="n">twice</span>;
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="n">at-least</span>(<span class="mi">2</span>);
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="n">at-most</span>(<span class="mi">3</span>);
+</code></pre></div></td></tr></table></div>
+<p>Each chained modifier <em>replaces</em> any failure recorded by the previous step, so chains like <code>.have-received('m').with('a').twice</code> produce at most one failure even if the first check would have failed on its own.</p>
+<h2 id="argument-matching-with">Argument matching: <code>.with(...)</code><a class="headerlink" href="#argument-matching-with" title="Permanent link">&para;</a></h2>
+<p><code>.with(args)</code> filters the recorded calls and only counts those whose args match.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;starting&#39;</span>);
+<span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;done&#39;</span>);
+
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="s">&#39;starting&#39;</span>);     <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="s">&#39;starting&#39;</span>).<span class="n">once</span>; <span class="c1"># passes</span>
+</code></pre></div></td></tr></table></div>
+<p>Both positional and named args are supported:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">allow</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="nb">receive</span>(<span class="s">&#39;greet&#39;</span>).<span class="o">and-</span><span class="n">return</span>(<span class="s">&#39;hi&#39;</span>);
+<span class="nv">$g</span>.<span class="n">greet</span>(:<span class="n">lang</span><span class="s">&lt;en&gt;</span>);
+<span class="n">expect</span>(<span class="nv">$g</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;greet&#39;</span>).<span class="k">with</span>(:<span class="n">lang</span><span class="s">&lt;en&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="argument-matchers">Argument matchers<a class="headerlink" href="#argument-matchers" title="Permanent link">&para;</a></h2>
+<p>For each positional or named arg, you can supply a matcher object instead of a literal value:</p>
+<table>
+<thead>
+<tr>
+<th>Matcher</th>
+<th>Matches</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anything</code></td>
+<td>Any value, including undefined.</td>
+</tr>
+<tr>
+<td><code>instance-of(Type)</code></td>
+<td>Anything for which <code>$arg ~~ Type</code> is true.</td>
+</tr>
+<tr>
+<td><code>hash-including(:k&lt;v&gt;, ...)</code></td>
+<td>Any <code>Associative</code> containing the listed key/value pairs.</td>
+</tr>
+<tr>
+<td><code>array-including(item, ...)</code></td>
+<td>Any <code>Positional</code> containing all the listed items.</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$log</span>.<span class="n">info</span>(<span class="s">&#39;hello&#39;</span>, <span class="mi">42</span>);
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="n">instance-of</span>(<span class="nb">Str</span>), <span class="n">instance-of</span>(<span class="nb">Int</span>));
+
+<span class="nv">$log</span>.<span class="n">info</span>({ <span class="n">user</span> =&gt; <span class="s">&#39;alice&#39;</span>, <span class="n">region</span> =&gt; <span class="s">&#39;us&#39;</span>, <span class="o">extra</span> =&gt; <span class="mi">1</span> });
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="n">hash-including</span>(<span class="n">user</span> =&gt; <span class="s">&#39;alice&#39;</span>));
+
+<span class="nv">$log</span>.<span class="n">info</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>, <span class="mi">4</span>, <span class="mi">5</span>]);
+<span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(<span class="n">array-including</span>(<span class="mi">2</span>, <span class="mi">4</span>));
+</code></pre></div></td></tr></table></div>
+<p>Matchers nest inside <code>hash-including</code> and <code>array-including</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$log</span>).<span class="nb">to</span>.<span class="n">have-received</span>(<span class="s">&#39;info&#39;</span>).<span class="k">with</span>(
+  <span class="n">hash-including</span>(<span class="n">user</span> =&gt; <span class="n">instance-of</span>(<span class="nb">Str</span>), <span class="nb">count</span> =&gt; <span class="n">anything</span>)
+);
+</code></pre></div></td></tr></table></div>
+<h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>spy($real-instance)</code> wraps user-defined methods; methods inherited from <code>Mu</code>/<code>Any</code> and submethods (e.g. <code>BUILD</code>, <code>POPULATE</code>) are not wrapped.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

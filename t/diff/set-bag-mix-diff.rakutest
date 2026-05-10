@@ -1,0 +1,34 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+{
+  my $out = strip-ansi(render-diff((set <a b c>), (set <a b d>)));
+  ok $out.contains('Set('), 'set diff opens with Set(';
+  ok $out.contains('-   d,'), 'set diff marks expected-only element';
+  ok $out.contains('+   c,'), 'set diff marks given-only element';
+}
+
+{
+  my $out = strip-ansi(render-diff((bag <a a b>), (bag <a b b>)));
+  ok $out.contains('Bag('),          'bag diff opens with Bag(';
+  ok $out.contains('-   "a" => 1'),  'bag diff shows expected count';
+  ok $out.contains('+   "a" => 2'),  'bag diff shows given count';
+}
+
+{
+  my $a = Mix.new-from-pairs((a => 1.5), (b => 2.0));
+  my $b = Mix.new-from-pairs((a => 1.5), (b => 3.0));
+  my $out = strip-ansi(render-diff($a, $b));
+  ok $out.contains('Mix('),       'mix diff opens with Mix(';
+  ok $out.contains('"b" => 2'),   'mix diff shows given value';
+  ok $out.contains('"b" => 3'),   'mix diff shows expected value';
+}
+
+done-testing;
