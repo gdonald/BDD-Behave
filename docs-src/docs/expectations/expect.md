@@ -80,6 +80,8 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `contain-exactly` | Order-independent multiset equality on arrays / lists. See [Matchers › ContainExactlyMatcher](matchers.md#containexactlymatcher-built-in). |
 | `match-array` | Single-array alias for `contain-exactly`. |
 | `include` | Membership check across arrays, hashes, sets/bags, strings, and ranges. See [Matchers › IncludeMatcher](matchers.md#includematcher-built-in). |
+| `start-with` | Sequence prefix check for arrays / lists; per-arg prefix check for strings. See [Matchers › StartWithMatcher](matchers.md#startwithmatcher-built-in). |
+| `end-with` | Sequence suffix check for arrays / lists; per-arg suffix check for strings. See [Matchers › EndWithMatcher](matchers.md#endwithmatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -88,6 +90,10 @@ expect([1, 2, 3]).to.match-array([3, 1, 2]);
 expect([1, 2, 3]).to.include(2);
 expect({ a => 1 }).to.include(:a(1));
 expect('hello').to.include('ell');
+expect([1, 2, 3]).to.start-with(1, 2);
+expect([1, 2, 3]).to.end-with(2, 3);
+expect('hello world').to.start-with('hello');
+expect('hello world').to.end-with('world');
 ```
 
 ## Custom matchers

@@ -155,6 +155,57 @@ expect([1, 2, 3]).to.not.include(99);
 Failure messages render as `expected <actual> to include <items>` (or `not
 to include` under `.not`).
 
+## StartWithMatcher (built-in)
+
+`start-with` checks that a sequence (Array, List) begins with the supplied
+items, or that a string begins with each supplied prefix:
+
+```raku
+expect([1, 2, 3]).to.start-with(1);            # passes
+expect([1, 2, 3]).to.start-with(1, 2);         # passes (in-order prefix)
+expect([1, 2, 3]).to.start-with(2);            # fails
+expect([1, 2, 3]).to.start-with(2, 1);         # fails (out of order)
+expect([1]).to.start-with(1, 2);               # fails (prefix longer)
+
+expect('hello world').to.start-with('hello');         # passes
+expect('hello world').to.start-with('hello', 'h');    # passes (each prefix AND)
+expect('hello world').to.start-with('hello', 'world');# fails ('world' is not a prefix)
+```
+
+For `Positional` / `Iterable` actuals, the args form an in-order prefix matched
+via `eqv`. For `Str` actuals, each arg must independently be a prefix of the
+string (AND semantics).
+
+The slurp is non-flattening, so passing a single array (`start-with([1, 2])`)
+looks for that array as one prefix element. To spread an existing array, use
+`|@arr`.
+
+`start-with` rejects undefined or non-iterable, non-string actuals. Empty arg
+lists die with `start-with requires at least one item`.
+
+Failure messages render as `expected <actual> to start with <items>` (or `not
+to start with` under `.not`).
+
+## EndWithMatcher (built-in)
+
+`end-with` mirrors `start-with` for the trailing end of a sequence or string:
+
+```raku
+expect([1, 2, 3]).to.end-with(3);              # passes
+expect([1, 2, 3]).to.end-with(2, 3);           # passes (in-order suffix)
+expect([1, 2, 3]).to.end-with(2);              # fails
+expect([1, 2, 3]).to.end-with(3, 2);           # fails (out of order)
+expect([1]).to.end-with(1, 2);                 # fails (suffix longer)
+
+expect('hello world').to.end-with('world');           # passes
+expect('hello world').to.end-with('world', 'd');      # passes (each suffix AND)
+expect('hello world').to.end-with('world', 'hello');  # fails ('hello' is not a suffix)
+```
+
+Same slurp / type / empty-arg conventions as `start-with`. Failure messages
+render as `expected <actual> to end with <items>` (or `not to end with` under
+`.not`).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

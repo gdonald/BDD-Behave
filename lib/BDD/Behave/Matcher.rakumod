@@ -70,6 +70,97 @@ class ContainExactlyMatcher does Matcher is export {
   method description(--> Str) { 'contain exactly ' ~ self.format-expected }
 }
 
+class StartWithMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+
+    given $actual {
+      when Str {
+        for $!expected.list -> $item {
+          return False unless $actual.starts-with($item.Str);
+        }
+        return True;
+      }
+      when Positional | Iterable {
+        my @arr = $actual.list;
+        my @items = $!expected.list;
+        return False if @items.elems > @arr.elems;
+        for @items.kv -> $i, $item {
+          return False unless @arr[$i] eqv $item;
+        }
+        return True;
+      }
+      default {
+        return False;
+      }
+    }
+  }
+
+  method format-expected(--> Str) {
+    $!expected.list.map(*.raku).join(', ');
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to start with " ~ self.format-expected;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to start with " ~ self.format-expected;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'start with ' ~ self.format-expected }
+}
+
+class EndWithMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+
+    given $actual {
+      when Str {
+        for $!expected.list -> $item {
+          return False unless $actual.ends-with($item.Str);
+        }
+        return True;
+      }
+      when Positional | Iterable {
+        my @arr = $actual.list;
+        my @items = $!expected.list;
+        return False if @items.elems > @arr.elems;
+        my $offset = @arr.elems - @items.elems;
+        for @items.kv -> $i, $item {
+          return False unless @arr[$offset + $i] eqv $item;
+        }
+        return True;
+      }
+      default {
+        return False;
+      }
+    }
+  }
+
+  method format-expected(--> Str) {
+    $!expected.list.map(*.raku).join(', ');
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to end with " ~ self.format-expected;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to end with " ~ self.format-expected;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'end with ' ~ self.format-expected }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

@@ -904,6 +904,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#startwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StartWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EndWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1131,6 +1153,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#startwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StartWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EndWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1345,6 +1389,60 @@ than spreading it. To spread an existing array, use <code>|@arr</code>.</p>
 </code></pre></div></td></tr></table></div>
 <p>Failure messages render as <code>expected &lt;actual&gt; to include &lt;items&gt;</code> (or <code>not
 to include</code> under <code>.not</code>).</p>
+<h2 id="startwithmatcher-built-in">StartWithMatcher (built-in)<a class="headerlink" href="#startwithmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>start-with</code> checks that a sequence (Array, List) begins with the supplied
+items, or that a string begins with each supplied prefix:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">1</span>);            <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">1</span>, <span class="mi">2</span>);         <span class="c1"># passes (in-order prefix)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">2</span>);            <span class="c1"># fails</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">2</span>, <span class="mi">1</span>);         <span class="c1"># fails (out of order)</span>
+<span class="n">expect</span>([<span class="mi">1</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">1</span>, <span class="mi">2</span>);               <span class="c1"># fails (prefix longer)</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;hello&#39;</span>);         <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;hello&#39;</span>, <span class="s">&#39;h&#39;</span>);    <span class="c1"># passes (each prefix AND)</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;hello&#39;</span>, <span class="s">&#39;world&#39;</span>);<span class="c1"># fails (&#39;world&#39; is not a prefix)</span>
+</code></pre></div></td></tr></table></div>
+<p>For <code>Positional</code> / <code>Iterable</code> actuals, the args form an in-order prefix matched
+via <code>eqv</code>. For <code>Str</code> actuals, each arg must independently be a prefix of the
+string (AND semantics).</p>
+<p>The slurp is non-flattening, so passing a single array (<code>start-with([1, 2])</code>)
+looks for that array as one prefix element. To spread an existing array, use
+<code>|@arr</code>.</p>
+<p><code>start-with</code> rejects undefined or non-iterable, non-string actuals. Empty arg
+lists die with <code>start-with requires at least one item</code>.</p>
+<p>Failure messages render as <code>expected &lt;actual&gt; to start with &lt;items&gt;</code> (or <code>not
+to start with</code> under <code>.not</code>).</p>
+<h2 id="endwithmatcher-built-in">EndWithMatcher (built-in)<a class="headerlink" href="#endwithmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>end-with</code> mirrors <code>start-with</code> for the trailing end of a sequence or string:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">3</span>);              <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">2</span>, <span class="mi">3</span>);           <span class="c1"># passes (in-order suffix)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">2</span>);              <span class="c1"># fails</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">3</span>, <span class="mi">2</span>);           <span class="c1"># fails (out of order)</span>
+<span class="n">expect</span>([<span class="mi">1</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">1</span>, <span class="mi">2</span>);                 <span class="c1"># fails (suffix longer)</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;world&#39;</span>);           <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;world&#39;</span>, <span class="s">&#39;d&#39;</span>);      <span class="c1"># passes (each suffix AND)</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;world&#39;</span>, <span class="s">&#39;hello&#39;</span>);  <span class="c1"># fails (&#39;hello&#39; is not a suffix)</span>
+</code></pre></div></td></tr></table></div>
+<p>Same slurp / type / empty-arg conventions as <code>start-with</code>. Failure messages
+render as <code>expected &lt;actual&gt; to end with &lt;items&gt;</code> (or <code>not to end with</code> under
+<code>.not</code>).</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

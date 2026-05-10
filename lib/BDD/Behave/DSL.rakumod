@@ -514,6 +514,20 @@ class ExpectationBuilder {
     self!apply-matcher(ContainExactlyMatcher.new(:expected($expected.list)));
   }
 
+  method start-with(**@items) {
+    if @items.elems == 0 {
+      die "start-with requires at least one item";
+    }
+    self!apply-matcher(StartWithMatcher.new(:expected(@items)));
+  }
+
+  method end-with(**@items) {
+    if @items.elems == 0 {
+      die "end-with requires at least one item";
+    }
+    self!apply-matcher(EndWithMatcher.new(:expected(@items)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),

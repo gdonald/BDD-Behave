@@ -1,0 +1,254 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 76;
+
+# StartWithMatcher does the Matcher role.
+{
+  my $m = StartWithMatcher.new(:expected([1]));
+  ok $m ~~ Matcher, 'StartWithMatcher does Matcher';
+}
+
+# StartWithMatcher: array prefix matching.
+{
+  my $m1 = StartWithMatcher.new(:expected([1]));
+  ok $m1.matches([1, 2, 3]), 'matches single-element prefix';
+  nok $m1.matches([2, 1, 3]), 'rejects when first element differs';
+
+  my $m2 = StartWithMatcher.new(:expected([1, 2]));
+  ok $m2.matches([1, 2, 3]), 'matches multi-element prefix';
+  nok $m2.matches([2, 1, 3]), 'rejects when prefix appears out of order';
+
+  my $m3 = StartWithMatcher.new(:expected([1, 2, 3]));
+  ok $m3.matches([1, 2, 3]), 'matches when prefix is whole array';
+  nok $m3.matches([1, 2]), 'rejects when prefix longer than actual';
+}
+
+# StartWithMatcher: List support.
+{
+  my $m = StartWithMatcher.new(:expected([1]));
+  ok $m.matches((1, 2, 3)), 'matches List prefix';
+}
+
+# StartWithMatcher: nested via eqv.
+{
+  my @nested = ([1, 2],);
+  my $m = StartWithMatcher.new(:expected(@nested));
+  ok $m.matches([[1, 2], [3, 4]]), 'matches nested element via eqv';
+  nok $m.matches([[1, 3], [3, 4]]), 'rejects when nested element differs';
+}
+
+# StartWithMatcher: strings.
+{
+  my $m = StartWithMatcher.new(:expected(['hello']));
+  ok $m.matches('hello world'), 'matches single string prefix';
+  nok $m.matches('world hello'), 'rejects when prefix missing';
+
+  my $multi = StartWithMatcher.new(:expected(['hello', 'h']));
+  ok $multi.matches('hello world'), 'matches multiple prefixes (AND)';
+
+  my $bad = StartWithMatcher.new(:expected(['hello', 'world']));
+  nok $bad.matches('hello world'), 'rejects when one prefix missing';
+
+  my $empty = StartWithMatcher.new(:expected(['']));
+  ok $empty.matches('hello'), 'empty string is always a prefix';
+}
+
+# StartWithMatcher: type guards.
+{
+  my $m = StartWithMatcher.new(:expected([1]));
+  nok $m.matches(Any), 'rejects undefined actual';
+  nok $m.matches(42), 'rejects non-iterable, non-string actual';
+}
+
+# StartWithMatcher: failure messages.
+{
+  my $m = StartWithMatcher.new(:expected([1, 2]));
+  is $m.failure-message([3, 4, 5]),
+     'expected $[3, 4, 5] to start with 1, 2',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated([1, 2, 3]),
+     'expected $[1, 2, 3] not to start with 1, 2',
+     'failure-message-negated renders given and expected';
+}
+
+# StartWithMatcher: expected-value and description.
+{
+  my $m = StartWithMatcher.new(:expected([1, 2]));
+  is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
+  is $m.description, 'start with 1, 2', 'description summarises items';
+}
+
+# expect(...).to.start-with(...) integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.start-with(1, 2), 'expect.to.start-with passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.start-with(2), 'expect.to.start-with fails for non-prefix';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected $[1, 2, 3] to start with 2', 'failure message preserved';
+  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply Failures.list[0].expected.Array, [2], 'failure expected preserved';
+  Failures.list = ();
+}
+
+# Negation flow.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.not.start-with(2), '.not passes when prefix absent';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.not.start-with(1), '.not fails when prefix present';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message, 'expected $[1, 2, 3] not to start with 1', 'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# Empty arg list dies.
+{
+  my $error;
+  try {
+    expect([1, 2, 3]).to.start-with();
+    CATCH { default { $error = .message } }
+  }
+  is $error, 'start-with requires at least one item', 'empty start-with() dies';
+}
+
+# EndWithMatcher does the Matcher role.
+{
+  my $m = EndWithMatcher.new(:expected([1]));
+  ok $m ~~ Matcher, 'EndWithMatcher does Matcher';
+}
+
+# EndWithMatcher: array suffix matching.
+{
+  my $m1 = EndWithMatcher.new(:expected([3]));
+  ok $m1.matches([1, 2, 3]), 'matches single-element suffix';
+  nok $m1.matches([3, 1, 2]), 'rejects when last element differs';
+
+  my $m2 = EndWithMatcher.new(:expected([2, 3]));
+  ok $m2.matches([1, 2, 3]), 'matches multi-element suffix';
+  nok $m2.matches([1, 3, 2]), 'rejects when suffix appears out of order';
+
+  my $m3 = EndWithMatcher.new(:expected([1, 2, 3]));
+  ok $m3.matches([1, 2, 3]), 'matches when suffix is whole array';
+  nok $m3.matches([1, 2]), 'rejects when suffix longer than actual';
+}
+
+# EndWithMatcher: List support.
+{
+  my $m = EndWithMatcher.new(:expected([3]));
+  ok $m.matches((1, 2, 3)), 'matches List suffix';
+}
+
+# EndWithMatcher: nested via eqv.
+{
+  my @nested = ([3, 4],);
+  my $m = EndWithMatcher.new(:expected(@nested));
+  ok $m.matches([[1, 2], [3, 4]]), 'matches nested element via eqv';
+  nok $m.matches([[1, 2], [3, 5]]), 'rejects when nested element differs';
+}
+
+# EndWithMatcher: strings.
+{
+  my $m = EndWithMatcher.new(:expected(['world']));
+  ok $m.matches('hello world'), 'matches single string suffix';
+  nok $m.matches('world hello'), 'rejects when suffix missing';
+
+  my $multi = EndWithMatcher.new(:expected(['world', 'd']));
+  ok $multi.matches('hello world'), 'matches multiple suffixes (AND)';
+
+  my $bad = EndWithMatcher.new(:expected(['world', 'hello']));
+  nok $bad.matches('hello world'), 'rejects when one suffix missing';
+
+  my $empty = EndWithMatcher.new(:expected(['']));
+  ok $empty.matches('hello'), 'empty string is always a suffix';
+}
+
+# EndWithMatcher: type guards.
+{
+  my $m = EndWithMatcher.new(:expected([1]));
+  nok $m.matches(Any), 'rejects undefined actual';
+  nok $m.matches(42), 'rejects non-iterable, non-string actual';
+}
+
+# EndWithMatcher: failure messages.
+{
+  my $m = EndWithMatcher.new(:expected([1, 2]));
+  is $m.failure-message([3, 4, 5]),
+     'expected $[3, 4, 5] to end with 1, 2',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated([4, 1, 2]),
+     'expected $[4, 1, 2] not to end with 1, 2',
+     'failure-message-negated renders given and expected';
+}
+
+# EndWithMatcher: expected-value and description.
+{
+  my $m = EndWithMatcher.new(:expected([1, 2]));
+  is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
+  is $m.description, 'end with 1, 2', 'description summarises items';
+}
+
+# expect(...).to.end-with(...) integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.end-with(2, 3), 'expect.to.end-with passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.end-with(2), 'expect.to.end-with fails for non-suffix';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected $[1, 2, 3] to end with 2', 'failure message preserved';
+  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply Failures.list[0].expected.Array, [2], 'failure expected preserved';
+  Failures.list = ();
+}
+
+# Negation flow.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.not.end-with(2), '.not passes when suffix absent';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 3]).to.not.end-with(3), '.not fails when suffix present';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message, 'expected $[1, 2, 3] not to end with 3', 'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# Empty arg list dies.
+{
+  my $error;
+  try {
+    expect([1, 2, 3]).to.end-with();
+    CATCH { default { $error = .message } }
+  }
+  is $error, 'end-with requires at least one item', 'empty end-with() dies';
+}
+
+# String integration.
+{
+  Failures.list = ();
+  ok expect('hello world').to.start-with('hello'), 'string start-with passes';
+  ok expect('hello world').to.end-with('world'), 'string end-with passes';
+
+  nok expect('hello world').to.start-with('world'), 'string start-with fails for non-prefix';
+  is Failures.list.elems, 1, 'one failure for bad string prefix';
+  Failures.list = ();
+
+  nok expect('hello world').to.end-with('hello'), 'string end-with fails for non-suffix';
+  is Failures.list.elems, 1, 'one failure for bad string suffix';
+  Failures.list = ();
+}
