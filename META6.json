@@ -2,9 +2,10 @@
   "name": "BDD::Behave",
   "description": "Behavior driven development framework",
   "version": "0.0.4",
+  "api": "1",
   "perl": "6.d",
   "authors": ["Greg Donald"],
-  "auth": "github:gdonald",
+  "auth": "zef:gdonald",
   "depends": [],
   "build-depends": [],
   "test-depends": ["Test", "Test::META", "Test::Output"],
@@ -31,7 +32,8 @@
   },
   "resources": [],
   "support": {
-    "source": "https://github.com/gdonald/BDD-Behave/issues"
+    "source": "https://github.com/gdonald/BDD-Behave.git",
+    "bugtracker": "https://github.com/gdonald/BDD-Behave/issues"
   },
   "license": "Artistic-2.0",
   "tags": [
