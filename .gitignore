@@ -1,5 +1,4 @@
-.DS_Store
 lib/.precomp
-.idea
-*.iml
 .precomp
+docs/
+docs-src/site/

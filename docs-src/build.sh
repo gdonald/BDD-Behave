@@ -1,5 +1,4 @@
 #!/bin/sh
 
-rm -rf ../docs
-mkdocs build
-mv site ../docs
+cd "$(dirname "$0")"
+mkdocs gh-deploy --force
