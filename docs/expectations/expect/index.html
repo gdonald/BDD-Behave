@@ -1284,6 +1284,10 @@
 <td><code>respond-to</code></td>
 <td>Method-presence check via <code>$actual.^can(...)</code>. Accepts one or more method names. See <a href="../matchers/#respondtomatcher-built-in">Matchers › RespondToMatcher</a>.</td>
 </tr>
+<tr>
+<td><code>have-attributes</code></td>
+<td>Multi-attribute check: each named pair calls the accessor on <code>$actual</code> and compares (<code>eqv</code>, or an inner <code>Matcher</code>). See <a href="../matchers/#haveattributesmatcher-built-in">Matchers › HaveAttributesMatcher</a>.</td>
+</tr>
 </tbody>
 </table>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

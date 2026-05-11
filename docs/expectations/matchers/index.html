@@ -998,6 +998,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#haveattributesmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HaveAttributesMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1312,6 +1323,17 @@
     <span class="md-ellipsis">
       
         RespondToMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#haveattributesmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HaveAttributesMatcher (built-in)
       
     </span>
   </a>
@@ -1744,6 +1766,58 @@ lists the missing methods:</p>
 </code></pre></div></td></tr></table></div>
 <p>Failure messages render as <code>expected &lt;actual&gt; to respond to &lt;names&gt;</code>
 (or <code>not to respond to &lt;names&gt;</code> under <code>.not</code>).</p>
+<h2 id="haveattributesmatcher-built-in">HaveAttributesMatcher (built-in)<a class="headerlink" href="#haveattributesmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>have-attributes</code> checks several attributes of an object in one call.
+Each named pair maps an attribute name to an expected value (or to
+another <code>Matcher</code>). For each pair, the matcher calls the accessor on
+the actual value and compares — values are compared with <code>eqv</code>, and
+when the expected side is itself a <code>Matcher</code> its <code>matches</code> method is
+delegated to.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Person</span> {
+  <span class="k">has</span> <span class="nb">Str</span> <span class="nv">$.name</span>;
+  <span class="k">has</span> <span class="nb">Int</span> <span class="nv">$.age</span>;
+}
+
+<span class="k">my</span> <span class="nv">$alice</span> = <span class="n">Person</span>.<span class="nb">new</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>, :<span class="n">age</span>(<span class="mi">30</span>));
+
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>, :<span class="n">age</span>(<span class="mi">30</span>));     <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>);               <span class="c1"># subset OK</span>
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">age</span>(<span class="mi">31</span>));                   <span class="c1"># fails</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple attributes are AND-combined — every pair must match. When the
+expectation fails, the failure message separates <em>missing</em> accessors
+(the object does not respond to the name at all) from <em>mismatched</em>
+values (accessor exists, but the value disagrees):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected Person.new(name =&gt; &quot;Alice&quot;, age =&gt; 30) to have attributes age =&gt; 31, nickname =&gt; &quot;Al&quot; (missing: &quot;nickname&quot;; mismatched: age: got 30, wanted 31)
+</code></pre></div></td></tr></table></div>
+<p>The matcher composes naturally with other matchers — pass a <code>Matcher</code>
+instance as the expected value for any attribute:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Matcher</span>;
+
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(
+  :<span class="n">name</span>(<span class="n">StartWithMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="s">&#39;A&#39;</span>]))),
+  :<span class="n">age</span>(<span class="n">BeAMatcher</span>.<span class="nb">new</span>(:<span class="n">type</span>(<span class="nb">Int</span>))),
+);
+</code></pre></div></td></tr></table></div>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">have-attributes</span>(:<span class="n">age</span>(<span class="mi">31</span>));
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to have attributes
+&lt;pairs&gt;</code> (or <code>not to have attributes &lt;pairs&gt;</code> under <code>.not</code>).</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

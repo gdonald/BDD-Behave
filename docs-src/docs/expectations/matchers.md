@@ -363,6 +363,58 @@ expect(Dog.new).to.not.respond-to('meow');
 Failure messages render as `expected <actual> to respond to <names>`
 (or `not to respond to <names>` under `.not`).
 
+## HaveAttributesMatcher (built-in)
+
+`have-attributes` checks several attributes of an object in one call.
+Each named pair maps an attribute name to an expected value (or to
+another `Matcher`). For each pair, the matcher calls the accessor on
+the actual value and compares — values are compared with `eqv`, and
+when the expected side is itself a `Matcher` its `matches` method is
+delegated to.
+
+```raku
+class Person {
+  has Str $.name;
+  has Int $.age;
+}
+
+my $alice = Person.new(:name<Alice>, :age(30));
+
+expect($alice).to.have-attributes(:name<Alice>, :age(30));     # passes
+expect($alice).to.have-attributes(:name<Alice>);               # subset OK
+expect($alice).to.have-attributes(:age(31));                   # fails
+```
+
+Multiple attributes are AND-combined — every pair must match. When the
+expectation fails, the failure message separates *missing* accessors
+(the object does not respond to the name at all) from *mismatched*
+values (accessor exists, but the value disagrees):
+
+```text
+expected Person.new(name => "Alice", age => 30) to have attributes age => 31, nickname => "Al" (missing: "nickname"; mismatched: age: got 30, wanted 31)
+```
+
+The matcher composes naturally with other matchers — pass a `Matcher`
+instance as the expected value for any attribute:
+
+```raku
+use BDD::Behave::Matcher;
+
+expect($alice).to.have-attributes(
+  :name(StartWithMatcher.new(:expected(['A']))),
+  :age(BeAMatcher.new(:type(Int))),
+);
+```
+
+Negation works the usual way:
+
+```raku
+expect($alice).to.not.have-attributes(:age(31));
+```
+
+Failure messages render as `expected <actual> to have attributes
+<pairs>` (or `not to have attributes <pairs>` under `.not`).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

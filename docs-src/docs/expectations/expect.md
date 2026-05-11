@@ -86,6 +86,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-a` / `be-an` | Type check including subclasses, roles, and subsets (`$actual ~~ $type`). See [Matchers › BeAMatcher](matchers.md#beamatcher-built-in). |
 | `be-an-instance-of` | Strict runtime-type check (`$actual.WHAT === $type`, requires defined). See [Matchers › BeAnInstanceOfMatcher](matchers.md#beaninstanceofmatcher-built-in). |
 | `respond-to` | Method-presence check via `$actual.^can(...)`. Accepts one or more method names. See [Matchers › RespondToMatcher](matchers.md#respondtomatcher-built-in). |
+| `have-attributes` | Multi-attribute check: each named pair calls the accessor on `$actual` and compares (`eqv`, or an inner `Matcher`). See [Matchers › HaveAttributesMatcher](matchers.md#haveattributesmatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);

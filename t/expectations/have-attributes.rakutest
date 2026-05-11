@@ -1,0 +1,197 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 47;
+
+class Point {
+  has $.x;
+  has $.y;
+}
+
+class Person {
+  has Str $.name;
+  has Int $.age;
+}
+
+role Coloured {
+  has Str $.colour;
+}
+
+class Shape does Coloured {
+  has Int $.sides;
+}
+
+# Role compliance
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1)}));
+  ok $m ~~ Matcher, 'HaveAttributesMatcher does Matcher';
+}
+
+# Single attribute match
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1)}));
+  ok $m.matches(Point.new(:x(1), :y(2))),
+     'single attribute matches when value equals';
+  nok $m.matches(Point.new(:x(2), :y(2))),
+      'single attribute does not match when value differs';
+}
+
+# Multiple attributes (AND)
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1), :y(2)}));
+  ok  $m.matches(Point.new(:x(1), :y(2))), 'both attributes match';
+  nok $m.matches(Point.new(:x(1), :y(9))), 'fails when one differs';
+  nok $m.matches(Point.new(:x(9), :y(2))), 'fails when other differs';
+}
+
+# String and Int attributes
+{
+  my $m = HaveAttributesMatcher.new(:expected({:name<Alice>, :age(30)}));
+  ok  $m.matches(Person.new(:name<Alice>, :age(30))), 'string+int match';
+  nok $m.matches(Person.new(:name<Bob>,   :age(30))), 'string differs';
+  nok $m.matches(Person.new(:name<Alice>, :age(31))), 'int differs';
+}
+
+# Missing accessor causes failure
+{
+  my $m = HaveAttributesMatcher.new(:expected({:nonexistent(1)}));
+  nok $m.matches(Point.new(:x(1), :y(2))), 'missing accessor fails';
+  my $msg = $m.failure-message(Point.new(:x(1), :y(2)));
+  ok $msg.contains('missing:'),       'missing list rendered';
+  ok $msg.contains('"nonexistent"'),  'missing name quoted';
+}
+
+# Mismatched value detail in failure message
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1), :y(2)}));
+  my $msg = $m.failure-message(Point.new(:x(1), :y(99)));
+  ok $msg.contains('mismatched:'), 'mismatched section present';
+  ok $msg.contains('y:'),          'mismatched name shown';
+  ok $msg.contains('got 99'),      'actual value shown';
+  ok $msg.contains('wanted 2'),    'expected value shown';
+}
+
+# format-expected and description (sorted, with raku-rendered values)
+{
+  my $m = HaveAttributesMatcher.new(:expected({:b(2), :a(1)}));
+  is $m.format-expected, 'a => 1, b => 2',
+     'format-expected sorted alphabetically';
+  is $m.description, 'have attributes a => 1, b => 2',
+     'description';
+}
+
+# Negated failure message
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1)}));
+  my $msg = $m.failure-message-negated(Point.new(:x(1), :y(2)));
+  ok $msg.contains('not to have attributes'), 'negated message';
+  ok $msg.contains('x => 1'),                 'expected pair rendered';
+}
+
+# Inherited / role-supplied attributes
+{
+  my $m = HaveAttributesMatcher.new(:expected({:colour<red>, :sides(3)}));
+  ok $m.matches(Shape.new(:colour<red>, :sides(3))),
+     'role-supplied accessor matches';
+}
+
+# Undefined actual fails
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1)}));
+  nok $m.matches(Point), 'type object (undefined) does not match';
+}
+
+# Matcher-valued expectations (compose with another matcher)
+{
+  my $inner = BeAMatcher.new(:type(Int));
+  my $m     = HaveAttributesMatcher.new(:expected({:x($inner)}));
+  ok  $m.matches(Point.new(:x(30), :y(0))),
+      'composes with matcher value (passes when Int)';
+  nok $m.matches(Point.new(:x('hello'), :y(0))),
+      'composes with matcher value (fails when not Int)';
+  my $msg = $m.failure-message(Point.new(:x('hello'), :y(0)));
+  ok $msg.contains('wanted be a Int'), 'composed failure message';
+}
+
+# Reports both missing and mismatched together
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(99), :foo(1)}));
+  my $msg = $m.failure-message(Point.new(:x(1), :y(2)));
+  ok $msg.contains('missing:'),     'missing section';
+  ok $msg.contains('mismatched:'),  'mismatched section';
+  ok $msg.contains('"foo"'),        'foo listed as missing';
+  ok $msg.contains('x:'),           'x listed as mismatched';
+}
+
+# expected-value returns the hash
+{
+  my $m = HaveAttributesMatcher.new(:expected({:x(1), :y(2)}));
+  my %exp = $m.expected-value;
+  is %exp.elems, 2,   'expected-value has two keys';
+  is %exp<x>,    1,   'expected-value preserves x';
+  is %exp<y>,    2,   'expected-value preserves y';
+}
+
+# expect integration: pass
+{
+  Failures.list = ();
+  ok expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(1), :y(2)),
+     'expect.to.have-attributes passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+  Failures.list = ();
+}
+
+# expect integration: fail
+{
+  Failures.list = ();
+  nok expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(99)),
+      'expect.to.have-attributes fails when mismatched';
+  is Failures.list.elems, 1, 'one failure recorded';
+  ok Failures.list[0].message.contains('to have attributes'),
+     'failure message present';
+  Failures.list = ();
+}
+
+# Negation integration
+{
+  Failures.list = ();
+  ok expect(Point.new(:x(1), :y(2))).to.not.have-attributes(:x(99)),
+     '.not.have-attributes passes when value differs';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(Point.new(:x(1), :y(2))).to.not.have-attributes(:x(1)),
+      '.not.have-attributes fails when value matches';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  ok Failures.list[0].message.contains('not to have attributes'),
+     'negated message';
+  Failures.list = ();
+}
+
+# Empty arg list dies
+{
+  my $caught;
+  try {
+    expect(Point.new(:x(1), :y(2))).to.have-attributes();
+    CATCH { default { $caught = .message } }
+  }
+  ok $caught.defined, 'have-attributes() with no args dies';
+  ok $caught.contains('have-attributes requires at least one'),
+     'die message is helpful';
+}
+
+# Failure metadata preserves given/expected
+{
+  Failures.list = ();
+  expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(99));
+  ok Failures.list[0].given ~~ Point, 'Failure.given preserved';
+  my %exp = Failures.list[0].expected;
+  is %exp<x>, 99, 'Failure.expected preserves attribute hash';
+  Failures.list = ();
+}

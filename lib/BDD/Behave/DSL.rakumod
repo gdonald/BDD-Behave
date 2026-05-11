@@ -554,6 +554,13 @@ class ExpectationBuilder {
     self!apply-matcher(RespondToMatcher.new(:expected(@names)));
   }
 
+  method have-attributes(*%attrs) {
+    if %attrs.elems == 0 {
+      die "have-attributes requires at least one attribute name => value pair";
+    }
+    self!apply-matcher(HaveAttributesMatcher.new(:expected(%attrs)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),
