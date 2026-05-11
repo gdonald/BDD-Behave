@@ -83,6 +83,8 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `start-with` | Sequence prefix check for arrays / lists; per-arg prefix check for strings. See [Matchers › StartWithMatcher](matchers.md#startwithmatcher-built-in). |
 | `end-with` | Sequence suffix check for arrays / lists; per-arg suffix check for strings. See [Matchers › EndWithMatcher](matchers.md#endwithmatcher-built-in). |
 | `all` | Every element of a collection must match an inner matcher. See [Matchers › AllMatcher](matchers.md#allmatcher-built-in). |
+| `be-a` / `be-an` | Type check including subclasses, roles, and subsets (`$actual ~~ $type`). See [Matchers › BeAMatcher](matchers.md#beamatcher-built-in). |
+| `be-an-instance-of` | Strict runtime-type check (`$actual.WHAT === $type`, requires defined). See [Matchers › BeAnInstanceOfMatcher](matchers.md#beaninstanceofmatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -96,6 +98,9 @@ expect([1, 2, 3]).to.end-with(2, 3);
 expect('hello world').to.start-with('hello');
 expect('hello world').to.end-with('world');
 expect([1, 2, 3]).to.all(Int);
+expect(42).to.be-a(Int);
+expect(42).to.be-an(Int);
+expect(Dog.new).to.be-an-instance-of(Dog);
 ```
 
 ## Custom matchers

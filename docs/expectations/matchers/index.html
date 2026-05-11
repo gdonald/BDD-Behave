@@ -965,6 +965,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#beamatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beaninstanceofmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAnInstanceOfMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1249,6 +1271,28 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beamatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beaninstanceofmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAnInstanceOfMatcher (built-in)
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1574,6 +1618,65 @@ pointing at the <strong>first</strong> failing element. Negation renders as
 raw so junctions are not autothreaded out:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
 </code></pre></div></td></tr></table></div>
+<h2 id="beamatcher-built-in">BeAMatcher (built-in)<a class="headerlink" href="#beamatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>be-a</code> checks whether the actual value is "of" a given type, including
+subclasses, composed roles, and <code>subset</code> types. Internally it smartmatches
+the actual value against the type (<code>$actual ~~ $type</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Int</span>);              <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Numeric</span>);          <span class="c1"># passes (Int is Numeric)</span>
+<span class="n">expect</span>(<span class="s">&#39;hi&#39;</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Int</span>);            <span class="c1"># fails</span>
+
+<span class="k">class</span> <span class="n">Animal</span> {}
+<span class="k">class</span> <span class="n">Dog</span> <span class="k">is</span> <span class="n">Animal</span> {}
+<span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Animal</span>);      <span class="c1"># passes (subclass)</span>
+
+<span class="k">role</span> <span class="n">Walkable</span> { <span class="k">method</span> <span class="n">walk</span> { } }
+<span class="k">class</span> <span class="n">Bird</span> <span class="k">does</span> <span class="n">Walkable</span> {}
+<span class="n">expect</span>(<span class="n">Bird</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Walkable</span>);   <span class="c1"># passes (role composition)</span>
+
+<span class="k">subset</span> <span class="n">Positive</span> <span class="nb">of</span> <span class="nb">Int</span> <span class="n">where</span> * &gt; <span class="mi">0</span>;
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Positive</span>);          <span class="c1"># passes</span>
+<span class="n">expect</span>(-<span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Positive</span>);         <span class="c1"># fails (where clause)</span>
+</code></pre></div></td></tr></table></div>
+<p><code>be-an</code> is provided as an alias for English grammar — it behaves identically:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an</span>(<span class="nb">Int</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to be a &lt;type&gt;</code> (or <code>not to be
+a &lt;type&gt;</code> under <code>.not</code>). The type name comes from <code>$type.^name</code>.</p>
+<h2 id="beaninstanceofmatcher-built-in">BeAnInstanceOfMatcher (built-in)<a class="headerlink" href="#beaninstanceofmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>be-an-instance-of</code> is a <strong>strict</strong> type check: the actual value's runtime
+type must be exactly the given type. Subclasses, composed roles, and subsets
+do not match. Internally it checks <code>$actual.defined &amp;&amp; $actual.WHAT === $type</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="n">Dog</span>);      <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="n">Animal</span>);   <span class="c1"># fails (subclass)</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="nb">Int</span>);           <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="nb">Numeric</span>);       <span class="c1"># fails (parent role)</span>
+</code></pre></div></td></tr></table></div>
+<p>Type objects (the uninstantiated type itself) do not match:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nb">Int</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="nb">Int</span>);          <span class="c1"># fails (Int is undefined)</span>
+</code></pre></div></td></tr></table></div>
+<p>Because composed roles and subsets are not the runtime type of any concrete
+object, <code>be-an-instance-of(SomeRole)</code> and <code>be-an-instance-of(SomeSubset)</code>
+always fail. Use <code>be-a</code> for those cases.</p>
+<p>Failure messages render as <code>expected &lt;actual&gt; to be an instance of &lt;type&gt;</code>
+(or <code>not to be an instance of &lt;type&gt;</code> under <code>.not</code>).</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

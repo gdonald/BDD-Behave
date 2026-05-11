@@ -535,6 +535,18 @@ class ExpectationBuilder {
     self!apply-matcher(AllMatcher.new(:inner($inner)));
   }
 
+  method be-a(Mu \type) {
+    self!apply-matcher(BeAMatcher.new(:type(type)));
+  }
+
+  method be-an(Mu \type) {
+    self!apply-matcher(BeAMatcher.new(:type(type)));
+  }
+
+  method be-an-instance-of(Mu \type) {
+    self!apply-matcher(BeAnInstanceOfMatcher.new(:type(type)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),

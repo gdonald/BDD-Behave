@@ -1,0 +1,232 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 67;
+
+class Animal {}
+class Dog is Animal {}
+class Poodle is Dog {}
+
+role Walkable {
+  method walk { 'walking' }
+}
+
+class Bird does Walkable {}
+
+subset Positive of Int where * > 0;
+
+# BeAMatcher and BeAnInstanceOfMatcher do the Matcher role.
+{
+  my $a   = BeAMatcher.new(:type(Int));
+  my $aio = BeAnInstanceOfMatcher.new(:type(Int));
+  ok $a   ~~ Matcher, 'BeAMatcher does Matcher';
+  ok $aio ~~ Matcher, 'BeAnInstanceOfMatcher does Matcher';
+}
+
+# BeAMatcher: built-in types.
+{
+  my $m = BeAMatcher.new(:type(Int));
+  ok  $m.matches(42),     'Int matches an Int';
+  nok $m.matches('hi'),   'Int does not match a Str';
+  ok  $m.matches(0),      'Int matches zero';
+
+  my $str = BeAMatcher.new(:type(Str));
+  ok  $str.matches('x'),  'Str matches a string';
+  nok $str.matches(42),   'Str does not match an integer';
+}
+
+# BeAMatcher: user-defined inheritance.
+{
+  my $m-animal = BeAMatcher.new(:type(Animal));
+  my $m-dog    = BeAMatcher.new(:type(Dog));
+  ok  $m-animal.matches(Animal.new),   'Animal matches Animal';
+  ok  $m-animal.matches(Dog.new),      'Animal matches subclass Dog';
+  ok  $m-animal.matches(Poodle.new),   'Animal matches grandchild Poodle';
+  ok  $m-dog.matches(Poodle.new),      'Dog matches subclass Poodle';
+  nok $m-dog.matches(Animal.new),      'Dog does not match parent Animal';
+  nok $m-dog.matches(Bird.new),        'Dog does not match sibling Bird';
+}
+
+# BeAMatcher: roles via .does (smartmatch handles this).
+{
+  my $m = BeAMatcher.new(:type(Walkable));
+  ok  $m.matches(Bird.new),   'role matches an instance that does it';
+  nok $m.matches(Animal.new), 'role does not match an instance that does not do it';
+}
+
+# BeAMatcher: subsets.
+{
+  my $m = BeAMatcher.new(:type(Positive));
+  ok  $m.matches(5),    'subset matches a value satisfying the where clause';
+  nok $m.matches(-1),   'subset does not match a value failing the where clause';
+  nok $m.matches(0),    'subset does not match zero (positive where)';
+}
+
+# BeAMatcher: parent built-in types.
+{
+  my $m = BeAMatcher.new(:type(Numeric));
+  ok $m.matches(42),    'Numeric matches Int (parent role)';
+  ok $m.matches(3.14),  'Numeric matches Rat';
+}
+
+# BeAMatcher: type-name and description.
+{
+  my $m = BeAMatcher.new(:type(Int));
+  is $m.type-name,   'Int',      'type-name returns "Int"';
+  is $m.description, 'be a Int', 'description returns "be a <name>"';
+}
+
+# BeAMatcher: failure messages.
+{
+  my $m = BeAMatcher.new(:type(Int));
+  ok $m.failure-message('hi').contains('to be a Int'),
+     'failure-message contains "to be a <name>"';
+  ok $m.failure-message-negated(42).contains('not to be a Int'),
+     'failure-message-negated contains "not to be a <name>"';
+}
+
+# BeAMatcher: expected-value.
+{
+  my $m = BeAMatcher.new(:type(Int));
+  ok $m.expected-value === Int, 'expected-value returns the type';
+}
+
+# BeAnInstanceOfMatcher: strict class matching.
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Dog));
+  ok  $m.matches(Dog.new),        'exact class matches';
+  nok $m.matches(Animal.new),     'parent instance does not match';
+  nok $m.matches(Poodle.new),     'subclass does not match (strict)';
+}
+
+# BeAnInstanceOfMatcher: built-in types.
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Int));
+  ok  $m.matches(42),      'Int exact match';
+  nok $m.matches('hi'),    'Str does not match Int';
+  nok $m.matches(3.14),    'Rat does not match Int';
+}
+
+# BeAnInstanceOfMatcher: parent type does not match.
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Numeric));
+  nok $m.matches(42),    'Int is not strictly Numeric (parent role)';
+}
+
+# BeAnInstanceOfMatcher: type objects fail.
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Int));
+  nok $m.matches(Int),   'type object Int is not an instance of itself';
+  nok $m.matches(Any),   'Any (undefined) is not an instance';
+}
+
+# BeAnInstanceOfMatcher: roles never match (no WHAT === Role).
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Walkable));
+  nok $m.matches(Bird.new), 'role argument: instance with .WHAT !=== role never matches';
+}
+
+# BeAnInstanceOfMatcher: subsets never match (subset is not a class).
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Positive));
+  nok $m.matches(5),   'subset argument: integer .WHAT === Int, not Positive';
+}
+
+# BeAnInstanceOfMatcher: type-name, description, expected-value.
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Dog));
+  is $m.type-name,       'Dog',                   'type-name returns class name';
+  is $m.description,     'be an instance of Dog', 'description';
+  ok $m.expected-value === Dog,                    'expected-value returns the type';
+}
+
+# BeAnInstanceOfMatcher: failure messages.
+{
+  my $m = BeAnInstanceOfMatcher.new(:type(Dog));
+  ok $m.failure-message(Animal.new).contains('to be an instance of Dog'),
+     'failure-message contains expected type';
+  ok $m.failure-message-negated(Dog.new).contains('not to be an instance of Dog'),
+     'failure-message-negated contains expected type';
+}
+
+# expect(...).to.be-a integration.
+{
+  Failures.list = ();
+  ok expect(42).to.be-a(Int), 'expect.to.be-a passes for matching type';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect('hi').to.be-a(Int), 'expect.to.be-a fails for mismatched type';
+  is Failures.list.elems, 1, 'one failure recorded';
+  ok Failures.list[0].message.contains('to be a Int'), 'failure message present';
+  Failures.list = ();
+}
+
+# expect(...).to.be-an (alias) integration.
+{
+  Failures.list = ();
+  ok expect(42).to.be-an(Int), 'be-an alias works';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect('hi').to.be-an(Int), 'be-an fails for mismatched type';
+  is Failures.list.elems, 1, 'one failure recorded via be-an';
+  Failures.list = ();
+}
+
+# expect(...).to.be-an-instance-of integration.
+{
+  Failures.list = ();
+  ok expect(Dog.new).to.be-an-instance-of(Dog), 'exact class match passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect(Dog.new).to.be-an-instance-of(Animal),
+      'subclass instance does not match parent strictly';
+  is Failures.list.elems, 1, 'one failure recorded';
+  ok Failures.list[0].message.contains('to be an instance of Animal'),
+     'failure message reports expected type';
+  Failures.list = ();
+}
+
+# Negation: be-a.
+{
+  Failures.list = ();
+  ok expect('hi').to.not.be-a(Int),   '.not.be-a passes for mismatched type';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(42).to.not.be-a(Int),    '.not.be-a fails when type matches';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  ok Failures.list[0].message.contains('not to be a Int'), 'negated message';
+  Failures.list = ();
+}
+
+# Negation: be-an-instance-of.
+{
+  Failures.list = ();
+  ok expect(Dog.new).to.not.be-an-instance-of(Animal),
+     '.not.be-an-instance-of passes when strict type differs';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(Dog.new).to.not.be-an-instance-of(Dog),
+      '.not.be-an-instance-of fails when exact type matches';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  Failures.list = ();
+}
+
+# Failure metadata: given and expected.
+{
+  Failures.list = ();
+  expect('hi').to.be-a(Int);
+  is Failures.list[0].given, 'hi', 'Failure.given preserved';
+  ok Failures.list[0].expected === Int, 'Failure.expected is the type';
+  Failures.list = ();
+}

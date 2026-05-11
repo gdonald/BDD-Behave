@@ -205,6 +205,54 @@ class AllMatcher does Matcher is export {
   method description(--> Str) { 'all ' ~ $!inner.description }
 }
 
+class BeAMatcher does Matcher is export {
+  has Mu $.type is required;
+
+  method matches($actual --> Bool) {
+    ?($actual ~~ $!type);
+  }
+
+  method type-name(--> Str) {
+    $!type.^name;
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be a " ~ self.type-name;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be a " ~ self.type-name;
+  }
+
+  method expected-value(--> Mu) { $!type }
+
+  method description(--> Str) { 'be a ' ~ self.type-name }
+}
+
+class BeAnInstanceOfMatcher does Matcher is export {
+  has Mu $.type is required;
+
+  method matches($actual --> Bool) {
+    ?($actual.defined && $actual.WHAT === $!type);
+  }
+
+  method type-name(--> Str) {
+    $!type.^name;
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be an instance of " ~ self.type-name;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be an instance of " ~ self.type-name;
+  }
+
+  method expected-value(--> Mu) { $!type }
+
+  method description(--> Str) { 'be an instance of ' ~ self.type-name }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

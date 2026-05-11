@@ -262,6 +262,65 @@ raw so junctions are not autothreaded out:
 expect([1, 2, 3]).to.all(any(1, 2, 3));
 ```
 
+## BeAMatcher (built-in)
+
+`be-a` checks whether the actual value is "of" a given type, including
+subclasses, composed roles, and `subset` types. Internally it smartmatches
+the actual value against the type (`$actual ~~ $type`):
+
+```raku
+expect(42).to.be-a(Int);              # passes
+expect(42).to.be-a(Numeric);          # passes (Int is Numeric)
+expect('hi').to.be-a(Int);            # fails
+
+class Animal {}
+class Dog is Animal {}
+expect(Dog.new).to.be-a(Animal);      # passes (subclass)
+
+role Walkable { method walk { } }
+class Bird does Walkable {}
+expect(Bird.new).to.be-a(Walkable);   # passes (role composition)
+
+subset Positive of Int where * > 0;
+expect(5).to.be-a(Positive);          # passes
+expect(-1).to.be-a(Positive);         # fails (where clause)
+```
+
+`be-an` is provided as an alias for English grammar — it behaves identically:
+
+```raku
+expect(42).to.be-an(Int);
+```
+
+Failure messages render as `expected <actual> to be a <type>` (or `not to be
+a <type>` under `.not`). The type name comes from `$type.^name`.
+
+## BeAnInstanceOfMatcher (built-in)
+
+`be-an-instance-of` is a **strict** type check: the actual value's runtime
+type must be exactly the given type. Subclasses, composed roles, and subsets
+do not match. Internally it checks `$actual.defined && $actual.WHAT === $type`:
+
+```raku
+expect(Dog.new).to.be-an-instance-of(Dog);      # passes
+expect(Dog.new).to.be-an-instance-of(Animal);   # fails (subclass)
+expect(42).to.be-an-instance-of(Int);           # passes
+expect(42).to.be-an-instance-of(Numeric);       # fails (parent role)
+```
+
+Type objects (the uninstantiated type itself) do not match:
+
+```raku
+expect(Int).to.be-an-instance-of(Int);          # fails (Int is undefined)
+```
+
+Because composed roles and subsets are not the runtime type of any concrete
+object, `be-an-instance-of(SomeRole)` and `be-an-instance-of(SomeSubset)`
+always fail. Use `be-a` for those cases.
+
+Failure messages render as `expected <actual> to be an instance of <type>`
+(or `not to be an instance of <type>` under `.not`).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:
