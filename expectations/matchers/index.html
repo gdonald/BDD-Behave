@@ -1,0 +1,1931 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/expectations/matchers/">
+      
+      
+        <link rel="prev" href="../expect/">
+      
+      
+        <link rel="next" href="../../diff/diff/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Matchers - BDD::Behave</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#matcher-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BDD::Behave
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Matchers
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gdonald/BDD-Behave" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BDD::Behave
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gdonald/BDD-Behave" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running Specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/describe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    describe / context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/it/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    it
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    let
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    let
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../let/let/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    let / let-bang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../let/subject/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subject / subject-bang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hooks/hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shared-contexts/shared-contexts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contexts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags/tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../focus-skip/focus-skip/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Focus and Skip
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../example-filter/example-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mocks/mocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expectations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Expectations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matchers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-matcher-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Matcher role
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eqmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EqMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#containexactlymatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContainExactlyMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#includematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IncludeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#startwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StartWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EndWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#allmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AllMatcher (built-in)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AllMatcher (built-in)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#composing-across-collections-of-collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composing across collections of collections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#junctions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Junctions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beamatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beaninstanceofmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAnInstanceOfMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#respondtomatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RespondToMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#haveattributesmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HaveAttributesMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-a-custom-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing a custom matcher
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../diff/diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diff Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/classes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classes in specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../variables/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables in specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-matcher-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Matcher role
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eqmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EqMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#containexactlymatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContainExactlyMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#includematcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IncludeMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#startwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        StartWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endwithmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EndWithMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#allmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AllMatcher (built-in)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AllMatcher (built-in)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#composing-across-collections-of-collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composing across collections of collections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#junctions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Junctions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beamatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beaninstanceofmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BeAnInstanceOfMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#respondtomatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RespondToMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#haveattributesmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        HaveAttributesMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-a-custom-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing a custom matcher
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="matcher-architecture">Matcher Architecture<a class="headerlink" href="#matcher-architecture" title="Permanent link">&para;</a></h1>
+<p><code>expect(...).to.be(...)</code> is built on top of a small <code>Matcher</code> role. The expected
+value passed to <code>.be(...)</code> is either:</p>
+<ul>
+<li><strong>a plain value</strong> — wrapped in the built-in <code>BeMatcher</code> (smartmatch), or</li>
+<li><strong>a <code>Matcher</code>-doing object</strong> — used directly.</li>
+</ul>
+<p>This is the seam every built-in matcher and every user-defined matcher plugs
+into.</p>
+<h2 id="the-matcher-role">The Matcher role<a class="headerlink" href="#the-matcher-role" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">unit</span> <span class="k">module</span> <span class="n">BDD::Behave::Matcher</span>;
+
+<span class="k">role</span> <span class="n">Matcher</span> <span class="k">is</span> <span class="k">export</span> {
+  <span class="k">method</span> <span class="n">matches</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Bool</span>) { ... }
+  <span class="k">method</span> <span class="n">failure-message</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) { <span class="nb">Str</span> }
+  <span class="k">method</span> <span class="n">failure-message-negated</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) { <span class="nb">Str</span> }
+  <span class="k">method</span> <span class="n">expected-value</span>(--&gt; <span class="nb">Mu</span>) { <span class="nb">Nil</span> }
+  <span class="k">method</span> <span class="n">description</span>(--&gt; <span class="nb">Str</span>) { <span class="nb">self</span>.^<span class="nb">name</span> }
+}
+</code></pre></div></td></tr></table></div>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Required?</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>matches($actual)</code></td>
+<td>yes</td>
+<td>Return <code>True</code> / <code>False</code> for whether <code>$actual</code> matches.</td>
+</tr>
+<tr>
+<td><code>failure-message($actual)</code></td>
+<td>no</td>
+<td>Message rendered when the expectation fails (positive form). Default: undefined <code>Str</code> (falls back to <code>Expected:</code> / <code>to be:</code> rendering).</td>
+</tr>
+<tr>
+<td><code>failure-message-negated($actual)</code></td>
+<td>no</td>
+<td>Message rendered when a <code>.not</code> expectation fails. Default: undefined <code>Str</code>.</td>
+</tr>
+<tr>
+<td><code>expected-value</code></td>
+<td>no</td>
+<td>The value stored in <code>Failure.expected</code> for tooling.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>no</td>
+<td>Human-readable description, useful for error reporting and reflection.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="bematcher-built-in">BeMatcher (built-in)<a class="headerlink" href="#bematcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>BeMatcher</code> wraps Raku's smartmatch operator (<code>~~</code>). When you write:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
+<span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="sr">/hell/</span>);
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);
+<span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
+</code></pre></div></td></tr></table></div>
+<p>…the runner constructs <code>BeMatcher.new(:expected(...))</code> under the hood. Because
+<code>BeMatcher</code> deliberately leaves <code>failure-message</code> undefined, failure rendering
+keeps the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized <code>Diff:</code>
+section described in <a href="../../diff/diff/">Diff Output</a>.</p>
+<h2 id="eqmatcher-built-in">EqMatcher (built-in)<a class="headerlink" href="#eqmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>eq</code> checks order-dependent structural equality using Raku's <code>eqv</code> operator.
+It's invoked via <code>expect(...).to.eq(...)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);            <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);            <span class="c1"># fails (order matters)</span>
+
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="o">eq</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> });  <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">42</span>);                          <span class="c1"># passes</span>
+</code></pre></div></td></tr></table></div>
+<p><code>eqv</code> is type-strict, so an <code>Array</code> is not equivalent to a <code>List</code> with the same
+elements:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>((<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));            <span class="c1"># fails (Array vs List)</span>
+</code></pre></div></td></tr></table></div>
+<p><code>EqMatcher</code> deliberately leaves <code>failure-message</code> undefined, so failures fall
+through to the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized
+<code>Diff:</code> section described in <a href="../../diff/diff/">Diff Output</a>.</p>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">not</span>.<span class="o">eq</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);
+</code></pre></div></td></tr></table></div>
+<h2 id="containexactlymatcher-built-in">ContainExactlyMatcher (built-in)<a class="headerlink" href="#containexactlymatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>contain-exactly</code> checks order-independent multiset equality on arrays / lists.
+Each item in <code>actual</code> must correspond to one item in the expected list (matched
+by <code>eqv</code>), with counts and totals matching:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>);   <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">1</span>);   <span class="c1"># passes (multiset)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>);      <span class="c1"># fails (counts differ)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>);      <span class="c1"># fails (extra in actual)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>);      <span class="c1"># fails (missing)</span>
+</code></pre></div></td></tr></table></div>
+<p>Items are passed as individual positional arguments. The slurp is
+non-flattening, so passing a single array (<code>contain-exactly([1, 2])</code>) looks for
+that array as one element. To spread an existing array, use <code>|@arr</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">@want</span> = <span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>;
+<span class="n">expect</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(|<span class="nv">@want</span>);
+</code></pre></div></td></tr></table></div>
+<p>The empty form passes for an empty array:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([]).<span class="nb">to</span>.<span class="n">contain-exactly</span>();
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to contain exactly &lt;items&gt;</code> (or
+<code>not to contain exactly</code> under <code>.not</code>).</p>
+<p><code>match-array</code> is the array-form alias — it takes a single array argument and
+delegates to the same matcher:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);   <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">1</span>, <span class="mi">2</span>]);      <span class="c1"># fails</span>
+</code></pre></div></td></tr></table></div>
+<p><code>match-array</code> requires its argument to be an array / list; passing a scalar
+dies with <code>match-array requires an array argument</code>.</p>
+<h2 id="includematcher-built-in">IncludeMatcher (built-in)<a class="headerlink" href="#includematcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>include</code> checks membership across arrays, hashes, sets, bags, ranges, and
+strings. It's invoked via <code>expect(...).to.include(...)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);              <span class="c1"># array element</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">1</span>, <span class="mi">3</span>);           <span class="c1"># multiple elements (AND)</span>
+<span class="n">expect</span>([[<span class="mi">1</span>, <span class="mi">2</span>], [<span class="mi">3</span>, <span class="mi">4</span>]]).<span class="nb">to</span>.<span class="n">include</span>([<span class="mi">1</span>, <span class="mi">2</span>]);  <span class="c1"># nested element via eqv</span>
+
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;a&#39;</span>);         <span class="c1"># hash key</span>
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="n">include</span>(<span class="n">a</span> =&gt; <span class="mi">1</span>);      <span class="c1"># hash key + value</span>
+<span class="n">expect</span>({ <span class="n">a</span> =&gt; <span class="mi">1</span>, <span class="n">b</span> =&gt; <span class="mi">2</span> }).<span class="nb">to</span>.<span class="n">include</span>(:<span class="n">a</span>(<span class="mi">1</span>));       <span class="c1"># named-pair shorthand</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;world&#39;</span>);    <span class="c1"># string substring</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;hello&#39;</span>, <span class="s">&#39;world&#39;</span>);
+
+<span class="n">expect</span>(<span class="n">set</span>(<span class="s">&#39;a&#39;</span>, <span class="s">&#39;b&#39;</span>)).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;a&#39;</span>);        <span class="c1"># Set / Bag membership</span>
+<span class="n">expect</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">5</span>);                  <span class="c1"># Range membership</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple items are combined with AND semantics: every item must be present
+for the matcher to pass. The slurp is non-flattening, so passing a single
+array argument (<code>include([1, 2])</code>) looks for that array as one element rather
+than spreading it. To spread an existing array, use <code>|@arr</code>.</p>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">include</span>(<span class="mi">99</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to include &lt;items&gt;</code> (or <code>not
+to include</code> under <code>.not</code>).</p>
+<h2 id="startwithmatcher-built-in">StartWithMatcher (built-in)<a class="headerlink" href="#startwithmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>start-with</code> checks that a sequence (Array, List) begins with the supplied
+items, or that a string begins with each supplied prefix:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">1</span>);            <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">1</span>, <span class="mi">2</span>);         <span class="c1"># passes (in-order prefix)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">2</span>);            <span class="c1"># fails</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">2</span>, <span class="mi">1</span>);         <span class="c1"># fails (out of order)</span>
+<span class="n">expect</span>([<span class="mi">1</span>]).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">1</span>, <span class="mi">2</span>);               <span class="c1"># fails (prefix longer)</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;hello&#39;</span>);         <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;hello&#39;</span>, <span class="s">&#39;h&#39;</span>);    <span class="c1"># passes (each prefix AND)</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;hello&#39;</span>, <span class="s">&#39;world&#39;</span>);<span class="c1"># fails (&#39;world&#39; is not a prefix)</span>
+</code></pre></div></td></tr></table></div>
+<p>For <code>Positional</code> / <code>Iterable</code> actuals, the args form an in-order prefix matched
+via <code>eqv</code>. For <code>Str</code> actuals, each arg must independently be a prefix of the
+string (AND semantics).</p>
+<p>The slurp is non-flattening, so passing a single array (<code>start-with([1, 2])</code>)
+looks for that array as one prefix element. To spread an existing array, use
+<code>|@arr</code>.</p>
+<p><code>start-with</code> rejects undefined or non-iterable, non-string actuals. Empty arg
+lists die with <code>start-with requires at least one item</code>.</p>
+<p>Failure messages render as <code>expected &lt;actual&gt; to start with &lt;items&gt;</code> (or <code>not
+to start with</code> under <code>.not</code>).</p>
+<h2 id="endwithmatcher-built-in">EndWithMatcher (built-in)<a class="headerlink" href="#endwithmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>end-with</code> mirrors <code>start-with</code> for the trailing end of a sequence or string:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">3</span>);              <span class="c1"># passes</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">2</span>, <span class="mi">3</span>);           <span class="c1"># passes (in-order suffix)</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">2</span>);              <span class="c1"># fails</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">3</span>, <span class="mi">2</span>);           <span class="c1"># fails (out of order)</span>
+<span class="n">expect</span>([<span class="mi">1</span>]).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">1</span>, <span class="mi">2</span>);                 <span class="c1"># fails (suffix longer)</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;world&#39;</span>);           <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;world&#39;</span>, <span class="s">&#39;d&#39;</span>);      <span class="c1"># passes (each suffix AND)</span>
+<span class="n">expect</span>(<span class="s">&#39;hello world&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;world&#39;</span>, <span class="s">&#39;hello&#39;</span>);  <span class="c1"># fails (&#39;hello&#39; is not a suffix)</span>
+</code></pre></div></td></tr></table></div>
+<p>Same slurp / type / empty-arg conventions as <code>start-with</code>. Failure messages
+render as <code>expected &lt;actual&gt; to end with &lt;items&gt;</code> (or <code>not to end with</code> under
+<code>.not</code>).</p>
+<h2 id="allmatcher-built-in">AllMatcher (built-in)<a class="headerlink" href="#allmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>all</code> checks that <strong>every element</strong> of a collection matches an inner matcher.
+The inner argument is either a plain value (wrapped in <code>BeMatcher</code>, smartmatch
+semantics) or any object that does <code>Matcher</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">1</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="mi">1</span>);                <span class="c1"># plain value via BeMatcher</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">Int</span>);              <span class="c1"># type</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">5</span>, <span class="mi">10</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);           <span class="c1"># range</span>
+<span class="n">expect</span>([<span class="s">&#39;foo&#39;</span>, <span class="s">&#39;food&#39;</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="sr">/^foo/</span>);     <span class="c1"># regex</span>
+
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="n">PositiveMatcher</span>.<span class="nb">new</span>);          <span class="c1"># custom matcher</span>
+<span class="n">expect</span>([[<span class="mi">1</span>, <span class="mi">2</span>], [<span class="mi">1</span>, <span class="mi">3</span>]]).<span class="nb">to</span>.<span class="nb">all</span>(                        <span class="c1"># composes with built-ins</span>
+  <span class="n">StartWithMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="mi">1</span>]))
+);
+</code></pre></div></td></tr></table></div>
+<p>An empty collection passes vacuously:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">Int</span>);                     <span class="c1"># passes</span>
+<span class="n">expect</span>(()).<span class="nb">to</span>.<span class="nb">all</span>(<span class="mi">1</span>);                       <span class="c1"># passes</span>
+</code></pre></div></td></tr></table></div>
+<p>Undefined or non-iterable actuals fail with a shape failure message
+(<code>expected ... to be a collection ...</code>). For sequence actuals, the matcher
+iterates <code>$actual.list</code>, so <code>Hash</code> actuals are iterated as <code>Pair</code>s.</p>
+<p>Failure messages render as
+<code>expected &lt;actual&gt; to all &lt;inner-description&gt; (element at index N: &lt;item&gt; did not match)</code>,
+pointing at the <strong>first</strong> failing element. Negation renders as
+<code>expected &lt;actual&gt; not to all &lt;inner-description&gt;</code>.</p>
+<h3 id="composing-across-collections-of-collections">Composing across collections of collections<a class="headerlink" href="#composing-across-collections-of-collections" title="Permanent link">&para;</a></h3>
+<p><code>all</code> is most useful when the inner matcher is itself a structural matcher:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">@rows</span> = [
+  { <span class="nb">id</span> =&gt; <span class="mi">1</span>, <span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span> },
+  { <span class="nb">id</span> =&gt; <span class="mi">2</span>, <span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span> },
+];
+
+<span class="n">expect</span>(<span class="nv">@rows</span>).<span class="nb">to</span>.<span class="nb">all</span>(<span class="n">IncludeMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span>])));
+</code></pre></div></td></tr></table></div>
+<h3 id="junctions">Junctions<a class="headerlink" href="#junctions" title="Permanent link">&para;</a></h3>
+<p>Pass junctions through <code>.all(...)</code> directly — the method binds its argument
+raw so junctions are not autothreaded out:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
+</code></pre></div></td></tr></table></div>
+<h2 id="beamatcher-built-in">BeAMatcher (built-in)<a class="headerlink" href="#beamatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>be-a</code> checks whether the actual value is "of" a given type, including
+subclasses, composed roles, and <code>subset</code> types. Internally it smartmatches
+the actual value against the type (<code>$actual ~~ $type</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Int</span>);              <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Numeric</span>);          <span class="c1"># passes (Int is Numeric)</span>
+<span class="n">expect</span>(<span class="s">&#39;hi&#39;</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Int</span>);            <span class="c1"># fails</span>
+
+<span class="k">class</span> <span class="n">Animal</span> {}
+<span class="k">class</span> <span class="n">Dog</span> <span class="k">is</span> <span class="n">Animal</span> {}
+<span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Animal</span>);      <span class="c1"># passes (subclass)</span>
+
+<span class="k">role</span> <span class="n">Walkable</span> { <span class="k">method</span> <span class="n">walk</span> { } }
+<span class="k">class</span> <span class="n">Bird</span> <span class="k">does</span> <span class="n">Walkable</span> {}
+<span class="n">expect</span>(<span class="n">Bird</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Walkable</span>);   <span class="c1"># passes (role composition)</span>
+
+<span class="k">subset</span> <span class="n">Positive</span> <span class="nb">of</span> <span class="nb">Int</span> <span class="n">where</span> * &gt; <span class="mi">0</span>;
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Positive</span>);          <span class="c1"># passes</span>
+<span class="n">expect</span>(-<span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Positive</span>);         <span class="c1"># fails (where clause)</span>
+</code></pre></div></td></tr></table></div>
+<p><code>be-an</code> is provided as an alias for English grammar — it behaves identically:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an</span>(<span class="nb">Int</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to be a &lt;type&gt;</code> (or <code>not to be
+a &lt;type&gt;</code> under <code>.not</code>). The type name comes from <code>$type.^name</code>.</p>
+<h2 id="beaninstanceofmatcher-built-in">BeAnInstanceOfMatcher (built-in)<a class="headerlink" href="#beaninstanceofmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>be-an-instance-of</code> is a <strong>strict</strong> type check: the actual value's runtime
+type must be exactly the given type. Subclasses, composed roles, and subsets
+do not match. Internally it checks <code>$actual.defined &amp;&amp; $actual.WHAT === $type</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="n">Dog</span>);      <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="n">Animal</span>);   <span class="c1"># fails (subclass)</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="nb">Int</span>);           <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="nb">Numeric</span>);       <span class="c1"># fails (parent role)</span>
+</code></pre></div></td></tr></table></div>
+<p>Type objects (the uninstantiated type itself) do not match:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nb">Int</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="nb">Int</span>);          <span class="c1"># fails (Int is undefined)</span>
+</code></pre></div></td></tr></table></div>
+<p>Because composed roles and subsets are not the runtime type of any concrete
+object, <code>be-an-instance-of(SomeRole)</code> and <code>be-an-instance-of(SomeSubset)</code>
+always fail. Use <code>be-a</code> for those cases.</p>
+<p>Failure messages render as <code>expected &lt;actual&gt; to be an instance of &lt;type&gt;</code>
+(or <code>not to be an instance of &lt;type&gt;</code> under <code>.not</code>).</p>
+<h2 id="respondtomatcher-built-in">RespondToMatcher (built-in)<a class="headerlink" href="#respondtomatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>respond-to</code> checks whether the actual value has one or more methods.
+Internally it uses the meta-object protocol's <code>^can</code> introspection
+(<code>$actual.^can($name)</code>), so it works on both instances and type objects,
+and recognises methods supplied by composed roles and parent classes.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Calculator</span> {
+  <span class="k">method</span> <span class="nb">add</span>(<span class="nv">$a</span>, <span class="nv">$b</span>) { <span class="nv">$a</span> + <span class="nv">$b</span> }
+  <span class="k">method</span> <span class="n">subtract</span>(<span class="nv">$a</span>, <span class="nv">$b</span>) { <span class="nv">$a</span> - <span class="nv">$b</span> }
+}
+
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;add&#39;</span>);                <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;add&#39;</span>, <span class="s">&#39;subtract&#39;</span>);    <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;multiply&#39;</span>);           <span class="c1"># fails</span>
+
+<span class="k">role</span> <span class="n">Greeter</span> { <span class="k">method</span> <span class="n">greet</span> { <span class="s">&#39;hello&#39;</span> } }
+<span class="k">class</span> <span class="n">Person</span> <span class="k">does</span> <span class="n">Greeter</span> { }
+<span class="n">expect</span>(<span class="n">Person</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;greet&#39;</span>);                  <span class="c1"># passes (via role)</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;uc&#39;</span>, <span class="s">&#39;lc&#39;</span>, <span class="s">&#39;chars&#39;</span>);         <span class="c1"># built-ins work</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;push&#39;</span>, <span class="s">&#39;pop&#39;</span>);             <span class="c1"># Arrays too</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple method names are AND-combined — every name must be present for
+the expectation to pass. When the expectation fails, the failure message
+lists the missing methods:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected Dog.new to respond to &quot;bark&quot;, &quot;meow&quot;, &quot;purr&quot; (missing: &quot;meow&quot;, &quot;purr&quot;)
+</code></pre></div></td></tr></table></div>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">respond-to</span>(<span class="s">&#39;meow&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to respond to &lt;names&gt;</code>
+(or <code>not to respond to &lt;names&gt;</code> under <code>.not</code>).</p>
+<h2 id="haveattributesmatcher-built-in">HaveAttributesMatcher (built-in)<a class="headerlink" href="#haveattributesmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>have-attributes</code> checks several attributes of an object in one call.
+Each named pair maps an attribute name to an expected value (or to
+another <code>Matcher</code>). For each pair, the matcher calls the accessor on
+the actual value and compares — values are compared with <code>eqv</code>, and
+when the expected side is itself a <code>Matcher</code> its <code>matches</code> method is
+delegated to.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Person</span> {
+  <span class="k">has</span> <span class="nb">Str</span> <span class="nv">$.name</span>;
+  <span class="k">has</span> <span class="nb">Int</span> <span class="nv">$.age</span>;
+}
+
+<span class="k">my</span> <span class="nv">$alice</span> = <span class="n">Person</span>.<span class="nb">new</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>, :<span class="n">age</span>(<span class="mi">30</span>));
+
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>, :<span class="n">age</span>(<span class="mi">30</span>));     <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>);               <span class="c1"># subset OK</span>
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">age</span>(<span class="mi">31</span>));                   <span class="c1"># fails</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple attributes are AND-combined — every pair must match. When the
+expectation fails, the failure message separates <em>missing</em> accessors
+(the object does not respond to the name at all) from <em>mismatched</em>
+values (accessor exists, but the value disagrees):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected Person.new(name =&gt; &quot;Alice&quot;, age =&gt; 30) to have attributes age =&gt; 31, nickname =&gt; &quot;Al&quot; (missing: &quot;nickname&quot;; mismatched: age: got 30, wanted 31)
+</code></pre></div></td></tr></table></div>
+<p>The matcher composes naturally with other matchers — pass a <code>Matcher</code>
+instance as the expected value for any attribute:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Matcher</span>;
+
+<span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(
+  :<span class="n">name</span>(<span class="n">StartWithMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="s">&#39;A&#39;</span>]))),
+  :<span class="n">age</span>(<span class="n">BeAMatcher</span>.<span class="nb">new</span>(:<span class="n">type</span>(<span class="nb">Int</span>))),
+);
+</code></pre></div></td></tr></table></div>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">have-attributes</span>(:<span class="n">age</span>(<span class="mi">31</span>));
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to have attributes
+&lt;pairs&gt;</code> (or <code>not to have attributes &lt;pairs&gt;</code> under <code>.not</code>).</p>
+<h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
+<p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::Matcher</span>;
+
+<span class="k">class</span> <span class="n">EvenMatcher</span> <span class="k">does</span> <span class="n">Matcher</span> {
+  <span class="k">method</span> <span class="n">matches</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Bool</span>) { ?(<span class="nv">$actual</span> %% <span class="mi">2</span>) }
+  <span class="k">method</span> <span class="n">failure-message</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) {
+    <span class="s">&quot;expected $actual to be even&quot;</span>;
+  }
+  <span class="k">method</span> <span class="n">failure-message-negated</span>(<span class="nv">$actual</span> --&gt; <span class="nb">Str</span>) {
+    <span class="s">&quot;expected $actual not to be even&quot;</span>;
+  }
+  <span class="k">method</span> <span class="n">expected-value</span>(--&gt; <span class="nb">Mu</span>) { <span class="s">&#39;an even number&#39;</span> }
+}
+
+<span class="n">it</span> <span class="s">&#39;is even&#39;</span>, {
+  <span class="n">expect</span>(<span class="mi">4</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">EvenMatcher</span>.<span class="nb">new</span>);          <span class="c1"># passes</span>
+  <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="n">EvenMatcher</span>.<span class="nb">new</span>);      <span class="c1"># passes</span>
+}
+</code></pre></div></td></tr></table></div>
+<p>When the matcher reports a failure:</p>
+<ul>
+<li>The matcher's <code>failure-message($actual)</code> (or <code>failure-message-negated($actual)</code>
+  for <code>.not</code>) becomes <code>Failure.message</code> and is what the failure summary prints.</li>
+<li><code>Failure.given</code> holds the actual value, <code>Failure.expected</code> holds
+  <code>expected-value</code>. Both are still useful for programmatic consumers and for
+  alternate formatters.</li>
+</ul>
+<h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
+<p><code>.not</code> flips the boolean result of <code>matches</code> <em>before</em> the framework decides
+whether to record a failure. Matchers do not need to special-case negation;
+they only need to return a sensible message from <code>failure-message-negated</code> for
+when <code>.not</code> fails (i.e., the matcher matched but should not have).</p>
+<p>Built-in matchers and user-supplied matchers go through the same role, so a
+custom matcher you write integrates with <code>expect</code> exactly the way the
+built-ins do.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
