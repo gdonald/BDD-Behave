@@ -321,6 +321,48 @@ always fail. Use `be-a` for those cases.
 Failure messages render as `expected <actual> to be an instance of <type>`
 (or `not to be an instance of <type>` under `.not`).
 
+## RespondToMatcher (built-in)
+
+`respond-to` checks whether the actual value has one or more methods.
+Internally it uses the meta-object protocol's `^can` introspection
+(`$actual.^can($name)`), so it works on both instances and type objects,
+and recognises methods supplied by composed roles and parent classes.
+
+```raku
+class Calculator {
+  method add($a, $b) { $a + $b }
+  method subtract($a, $b) { $a - $b }
+}
+
+expect(Calculator.new).to.respond-to('add');                # passes
+expect(Calculator.new).to.respond-to('add', 'subtract');    # passes
+expect(Calculator.new).to.respond-to('multiply');           # fails
+
+role Greeter { method greet { 'hello' } }
+class Person does Greeter { }
+expect(Person.new).to.respond-to('greet');                  # passes (via role)
+
+expect('hello').to.respond-to('uc', 'lc', 'chars');         # built-ins work
+expect([1, 2, 3]).to.respond-to('push', 'pop');             # Arrays too
+```
+
+Multiple method names are AND-combined — every name must be present for
+the expectation to pass. When the expectation fails, the failure message
+lists the missing methods:
+
+```text
+expected Dog.new to respond to "bark", "meow", "purr" (missing: "meow", "purr")
+```
+
+Negation works the usual way:
+
+```raku
+expect(Dog.new).to.not.respond-to('meow');
+```
+
+Failure messages render as `expected <actual> to respond to <names>`
+(or `not to respond to <names>` under `.not`).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

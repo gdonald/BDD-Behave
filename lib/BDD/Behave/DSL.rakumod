@@ -547,6 +547,13 @@ class ExpectationBuilder {
     self!apply-matcher(BeAnInstanceOfMatcher.new(:type(type)));
   }
 
+  method respond-to(**@names) {
+    if @names.elems == 0 {
+      die "respond-to requires at least one method name";
+    }
+    self!apply-matcher(RespondToMatcher.new(:expected(@names)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),

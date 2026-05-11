@@ -1280,6 +1280,10 @@
 <td><code>be-an-instance-of</code></td>
 <td>Strict runtime-type check (<code>$actual.WHAT === $type</code>, requires defined). See <a href="../matchers/#beaninstanceofmatcher-built-in">Matchers › BeAnInstanceOfMatcher</a>.</td>
 </tr>
+<tr>
+<td><code>respond-to</code></td>
+<td>Method-presence check via <code>$actual.^can(...)</code>. Accepts one or more method names. See <a href="../matchers/#respondtomatcher-built-in">Matchers › RespondToMatcher</a>.</td>
+</tr>
 </tbody>
 </table>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1295,7 +1299,8 @@
 <span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span>
-<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>);
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>]);
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);
@@ -1309,6 +1314,7 @@
 <span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="nb">Int</span>);
 <span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an</span>(<span class="nb">Int</span>);
 <span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">be-an-instance-of</span>(<span class="n">Dog</span>);
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;add&#39;</span>, <span class="s">&#39;subtract&#39;</span>);
 </code></pre></div></td></tr></table></div>
 <h2 id="custom-matchers">Custom matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h2>
 <p><code>be</code> accepts any object that does the <a href="../matchers/"><code>Matcher</code></a> role. The matcher's <code>matches</code>, <code>failure-message</code>, and <code>failure-message-negated</code> methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.</p>

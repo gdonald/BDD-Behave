@@ -1,0 +1,158 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 38;
+
+class Calculator {
+  method add($a, $b) { $a + $b }
+  method subtract($a, $b) { $a - $b }
+}
+
+role Greeter {
+  method greet { 'hello' }
+}
+
+class Person does Greeter {
+  method name { 'Alice' }
+}
+
+class Dog {
+  method bark { 'woof' }
+}
+
+# RespondToMatcher does the Matcher role.
+{
+  my $m = RespondToMatcher.new(:expected(['bark']));
+  ok $m ~~ Matcher, 'RespondToMatcher does Matcher';
+}
+
+# matches: single method on user class.
+{
+  my $m = RespondToMatcher.new(:expected(['add']));
+  ok  $m.matches(Calculator.new), 'instance with method matches';
+  ok  $m.matches(Calculator),     'type object with method matches';
+  nok $m.matches(Dog.new),        'instance without method does not match';
+}
+
+# matches: multiple methods AND-combined.
+{
+  my $m = RespondToMatcher.new(:expected(['add', 'subtract']));
+  ok  $m.matches(Calculator.new), 'matches when all methods are present';
+
+  my $m2 = RespondToMatcher.new(:expected(['add', 'multiply']));
+  nok $m2.matches(Calculator.new), 'does not match when one method is missing';
+}
+
+# matches: methods from composed roles.
+{
+  my $m = RespondToMatcher.new(:expected(['greet']));
+  ok $m.matches(Person.new), 'role-supplied method is detected';
+
+  my $m2 = RespondToMatcher.new(:expected(['greet', 'name']));
+  ok $m2.matches(Person.new), 'role and own methods together';
+}
+
+# matches: built-in types.
+{
+  my $m = RespondToMatcher.new(:expected(['uc', 'lc']));
+  ok $m.matches('hello'), 'Str responds to uc and lc';
+
+  my $m2 = RespondToMatcher.new(:expected(['totally-not-a-method']));
+  nok $m2.matches('hello'), 'Str does not respond to fictional method';
+}
+
+# format-expected and description.
+{
+  my $m = RespondToMatcher.new(:expected(['foo', 'bar']));
+  is $m.format-expected, '"foo", "bar"', 'format-expected joins quoted names';
+  is $m.description,     'respond to "foo", "bar"', 'description';
+}
+
+# expected-value returns the list of names.
+{
+  my $m = RespondToMatcher.new(:expected(['bark', 'sit']));
+  my @exp = $m.expected-value.list;
+  is @exp.elems, 2, 'expected-value has both names';
+  is @exp[0], 'bark', 'first name preserved';
+  is @exp[1], 'sit',  'second name preserved';
+}
+
+# failure-message includes missing list.
+{
+  my $m = RespondToMatcher.new(:expected(['bark', 'meow', 'purr']));
+  my $msg = $m.failure-message(Dog.new);
+  ok $msg.contains('to respond to'),    'message has "to respond to"';
+  ok $msg.contains('missing:'),         'message lists missing methods';
+  ok $msg.contains('"meow"'),           'message names missing meow';
+  ok $msg.contains('"purr"'),           'message names missing purr';
+  nok $msg.contains('missing: "bark"'), 'present methods not listed as missing';
+}
+
+# failure-message without missing list when shape failure (none missing here, edge case).
+{
+  my $m = RespondToMatcher.new(:expected(['bark']));
+  my $msg-neg = $m.failure-message-negated(Dog.new);
+  ok $msg-neg.contains('not to respond to'), 'negated message';
+  ok $msg-neg.contains('"bark"'),            'negated message names method';
+}
+
+# expect integration: passing.
+{
+  Failures.list = ();
+  ok expect(Calculator.new).to.respond-to('add'), 'expect.to.respond-to passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+  Failures.list = ();
+}
+
+# expect integration: failing.
+{
+  Failures.list = ();
+  nok expect(Dog.new).to.respond-to('meow'), 'expect.to.respond-to fails when missing';
+  is Failures.list.elems, 1, 'one failure recorded';
+  ok Failures.list[0].message.contains('to respond to'), 'failure message present';
+  Failures.list = ();
+}
+
+# Negation integration.
+{
+  Failures.list = ();
+  ok expect(Dog.new).to.not.respond-to('meow'),
+     '.not.respond-to passes when method absent';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(Dog.new).to.not.respond-to('bark'),
+      '.not.respond-to fails when method present';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  ok Failures.list[0].message.contains('not to respond to'), 'negated message';
+  Failures.list = ();
+}
+
+# Empty arg list dies.
+{
+  my $caught;
+  try {
+    expect(Calculator.new).to.respond-to();
+    CATCH { default { $caught = .message } }
+  }
+  ok $caught.defined, 'respond-to() with no args dies';
+  ok $caught.contains('respond-to requires at least one method name'),
+     'die message is helpful';
+}
+
+# Failure metadata.
+{
+  Failures.list = ();
+  expect(Dog.new).to.respond-to('meow');
+  ok Failures.list[0].given ~~ Dog, 'Failure.given preserved';
+  my @exp = Failures.list[0].expected.list;
+  is @exp.elems, 1, 'Failure.expected has one method';
+  is @exp[0], 'meow', 'Failure.expected names the method';
+  Failures.list = ();
+}

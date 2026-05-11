@@ -987,6 +987,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#respondtomatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RespondToMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1290,6 +1301,17 @@
     <span class="md-ellipsis">
       
         BeAnInstanceOfMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#respondtomatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RespondToMatcher (built-in)
       
     </span>
   </a>
@@ -1677,6 +1699,51 @@ object, <code>be-an-instance-of(SomeRole)</code> and <code>be-an-instance-of(Som
 always fail. Use <code>be-a</code> for those cases.</p>
 <p>Failure messages render as <code>expected &lt;actual&gt; to be an instance of &lt;type&gt;</code>
 (or <code>not to be an instance of &lt;type&gt;</code> under <code>.not</code>).</p>
+<h2 id="respondtomatcher-built-in">RespondToMatcher (built-in)<a class="headerlink" href="#respondtomatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>respond-to</code> checks whether the actual value has one or more methods.
+Internally it uses the meta-object protocol's <code>^can</code> introspection
+(<code>$actual.^can($name)</code>), so it works on both instances and type objects,
+and recognises methods supplied by composed roles and parent classes.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">Calculator</span> {
+  <span class="k">method</span> <span class="nb">add</span>(<span class="nv">$a</span>, <span class="nv">$b</span>) { <span class="nv">$a</span> + <span class="nv">$b</span> }
+  <span class="k">method</span> <span class="n">subtract</span>(<span class="nv">$a</span>, <span class="nv">$b</span>) { <span class="nv">$a</span> - <span class="nv">$b</span> }
+}
+
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;add&#39;</span>);                <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;add&#39;</span>, <span class="s">&#39;subtract&#39;</span>);    <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="n">Calculator</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;multiply&#39;</span>);           <span class="c1"># fails</span>
+
+<span class="k">role</span> <span class="n">Greeter</span> { <span class="k">method</span> <span class="n">greet</span> { <span class="s">&#39;hello&#39;</span> } }
+<span class="k">class</span> <span class="n">Person</span> <span class="k">does</span> <span class="n">Greeter</span> { }
+<span class="n">expect</span>(<span class="n">Person</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;greet&#39;</span>);                  <span class="c1"># passes (via role)</span>
+
+<span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;uc&#39;</span>, <span class="s">&#39;lc&#39;</span>, <span class="s">&#39;chars&#39;</span>);         <span class="c1"># built-ins work</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;push&#39;</span>, <span class="s">&#39;pop&#39;</span>);             <span class="c1"># Arrays too</span>
+</code></pre></div></td></tr></table></div>
+<p>Multiple method names are AND-combined — every name must be present for
+the expectation to pass. When the expectation fails, the failure message
+lists the missing methods:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected Dog.new to respond to &quot;bark&quot;, &quot;meow&quot;, &quot;purr&quot; (missing: &quot;meow&quot;, &quot;purr&quot;)
+</code></pre></div></td></tr></table></div>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="n">Dog</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">respond-to</span>(<span class="s">&#39;meow&#39;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to respond to &lt;names&gt;</code>
+(or <code>not to respond to &lt;names&gt;</code> under <code>.not</code>).</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

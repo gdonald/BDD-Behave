@@ -253,6 +253,39 @@ class BeAnInstanceOfMatcher does Matcher is export {
   method description(--> Str) { 'be an instance of ' ~ self.type-name }
 }
 
+class RespondToMatcher does Matcher is export {
+  has $.expected;
+
+  method !missing($actual) {
+    $!expected.list.grep({ !$actual.^can($_.Str) });
+  }
+
+  method matches($actual --> Bool) {
+    ?(self!missing($actual).elems == 0);
+  }
+
+  method format-expected(--> Str) {
+    $!expected.list.map(*.raku).join(', ');
+  }
+
+  method failure-message($actual --> Str) {
+    my @missing = self!missing($actual);
+    my $head    = "expected " ~ $actual.raku ~ " to respond to "
+                ~ self.format-expected;
+    @missing.elems
+      ?? $head ~ " (missing: " ~ @missing.map(*.raku).join(', ') ~ ")"
+      !! $head;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to respond to " ~ self.format-expected;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'respond to ' ~ self.format-expected }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 
