@@ -926,6 +926,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#allmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AllMatcher (built-in)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AllMatcher (built-in)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#composing-across-collections-of-collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composing across collections of collections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#junctions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Junctions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1171,6 +1210,45 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#allmatcher-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AllMatcher (built-in)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AllMatcher (built-in)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#composing-across-collections-of-collections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Composing across collections of collections
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#junctions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Junctions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1443,6 +1521,59 @@ to start with</code> under <code>.not</code>).</p>
 <p>Same slurp / type / empty-arg conventions as <code>start-with</code>. Failure messages
 render as <code>expected &lt;actual&gt; to end with &lt;items&gt;</code> (or <code>not to end with</code> under
 <code>.not</code>).</p>
+<h2 id="allmatcher-built-in">AllMatcher (built-in)<a class="headerlink" href="#allmatcher-built-in" title="Permanent link">&para;</a></h2>
+<p><code>all</code> checks that <strong>every element</strong> of a collection matches an inner matcher.
+The inner argument is either a plain value (wrapped in <code>BeMatcher</code>, smartmatch
+semantics) or any object that does <code>Matcher</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">1</span>, <span class="mi">1</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="mi">1</span>);                <span class="c1"># plain value via BeMatcher</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">Int</span>);              <span class="c1"># type</span>
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">5</span>, <span class="mi">10</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);           <span class="c1"># range</span>
+<span class="n">expect</span>([<span class="s">&#39;foo&#39;</span>, <span class="s">&#39;food&#39;</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="sr">/^foo/</span>);     <span class="c1"># regex</span>
+
+<span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="n">PositiveMatcher</span>.<span class="nb">new</span>);          <span class="c1"># custom matcher</span>
+<span class="n">expect</span>([[<span class="mi">1</span>, <span class="mi">2</span>], [<span class="mi">1</span>, <span class="mi">3</span>]]).<span class="nb">to</span>.<span class="nb">all</span>(                        <span class="c1"># composes with built-ins</span>
+  <span class="n">StartWithMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="mi">1</span>]))
+);
+</code></pre></div></td></tr></table></div>
+<p>An empty collection passes vacuously:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">Int</span>);                     <span class="c1"># passes</span>
+<span class="n">expect</span>(()).<span class="nb">to</span>.<span class="nb">all</span>(<span class="mi">1</span>);                       <span class="c1"># passes</span>
+</code></pre></div></td></tr></table></div>
+<p>Undefined or non-iterable actuals fail with a shape failure message
+(<code>expected ... to be a collection ...</code>). For sequence actuals, the matcher
+iterates <code>$actual.list</code>, so <code>Hash</code> actuals are iterated as <code>Pair</code>s.</p>
+<p>Failure messages render as
+<code>expected &lt;actual&gt; to all &lt;inner-description&gt; (element at index N: &lt;item&gt; did not match)</code>,
+pointing at the <strong>first</strong> failing element. Negation renders as
+<code>expected &lt;actual&gt; not to all &lt;inner-description&gt;</code>.</p>
+<h3 id="composing-across-collections-of-collections">Composing across collections of collections<a class="headerlink" href="#composing-across-collections-of-collections" title="Permanent link">&para;</a></h3>
+<p><code>all</code> is most useful when the inner matcher is itself a structural matcher:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">@rows</span> = [
+  { <span class="nb">id</span> =&gt; <span class="mi">1</span>, <span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span> },
+  { <span class="nb">id</span> =&gt; <span class="mi">2</span>, <span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span> },
+];
+
+<span class="n">expect</span>(<span class="nv">@rows</span>).<span class="nb">to</span>.<span class="nb">all</span>(<span class="n">IncludeMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span>])));
+</code></pre></div></td></tr></table></div>
+<h3 id="junctions">Junctions<a class="headerlink" href="#junctions" title="Permanent link">&para;</a></h3>
+<p>Pass junctions through <code>.all(...)</code> directly — the method binds its argument
+raw so junctions are not autothreaded out:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
+</code></pre></div></td></tr></table></div>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

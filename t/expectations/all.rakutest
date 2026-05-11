@@ -1,0 +1,171 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 45;
+
+class PositiveMatcher does Matcher {
+  method matches($actual --> Bool) { ?($actual.defined && $actual > 0) }
+  method failure-message($actual --> Str) {
+    "expected $actual to be positive";
+  }
+  method failure-message-negated($actual --> Str) {
+    "expected $actual not to be positive";
+  }
+  method description(--> Str) { 'be positive' }
+}
+
+# AllMatcher does the Matcher role.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  ok $m ~~ Matcher, 'AllMatcher does Matcher';
+}
+
+# AllMatcher: array element matching with BeMatcher.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  ok  $m.matches([1, 1, 1]),     'matches when every element equals expected';
+  nok $m.matches([1, 2, 1]),     'rejects when one element differs';
+  nok $m.matches([2, 2, 2]),     'rejects when no element matches';
+
+  my $type-m = AllMatcher.new(:inner(BeMatcher.new(:expected(Int))));
+  ok  $type-m.matches([1, 2, 3]),       'matches when every element is Int';
+  nok $type-m.matches([1, 'two', 3]),   'rejects when one element is not Int';
+
+  my $range-m = AllMatcher.new(:inner(BeMatcher.new(:expected(1..10))));
+  ok  $range-m.matches([1, 5, 10]),     'matches when every element is in range';
+  nok $range-m.matches([1, 11, 5]),     'rejects when one element is out of range';
+}
+
+# AllMatcher: empty collection vacuous truth.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  ok $m.matches([]),  'vacuous truth on empty array';
+  ok $m.matches(()),  'vacuous truth on empty list';
+}
+
+# AllMatcher: List actual.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(Int))));
+  ok $m.matches((1, 2, 3)), 'matches a List of Ints';
+}
+
+# AllMatcher: type guards.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  nok $m.matches(Any), 'rejects undefined actual';
+  nok $m.matches(42),  'rejects non-iterable scalar';
+}
+
+# AllMatcher: custom inner matcher.
+{
+  my $m = AllMatcher.new(:inner(PositiveMatcher.new));
+  ok  $m.matches([1, 2, 3]),     'matches when every element is positive';
+  nok $m.matches([1, -2, 3]),    'rejects when one element is negative';
+  nok $m.matches([1, 0, 3]),     'rejects when one element is zero';
+}
+
+# AllMatcher: nested matcher composition.
+{
+  my $inner = StartWithMatcher.new(:expected([1]));
+  my $m     = AllMatcher.new(:inner($inner));
+  ok  $m.matches([[1, 2], [1, 3]]),   'composes with StartWithMatcher (pass)';
+  nok $m.matches([[1, 2], [2, 3]]),   'composes with StartWithMatcher (fail)';
+}
+
+# AllMatcher: failure-message format.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  my $msg = $m.failure-message([1, 2, 1]);
+  ok $msg.contains('to all be 1'),
+     'failure-message contains "to all <inner description>"';
+  ok $msg.contains('element at index 1'),
+     'failure-message reports failing index';
+  ok $msg.contains('did not match'),
+     'failure-message says "did not match"';
+}
+
+# AllMatcher: failure-message-negated format.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  is $m.failure-message-negated([1, 1, 1]),
+     'expected $[1, 1, 1] not to all be 1',
+     'failure-message-negated renders correctly';
+}
+
+# AllMatcher: failure-message on non-collection actual.
+{
+  my $m = AllMatcher.new(:inner(BeMatcher.new(:expected(1))));
+  ok $m.failure-message(42).contains('to be a collection'),
+     'non-collection actual produces shape failure';
+  ok $m.failure-message(Any).contains('to be a collection'),
+     'undefined actual produces shape failure';
+}
+
+# AllMatcher: expected-value and description.
+{
+  my $inner = BeMatcher.new(:expected(0));
+  my $m     = AllMatcher.new(:inner($inner));
+  ok $m.expected-value === $inner, 'expected-value returns the inner matcher';
+  is $m.description, 'all be 0',   'description summarises inner matcher';
+}
+
+# expect(...).to.all(...) integration.
+{
+  Failures.list = ();
+  ok expect([1, 1, 1]).to.all(1), 'expect.to.all passes when every element matches';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, 2, 1]).to.all(1), 'expect.to.all fails for non-matching element';
+  is Failures.list.elems, 1, 'one failure recorded';
+  ok Failures.list[0].message.contains('to all be 1'), 'failure message contains "to all be 1"';
+  is-deeply Failures.list[0].given.Array, [1, 2, 1], 'failure given preserved';
+  Failures.list = ();
+}
+
+# expect(...).to.all(matcher_instance) integration.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.all(PositiveMatcher.new), 'integration with custom matcher passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect([1, -1, 1]).to.all(PositiveMatcher.new), 'integration with custom matcher fails';
+  is Failures.list.elems, 1, 'one failure recorded';
+  Failures.list = ();
+}
+
+# Negation flow.
+{
+  Failures.list = ();
+  ok expect([1, 2, 3]).to.not.all(1), '.not passes when at least one element differs';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect([1, 1, 1]).to.not.all(1), '.not fails when every element matches';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message, 'expected $[1, 1, 1] not to all be 1', 'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# Failure.expected exposes the inner matcher for tooling.
+{
+  Failures.list = ();
+  expect([1, 2, 3]).to.all(0);
+  ok Failures.list[0].expected ~~ Matcher, 'Failure.expected is a Matcher instance';
+  Failures.list = ();
+}
+
+# Empty collection passes through expect.
+{
+  Failures.list = ();
+  ok expect([]).to.all(Int), 'empty array passes vacuously';
+  is Failures.list.elems, 0, 'no failure on empty array';
+  Failures.list = ();
+}

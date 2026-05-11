@@ -206,6 +206,62 @@ Same slurp / type / empty-arg conventions as `start-with`. Failure messages
 render as `expected <actual> to end with <items>` (or `not to end with` under
 `.not`).
 
+## AllMatcher (built-in)
+
+`all` checks that **every element** of a collection matches an inner matcher.
+The inner argument is either a plain value (wrapped in `BeMatcher`, smartmatch
+semantics) or any object that does `Matcher`:
+
+```raku
+expect([1, 1, 1]).to.all(1);                # plain value via BeMatcher
+expect([1, 2, 3]).to.all(Int);              # type
+expect([1, 5, 10]).to.all(1..10);           # range
+expect(['foo', 'food']).to.all(/^foo/);     # regex
+
+expect([1, 2, 3]).to.all(PositiveMatcher.new);          # custom matcher
+expect([[1, 2], [1, 3]]).to.all(                        # composes with built-ins
+  StartWithMatcher.new(:expected([1]))
+);
+```
+
+An empty collection passes vacuously:
+
+```raku
+expect([]).to.all(Int);                     # passes
+expect(()).to.all(1);                       # passes
+```
+
+Undefined or non-iterable actuals fail with a shape failure message
+(`expected ... to be a collection ...`). For sequence actuals, the matcher
+iterates `$actual.list`, so `Hash` actuals are iterated as `Pair`s.
+
+Failure messages render as
+`expected <actual> to all <inner-description> (element at index N: <item> did not match)`,
+pointing at the **first** failing element. Negation renders as
+`expected <actual> not to all <inner-description>`.
+
+### Composing across collections of collections
+
+`all` is most useful when the inner matcher is itself a structural matcher:
+
+```raku
+my @rows = [
+  { id => 1, status => 'ok' },
+  { id => 2, status => 'ok' },
+];
+
+expect(@rows).to.all(IncludeMatcher.new(:expected([status => 'ok'])));
+```
+
+### Junctions
+
+Pass junctions through `.all(...)` directly — the method binds its argument
+raw so junctions are not autothreaded out:
+
+```raku
+expect([1, 2, 3]).to.all(any(1, 2, 3));
+```
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

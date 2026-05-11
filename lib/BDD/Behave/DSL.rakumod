@@ -528,6 +528,13 @@ class ExpectationBuilder {
     self!apply-matcher(EndWithMatcher.new(:expected(@items)));
   }
 
+  method all(Mu \expected) {
+    my $inner = expected ~~ Matcher
+      ?? expected
+      !! BeMatcher.new(:expected(expected));
+    self!apply-matcher(AllMatcher.new(:inner($inner)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),

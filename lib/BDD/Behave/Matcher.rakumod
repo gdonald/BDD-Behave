@@ -161,6 +161,50 @@ class EndWithMatcher does Matcher is export {
   method description(--> Str) { 'end with ' ~ self.format-expected }
 }
 
+class AllMatcher does Matcher is export {
+  has Matcher $.inner;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Positional | Iterable;
+
+    for $actual.list -> $item {
+      return False unless $!inner.matches($item);
+    }
+    return True;
+  }
+
+  method !find-failing-index($actual) {
+    for $actual.list.kv -> $i, $item {
+      return $i unless $!inner.matches($item);
+    }
+    return Int;
+  }
+
+  method failure-message($actual --> Str) {
+    unless $actual.defined && $actual ~~ Positional | Iterable {
+      return "expected " ~ $actual.raku ~ " to be a collection that all "
+           ~ $!inner.description;
+    }
+
+    my $idx = self!find-failing-index($actual);
+    if $idx.defined {
+      my $item = $actual.list[$idx];
+      return "expected " ~ $actual.raku ~ " to all " ~ $!inner.description
+           ~ " (element at index " ~ $idx ~ ": " ~ $item.raku ~ " did not match)";
+    }
+    "expected " ~ $actual.raku ~ " to all " ~ $!inner.description;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to all " ~ $!inner.description;
+  }
+
+  method expected-value(--> Mu) { $!inner }
+
+  method description(--> Str) { 'all ' ~ $!inner.description }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

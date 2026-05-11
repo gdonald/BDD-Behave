@@ -82,6 +82,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `include` | Membership check across arrays, hashes, sets/bags, strings, and ranges. See [Matchers › IncludeMatcher](matchers.md#includematcher-built-in). |
 | `start-with` | Sequence prefix check for arrays / lists; per-arg prefix check for strings. See [Matchers › StartWithMatcher](matchers.md#startwithmatcher-built-in). |
 | `end-with` | Sequence suffix check for arrays / lists; per-arg suffix check for strings. See [Matchers › EndWithMatcher](matchers.md#endwithmatcher-built-in). |
+| `all` | Every element of a collection must match an inner matcher. See [Matchers › AllMatcher](matchers.md#allmatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -94,6 +95,7 @@ expect([1, 2, 3]).to.start-with(1, 2);
 expect([1, 2, 3]).to.end-with(2, 3);
 expect('hello world').to.start-with('hello');
 expect('hello world').to.end-with('world');
+expect([1, 2, 3]).to.all(Int);
 ```
 
 ## Custom matchers
