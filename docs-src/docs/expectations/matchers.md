@@ -530,6 +530,64 @@ expected 10 to be between 1 and 10 (exclusive)
 `Failure.expected` is populated as `[min, max]` so programmatic
 consumers and alternate formatters can introspect the bounds.
 
+## BeWithinMatcher (built-in)
+
+`be-within` performs a tolerance check on a numeric `actual` against an
+expected target, parameterized by a `delta`. The call shape uses an
+`.of(...)` continuation so the delta and expected target read naturally:
+
+```raku
+expect(5.05).to.be-within(0.1).of(5.0);     # passes (|5.05 - 5.0| <= 0.1)
+expect(5.1).to.be-within(0.1).of(5.0);      # passes (boundary is inclusive)
+expect(5.2).to.be-within(0.1).of(5.0);      # fails
+expect(3.14e0).to.be-within(0.01e0).of(3.15e0);  # Num tolerance
+```
+
+The boundary is inclusive — `abs(actual - expected) <= delta` — so a
+delta of `0` means actual must equal expected exactly:
+
+```raku
+expect(5).to.be-within(0).of(5);            # passes
+expect(5.0001).to.be-within(0).of(5);       # fails
+```
+
+`be-within` accepts any `Real` actual and target, so `Int`, `Rat`, and
+`Num` mix freely. Negative values and zero behave the obvious way:
+
+```raku
+expect(-5.05).to.be-within(0.1).of(-5.0);
+expect(0.05).to.be-within(0.1).of(0);
+```
+
+The matcher fails (rather than dying) when either `$actual` or the
+target passed to `.of(...)` is undefined or non-`Real`, so a stray
+`Int`-typed `Nil` or a `Str` produces a recorded failure instead of a
+runtime error:
+
+```raku
+expect(Int).to.be-within(0.1).of(5.0);      # records a failure
+expect('abc').to.be-within(0.1).of(5.0);    # records a failure
+expect(5.0).to.be-within(0.1).of(Int);      # records a failure
+```
+
+Negation works the usual way:
+
+```raku
+expect(5.2).to.not.be-within(0.1).of(5.0);  # passes (outside tolerance)
+expect(5.05).to.not.be-within(0.1).of(5.0); # fails (inside tolerance)
+```
+
+Failure messages render the delta and expected target:
+
+```text
+expected 5.2 to be within 0.1 of 5.0
+expected 5.05 not to be within 0.1 of 5.0
+```
+
+`Failure.expected` is populated with the expected target (not the
+delta), and `Failure.given` holds the actual value, so programmatic
+consumers and alternate formatters can introspect both.
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

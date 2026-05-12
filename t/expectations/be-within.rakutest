@@ -1,0 +1,143 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 37;
+
+# BeWithinMatcher does the Matcher role.
+{
+  my $m = BeWithinMatcher.new(:delta(0.1), :expected(5.0));
+  ok $m ~~ Matcher, 'BeWithinMatcher does Matcher';
+}
+
+# BeWithinMatcher: core tolerance check.
+{
+  my $m = BeWithinMatcher.new(:delta(0.1), :expected(5.0));
+  ok $m.matches(5.0),  'matches when actual equals expected';
+  ok $m.matches(5.05), 'matches inside the tolerance band';
+  ok $m.matches(5.1),  'matches at upper boundary';
+  ok $m.matches(4.9),  'matches at lower boundary';
+  ok $m.matches(4.95), 'matches inside the negative side';
+  nok $m.matches(5.2), 'rejects above upper boundary';
+  nok $m.matches(4.8), 'rejects below lower boundary';
+}
+
+# BeWithinMatcher: zero delta.
+{
+  my $m = BeWithinMatcher.new(:delta(0), :expected(5));
+  ok $m.matches(5),       'zero delta matches exact value';
+  nok $m.matches(5.0001), 'zero delta rejects any drift';
+}
+
+# BeWithinMatcher: numeric types mix freely.
+{
+  ok BeWithinMatcher.new(:delta(2), :expected(11)).matches(10),
+     'Int delta + Int expected + Int actual';
+  ok BeWithinMatcher.new(:delta(0.01e0), :expected(3.15e0)).matches(3.14e0),
+     'Num bounds, Num actual';
+  ok BeWithinMatcher.new(:delta(0.5), :expected(2.25)).matches(2),
+     'Int actual against Rat expected';
+  ok BeWithinMatcher.new(:delta(0.1), :expected(-5.0)).matches(-5.05),
+     'negative values within tolerance';
+  ok BeWithinMatcher.new(:delta(0.1), :expected(0)).matches(0.05),
+     'zero expected, small positive actual';
+}
+
+# BeWithinMatcher: type guards.
+{
+  my $m = BeWithinMatcher.new(:delta(0.1), :expected(5.0));
+  nok $m.matches(Int),   'rejects undefined Int type';
+  nok $m.matches(Any),   'rejects Any';
+  nok $m.matches('abc'), 'rejects non-Real string';
+
+  my $bad-expected = BeWithinMatcher.new(:delta(0.1), :expected(Int));
+  nok $bad-expected.matches(5.0), 'rejects when expected is undefined';
+
+  my $bad-str-expected = BeWithinMatcher.new(:delta(0.1), :expected('abc'));
+  nok $bad-str-expected.matches(5.0), 'rejects when expected is non-Real';
+}
+
+# BeWithinMatcher: failure messages.
+{
+  my $m = BeWithinMatcher.new(:delta(0.1), :expected(5.0));
+  is $m.failure-message(5.2),
+     'expected 5.2 to be within 0.1 of 5.0',
+     'failure-message';
+  is $m.failure-message-negated(5.05),
+     'expected 5.05 not to be within 0.1 of 5.0',
+     'failure-message-negated';
+}
+
+# BeWithinMatcher: expected-value returns expected target.
+{
+  my $m = BeWithinMatcher.new(:delta(0.1), :expected(5.0));
+  is $m.expected-value, 5.0, 'expected-value is the target value';
+}
+
+# BeWithinMatcher: description.
+{
+  my $m = BeWithinMatcher.new(:delta(0.1), :expected(5.0));
+  is $m.description, 'be within 0.1 of 5.0', 'description';
+}
+
+# expect(...).to.be-within(d).of(e) integration: passes.
+{
+  Failures.list = ();
+  expect(5.0).to.be-within(0.1).of(5.0);
+  is Failures.list.elems, 0, 'passes when actual equals expected';
+
+  Failures.list = ();
+  expect(5.05).to.be-within(0.1).of(5.0);
+  is Failures.list.elems, 0, 'passes within tolerance';
+
+  Failures.list = ();
+  expect(5.1).to.be-within(0.1).of(5.0);
+  is Failures.list.elems, 0, 'passes at upper boundary';
+}
+
+# expect(...).to.be-within(d).of(e) integration: fails.
+{
+  Failures.list = ();
+  expect(5.2).to.be-within(0.1).of(5.0);
+  is Failures.list.elems, 1, 'fails outside tolerance';
+  is Failures.list[0].given, 5.2, 'failure given preserved';
+  is Failures.list[0].expected, 5.0, 'failure expected preserved';
+  is Failures.list[0].message,
+     'expected 5.2 to be within 0.1 of 5.0',
+     'failure-message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-within(d).of(e) negation.
+{
+  Failures.list = ();
+  expect(5.2).to.not.be-within(0.1).of(5.0);
+  is Failures.list.elems, 0, '.not passes when outside tolerance';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(5.05).to.not.be-within(0.1).of(5.0);
+  is Failures.list.elems, 1, '.not fails when inside tolerance';
+  ok Failures.list[0].negated, 'failure marked negated';
+  is Failures.list[0].message,
+     'expected 5.05 not to be within 0.1 of 5.0',
+     'negated failure-message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.be-within(d).of(undefined / non-Real) records a failure.
+{
+  Failures.list = ();
+  expect(5.0).to.be-within(0.1).of(Int);
+  is Failures.list.elems, 1, 'records failure when expected is undefined';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(5.0).to.be-within(0.1).of('abc');
+  is Failures.list.elems, 1, 'records failure when expected is non-Real';
+  Failures.list = ();
+}

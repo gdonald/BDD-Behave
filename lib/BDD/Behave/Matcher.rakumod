@@ -500,6 +500,35 @@ class BeBetweenMatcher does Matcher is export {
   method description(--> Str) { 'be between ' ~ self.bounds-clause }
 }
 
+class BeWithinMatcher does Matcher is export {
+  has $.delta;
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Real;
+    return False unless $!expected.defined;
+    return False unless $!expected ~~ Real;
+    ?(abs($actual - $!expected) <= $!delta);
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be within " ~ $!delta.raku
+      ~ " of " ~ $!expected.raku;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be within " ~ $!delta.raku
+      ~ " of " ~ $!expected.raku;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) {
+    'be within ' ~ $!delta.raku ~ ' of ' ~ $!expected.raku;
+  }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

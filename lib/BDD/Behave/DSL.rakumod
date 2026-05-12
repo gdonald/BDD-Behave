@@ -474,6 +474,41 @@ class BetweenExpectation {
   }
 }
 
+class WithinExpectation {
+  has Mu   $.given;
+  has Bool $.negated = False;
+  has Str  $.file;
+  has Int  $.line;
+  has      $.delta;
+
+  submethod BUILD(
+    Mu :$given is raw, :$!negated, :$!file, :$!line, :$!delta,
+  ) {
+    $!given := $given;
+  }
+
+  method of($expected --> Nil) {
+    my $matcher = BeWithinMatcher.new(:delta($!delta), :$expected);
+    my $matched = ?$matcher.matches($!given);
+    my $passed  = $!negated ?? !$matched !! $matched;
+    return if $passed;
+
+    my $message = $!negated
+      ?? $matcher.failure-message-negated($!given)
+      !! $matcher.failure-message($!given);
+
+    my $f = Failure.new(
+      :file($!file),
+      :line($!line),
+      :given($!given),
+      :expected($matcher.expected-value),
+      :negated($!negated),
+      :message($message),
+    );
+    Failures.list.push($f);
+  }
+}
+
 class ExpectationBuilder {
   has $.given;
   has Bool $.negated is rw = False;
@@ -674,6 +709,16 @@ class ExpectationBuilder {
     );
     $expectation.validate;
     $expectation;
+  }
+
+  method be-within($delta) {
+    WithinExpectation.new(
+      :given($!given),
+      :negated($!negated),
+      :file($!file),
+      :line($!line),
+      :$delta,
+    );
   }
 
   method have-received(Str:D $method-name) {

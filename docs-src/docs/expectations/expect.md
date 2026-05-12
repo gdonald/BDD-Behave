@@ -92,6 +92,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-less-than` / `be-lt` | Numeric `<` comparison. |
 | `be-less-than-or-equal-to` / `be-lte` | Numeric `<=` comparison. |
 | `be-between` | Range check between two `Real` bounds. Inclusive by default; chain `.exclusive` or `.inclusive` to flip the mode. See [Matchers › BeBetweenMatcher](matchers.md#bebetweenmatcher-built-in). |
+| `be-within` | Tolerance check: `be-within($delta).of($expected)` passes when `abs(actual - expected) <= delta`. See [Matchers › BeWithinMatcher](matchers.md#bewithinmatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -111,6 +112,7 @@ expect(Dog.new).to.be-an-instance-of(Dog);
 expect(Calculator.new).to.respond-to('add', 'subtract');
 expect(5).to.be-between(1, 10);
 expect(5).to.be-between(1, 10).exclusive;
+expect(3.14e0).to.be-within(0.01e0).of(3.15e0);
 ```
 
 ## Custom matchers
