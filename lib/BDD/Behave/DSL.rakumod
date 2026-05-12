@@ -561,6 +561,38 @@ class ExpectationBuilder {
     self!apply-matcher(HaveAttributesMatcher.new(:expected(%attrs)));
   }
 
+  method be-greater-than($expected) {
+    self!apply-matcher(BeGreaterThanMatcher.new(:$expected));
+  }
+
+  method be-gt($expected) {
+    self!apply-matcher(BeGreaterThanMatcher.new(:$expected));
+  }
+
+  method be-greater-than-or-equal-to($expected) {
+    self!apply-matcher(BeGreaterThanOrEqualMatcher.new(:$expected));
+  }
+
+  method be-gte($expected) {
+    self!apply-matcher(BeGreaterThanOrEqualMatcher.new(:$expected));
+  }
+
+  method be-less-than($expected) {
+    self!apply-matcher(BeLessThanMatcher.new(:$expected));
+  }
+
+  method be-lt($expected) {
+    self!apply-matcher(BeLessThanMatcher.new(:$expected));
+  }
+
+  method be-less-than-or-equal-to($expected) {
+    self!apply-matcher(BeLessThanOrEqualMatcher.new(:$expected));
+  }
+
+  method be-lte($expected) {
+    self!apply-matcher(BeLessThanOrEqualMatcher.new(:$expected));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = BDD::Behave::Mock::HaveReceivedExpectation.new(
       :target($!given),

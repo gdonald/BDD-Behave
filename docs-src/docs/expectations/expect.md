@@ -87,6 +87,10 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-an-instance-of` | Strict runtime-type check (`$actual.WHAT === $type`, requires defined). See [Matchers › BeAnInstanceOfMatcher](matchers.md#beaninstanceofmatcher-built-in). |
 | `respond-to` | Method-presence check via `$actual.^can(...)`. Accepts one or more method names. See [Matchers › RespondToMatcher](matchers.md#respondtomatcher-built-in). |
 | `have-attributes` | Multi-attribute check: each named pair calls the accessor on `$actual` and compares (`eqv`, or an inner `Matcher`). See [Matchers › HaveAttributesMatcher](matchers.md#haveattributesmatcher-built-in). |
+| `be-greater-than` / `be-gt` | Numeric `>` comparison; fails (not dies) on undefined or non-`Real` actuals. See [Matchers › Comparison matchers](matchers.md#comparison-matchers-built-in). |
+| `be-greater-than-or-equal-to` / `be-gte` | Numeric `>=` comparison. |
+| `be-less-than` / `be-lt` | Numeric `<` comparison. |
+| `be-less-than-or-equal-to` / `be-lte` | Numeric `<=` comparison. |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);

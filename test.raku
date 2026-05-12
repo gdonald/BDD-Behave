@@ -4,6 +4,8 @@ use v6.d;
 
 $*OUT.out-buffer = False;
 
+%*ENV<AUTHOR_TESTING> = 1;
+
 chdir $*PROGRAM.parent;
 
 my $jobs = $*KERNEL.cpu-cores // 2;

@@ -8,6 +8,7 @@ plan 1;
 constant AUTHOR = ?%*ENV<AUTHOR_TESTING>;
 
 if AUTHOR {
+  my $*DIST-DIR = $*PROGRAM.parent.parent.parent.absolute.IO;
   require Test::META <&meta-ok>;
   meta-ok;
   done-testing;

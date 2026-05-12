@@ -89,4 +89,8 @@ See also the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/ma
 
 #### License
 
-Behave is released under the [Artistic License 2.0](https://opensource.org/licenses/Artistic-2.0)
+Copyright (c) 2019-2026 Greg Donald
+
+This software is licensed under the Artistic License 2.0.
+
+[![GitHub](https://img.shields.io/github/license/gdonald/BDD-Behave?color=aa0000)](https://github.com/gdonald/BDD-Behave/blob/master/LICENSE)

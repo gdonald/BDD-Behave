@@ -415,6 +415,60 @@ expect($alice).to.not.have-attributes(:age(31));
 Failure messages render as `expected <actual> to have attributes
 <pairs>` (or `not to have attributes <pairs>` under `.not`).
 
+## Comparison matchers (built-in)
+
+Four matchers cover numeric ordering:
+
+| Matcher | Operator | Aliases |
+| --- | --- | --- |
+| `be-greater-than` | `>` | `be-gt` |
+| `be-greater-than-or-equal-to` | `>=` | `be-gte` |
+| `be-less-than` | `<` | `be-lt` |
+| `be-less-than-or-equal-to` | `<=` | `be-lte` |
+
+```raku
+expect(5).to.be-greater-than(3);
+expect(5).to.be-greater-than-or-equal-to(5);
+expect(3).to.be-less-than(5);
+expect(5).to.be-less-than-or-equal-to(5);
+
+expect(5).to.be-gt(3);
+expect(5).to.be-gte(5);
+expect(3).to.be-lt(5);
+expect(5).to.be-lte(5);
+```
+
+All four accept any `Real` value, so `Int`, `Rat`, and `Num` mix freely
+and negatives / zero behave as expected:
+
+```raku
+expect(1.5).to.be-greater-than(1.4);     # Rat vs Rat
+expect(5).to.be-greater-than(4.99);      # Int vs Rat
+expect(3.14e0).to.be-greater-than(3.0e0); # Num vs Num
+expect(-1).to.be-greater-than(-5);
+expect(0).to.not.be-greater-than(0);
+```
+
+Each matcher fails (rather than dying) when `$actual` is undefined or
+is not a `Real`, so a stray `Int`-typed `Nil` or a `Str` produces a
+recorded failure instead of a runtime error:
+
+```raku
+expect(Int).to.be-greater-than(0);  # records a failure
+expect('abc').to.be-less-than(10);  # records a failure
+```
+
+Negation works the usual way:
+
+```raku
+expect(3).to.not.be-greater-than(5);
+expect(7).to.not.be-less-than(5);
+```
+
+Failure messages render as `expected <actual> to be greater than
+<expected>` (and the obvious variants for the other three), or `not to
+be …` under `.not`.
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

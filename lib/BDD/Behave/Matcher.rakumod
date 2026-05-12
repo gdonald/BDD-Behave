@@ -370,6 +370,102 @@ class HaveAttributesMatcher does Matcher is export {
   }
 }
 
+class BeGreaterThanMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Real;
+    ?($actual > $!expected);
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be greater than " ~ $!expected.raku;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be greater than " ~ $!expected.raku;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'be greater than ' ~ $!expected.raku }
+}
+
+class BeGreaterThanOrEqualMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Real;
+    ?($actual >= $!expected);
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be greater than or equal to "
+      ~ $!expected.raku;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be greater than or equal to "
+      ~ $!expected.raku;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) {
+    'be greater than or equal to ' ~ $!expected.raku;
+  }
+}
+
+class BeLessThanMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Real;
+    ?($actual < $!expected);
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be less than " ~ $!expected.raku;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be less than " ~ $!expected.raku;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) { 'be less than ' ~ $!expected.raku }
+}
+
+class BeLessThanOrEqualMatcher does Matcher is export {
+  has $.expected;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Real;
+    ?($actual <= $!expected);
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be less than or equal to "
+      ~ $!expected.raku;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be less than or equal to "
+      ~ $!expected.raku;
+  }
+
+  method expected-value(--> Mu) { $!expected }
+
+  method description(--> Str) {
+    'be less than or equal to ' ~ $!expected.raku;
+  }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

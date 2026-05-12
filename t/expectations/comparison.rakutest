@@ -1,0 +1,281 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 91;
+
+# BeGreaterThanMatcher does the Matcher role.
+{
+  my $m = BeGreaterThanMatcher.new(:expected(5));
+  ok $m ~~ Matcher, 'BeGreaterThanMatcher does Matcher';
+}
+
+# BeGreaterThanMatcher: basic numeric comparisons.
+{
+  my $m = BeGreaterThanMatcher.new(:expected(5));
+  ok $m.matches(6), 'matches when greater';
+  nok $m.matches(5), 'rejects when equal';
+  nok $m.matches(4), 'rejects when less';
+  nok $m.matches(0), 'rejects zero';
+  nok $m.matches(-1), 'rejects negative';
+}
+
+# BeGreaterThanMatcher: Rat / Num support.
+{
+  ok BeGreaterThanMatcher.new(:expected(1.5)).matches(1.6), 'Rat: greater';
+  nok BeGreaterThanMatcher.new(:expected(1.5)).matches(1.5), 'Rat: equal rejected';
+  ok BeGreaterThanMatcher.new(:expected(3.0e0)).matches(3.14e0), 'Num: greater';
+}
+
+# BeGreaterThanMatcher: type guards.
+{
+  my $m = BeGreaterThanMatcher.new(:expected(5));
+  nok $m.matches(Int), 'rejects undefined Int type';
+  nok $m.matches(Any), 'rejects Any';
+  nok $m.matches('abc'), 'rejects non-Real string';
+}
+
+# BeGreaterThanMatcher: failure messages.
+{
+  my $m = BeGreaterThanMatcher.new(:expected(5));
+  is $m.failure-message(2),
+     'expected 2 to be greater than 5',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated(7),
+     'expected 7 not to be greater than 5',
+     'failure-message-negated renders given and expected';
+}
+
+# BeGreaterThanMatcher: expected-value and description.
+{
+  my $m = BeGreaterThanMatcher.new(:expected(5));
+  is $m.expected-value, 5, 'expected-value returns the threshold';
+  is $m.description, 'be greater than 5', 'description summarises threshold';
+}
+
+# expect(...).to.be-greater-than(...) integration.
+{
+  Failures.list = ();
+  ok expect(6).to.be-greater-than(5), 'integration: passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect(2).to.be-greater-than(5), 'integration: fails';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].given, 2, 'failure given preserved';
+  is Failures.list[0].expected, 5, 'failure expected preserved';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-greater-than(...) negation.
+{
+  Failures.list = ();
+  ok expect(3).to.not.be-greater-than(5), '.not passes when actual is not greater';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(7).to.not.be-greater-than(5), '.not fails when actual is greater';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# be-gt is an alias.
+{
+  Failures.list = ();
+  ok expect(5).to.be-gt(3), 'be-gt alias passes';
+  nok expect(3).to.be-gt(5), 'be-gt alias fails';
+  Failures.list = ();
+}
+
+# BeGreaterThanOrEqualMatcher does the Matcher role.
+{
+  my $m = BeGreaterThanOrEqualMatcher.new(:expected(5));
+  ok $m ~~ Matcher, 'BeGreaterThanOrEqualMatcher does Matcher';
+}
+
+# BeGreaterThanOrEqualMatcher: basic numeric comparisons.
+{
+  my $m = BeGreaterThanOrEqualMatcher.new(:expected(5));
+  ok $m.matches(6), 'matches when greater';
+  ok $m.matches(5), 'matches when equal';
+  nok $m.matches(4), 'rejects when less';
+}
+
+# BeGreaterThanOrEqualMatcher: type guards.
+{
+  my $m = BeGreaterThanOrEqualMatcher.new(:expected(5));
+  nok $m.matches(Int), 'rejects undefined Int type';
+  nok $m.matches('abc'), 'rejects non-Real string';
+}
+
+# BeGreaterThanOrEqualMatcher: failure messages.
+{
+  my $m = BeGreaterThanOrEqualMatcher.new(:expected(5));
+  is $m.failure-message(2),
+     'expected 2 to be greater than or equal to 5',
+     'failure-message renders threshold';
+  is $m.failure-message-negated(7),
+     'expected 7 not to be greater than or equal to 5',
+     'failure-message-negated renders threshold';
+  is $m.description, 'be greater than or equal to 5', 'description set';
+}
+
+# expect(...).to.be-greater-than-or-equal-to(...) integration.
+{
+  Failures.list = ();
+  ok expect(5).to.be-greater-than-or-equal-to(5), 'passes on equal';
+  ok expect(6).to.be-greater-than-or-equal-to(5), 'passes on greater';
+  is Failures.list.elems, 0, 'no failures on pass';
+
+  Failures.list = ();
+  nok expect(4).to.be-greater-than-or-equal-to(5), 'fails when less';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].given, 4, 'failure given preserved';
+  is Failures.list[0].expected, 5, 'failure expected preserved';
+  Failures.list = ();
+}
+
+# be-gte alias.
+{
+  Failures.list = ();
+  ok expect(5).to.be-gte(5), 'be-gte alias passes';
+  nok expect(3).to.be-gte(5), 'be-gte alias fails';
+  Failures.list = ();
+}
+
+# BeLessThanMatcher does the Matcher role.
+{
+  my $m = BeLessThanMatcher.new(:expected(5));
+  ok $m ~~ Matcher, 'BeLessThanMatcher does Matcher';
+}
+
+# BeLessThanMatcher: basic numeric comparisons.
+{
+  my $m = BeLessThanMatcher.new(:expected(5));
+  ok $m.matches(4), 'matches when less';
+  nok $m.matches(5), 'rejects when equal';
+  nok $m.matches(6), 'rejects when greater';
+  ok $m.matches(0), 'matches zero against 5';
+  ok $m.matches(-1), 'matches negative';
+}
+
+# BeLessThanMatcher: Rat / Num support.
+{
+  ok BeLessThanMatcher.new(:expected(1.5)).matches(1.4), 'Rat: less';
+  nok BeLessThanMatcher.new(:expected(1.5)).matches(1.5), 'Rat: equal rejected';
+}
+
+# BeLessThanMatcher: type guards.
+{
+  my $m = BeLessThanMatcher.new(:expected(5));
+  nok $m.matches(Int), 'rejects undefined Int type';
+  nok $m.matches('abc'), 'rejects non-Real string';
+}
+
+# BeLessThanMatcher: failure messages.
+{
+  my $m = BeLessThanMatcher.new(:expected(5));
+  is $m.failure-message(7),
+     'expected 7 to be less than 5',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated(2),
+     'expected 2 not to be less than 5',
+     'failure-message-negated renders given and expected';
+  is $m.description, 'be less than 5', 'description set';
+}
+
+# expect(...).to.be-less-than(...) integration.
+{
+  Failures.list = ();
+  ok expect(3).to.be-less-than(5), 'integration: passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect(7).to.be-less-than(5), 'integration: fails';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].given, 7, 'failure given preserved';
+  is Failures.list[0].expected, 5, 'failure expected preserved';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-less-than(...) negation.
+{
+  Failures.list = ();
+  ok expect(7).to.not.be-less-than(5), '.not passes when actual is not less';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(3).to.not.be-less-than(5), '.not fails when actual is less';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# be-lt alias.
+{
+  Failures.list = ();
+  ok expect(3).to.be-lt(5), 'be-lt alias passes';
+  nok expect(7).to.be-lt(5), 'be-lt alias fails';
+  Failures.list = ();
+}
+
+# BeLessThanOrEqualMatcher does the Matcher role.
+{
+  my $m = BeLessThanOrEqualMatcher.new(:expected(5));
+  ok $m ~~ Matcher, 'BeLessThanOrEqualMatcher does Matcher';
+}
+
+# BeLessThanOrEqualMatcher: basic numeric comparisons.
+{
+  my $m = BeLessThanOrEqualMatcher.new(:expected(5));
+  ok $m.matches(4), 'matches when less';
+  ok $m.matches(5), 'matches when equal';
+  nok $m.matches(6), 'rejects when greater';
+}
+
+# BeLessThanOrEqualMatcher: type guards.
+{
+  my $m = BeLessThanOrEqualMatcher.new(:expected(5));
+  nok $m.matches(Int), 'rejects undefined Int type';
+  nok $m.matches('abc'), 'rejects non-Real string';
+}
+
+# BeLessThanOrEqualMatcher: failure messages.
+{
+  my $m = BeLessThanOrEqualMatcher.new(:expected(5));
+  is $m.failure-message(7),
+     'expected 7 to be less than or equal to 5',
+     'failure-message renders threshold';
+  is $m.failure-message-negated(2),
+     'expected 2 not to be less than or equal to 5',
+     'failure-message-negated renders threshold';
+  is $m.description, 'be less than or equal to 5', 'description set';
+}
+
+# expect(...).to.be-less-than-or-equal-to(...) integration.
+{
+  Failures.list = ();
+  ok expect(5).to.be-less-than-or-equal-to(5), 'passes on equal';
+  ok expect(3).to.be-less-than-or-equal-to(5), 'passes on less';
+  is Failures.list.elems, 0, 'no failures on pass';
+
+  Failures.list = ();
+  nok expect(7).to.be-less-than-or-equal-to(5), 'fails when greater';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].given, 7, 'failure given preserved';
+  is Failures.list[0].expected, 5, 'failure expected preserved';
+  Failures.list = ();
+}
+
+# be-lte alias.
+{
+  Failures.list = ();
+  ok expect(5).to.be-lte(5), 'be-lte alias passes';
+  nok expect(7).to.be-lte(5), 'be-lte alias fails';
+  Failures.list = ();
+}

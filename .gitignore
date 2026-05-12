@@ -2,3 +2,4 @@ lib/.precomp
 .precomp
 docs/
 docs-src/site/
+.fezignore
