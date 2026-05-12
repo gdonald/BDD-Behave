@@ -1009,6 +1009,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#comparison-matchers-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison matchers (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#writing-a-custom-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1334,6 +1345,17 @@
     <span class="md-ellipsis">
       
         HaveAttributesMatcher (built-in)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparison-matchers-built-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison matchers (built-in)
       
     </span>
   </a>
@@ -1818,6 +1840,84 @@ instance as the expected value for any attribute:</p>
 </code></pre></div></td></tr></table></div>
 <p>Failure messages render as <code>expected &lt;actual&gt; to have attributes
 &lt;pairs&gt;</code> (or <code>not to have attributes &lt;pairs&gt;</code> under <code>.not</code>).</p>
+<h2 id="comparison-matchers-built-in">Comparison matchers (built-in)<a class="headerlink" href="#comparison-matchers-built-in" title="Permanent link">&para;</a></h2>
+<p>Four matchers cover numeric ordering:</p>
+<table>
+<thead>
+<tr>
+<th>Matcher</th>
+<th>Operator</th>
+<th>Aliases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>be-greater-than</code></td>
+<td><code>&gt;</code></td>
+<td><code>be-gt</code></td>
+</tr>
+<tr>
+<td><code>be-greater-than-or-equal-to</code></td>
+<td><code>&gt;=</code></td>
+<td><code>be-gte</code></td>
+</tr>
+<tr>
+<td><code>be-less-than</code></td>
+<td><code>&lt;</code></td>
+<td><code>be-lt</code></td>
+</tr>
+<tr>
+<td><code>be-less-than-or-equal-to</code></td>
+<td><code>&lt;=</code></td>
+<td><code>be-lte</code></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-greater-than</span>(<span class="mi">3</span>);
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-greater-than-or-equal-to</span>(<span class="mi">5</span>);
+<span class="n">expect</span>(<span class="mi">3</span>).<span class="nb">to</span>.<span class="n">be-less-than</span>(<span class="mi">5</span>);
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-less-than-or-equal-to</span>(<span class="mi">5</span>);
+
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-gt</span>(<span class="mi">3</span>);
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-gte</span>(<span class="mi">5</span>);
+<span class="n">expect</span>(<span class="mi">3</span>).<span class="nb">to</span>.<span class="n">be-lt</span>(<span class="mi">5</span>);
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-lte</span>(<span class="mi">5</span>);
+</code></pre></div></td></tr></table></div>
+<p>All four accept any <code>Real</code> value, so <code>Int</code>, <code>Rat</code>, and <code>Num</code> mix freely
+and negatives / zero behave as expected:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mf">1.5</span>).<span class="nb">to</span>.<span class="n">be-greater-than</span>(<span class="mf">1.4</span>);     <span class="c1"># Rat vs Rat</span>
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-greater-than</span>(<span class="mf">4.99</span>);      <span class="c1"># Int vs Rat</span>
+<span class="n">expect</span>(<span class="mf">3.14e0</span>).<span class="nb">to</span>.<span class="n">be-greater-than</span>(<span class="mf">3.0e0</span>); <span class="c1"># Num vs Num</span>
+<span class="n">expect</span>(-<span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be-greater-than</span>(-<span class="mi">5</span>);
+<span class="n">expect</span>(<span class="mi">0</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be-greater-than</span>(<span class="mi">0</span>);
+</code></pre></div></td></tr></table></div>
+<p>Each matcher fails (rather than dying) when <code>$actual</code> is undefined or
+is not a <code>Real</code>, so a stray <code>Int</code>-typed <code>Nil</code> or a <code>Str</code> produces a
+recorded failure instead of a runtime error:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nb">Int</span>).<span class="nb">to</span>.<span class="n">be-greater-than</span>(<span class="mi">0</span>);  <span class="c1"># records a failure</span>
+<span class="n">expect</span>(<span class="s">&#39;abc&#39;</span>).<span class="nb">to</span>.<span class="n">be-less-than</span>(<span class="mi">10</span>);  <span class="c1"># records a failure</span>
+</code></pre></div></td></tr></table></div>
+<p>Negation works the usual way:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">3</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be-greater-than</span>(<span class="mi">5</span>);
+<span class="n">expect</span>(<span class="mi">7</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be-less-than</span>(<span class="mi">5</span>);
+</code></pre></div></td></tr></table></div>
+<p>Failure messages render as <code>expected &lt;actual&gt; to be greater than
+&lt;expected&gt;</code> (and the obvious variants for the other three), or <code>not to
+be …</code> under <code>.not</code>.</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
