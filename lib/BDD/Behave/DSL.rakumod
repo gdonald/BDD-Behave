@@ -404,6 +404,76 @@ our multi sub xit(&block, *%meta) is export {
   it(&block, |%meta, :skipped);
 }
 
+class BetweenExpectation {
+  has Mu   $.given;
+  has Bool $.negated = False;
+  has Str  $.file;
+  has Int  $.line;
+  has      $.min;
+  has      $.max;
+  has Bool $!exclusive = False;
+  has      $!recorded-failure;
+
+  submethod BUILD(
+    Mu :$given is raw, :$!negated, :$!file, :$!line, :$!min, :$!max,
+  ) {
+    $!given := $given;
+  }
+
+  method validate(--> Nil) {
+    my $matcher = BeBetweenMatcher.new(
+      :min($!min), :max($!max), :exclusive($!exclusive),
+    );
+    my $matched = ?$matcher.matches($!given);
+    my $passed  = $!negated ?? !$matched !! $matched;
+
+    if $passed {
+      self.clear-failure;
+      return;
+    }
+
+    my $message = $!negated
+      ?? $matcher.failure-message-negated($!given)
+      !! $matcher.failure-message($!given);
+
+    self.replace-failure($message, $matcher);
+  }
+
+  method replace-failure(Str $msg, $matcher --> Nil) {
+    self.clear-failure;
+    my $f = Failure.new(
+      :file($!file),
+      :line($!line),
+      :given($!given),
+      :expected($matcher.expected-value),
+      :negated($!negated),
+      :message($msg),
+    );
+    Failures.list.push($f);
+    $!recorded-failure = $f;
+  }
+
+  method clear-failure(--> Nil) {
+    return unless $!recorded-failure.defined;
+    my $list = Failures.list;
+    my $idx  = $list.first({ $_ === $!recorded-failure }, :k);
+    $list.splice($idx, 1) if $idx.defined;
+    $!recorded-failure = Nil;
+  }
+
+  method inclusive {
+    $!exclusive = False;
+    self.validate;
+    self;
+  }
+
+  method exclusive {
+    $!exclusive = True;
+    self.validate;
+    self;
+  }
+}
+
 class ExpectationBuilder {
   has $.given;
   has Bool $.negated is rw = False;
@@ -591,6 +661,19 @@ class ExpectationBuilder {
 
   method be-lte($expected) {
     self!apply-matcher(BeLessThanOrEqualMatcher.new(:$expected));
+  }
+
+  method be-between($min, $max) {
+    my $expectation = BetweenExpectation.new(
+      :given($!given),
+      :negated($!negated),
+      :file($!file),
+      :line($!line),
+      :$min,
+      :$max,
+    );
+    $expectation.validate;
+    $expectation;
   }
 
   method have-received(Str:D $method-name) {

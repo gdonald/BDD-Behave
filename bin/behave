@@ -82,18 +82,22 @@ my $registry = BDD::Behave::SpecRegistry::registry();
 my $total-result = BDD::Behave::Runner::RunResult.new;
 my $multi = @files.elems > 1;
 my $suites-run = 0;
+my @load-errors;
 
 for @files -> $file {
   say "\nLoading: $file" if $verbose;
+  my $load-failed = False;
   try {
     EVALFILE $file;
     CATCH {
       default {
-        note "Warning: Could not load $file: {.message}";
-        note "  (This spec may use legacy syntax incompatible with the new runner)";
+        @load-errors.push: %( :$file, :message(.message) );
+        note red("Error: Could not load $file: {.message}");
+        $load-failed = True;
       }
     }
   }
+  next if $load-failed;
 
   my $suite = $registry.suite-for-file($file.IO);
   next unless $suite.defined;
@@ -126,5 +130,15 @@ if $suites-run > 1 {
   say green("  {$total-result.passed} passed")         if $total-result.passed > 0;
 }
 
-# Exit with appropriate code
-exit($total-result.success ?? 0 !! 1);
+if @load-errors.elems {
+  say "\n" ~ red("Load errors ({@load-errors.elems}):");
+  for @load-errors -> $err {
+    say red("  ✗ ") ~ $err<file>;
+    for $err<message>.lines -> $line {
+      say "      $line";
+    }
+  }
+}
+
+# Exit non-zero if any examples failed or any spec file failed to load
+exit(($total-result.success && @load-errors.elems == 0) ?? 0 !! 1);

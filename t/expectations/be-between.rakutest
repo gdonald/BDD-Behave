@@ -1,0 +1,218 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 54;
+
+# BeBetweenMatcher does the Matcher role.
+{
+  my $m = BeBetweenMatcher.new(:min(1), :max(10));
+  ok $m ~~ Matcher, 'BeBetweenMatcher does Matcher';
+}
+
+# BeBetweenMatcher inclusive defaults.
+{
+  my $m = BeBetweenMatcher.new(:min(1), :max(10));
+  nok $m.exclusive, 'inclusive by default';
+  ok $m.matches(5), 'matches strictly inside';
+  ok $m.matches(1), 'matches lower bound';
+  ok $m.matches(10), 'matches upper bound';
+  nok $m.matches(0), 'rejects below lower';
+  nok $m.matches(11), 'rejects above upper';
+}
+
+# BeBetweenMatcher exclusive bounds.
+{
+  my $m = BeBetweenMatcher.new(:min(1), :max(10), :exclusive);
+  ok $m.matches(5), 'matches strictly inside';
+  nok $m.matches(1), 'rejects lower bound';
+  nok $m.matches(10), 'rejects upper bound';
+  nok $m.matches(0), 'rejects below lower';
+  nok $m.matches(11), 'rejects above upper';
+}
+
+# BeBetweenMatcher: Rat / Num support.
+{
+  ok BeBetweenMatcher.new(:min(1.0), :max(2.0)).matches(1.5),
+     'Rat bounds: strictly inside';
+  ok BeBetweenMatcher.new(:min(3.0e0), :max(4.0e0)).matches(3.14e0),
+     'Num bounds: strictly inside';
+  ok BeBetweenMatcher.new(:min(1.5), :max(2.5)).matches(2),
+     'Int actual against Rat bounds';
+  ok BeBetweenMatcher.new(:min(-5), :max(-1)).matches(-3),
+     'negative range matches negative actual';
+  ok BeBetweenMatcher.new(:min(0), :max(0)).matches(0),
+     'degenerate inclusive range matches single value';
+}
+
+# BeBetweenMatcher: type guards.
+{
+  my $m = BeBetweenMatcher.new(:min(1), :max(10));
+  nok $m.matches(Int), 'rejects undefined Int type';
+  nok $m.matches(Any), 'rejects Any';
+  nok $m.matches('abc'), 'rejects non-Real string';
+}
+
+# BeBetweenMatcher: failure messages render inclusive/exclusive clauses.
+{
+  my $inc = BeBetweenMatcher.new(:min(1), :max(10));
+  is $inc.failure-message(11),
+     'expected 11 to be between 1 and 10 (inclusive)',
+     'inclusive failure-message';
+  is $inc.failure-message-negated(5),
+     'expected 5 not to be between 1 and 10 (inclusive)',
+     'inclusive failure-message-negated';
+
+  my $exc = BeBetweenMatcher.new(:min(1), :max(10), :exclusive);
+  is $exc.failure-message(10),
+     'expected 10 to be between 1 and 10 (exclusive)',
+     'exclusive failure-message';
+  is $exc.failure-message-negated(5),
+     'expected 5 not to be between 1 and 10 (exclusive)',
+     'exclusive failure-message-negated';
+}
+
+# BeBetweenMatcher: expected-value returns [min, max].
+{
+  my $m = BeBetweenMatcher.new(:min(1), :max(10));
+  my $exp = $m.expected-value;
+  is $exp.elems, 2, 'expected-value has two elements';
+  is $exp[0], 1, 'expected-value[0] is min';
+  is $exp[1], 10, 'expected-value[1] is max';
+}
+
+# BeBetweenMatcher: description.
+{
+  my $inc = BeBetweenMatcher.new(:min(1), :max(10));
+  is $inc.description, 'be between 1 and 10 (inclusive)',
+     'inclusive description';
+  my $exc = BeBetweenMatcher.new(:min(1), :max(10), :exclusive);
+  is $exc.description, 'be between 1 and 10 (exclusive)',
+     'exclusive description';
+}
+
+# expect(...).to.be-between(...) inclusive default integration.
+{
+  Failures.list = ();
+  expect(5).to.be-between(1, 10);
+  is Failures.list.elems, 0, 'passes when strictly inside';
+
+  Failures.list = ();
+  expect(1).to.be-between(1, 10);
+  is Failures.list.elems, 0, 'passes on lower bound';
+
+  Failures.list = ();
+  expect(10).to.be-between(1, 10);
+  is Failures.list.elems, 0, 'passes on upper bound';
+
+  Failures.list = ();
+  expect(0).to.be-between(1, 10);
+  is Failures.list.elems, 1, 'fails below lower bound';
+  is Failures.list[0].given, 0, 'failure given preserved';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(11).to.be-between(1, 10);
+  is Failures.list.elems, 1, 'fails above upper bound';
+  Failures.list = ();
+}
+
+# expect(...).to.be-between(...).exclusive integration.
+{
+  Failures.list = ();
+  expect(5).to.be-between(1, 10).exclusive;
+  is Failures.list.elems, 0, 'exclusive passes strictly inside';
+
+  Failures.list = ();
+  expect(1).to.be-between(1, 10).exclusive;
+  is Failures.list.elems, 1, 'exclusive fails on lower bound';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(10).to.be-between(1, 10).exclusive;
+  is Failures.list.elems, 1, 'exclusive fails on upper bound';
+  Failures.list = ();
+}
+
+# expect(...).to.be-between(...).inclusive integration.
+{
+  Failures.list = ();
+  expect(1).to.be-between(1, 10).inclusive;
+  is Failures.list.elems, 0, 'inclusive passes on lower bound';
+  Failures.list = ();
+}
+
+# Chained modifiers replace the previously recorded failure.
+{
+  Failures.list = ();
+  expect(10).to.be-between(1, 10).exclusive.inclusive;
+  is Failures.list.elems, 0,
+     '.exclusive then .inclusive clears the prior failure';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(10).to.be-between(1, 10).exclusive;
+  is Failures.list.elems, 1, '.exclusive flipped success to one failure';
+  is Failures.list[0].message,
+     'expected 10 to be between 1 and 10 (exclusive)',
+     'exclusive failure message recorded';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(0).to.be-between(1, 10).inclusive;
+  is Failures.list.elems, 1,
+     'inclusive still records failure when actual is out of range';
+  is Failures.list[0].message,
+     'expected 0 to be between 1 and 10 (inclusive)',
+     'inclusive failure message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-between(...) negation.
+{
+  Failures.list = ();
+  ok expect(0).to.not.be-between(1, 10),
+     '.not passes when below the inclusive range';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(5).to.not.be-between(1, 10);
+  is Failures.list.elems, 1, '.not fails when within range';
+  ok Failures.list[0].negated, 'failure marked negated';
+  is Failures.list[0].message,
+     'expected 5 not to be between 1 and 10 (inclusive)',
+     'negated failure-message recorded';
+  Failures.list = ();
+}
+
+# Negation composes with .exclusive.
+{
+  Failures.list = ();
+  expect(1).to.not.be-between(1, 10).exclusive;
+  is Failures.list.elems, 0,
+     '.not.be-between(...).exclusive passes when actual equals boundary';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(5).to.not.be-between(1, 10).exclusive;
+  is Failures.list.elems, 1,
+     '.not.be-between(...).exclusive still fails strictly inside';
+  Failures.list = ();
+}
+
+# Failure.expected preserves the [min, max] list for tooling.
+{
+  Failures.list = ();
+  expect(11).to.be-between(1, 10);
+  my $expected = Failures.list[0].expected;
+  is $expected.elems, 2, 'Failure.expected has two elements';
+  is $expected[0], 1, 'Failure.expected[0] is min';
+  is $expected[1], 10, 'Failure.expected[1] is max';
+  Failures.list = ();
+}
+

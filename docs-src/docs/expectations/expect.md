@@ -91,6 +91,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-greater-than-or-equal-to` / `be-gte` | Numeric `>=` comparison. |
 | `be-less-than` / `be-lt` | Numeric `<` comparison. |
 | `be-less-than-or-equal-to` / `be-lte` | Numeric `<=` comparison. |
+| `be-between` | Range check between two `Real` bounds. Inclusive by default; chain `.exclusive` or `.inclusive` to flip the mode. See [Matchers › BeBetweenMatcher](matchers.md#bebetweenmatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -108,6 +109,8 @@ expect(42).to.be-a(Int);
 expect(42).to.be-an(Int);
 expect(Dog.new).to.be-an-instance-of(Dog);
 expect(Calculator.new).to.respond-to('add', 'subtract');
+expect(5).to.be-between(1, 10);
+expect(5).to.be-between(1, 10).exclusive;
 ```
 
 ## Custom matchers

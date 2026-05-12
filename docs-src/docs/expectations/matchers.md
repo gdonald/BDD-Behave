@@ -469,6 +469,67 @@ Failure messages render as `expected <actual> to be greater than
 <expected>` (and the obvious variants for the other three), or `not to
 be …` under `.not`.
 
+## BeBetweenMatcher (built-in)
+
+`be-between` checks whether a numeric `actual` falls within a `[min, max]`
+range. The matcher is inclusive by default; chain `.exclusive` (or the
+explicit `.inclusive`) to flip the mode:
+
+```raku
+expect(5).to.be-between(1, 10);              # inclusive (default), passes
+expect(1).to.be-between(1, 10);              # inclusive: lower bound passes
+expect(10).to.be-between(1, 10);             # inclusive: upper bound passes
+
+expect(5).to.be-between(1, 10).exclusive;    # exclusive: passes strictly inside
+expect(1).to.be-between(1, 10).exclusive;    # exclusive: lower bound fails
+expect(10).to.be-between(1, 10).exclusive;   # exclusive: upper bound fails
+
+expect(5).to.be-between(1, 10).inclusive;    # equivalent to the default
+```
+
+All four call sites use the same chainable expectation. Re-chaining a
+modifier *replaces* any previously recorded failure, so
+`expect(10).to.be-between(1, 10).exclusive.inclusive` ends with no
+failure: the `.exclusive` step pushes one, then `.inclusive` clears it
+when the re-evaluation passes.
+
+`be-between` accepts any `Real` actual, so `Int`, `Rat`, and `Num` mix
+freely and negative / zero bounds behave the obvious way:
+
+```raku
+expect(1.5).to.be-between(1.0, 2.0);
+expect(2).to.be-between(1.5, 2.5);
+expect(-3).to.be-between(-5, -1);
+expect(0).to.be-between(0, 0);
+```
+
+The matcher fails (rather than dying) when `$actual` is undefined or is
+not a `Real`, so a stray `Int`-typed `Nil` or a `Str` produces a
+recorded failure instead of a runtime error:
+
+```raku
+expect(Int).to.be-between(0, 10);            # records a failure
+expect('abc').to.be-between(0, 10);          # records a failure
+```
+
+Negation works the usual way, and composes with the inclusive / exclusive
+modifiers:
+
+```raku
+expect(0).to.not.be-between(1, 10);
+expect(1).to.not.be-between(1, 10).exclusive;
+```
+
+Failure messages name both bounds and the active mode:
+
+```text
+expected 11 to be between 1 and 10 (inclusive)
+expected 10 to be between 1 and 10 (exclusive)
+```
+
+`Failure.expected` is populated as `[min, max]` so programmatic
+consumers and alternate formatters can introspect the bounds.
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

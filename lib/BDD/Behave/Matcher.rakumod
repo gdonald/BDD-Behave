@@ -466,6 +466,40 @@ class BeLessThanOrEqualMatcher does Matcher is export {
   }
 }
 
+class BeBetweenMatcher does Matcher is export {
+  has $.min;
+  has $.max;
+  has Bool $.exclusive = False;
+
+  method matches($actual --> Bool) {
+    return False unless $actual.defined;
+    return False unless $actual ~~ Real;
+    if $!exclusive {
+      ?($actual > $!min && $actual < $!max);
+    } else {
+      ?($actual >= $!min && $actual <= $!max);
+    }
+  }
+
+  method bounds-clause(--> Str) {
+    $!exclusive
+      ?? $!min.raku ~ ' and ' ~ $!max.raku ~ ' (exclusive)'
+      !! $!min.raku ~ ' and ' ~ $!max.raku ~ ' (inclusive)';
+  }
+
+  method failure-message($actual --> Str) {
+    "expected " ~ $actual.raku ~ " to be between " ~ self.bounds-clause;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected " ~ $actual.raku ~ " not to be between " ~ self.bounds-clause;
+  }
+
+  method expected-value(--> Mu) { [$!min, $!max] }
+
+  method description(--> Str) { 'be between ' ~ self.bounds-clause }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

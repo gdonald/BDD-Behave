@@ -1,0 +1,55 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 9;
+
+my $root      = $*PROGRAM.parent.parent.parent;
+my $bin       = $root.add('bin/behave');
+my $broken    = $root.add('t/fixtures/broken-fixture-spec.raku');
+my $passing   = $root.add('specs/expectations/be-between-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+# A spec file that fails to compile exits non-zero.
+{
+  my %r = run-behave($broken.absolute);
+  isnt %r<exit>, 0,
+    'broken spec file produces non-zero exit code';
+  ok %r<err>.contains('Error: Could not load'),
+    'error is printed to stderr';
+  ok %r<err>.contains('broken-fixture-spec.raku'),
+    'error names the offending file';
+}
+
+# Load errors are surfaced in the run summary, not silently swallowed.
+{
+  my %r = run-behave($broken.absolute);
+  ok %r<out>.contains('Load errors'),
+    'stdout summary mentions load errors';
+  ok %r<out>.contains('broken-fixture-spec.raku'),
+    'load-errors block names the offending file';
+}
+
+# A passing spec file alone still exits 0.
+{
+  my %r = run-behave($passing.absolute);
+  is %r<exit>, 0, 'passing spec file exits 0';
+  unlike %r<err>, /'Could not load'/,
+    'passing spec produces no load-error noise';
+}
+
+# A passing spec mixed with a broken one: still exits non-zero,
+# and the passing spec's examples still run.
+{
+  my %r = run-behave($passing.absolute, $broken.absolute);
+  isnt %r<exit>, 0,
+    'mixed batch with one broken file exits non-zero';
+  ok %r<out>.contains('passed'),
+    'mixed batch still reports passing examples from the good file';
+}
