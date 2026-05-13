@@ -95,6 +95,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-within`                              | Tolerance check: `be-within($delta).of($expected)` passes when `abs(actual - expected) <= delta`. See [Matchers › BeWithinMatcher](matchers.md#bewithinmatcher-built-in).                               |
 | `be-truthy`                              | Boolean coercion check (`?$actual`); empty `Array`/`Hash`, `Nil`, and undefined type objects are not truthy. See [Matchers › BeTruthyMatcher](matchers.md#betruthymatcher-built-in).                    |
 | `be-falsy`                               | Inverse of `be-truthy` (`!$actual`). See [Matchers › BeFalsyMatcher](matchers.md#befalsymatcher-built-in).                                                                                              |
+| `be-nil`                                 | Undefined-value check (`!$actual.defined`); passes for `Nil`, `Any`, and undefined type objects. See [Matchers › BeNilMatcher](matchers.md#benilmatcher-built-in).                                      |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -117,6 +118,9 @@ expect(5).to.be-between(1, 10).exclusive;
 expect(3.14e0).to.be-within(0.01e0).of(3.15e0);
 expect(True).to.be-truthy;
 expect(False).to.be-falsy;
+expect(Nil).to.be-nil;
+expect(Int).to.be-nil;          # undefined type object
+expect(42).to.not.be-nil;
 ```
 
 ## Custom matchers

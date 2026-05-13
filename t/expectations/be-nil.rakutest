@@ -1,0 +1,120 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 35;
+
+# BeNilMatcher does the Matcher role.
+{
+  ok BeNilMatcher.new ~~ Matcher, 'BeNilMatcher does Matcher';
+}
+
+# BeNilMatcher.matches checks for undefined values.
+{
+  my $m = BeNilMatcher.new;
+
+  ok  $m.matches(Nil),        'Nil is nil';
+  ok  $m.matches(Any),        'Any is nil';
+  ok  $m.matches(Int),        'undefined Int type object is nil';
+  ok  $m.matches(Str),        'undefined Str type object is nil';
+
+  nok $m.matches(42),         'defined integer is not nil';
+  nok $m.matches(0),          '0 is not nil (defined)';
+  nok $m.matches(''),         'empty string is not nil (defined)';
+  nok $m.matches([]),         'empty array is not nil (defined)';
+  nok $m.matches({}),         'empty hash is not nil (defined)';
+  nok $m.matches(False),      'False is not nil (defined)';
+  nok $m.matches(True),       'True is not nil (defined)';
+  nok $m.matches('hello'),    'non-empty string is not nil';
+  nok $m.matches([1, 2, 3]),  'non-empty array is not nil';
+}
+
+# Failure messages render the actual value.
+{
+  is BeNilMatcher.new.failure-message(42),
+     'expected 42 to be nil',
+     'BeNilMatcher.failure-message for integer';
+  is BeNilMatcher.new.failure-message(''),
+     q[expected "" to be nil],
+     'BeNilMatcher.failure-message for empty string';
+  is BeNilMatcher.new.failure-message-negated(Nil),
+     'expected Nil not to be nil',
+     'BeNilMatcher.failure-message-negated for Nil';
+  is BeNilMatcher.new.failure-message-negated(Int),
+     'expected Int not to be nil',
+     'BeNilMatcher.failure-message-negated for Int';
+}
+
+# Description.
+{
+  is BeNilMatcher.new.description, 'be nil', 'BeNilMatcher.description';
+}
+
+# expect(...).to.be-nil integration.
+{
+  Failures.list = ();
+  expect(Nil).to.be-nil;
+  is Failures.list.elems, 0, 'be-nil passes for Nil';
+
+  Failures.list = ();
+  expect(Int).to.be-nil;
+  is Failures.list.elems, 0, 'be-nil passes for undefined type object';
+
+  Failures.list = ();
+  expect(42).to.be-nil;
+  is Failures.list.elems, 1, 'be-nil fails for defined value';
+  is Failures.list[0].given, 42, 'Failure.given preserved';
+  is Failures.list[0].message, 'expected 42 to be nil',
+     'Failure.message recorded';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(0).to.be-nil;
+  is Failures.list.elems, 1, 'be-nil fails for 0';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-nil negation.
+{
+  Failures.list = ();
+  expect(42).to.not.be-nil;
+  is Failures.list.elems, 0, '.not.be-nil passes for defined value';
+
+  Failures.list = ();
+  expect(Nil).to.not.be-nil;
+  is Failures.list.elems, 1, '.not.be-nil fails for Nil';
+  ok Failures.list[0].negated, 'failure marked negated';
+  is Failures.list[0].message, 'expected Any not to be nil',
+     'negated message recorded (Nil reverts to Any in scalar)';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(Int).to.not.be-nil;
+  is Failures.list.elems, 1, '.not.be-nil fails for undefined type object';
+  is Failures.list[0].message, 'expected Int not to be nil',
+     'negated message records type-object name';
+  Failures.list = ();
+}
+
+# Type object vs instance distinction.
+{
+  my class Widget { has $.name }
+
+  my $m = BeNilMatcher.new;
+  ok  $m.matches(Widget),       'undefined user class is nil';
+  nok $m.matches(Widget.new),   'defined user instance is not nil';
+
+  Failures.list = ();
+  expect(Widget).to.be-nil;
+  is Failures.list.elems, 0, 'be-nil passes for user class type object';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect(Widget.new).to.be-nil;
+  is Failures.list.elems, 1, 'be-nil fails for user instance';
+  Failures.list = ();
+}

@@ -651,6 +651,49 @@ expect([1, 2, 3]).to.not.be-falsy;
 `be-falsy` takes no arguments. Failure messages render as
 `expected <actual> to be falsy` (or `not to be falsy` under `.not`).
 
+## BeNilMatcher (built-in)
+
+`be-nil` passes when the actual value is undefined (`!$actual.defined`).
+That covers Raku's three flavors of "not a value":
+
+- `Nil` itself
+- `Any` (the default for an unassigned scalar)
+- any type object, including built-ins like `Int`/`Str` and user-defined classes
+
+```raku
+expect(Nil).to.be-nil;
+expect(Any).to.be-nil;
+expect(Int).to.be-nil;          # undefined built-in type object
+expect(Str).to.be-nil;
+
+my class Widget {}
+expect(Widget).to.be-nil;       # user-defined type object
+expect(Widget.new).to.not.be-nil; # defined instance
+```
+
+Defined values — even "empty" or falsy ones — fail `be-nil`:
+
+```raku
+expect(0).to.not.be-nil;
+expect('').to.not.be-nil;
+expect([]).to.not.be-nil;
+expect({}).to.not.be-nil;
+expect(False).to.not.be-nil;
+```
+
+This is the type-object-vs-instance distinction that Raku makes
+explicit: `Int` (the type) is undefined, but `0` (an instance of
+`Int`) is defined. Use `be-nil` when you care about "is this a real
+value", and `be-falsy` when you care about boolean coercion (which
+treats empty collections as false too).
+
+Note that assigning `Nil` to a plain `my $x` reverts `$x` to `Any` —
+both still pass `be-nil`, so the distinction rarely matters in
+practice.
+
+`be-nil` takes no arguments. Failure messages render as
+`expected <actual.raku> to be nil` (or `not to be nil` under `.not`).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

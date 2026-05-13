@@ -719,6 +719,10 @@ class ExpectationBuilder {
     self!apply-matcher(BeFalsyMatcher.new);
   }
 
+  method be-nil() {
+    self!apply-matcher(BeNilMatcher.new);
+  }
+
   method be-within($delta) {
     WithinExpectation.new(
       :given($!given),
