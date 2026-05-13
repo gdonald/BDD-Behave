@@ -155,6 +155,28 @@ expect([1, 2, 3]).to.not.include(99);
 Failure messages render as `expected <actual> to include <items>` (or `not
 to include` under `.not`).
 
+### String-specific behavior
+
+When the actual is a `Str`, `include` does substring matching via
+`.contains`. A few details worth knowing:
+
+```raku
+expect('').to.include('');                     # empty needle matches everything
+expect("col1\tcol2").to.include("\t");         # whitespace and control chars
+expect("a\nb").to.include("a\nb");             # substrings spanning newlines
+expect('café au lait').to.include('café');     # Unicode (ASCII extension)
+expect('日本語のテスト').to.include('日本');     # CJK
+expect('done 🚀').to.include('🚀');            # emoji
+expect('order #42').to.include(42);            # non-Str args are .Str-coerced
+```
+
+Matching is case sensitive — `expect('Hello').to.include('hello')` fails.
+For case-insensitive matching, use [`MatchMatcher`](#matchmatcher-built-in)
+with a regex like `rx:i/hello/`.
+
+Allomorphs (`IntStr`, `RatStr`, `<42>`) are accepted as actuals and routed
+through the `Str` branch since they smartmatch as `Str`.
+
 ## StartWithMatcher (built-in)
 
 `start-with` checks that a sequence (Array, List) begins with the supplied
@@ -186,6 +208,26 @@ lists die with `start-with requires at least one item`.
 Failure messages render as `expected <actual> to start with <items>` (or `not
 to start with` under `.not`).
 
+### String-specific behavior
+
+When the actual is a `Str`, each prefix is checked via `.starts-with` after
+`.Str` coercion. Multi-prefix calls AND together — every supplied prefix must
+independently be a prefix of the string:
+
+```raku
+expect('').to.start-with('');                  # empty prefix matches everything
+expect("\thello").to.start-with("\t");         # leading tab / control char
+expect("a\nb").to.start-with("a\nb");          # prefix can cross a newline
+expect('café au lait').to.start-with('café');  # Unicode (ASCII extension)
+expect('日本語').to.start-with('日本');         # CJK
+expect('🚀 launch').to.start-with('🚀');       # emoji
+expect('42 answers').to.start-with(42);        # non-Str args are .Str-coerced
+```
+
+Matching is case sensitive and respects leading whitespace —
+`expect('hello').to.start-with(' hello')` fails. Allomorphs (`IntStr`,
+`RatStr`) are accepted as actuals and routed through the `Str` branch.
+
 ## EndWithMatcher (built-in)
 
 `end-with` mirrors `start-with` for the trailing end of a sequence or string:
@@ -205,6 +247,26 @@ expect('hello world').to.end-with('world', 'hello');  # fails ('hello' is not a 
 Same slurp / type / empty-arg conventions as `start-with`. Failure messages
 render as `expected <actual> to end with <items>` (or `not to end with` under
 `.not`).
+
+### String-specific behavior
+
+When the actual is a `Str`, each suffix is checked via `.ends-with` after
+`.Str` coercion. Multi-suffix calls AND together — every supplied suffix must
+independently be a suffix of the string:
+
+```raku
+expect('').to.end-with('');                    # empty suffix matches everything
+expect("done\n").to.end-with("\n");            # trailing newline / control char
+expect("a\nb").to.end-with("a\nb");            # suffix can cross a newline
+expect('le café').to.end-with('café');         # Unicode (ASCII extension)
+expect('日本語').to.end-with('語');             # CJK
+expect('moon 🚀').to.end-with('🚀');           # emoji
+expect('answer = 42').to.end-with(42);         # non-Str args are .Str-coerced
+```
+
+Matching is case sensitive and respects trailing whitespace —
+`expect('hello').to.end-with('hello ')` fails. Allomorphs (`IntStr`, `RatStr`)
+are accepted as actuals and routed through the `Str` branch.
 
 ## AllMatcher (built-in)
 

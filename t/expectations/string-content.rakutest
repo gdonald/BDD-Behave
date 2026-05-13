@@ -1,0 +1,286 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 83;
+
+# Empty strings (include)
+{
+  my $m = IncludeMatcher.new(:expected(['']));
+  ok $m.matches('hello'), 'empty substring matches non-empty string';
+  ok $m.matches(''),      'empty substring matches empty string';
+
+  my $m2 = IncludeMatcher.new(:expected(['a']));
+  nok $m2.matches(''),    'non-empty substring rejects empty string';
+}
+
+# Empty strings (start-with)
+{
+  my $m = StartWithMatcher.new(:expected(['']));
+  ok $m.matches('hello'), 'empty prefix matches non-empty string';
+  ok $m.matches(''),      'empty prefix matches empty string';
+
+  my $m2 = StartWithMatcher.new(:expected(['a']));
+  nok $m2.matches(''),    'non-empty prefix rejects empty string';
+}
+
+# Empty strings (end-with)
+{
+  my $m = EndWithMatcher.new(:expected(['']));
+  ok $m.matches('hello'), 'empty suffix matches non-empty string';
+  ok $m.matches(''),      'empty suffix matches empty string';
+
+  my $m2 = EndWithMatcher.new(:expected(['a']));
+  nok $m2.matches(''),    'non-empty suffix rejects empty string';
+}
+
+# Whitespace and special characters (include)
+{
+  my $m = IncludeMatcher.new(:expected(['quick brown']));
+  ok $m.matches('the quick brown fox'),  'matches substring with spaces';
+
+  my $tab = IncludeMatcher.new(:expected(["\t"]));
+  ok $tab.matches("col1\tcol2"),         'matches tab character';
+
+  my $nl = IncludeMatcher.new(:expected(["1\nline2"]));
+  ok $nl.matches("line1\nline2"),        'matches across newline boundary';
+
+  my $multi = IncludeMatcher.new(:expected([': ', 'not found']));
+  ok $multi.matches('error: file not found.'),
+                                         'multiple punctuation substrings AND together';
+
+  my $lead = IncludeMatcher.new(:expected([' hello']));
+  nok $lead.matches('hello'),            'distinguishes leading whitespace';
+}
+
+# Whitespace and special characters (start-with)
+{
+  my $sp = StartWithMatcher.new(:expected([' ']));
+  ok $sp.matches(' indented'),           'matches leading space';
+
+  my $tab = StartWithMatcher.new(:expected(["\t"]));
+  ok $tab.matches("\thello"),            'matches leading tab';
+
+  my $nl = StartWithMatcher.new(:expected(["\n"]));
+  ok $nl.matches("\nfirst"),             'matches leading newline';
+
+  my $punct = StartWithMatcher.new(:expected(['-- ']));
+  ok $punct.matches('-- a comment'),     'matches punctuation prefix';
+
+  my $lead = StartWithMatcher.new(:expected([' hello']));
+  nok $lead.matches('hello'),            'distinguishes leading whitespace prefix';
+}
+
+# Whitespace and special characters (end-with)
+{
+  my $sp = EndWithMatcher.new(:expected([' ']));
+  ok $sp.matches('trailing '),           'matches trailing space';
+
+  my $tab = EndWithMatcher.new(:expected(["\t"]));
+  ok $tab.matches("hello\t"),            'matches trailing tab';
+
+  my $nl = EndWithMatcher.new(:expected(["\n"]));
+  ok $nl.matches("done\n"),              'matches trailing newline';
+
+  my $punct = EndWithMatcher.new(:expected(['.', 'sentence.']));
+  ok $punct.matches('end of sentence.'), 'multiple punctuation suffixes AND together';
+
+  my $tail = EndWithMatcher.new(:expected(['hello ']));
+  nok $tail.matches('hello'),            'distinguishes trailing whitespace suffix';
+}
+
+# Multi-line strings (include)
+{
+  my $hay = "alpha\nbeta\ngamma\n";
+  ok IncludeMatcher.new(:expected(['alpha'])).matches($hay),       'matches first-line substring';
+  ok IncludeMatcher.new(:expected(['beta'])).matches($hay),        'matches middle-line substring';
+  ok IncludeMatcher.new(:expected(["alpha\nbeta"])).matches($hay), 'matches across two lines';
+  ok IncludeMatcher.new(:expected(["\n"])).matches($hay),          'matches trailing newline';
+}
+
+# Multi-line strings (start-with)
+{
+  my $text = "first line\nsecond line";
+  ok StartWithMatcher.new(:expected(['first'])).matches($text),
+                                          'matches prefix on first line';
+  ok StartWithMatcher.new(:expected(["first line\nsecond"])).matches($text),
+                                          'matches prefix that crosses a newline';
+  nok StartWithMatcher.new(:expected(['second'])).matches($text),
+                                          'rejects prefix that lives on second line';
+}
+
+# Multi-line strings (end-with)
+{
+  my $text = "first line\nsecond line";
+  ok EndWithMatcher.new(:expected(['second line'])).matches($text),
+                                          'matches suffix on last line';
+  ok EndWithMatcher.new(:expected(["line\nsecond line"])).matches($text),
+                                          'matches suffix that crosses a newline';
+  nok EndWithMatcher.new(:expected(['first'])).matches($text),
+                                          'rejects suffix that lives on first line';
+}
+
+# Unicode strings (include)
+{
+  ok IncludeMatcher.new(:expected(['café'])).matches('café au lait'),
+                                          'include matches multi-byte ASCII-extension';
+  ok IncludeMatcher.new(:expected(['日本'])).matches('日本語のテスト'),
+                                          'include matches CJK substring';
+  ok IncludeMatcher.new(:expected(['🚀'])).matches('done ✅ shipped 🚀'),
+                                          'include matches emoji substring';
+  ok IncludeMatcher.new(:expected(['ï'])).matches('naïve'),
+                                          'include matches combining-character grapheme';
+}
+
+# Unicode strings (start-with)
+{
+  ok StartWithMatcher.new(:expected(['café'])).matches('café au lait'),
+                                          'start-with matches multi-byte ASCII-extension';
+  ok StartWithMatcher.new(:expected(['日本'])).matches('日本語のテスト'),
+                                          'start-with matches CJK prefix';
+  ok StartWithMatcher.new(:expected(['🚀'])).matches('🚀 to the moon'),
+                                          'start-with matches emoji prefix';
+  ok StartWithMatcher.new(:expected(['ï'])).matches('ïmpression'),
+                                          'start-with matches combining-character prefix';
+}
+
+# Unicode strings (end-with)
+{
+  ok EndWithMatcher.new(:expected(['café'])).matches('le café'),
+                                          'end-with matches multi-byte ASCII-extension';
+  ok EndWithMatcher.new(:expected(['テスト'])).matches('日本語のテスト'),
+                                          'end-with matches CJK suffix';
+  ok EndWithMatcher.new(:expected(['🚀'])).matches('to the moon 🚀'),
+                                          'end-with matches emoji suffix';
+}
+
+# Case sensitivity (include)
+{
+  nok IncludeMatcher.new(:expected(['hello'])).matches('Hello World'),
+                                          'include is case sensitive: lower needle';
+  nok IncludeMatcher.new(:expected(['WORLD'])).matches('hello world'),
+                                          'include is case sensitive: upper needle';
+  ok IncludeMatcher.new(:expected(['Hello', 'World'])).matches('Hello World'),
+                                          'include matches when case matches exactly';
+}
+
+# Case sensitivity (start-with)
+{
+  nok StartWithMatcher.new(:expected(['hello'])).matches('Hello world'),
+                                          'start-with is case sensitive';
+  ok StartWithMatcher.new(:expected(['Hello'])).matches('Hello world'),
+                                          'start-with matches when case matches exactly';
+}
+
+# Case sensitivity (end-with)
+{
+  nok EndWithMatcher.new(:expected(['world'])).matches('Hello World'),
+                                          'end-with is case sensitive';
+  ok EndWithMatcher.new(:expected(['World'])).matches('Hello World'),
+                                          'end-with matches when case matches exactly';
+}
+
+# Numeric stringification of needle args
+{
+  ok IncludeMatcher.new(:expected([42])).matches('order #42 confirmed'),
+                                          'include coerces Int needle to .Str';
+  ok IncludeMatcher.new(:expected([3.14])).matches('pi is about 3.14'),
+                                          'include coerces Rat needle to .Str';
+  nok IncludeMatcher.new(:expected([99])).matches('order #42 confirmed'),
+                                          'include fails when coerced numeric needle absent';
+
+  ok StartWithMatcher.new(:expected([42])).matches('42 is the answer'),
+                                          'start-with coerces Int prefix to .Str';
+  ok StartWithMatcher.new(:expected([3.14])).matches('3.14 radians'),
+                                          'start-with coerces Rat prefix to .Str';
+
+  ok EndWithMatcher.new(:expected([42])).matches('answer = 42'),
+                                          'end-with coerces Int suffix to .Str';
+  ok EndWithMatcher.new(:expected([3.14])).matches('value: 3.14'),
+                                          'end-with coerces Rat suffix to .Str';
+}
+
+# Allomorph haystacks: <42> is IntStr (Int+Str), <3.14> is RatStr (Rat+Str).
+# Goes through the Str branch because IntStr/RatStr smartmatch as Str.
+{
+  my $int-allo = <42>;
+  ok IncludeMatcher.new(:expected(['4'])).matches($int-allo),
+                                          'include treats IntStr as a string';
+  ok StartWithMatcher.new(:expected(['4'])).matches($int-allo),
+                                          'start-with treats IntStr as a string';
+  ok EndWithMatcher.new(:expected(['2'])).matches($int-allo),
+                                          'end-with treats IntStr as a string';
+
+  my $rat-allo = <3.14>;
+  ok IncludeMatcher.new(:expected(['.14'])).matches($rat-allo),
+                                          'include treats RatStr as a string';
+  ok StartWithMatcher.new(:expected(['3.'])).matches($rat-allo),
+                                          'start-with treats RatStr as a string';
+  ok EndWithMatcher.new(:expected(['14'])).matches($rat-allo),
+                                          'end-with treats RatStr as a string';
+}
+
+# expect(...).to.<matcher>(...) integration with strings
+{
+  ok expect('hello world').to.include('world'),       'include integrates via expect';
+  ok expect('hello world').to.start-with('hello'),    'start-with integrates via expect';
+  ok expect('hello world').to.end-with('world'),      'end-with integrates via expect';
+
+  nok expect('hello').to.include('xyz'),              'include integration fails on miss';
+  nok expect('hello').to.start-with('lo'),            'start-with integration fails on miss';
+  nok expect('hello').to.end-with('he'),              'end-with integration fails on miss';
+}
+
+# Failure messages use matcher-supplied text and surface .raku of actual + expected.
+{
+  Failures.list = ();
+  expect("café au lait").to.include('xyz');
+  is Failures.list[0].message,
+     'expected "café au lait" to include "xyz"',
+     'include failure message uses .raku of actual';
+  Failures.list = ();
+
+  expect("hello\nworld").to.start-with('world');
+  is Failures.list[0].message,
+     "expected \"hello\\nworld\" to start with \"world\"",
+     'start-with failure message uses .raku and escapes newlines';
+  Failures.list = ();
+
+  expect("hello").to.end-with(' ');
+  is Failures.list[0].message,
+     'expected "hello" to end with " "',
+     'end-with failure message preserves whitespace in .raku';
+  Failures.list = ();
+}
+
+# Negation across all three string matchers.
+{
+  ok expect('hello world').to.not.include('xyz'),    'include negation passes';
+  ok expect('hello world').to.not.start-with('xyz'), 'start-with negation passes';
+  ok expect('hello world').to.not.end-with('xyz'),   'end-with negation passes';
+
+  Failures.list = ();
+  expect('hello world').to.not.include('hello');
+  is Failures.list.elems, 1,
+                                          'include negation records a failure on match';
+  ok Failures.list[0].negated,            'failure is flagged negated';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect('hello world').to.not.start-with('hello');
+  is Failures.list.elems, 1,
+                                          'start-with negation records a failure on match';
+  ok Failures.list[0].negated,            'failure is flagged negated';
+  Failures.list = ();
+
+  Failures.list = ();
+  expect('hello world').to.not.end-with('world');
+  is Failures.list.elems, 1,
+                                          'end-with negation records a failure on match';
+  ok Failures.list[0].negated,            'failure is flagged negated';
+  Failures.list = ();
+}
