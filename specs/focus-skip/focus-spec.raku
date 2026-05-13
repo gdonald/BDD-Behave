@@ -24,11 +24,11 @@ fdescribe 'fdescribe focuses an entire group', {
 
 describe 'sibling group filtered out by focus mode', {
   it 'this never displays because focus mode is on', {
-    expect(False).to.be(True);
+    expect(False).to.be-truthy;
   }
 }
 
 fdescribe 'focus + skip combined', {
   it  'focused and runs', { expect(7 + 1).to.be(8); }
-  xit 'skipped, body never executes', { expect(False).to.be(True); }
+  xit 'skipped, body never executes', { expect(False).to.be-truthy; }
 }

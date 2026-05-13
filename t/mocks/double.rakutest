@@ -224,7 +224,7 @@ need BDD::Behave::Mock;
     it 'dispatches stubs to the example body', {
       my $repo = double('Repo', find => { id => 42, name => 'thing' });
       $captured = $repo.find('whatever');
-      expect($repo.received('find')).to.be(True);
+      expect($repo.received('find')).to.be-truthy;
     }
   }
 

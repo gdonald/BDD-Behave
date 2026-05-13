@@ -42,14 +42,14 @@ my @on-disk  = walk-rakumod($lib).map({ module-name-from-path($_, $lib) }).sort;
 describe 'META6.json provides declarations', {
   for @on-disk -> $module {
     it "declares $module", {
-      expect(%provides{$module}:exists ?? 1 !! 0).to.be(1);
+      expect(%provides{$module}:exists).to.be-truthy;
     }
   }
 
   for @declared -> $module {
     it "$module path exists on disk", {
       my $declared-path = $repo.add(%provides{$module}).absolute.IO;
-      expect($declared-path.f ?? 1 !! 0).to.be(1);
+      expect($declared-path.f).to.be-truthy;
     }
   }
 }

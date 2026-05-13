@@ -12,14 +12,10 @@ sub induce(&block --> List) {
   @new.List;
 }
 
-# Behave's smartmatch matcher cannot directly check Bool values
-# (False ~~ False is False under smartmatch). Coerce to 0/1 first.
-sub bool-as-int(Bool $b --> Int) { $b ?? 1 !! 0 }
-
 describe 'expect basics', {
   it 'returns True for a passing positive expectation', {
     my $result = expect(42).to.be(42);
-    expect(bool-as-int($result)).to.be(1);
+    expect($result).to.be-truthy;
   }
 
   it 'records no failure for a passing positive expectation', {
@@ -30,7 +26,7 @@ describe 'expect basics', {
   it 'returns False for a failing positive expectation', {
     my $returned;
     my @new = induce({ $returned = expect(42).to.be(41) });
-    expect(bool-as-int($returned)).to.be(0);
+    expect($returned).to.be-falsy;
     expect(@new.elems).to.be(1);
   }
 
@@ -39,22 +35,22 @@ describe 'expect basics', {
     my $f = @new[0];
     expect($f.given).to.be(42);
     expect($f.expected).to.be(41);
-    expect(bool-as-int($f.negated.so)).to.be(0);
+    expect($f.negated).to.be-falsy;
   }
 
   it 'returns True for a passing negated expectation', {
     my $returned;
     my @new = induce({ $returned = expect(42).to.not.be(41) });
-    expect(bool-as-int($returned)).to.be(1);
+    expect($returned).to.be-truthy;
     expect(@new.elems).to.be(0);
   }
 
   it 'returns False for a failing negated expectation', {
     my $returned;
     my @new = induce({ $returned = expect(42).to.not.be(42) });
-    expect(bool-as-int($returned)).to.be(0);
+    expect($returned).to.be-falsy;
     expect(@new.elems).to.be(1);
-    expect(bool-as-int(@new[0].negated.so)).to.be(1);
+    expect(@new[0].negated).to.be-truthy;
   }
 
   it 'works with strings', {

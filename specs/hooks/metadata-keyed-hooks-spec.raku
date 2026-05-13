@@ -41,7 +41,7 @@ describe 'metadata-keyed after-each hooks', {
   }
 
   it 'untagged examples do not trigger the filtered after-each', {
-    expect(@log.grep('teardown-slow').elems > 0 ?? 1 !! 0).to.be(1);
+    expect(@log.grep('teardown-slow').elems > 0).to.be-truthy;
   }
 }
 

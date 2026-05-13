@@ -60,7 +60,7 @@ describe 'expect with real Raku values', {
     my @new = induce({ expect(@actual).to.be(@expected) });
 
     expect(@new.elems).to.be(1);
-    expect(@new[0].given ~~ Array).to.be(True);
-    expect(@new[0].expected ~~ Array).to.be(True);
+    expect(@new[0].given ~~ Array).to.be-truthy;
+    expect(@new[0].expected ~~ Array).to.be-truthy;
   }
 }

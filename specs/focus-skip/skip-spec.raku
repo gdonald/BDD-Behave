@@ -6,7 +6,7 @@ describe 'xit skips a single example', {
   }
 
   xit 'this example is skipped (body never runs)', {
-    expect(False).to.be(True);
+    expect(False).to.be-truthy;
   }
 
   it 'this example also runs', {
@@ -29,7 +29,7 @@ describe 'xcontext skips a single context block', {
   }
 
   xcontext 'inside an xcontext', {
-    it 'never runs',        { expect(False).to.be(True); }
-    it 'also never runs',   { expect(False).to.be(True); }
+    it 'never runs',        { expect(False).to.be-truthy; }
+    it 'also never runs',   { expect(False).to.be-truthy; }
   }
 }

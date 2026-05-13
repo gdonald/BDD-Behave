@@ -29,12 +29,12 @@ describe 'string diff', {
 
     it 'wraps the differing chars with ANSI red for expected', {
       my $out = render-diff('hello world', 'hello earth');
-      expect($out.contains("\e[31m") ?? 1 !! 0).to.be(1);
+      expect($out.contains("\e[31m")).to.be-truthy;
     }
 
     it 'wraps the differing chars with ANSI green for given', {
       my $out = render-diff('hello world', 'hello earth');
-      expect($out.contains("\e[32m") ?? 1 !! 0).to.be(1);
+      expect($out.contains("\e[32m")).to.be-truthy;
     }
   }
 

@@ -97,7 +97,7 @@ describe 'verification', {
       allow($g).to.receive('imaginary');
       CATCH { default { $died = True } }
     }
-    expect($died).to.be(True);
+    expect($died).to.be-truthy;
   }
 
   it 'rejects stubbing a non-existent class method', {
@@ -106,7 +106,7 @@ describe 'verification', {
       allow(AllowRepo).to.receive('imaginary');
       CATCH { default { $died = True } }
     }
-    expect($died).to.be(True);
+    expect($died).to.be-truthy;
   }
 }
 
@@ -116,7 +116,7 @@ describe 'allow on a Double', {
     allow($d).to.receive('find').and-return('via-allow');
 
     expect($d.find(1)).to.be('via-allow');
-    expect($d.received('find')).to.be(True);
+    expect($d.received('find')).to.be-truthy;
   }
 
   it 'restores the previous stub on cleanup', {
@@ -134,7 +134,7 @@ describe 'allow on a Double', {
       $setup.and-call-original;
       CATCH { default { $died = True } }
     }
-    expect($died).to.be(True);
+    expect($died).to.be-truthy;
   }
 }
 

@@ -23,13 +23,13 @@ role Matcher is export {
 }
 ```
 
-| Method | Required? | Purpose |
-| --- | --- | --- |
-| `matches($actual)` | yes | Return `True` / `False` for whether `$actual` matches. |
-| `failure-message($actual)` | no | Message rendered when the expectation fails (positive form). Default: undefined `Str` (falls back to `Expected:` / `to be:` rendering). |
-| `failure-message-negated($actual)` | no | Message rendered when a `.not` expectation fails. Default: undefined `Str`. |
-| `expected-value` | no | The value stored in `Failure.expected` for tooling. |
-| `description` | no | Human-readable description, useful for error reporting and reflection. |
+| Method                             | Required? | Purpose                                                                                                                                 |
+| ---------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `matches($actual)`                 | yes       | Return `True` / `False` for whether `$actual` matches.                                                                                  |
+| `failure-message($actual)`         | no        | Message rendered when the expectation fails (positive form). Default: undefined `Str` (falls back to `Expected:` / `to be:` rendering). |
+| `failure-message-negated($actual)` | no        | Message rendered when a `.not` expectation fails. Default: undefined `Str`.                                                             |
+| `expected-value`                   | no        | The value stored in `Failure.expected` for tooling.                                                                                     |
+| `description`                      | no        | Human-readable description, useful for error reporting and reflection.                                                                  |
 
 ## BeMatcher (built-in)
 
@@ -419,12 +419,12 @@ Failure messages render as `expected <actual> to have attributes
 
 Four matchers cover numeric ordering:
 
-| Matcher | Operator | Aliases |
-| --- | --- | --- |
-| `be-greater-than` | `>` | `be-gt` |
-| `be-greater-than-or-equal-to` | `>=` | `be-gte` |
-| `be-less-than` | `<` | `be-lt` |
-| `be-less-than-or-equal-to` | `<=` | `be-lte` |
+| Matcher                       | Operator | Aliases  |
+| ----------------------------- | -------- | -------- |
+| `be-greater-than`             | `>`      | `be-gt`  |
+| `be-greater-than-or-equal-to` | `>=`     | `be-gte` |
+| `be-less-than`                | `<`      | `be-lt`  |
+| `be-less-than-or-equal-to`    | `<=`     | `be-lte` |
 
 ```raku
 expect(5).to.be-greater-than(3);
@@ -587,6 +587,69 @@ expected 5.05 not to be within 0.1 of 5.0
 `Failure.expected` is populated with the expected target (not the
 delta), and `Failure.given` holds the actual value, so programmatic
 consumers and alternate formatters can introspect both.
+
+## BeTruthyMatcher (built-in)
+
+`be-truthy` checks Raku's boolean coercion of the actual value (`?$actual`).
+Anything that coerces to `True` passes; anything that coerces to `False`
+fails:
+
+```raku
+expect(True).to.be-truthy;
+expect(1).to.be-truthy;
+expect('hello').to.be-truthy;
+expect([1, 2, 3]).to.be-truthy;
+expect({ a => 1 }).to.be-truthy;
+
+expect(False).to.not.be-truthy;
+expect(0).to.not.be-truthy;
+expect('').to.not.be-truthy;
+expect([]).to.not.be-truthy;
+expect(Nil).to.not.be-truthy;
+expect(Int).to.not.be-truthy;        # undefined type object
+```
+
+Raku's coercion may surprise users coming from Perl: non-empty strings
+are always truthy (`'0'.Bool` is `True`), but an empty `Array` / `Hash`
+is `False`:
+
+```raku
+expect('0').to.be-truthy;        # non-empty string in Raku
+expect([]).to.not.be-truthy;
+expect({}).to.not.be-truthy;
+```
+
+`be-truthy` takes no arguments. Negation works the usual way:
+
+```raku
+expect(0).to.not.be-truthy;
+```
+
+Failure messages render as `expected <actual> to be truthy` (or `not to
+be truthy` under `.not`).
+
+## BeFalsyMatcher (built-in)
+
+`be-falsy` is the inverse of `be-truthy` — it passes when `!$actual` is
+`True`:
+
+```raku
+expect(False).to.be-falsy;
+expect(0).to.be-falsy;
+expect('').to.be-falsy;
+expect([]).to.be-falsy;
+expect({}).to.be-falsy;
+expect(Nil).to.be-falsy;
+expect(Int).to.be-falsy;            # undefined type object
+
+expect(True).to.not.be-falsy;
+expect(1).to.not.be-falsy;
+expect('hello').to.not.be-falsy;
+expect([1, 2, 3]).to.not.be-falsy;
+```
+
+`be-falsy` takes no arguments. Failure messages render as
+`expected <actual> to be falsy` (or `not to be falsy` under `.not`).
 
 ## Writing a custom matcher
 

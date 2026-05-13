@@ -66,14 +66,14 @@ describe 'RunResult counters', {
     my $suite  = build-suite(:pass(2), :fail(1));
     my $result = silent-run($suite);
 
-    expect($result.success ?? 1 !! 0).to.be(0);
+    expect($result.success).to.be-falsy;
   }
 
   it 'reports success() = True when every example passes', {
     my $suite  = build-suite(:pass(3));
     my $result = silent-run($suite);
 
-    expect($result.success).to.be(True);
+    expect($result.success).to.be-truthy;
     expect($result.failed).to.be(0);
   }
 
@@ -133,6 +133,6 @@ describe 'Runner integration with the public DSL', {
 
     expect($result.total).to.be(1);
     expect($result.passed).to.be(1);
-    expect($result.success).to.be(True);
+    expect($result.success).to.be-truthy;
   }
 }

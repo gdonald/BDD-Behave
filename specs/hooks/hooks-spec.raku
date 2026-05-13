@@ -17,7 +17,7 @@ describe 'before-each and after-each hooks', {
   }
 
   it 'records both phases per example', {
-    expect(@log.grep('before-each').elems > 0).to.be(True);
+    expect(@log.grep('before-each').elems > 0).to.be-truthy;
   }
 }
 

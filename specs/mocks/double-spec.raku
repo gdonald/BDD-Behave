@@ -28,7 +28,7 @@ describe 'ad-hoc doubles', {
     expect($log.calls.elems).to.be(3);
     expect($log.call-count('info')).to.be(2);
     expect($log.call-count('warn')).to.be(1);
-    expect($log.received('info')).to.be(True);
+    expect($log.received('info')).to.be-truthy;
     expect($log.call-count('error')).to.be(0);
   }
 
@@ -62,7 +62,7 @@ describe 'class-based doubles', {
   it 'records the class and uses its name as the double name', {
     my $g = double(Greeter, hello => 'hi there');
 
-    expect($g.double-class === Greeter).to.be(True);
+    expect($g.double-class === Greeter).to.be-truthy;
     expect($g.double-name).to.be('Greeter');
   }
 

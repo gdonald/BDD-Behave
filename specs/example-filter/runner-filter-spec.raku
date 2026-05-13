@@ -202,7 +202,7 @@ describe 'Runner --example filtering', {
 
       my $result = silent-run($suite, :example-patterns(['no-such-thing']));
       expect($result.total).to.be(0);
-      expect($result.success).to.be(True);
+      expect($result.success).to.be-truthy;
     }
   }
 }

@@ -45,25 +45,25 @@ describe 'diff-shape', {
 
 describe 'diffable', {
   it 'returns True for matching shapes that are structural', {
-    expect(diffable('hi', 'bye') ?? 1 !! 0).to.be(1);
-    expect(diffable([1], [2]) ?? 1 !! 0).to.be(1);
-    expect(diffable({a => 1}, {b => 2}) ?? 1 !! 0).to.be(1);
-    expect(diffable((set <a>), (set <b>)) ?? 1 !! 0).to.be(1);
-    expect(diffable((bag <a>), (bag <b>)) ?? 1 !! 0).to.be(1);
+    expect(diffable('hi', 'bye')).to.be-truthy;
+    expect(diffable([1], [2])).to.be-truthy;
+    expect(diffable({a => 1}, {b => 2})).to.be-truthy;
+    expect(diffable((set <a>), (set <b>))).to.be-truthy;
+    expect(diffable((bag <a>), (bag <b>))).to.be-truthy;
   }
 
   it 'returns False for plain scalars', {
-    expect(diffable(1, 2) ?? 1 !! 0).to.be(0);
-    expect(diffable(True, False) ?? 1 !! 0).to.be(0);
+    expect(diffable(1, 2)).to.be-falsy;
+    expect(diffable(True, False)).to.be-falsy;
   }
 
   it 'returns False for mismatched shapes', {
-    expect(diffable([1, 2], {a => 1}) ?? 1 !! 0).to.be(0);
-    expect(diffable('hi', [1]) ?? 1 !! 0).to.be(0);
+    expect(diffable([1, 2], {a => 1})).to.be-falsy;
+    expect(diffable('hi', [1])).to.be-falsy;
   }
 
   it 'returns False when either value is undefined', {
-    expect(diffable(Nil, [1]) ?? 1 !! 0).to.be(0);
-    expect(diffable([1], Any) ?? 1 !! 0).to.be(0);
+    expect(diffable(Nil, [1])).to.be-falsy;
+    expect(diffable([1], Any)).to.be-falsy;
   }
 }

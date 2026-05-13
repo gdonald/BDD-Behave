@@ -29,21 +29,21 @@ sub find-fixture() {
 describe 'describe / context / it registration', {
   it 'registers a Suite for the spec file', {
     my $suite = find-suite();
-    expect($suite ~~ Suite).to.be(True);
+    expect($suite ~~ Suite).to.be-truthy;
   }
 
   it 'stores the describe as a top-level group with its description', {
     my $fixture = find-fixture();
-    expect($fixture ~~ ExampleGroup).to.be(True);
+    expect($fixture ~~ ExampleGroup).to.be-truthy;
     expect($fixture.description).to.be('describe-spec fixture');
   }
 
   it 'registers context as a nested group with the right parent', {
     my $fixture = find-fixture();
     my $inner   = $fixture.groups.first(*.description eq 'describe-spec fixture inner');
-    expect($inner ~~ ExampleGroup).to.be(True);
+    expect($inner ~~ ExampleGroup).to.be-truthy;
     expect($inner.description).to.be('describe-spec fixture inner');
-    expect($inner.parent === $fixture).to.be(True);
+    expect($inner.parent === $fixture).to.be-truthy;
   }
 
   it 'registers examples under the nested group', {
@@ -54,6 +54,6 @@ describe 'describe / context / it registration', {
 
   it 'stores the example block as a Callable for deferred execution', {
     my $example = find-fixture().groups[0].examples[0];
-    expect($example.block ~~ Callable).to.be(True);
+    expect($example.block ~~ Callable).to.be-truthy;
   }
 }

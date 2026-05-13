@@ -73,26 +73,28 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 
 `expect(...).to.<matcher>(...)` is the general form. The current built-ins:
 
-| Matcher | Purpose |
-| --- | --- |
-| `be` | Smartmatch (`~~`) against the expected value. |
-| `eq` | Order-dependent structural equality via `eqv`. See [Matchers › EqMatcher](matchers.md#eqmatcher-built-in). |
-| `contain-exactly` | Order-independent multiset equality on arrays / lists. See [Matchers › ContainExactlyMatcher](matchers.md#containexactlymatcher-built-in). |
-| `match-array` | Single-array alias for `contain-exactly`. |
-| `include` | Membership check across arrays, hashes, sets/bags, strings, and ranges. See [Matchers › IncludeMatcher](matchers.md#includematcher-built-in). |
-| `start-with` | Sequence prefix check for arrays / lists; per-arg prefix check for strings. See [Matchers › StartWithMatcher](matchers.md#startwithmatcher-built-in). |
-| `end-with` | Sequence suffix check for arrays / lists; per-arg suffix check for strings. See [Matchers › EndWithMatcher](matchers.md#endwithmatcher-built-in). |
-| `all` | Every element of a collection must match an inner matcher. See [Matchers › AllMatcher](matchers.md#allmatcher-built-in). |
-| `be-a` / `be-an` | Type check including subclasses, roles, and subsets (`$actual ~~ $type`). See [Matchers › BeAMatcher](matchers.md#beamatcher-built-in). |
-| `be-an-instance-of` | Strict runtime-type check (`$actual.WHAT === $type`, requires defined). See [Matchers › BeAnInstanceOfMatcher](matchers.md#beaninstanceofmatcher-built-in). |
-| `respond-to` | Method-presence check via `$actual.^can(...)`. Accepts one or more method names. See [Matchers › RespondToMatcher](matchers.md#respondtomatcher-built-in). |
-| `have-attributes` | Multi-attribute check: each named pair calls the accessor on `$actual` and compares (`eqv`, or an inner `Matcher`). See [Matchers › HaveAttributesMatcher](matchers.md#haveattributesmatcher-built-in). |
-| `be-greater-than` / `be-gt` | Numeric `>` comparison; fails (not dies) on undefined or non-`Real` actuals. See [Matchers › Comparison matchers](matchers.md#comparison-matchers-built-in). |
-| `be-greater-than-or-equal-to` / `be-gte` | Numeric `>=` comparison. |
-| `be-less-than` / `be-lt` | Numeric `<` comparison. |
-| `be-less-than-or-equal-to` / `be-lte` | Numeric `<=` comparison. |
-| `be-between` | Range check between two `Real` bounds. Inclusive by default; chain `.exclusive` or `.inclusive` to flip the mode. See [Matchers › BeBetweenMatcher](matchers.md#bebetweenmatcher-built-in). |
-| `be-within` | Tolerance check: `be-within($delta).of($expected)` passes when `abs(actual - expected) <= delta`. See [Matchers › BeWithinMatcher](matchers.md#bewithinmatcher-built-in). |
+| Matcher                                  | Purpose                                                                                                                                                                                                 |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `be`                                     | Smartmatch (`~~`) against the expected value.                                                                                                                                                           |
+| `eq`                                     | Order-dependent structural equality via `eqv`. See [Matchers › EqMatcher](matchers.md#eqmatcher-built-in).                                                                                              |
+| `contain-exactly`                        | Order-independent multiset equality on arrays / lists. See [Matchers › ContainExactlyMatcher](matchers.md#containexactlymatcher-built-in).                                                              |
+| `match-array`                            | Single-array alias for `contain-exactly`.                                                                                                                                                               |
+| `include`                                | Membership check across arrays, hashes, sets/bags, strings, and ranges. See [Matchers › IncludeMatcher](matchers.md#includematcher-built-in).                                                           |
+| `start-with`                             | Sequence prefix check for arrays / lists; per-arg prefix check for strings. See [Matchers › StartWithMatcher](matchers.md#startwithmatcher-built-in).                                                   |
+| `end-with`                               | Sequence suffix check for arrays / lists; per-arg suffix check for strings. See [Matchers › EndWithMatcher](matchers.md#endwithmatcher-built-in).                                                       |
+| `all`                                    | Every element of a collection must match an inner matcher. See [Matchers › AllMatcher](matchers.md#allmatcher-built-in).                                                                                |
+| `be-a` / `be-an`                         | Type check including subclasses, roles, and subsets (`$actual ~~ $type`). See [Matchers › BeAMatcher](matchers.md#beamatcher-built-in).                                                                 |
+| `be-an-instance-of`                      | Strict runtime-type check (`$actual.WHAT === $type`, requires defined). See [Matchers › BeAnInstanceOfMatcher](matchers.md#beaninstanceofmatcher-built-in).                                             |
+| `respond-to`                             | Method-presence check via `$actual.^can(...)`. Accepts one or more method names. See [Matchers › RespondToMatcher](matchers.md#respondtomatcher-built-in).                                              |
+| `have-attributes`                        | Multi-attribute check: each named pair calls the accessor on `$actual` and compares (`eqv`, or an inner `Matcher`). See [Matchers › HaveAttributesMatcher](matchers.md#haveattributesmatcher-built-in). |
+| `be-greater-than` / `be-gt`              | Numeric `>` comparison; fails (not dies) on undefined or non-`Real` actuals. See [Matchers › Comparison matchers](matchers.md#comparison-matchers-built-in).                                            |
+| `be-greater-than-or-equal-to` / `be-gte` | Numeric `>=` comparison.                                                                                                                                                                                |
+| `be-less-than` / `be-lt`                 | Numeric `<` comparison.                                                                                                                                                                                 |
+| `be-less-than-or-equal-to` / `be-lte`    | Numeric `<=` comparison.                                                                                                                                                                                |
+| `be-between`                             | Range check between two `Real` bounds. Inclusive by default; chain `.exclusive` or `.inclusive` to flip the mode. See [Matchers › BeBetweenMatcher](matchers.md#bebetweenmatcher-built-in).             |
+| `be-within`                              | Tolerance check: `be-within($delta).of($expected)` passes when `abs(actual - expected) <= delta`. See [Matchers › BeWithinMatcher](matchers.md#bewithinmatcher-built-in).                               |
+| `be-truthy`                              | Boolean coercion check (`?$actual`); empty `Array`/`Hash`, `Nil`, and undefined type objects are not truthy. See [Matchers › BeTruthyMatcher](matchers.md#betruthymatcher-built-in).                    |
+| `be-falsy`                               | Inverse of `be-truthy` (`!$actual`). See [Matchers › BeFalsyMatcher](matchers.md#befalsymatcher-built-in).                                                                                              |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -113,6 +115,8 @@ expect(Calculator.new).to.respond-to('add', 'subtract');
 expect(5).to.be-between(1, 10);
 expect(5).to.be-between(1, 10).exclusive;
 expect(3.14e0).to.be-within(0.01e0).of(3.15e0);
+expect(True).to.be-truthy;
+expect(False).to.be-falsy;
 ```
 
 ## Custom matchers

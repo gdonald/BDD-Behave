@@ -89,7 +89,7 @@ describe 'allow-any-instance-of(Class)', {
       allow-any-instance-of($r).to.receive('find');
       CATCH { default { $died = True } }
     }
-    expect($died).to.be(True);
+    expect($died).to.be-truthy;
   }
 
   it 'rejects a method the class does not define', {
@@ -98,7 +98,7 @@ describe 'allow-any-instance-of(Class)', {
       allow-any-instance-of(PartialRepo).to.receive('imaginary');
       CATCH { default { $died = True } }
     }
-    expect($died).to.be(True);
+    expect($died).to.be-truthy;
   }
 
   it 'supports .and-raise', {

@@ -9,7 +9,7 @@ describe 'spy() with no arguments', {
   it 'returns an anonymous double that records calls', {
     my $s = spy();
     $s.poke('hi');
-    expect($s.received('poke')).to.be(True);
+    expect($s.received('poke')).to.be-truthy;
     expect($s.call-count('poke')).to.be(1);
   }
 }
@@ -18,7 +18,7 @@ describe 'spy with a name', {
   it 'behaves like a permissive double', {
     my $s = spy('Logger');
     $s.warn('careful');
-    expect($s.received('warn')).to.be(True);
+    expect($s.received('warn')).to.be-truthy;
     expect($s.warn).to.be(Any);
   }
 }

@@ -1,0 +1,141 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 53;
+
+# BeTruthyMatcher / BeFalsyMatcher do the Matcher role.
+{
+  ok BeTruthyMatcher.new ~~ Matcher, 'BeTruthyMatcher does Matcher';
+  ok BeFalsyMatcher.new  ~~ Matcher, 'BeFalsyMatcher does Matcher';
+}
+
+# BeTruthyMatcher.matches matches Raku boolean coercion.
+{
+  my $m = BeTruthyMatcher.new;
+  ok  $m.matches(True),       'True is truthy';
+  ok  $m.matches(1),          '1 is truthy';
+  ok  $m.matches(-1),         '-1 is truthy';
+  ok  $m.matches('hello'),    'non-empty string is truthy';
+  ok  $m.matches('0'),        q['0' is truthy (non-empty string in Raku)];
+  ok  $m.matches([1, 2]),     'non-empty array is truthy';
+  ok  $m.matches({ a => 1 }), 'non-empty hash is truthy';
+  ok  $m.matches(1.5),        'Rat is truthy';
+  ok  $m.matches(3.14e0),     'Num is truthy';
+
+  nok $m.matches(False),      'False is not truthy';
+  nok $m.matches(0),          '0 is not truthy';
+  nok $m.matches(''),         'empty string is not truthy';
+  nok $m.matches([]),         'empty array is not truthy';
+  nok $m.matches({}),         'empty hash is not truthy';
+  nok $m.matches(Nil),        'Nil is not truthy';
+  nok $m.matches(Int),        'undefined type object is not truthy';
+}
+
+# BeFalsyMatcher.matches matches Raku boolean coercion (inverse).
+{
+  my $m = BeFalsyMatcher.new;
+  ok  $m.matches(False),      'False is falsy';
+  ok  $m.matches(0),          '0 is falsy';
+  ok  $m.matches(''),         'empty string is falsy';
+  ok  $m.matches([]),         'empty array is falsy';
+  ok  $m.matches({}),         'empty hash is falsy';
+  ok  $m.matches(Nil),        'Nil is falsy';
+  ok  $m.matches(Int),        'undefined Int type object is falsy';
+  ok  $m.matches(Any),        'Any is falsy';
+
+  nok $m.matches(True),       'True is not falsy';
+  nok $m.matches(1),          '1 is not falsy';
+  nok $m.matches('hello'),    'non-empty string is not falsy';
+  nok $m.matches('0'),        q['0' is not falsy (non-empty string in Raku)];
+  nok $m.matches([1]),        'non-empty array is not falsy';
+}
+
+# Failure messages.
+{
+  is BeTruthyMatcher.new.failure-message(0),
+     'expected 0 to be truthy',
+     'BeTruthyMatcher.failure-message';
+  is BeTruthyMatcher.new.failure-message-negated(True),
+     'expected Bool::True not to be truthy',
+     'BeTruthyMatcher.failure-message-negated';
+
+  is BeFalsyMatcher.new.failure-message(True),
+     'expected Bool::True to be falsy',
+     'BeFalsyMatcher.failure-message';
+  is BeFalsyMatcher.new.failure-message-negated(False),
+     'expected Bool::False not to be falsy',
+     'BeFalsyMatcher.failure-message-negated';
+}
+
+# Descriptions.
+{
+  is BeTruthyMatcher.new.description, 'be truthy',
+     'BeTruthyMatcher.description';
+  is BeFalsyMatcher.new.description, 'be falsy',
+     'BeFalsyMatcher.description';
+}
+
+# expect(...).to.be-truthy integration.
+{
+  Failures.list = ();
+  expect(True).to.be-truthy;
+  is Failures.list.elems, 0, 'be-truthy passes for True';
+
+  Failures.list = ();
+  expect(0).to.be-truthy;
+  is Failures.list.elems, 1, 'be-truthy fails for 0';
+  is Failures.list[0].given, 0, 'Failure.given preserved';
+  is Failures.list[0].message, 'expected 0 to be truthy',
+     'Failure.message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.be-falsy integration.
+{
+  Failures.list = ();
+  expect(False).to.be-falsy;
+  is Failures.list.elems, 0, 'be-falsy passes for False';
+
+  Failures.list = ();
+  expect(42).to.be-falsy;
+  is Failures.list.elems, 1, 'be-falsy fails for 42';
+  is Failures.list[0].given, 42, 'Failure.given preserved';
+  is Failures.list[0].message, 'expected 42 to be falsy',
+     'Failure.message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-truthy negation.
+{
+  Failures.list = ();
+  expect(False).to.not.be-truthy;
+  is Failures.list.elems, 0, '.not.be-truthy passes for False';
+
+  Failures.list = ();
+  expect(True).to.not.be-truthy;
+  is Failures.list.elems, 1, '.not.be-truthy fails for True';
+  ok Failures.list[0].negated, 'failure marked negated';
+  is Failures.list[0].message, 'expected Bool::True not to be truthy',
+     'negated message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.not.be-falsy negation.
+{
+  Failures.list = ();
+  expect(True).to.not.be-falsy;
+  is Failures.list.elems, 0, '.not.be-falsy passes for True';
+
+  Failures.list = ();
+  expect(False).to.not.be-falsy;
+  is Failures.list.elems, 1, '.not.be-falsy fails for False';
+  ok Failures.list[0].negated, 'failure marked negated';
+  is Failures.list[0].message, 'expected Bool::False not to be falsy',
+     'negated message recorded';
+  Failures.list = ();
+}

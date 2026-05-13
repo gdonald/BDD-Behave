@@ -24,8 +24,8 @@ describe 'around-each wraps a single example', {
   }
 
   it 'records around-end and after between examples', {
-    expect(@log.grep('around-end').elems > 0).to.be(True);
-    expect(@log.grep('after').elems > 0).to.be(True);
+    expect(@log.grep('around-end').elems > 0).to.be-truthy;
+    expect(@log.grep('after').elems > 0).to.be-truthy;
   }
 }
 
@@ -90,7 +90,7 @@ describe 'around-each cleanup with LEAVE', {
   }
 
   it 'closes after the previous example', {
-    expect(@resources.grep('close').elems > 0).to.be(True);
+    expect(@resources.grep('close').elems > 0).to.be-truthy;
   }
 }
 

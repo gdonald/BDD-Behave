@@ -10,24 +10,24 @@ describe 'set diff', {
     my $a = set <a b c>;
     my $b = set <a b d>;
     my $out = strip-ansi(render-diff($a, $b));
-    expect($out.contains('Set(') ?? 1 !! 0).to.be(1);
-    expect($out.contains('-   d,') ?? 1 !! 0).to.be(1);
-    expect($out.contains('+   c,') ?? 1 !! 0).to.be(1);
+    expect($out.contains('Set(')).to.be-truthy;
+    expect($out.contains('-   d,')).to.be-truthy;
+    expect($out.contains('+   c,')).to.be-truthy;
   }
 
   it 'shows context for shared elements', {
     my $a = set <a b c>;
     my $b = set <a b d>;
     my $out = strip-ansi(render-diff($a, $b));
-    expect($out.contains('    a,') ?? 1 !! 0).to.be(1);
-    expect($out.contains('    b,') ?? 1 !! 0).to.be(1);
+    expect($out.contains('    a,')).to.be-truthy;
+    expect($out.contains('    b,')).to.be-truthy;
   }
 
   it 'renders empty sets as Set()', {
     my $a = set <a>;
     my $b = set ();
     my $out = strip-ansi(render-diff($a, $b));
-    expect($out.contains('- Set()') ?? 1 !! 0).to.be(1);
+    expect($out.contains('- Set()')).to.be-truthy;
   }
 }
 
@@ -36,9 +36,9 @@ describe 'bag diff', {
     my $a = bag <a a b>;
     my $b = bag <a b b>;
     my $out = strip-ansi(render-diff($a, $b));
-    expect($out.contains('Bag(') ?? 1 !! 0).to.be(1);
-    expect($out.contains('-   "a" => 1') ?? 1 !! 0).to.be(1);
-    expect($out.contains('+   "a" => 2') ?? 1 !! 0).to.be(1);
+    expect($out.contains('Bag(')).to.be-truthy;
+    expect($out.contains('-   "a" => 1')).to.be-truthy;
+    expect($out.contains('+   "a" => 2')).to.be-truthy;
   }
 }
 
@@ -47,8 +47,8 @@ describe 'mix diff', {
     my $a = Mix.new-from-pairs((a => 1.5), (b => 2.0));
     my $b = Mix.new-from-pairs((a => 1.5), (b => 3.0));
     my $out = strip-ansi(render-diff($a, $b));
-    expect($out.contains('Mix(') ?? 1 !! 0).to.be(1);
-    expect($out.contains('"b" => 2') ?? 1 !! 0).to.be(1);
-    expect($out.contains('"b" => 3') ?? 1 !! 0).to.be(1);
+    expect($out.contains('Mix(')).to.be-truthy;
+    expect($out.contains('"b" => 2')).to.be-truthy;
+    expect($out.contains('"b" => 3')).to.be-truthy;
   }
 }

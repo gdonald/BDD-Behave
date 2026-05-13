@@ -140,7 +140,7 @@ describe 'be-a matcher failure metadata', {
     my $expected = Failures.list[0].expected;
     Failures.list = ();
     expect($given).to.be('hi');
-    expect($expected === Int).to.be(True);
+    expect($expected === Int).to.be-truthy;
   }
 }
 

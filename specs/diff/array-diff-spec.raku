@@ -14,12 +14,12 @@ describe 'array diff', {
 
   it 'shows added elements with green plus markers', {
     my $out = render-diff([1, 2, 3], [1, 2]);
-    expect($out.contains("\e[32m") ?? 1 !! 0).to.be(1);
+    expect($out.contains("\e[32m")).to.be-truthy;
   }
 
   it 'shows removed elements with red minus markers', {
     my $out = render-diff([1], [1, 2, 3]);
-    expect($out.contains("\e[31m") ?? 1 !! 0).to.be(1);
+    expect($out.contains("\e[31m")).to.be-truthy;
   }
 
   it 'renders empty arrays as []', {
@@ -29,8 +29,8 @@ describe 'array diff', {
 
   it 'reports identical lines as context (no marker)', {
     my $out = strip-ansi(render-diff([1, 2, 3], [1, 9, 3]));
-    expect($out.contains("    1,") ?? 1 !! 0).to.be(1);
-    expect($out.contains("    3,") ?? 1 !! 0).to.be(1);
+    expect($out.contains("    1,")).to.be-truthy;
+    expect($out.contains("    3,")).to.be-truthy;
   }
 
   it 'handles arrays of strings', {

@@ -9,7 +9,7 @@ describe 'Suite (top-level container)', {
   it 'is created via .create with sensible defaults', {
     my $suite = Suite.create(:file('specs/example.raku'));
 
-    expect($suite.is-root).to.be(True);
+    expect($suite.is-root).to.be-truthy;
     expect($suite.description).to.be('suite');
     expect($suite.depth).to.be(0);
     expect($suite.children.elems).to.be(0);
@@ -82,7 +82,7 @@ describe 'Pending markers and metadata', {
       :line(1),
       :block({ True }),
     );
-    expect($example.pending ?? 1 !! 0).to.be(0);
+    expect($example.pending).to.be-falsy;
   }
 
   it 'records pending state and a stored reason after mark-pending', {
@@ -94,7 +94,7 @@ describe 'Pending markers and metadata', {
     );
     $example.mark-pending(:reason('wip'));
 
-    expect($example.pending).to.be(True);
+    expect($example.pending).to.be-truthy;
     expect($example.get-metadata('pending-reason')).to.be('wip');
   }
 }
@@ -112,8 +112,8 @@ describe 'Hook registration on a group', {
 
     expect($group.hooks('before-each').elems).to.be(1);
     expect($group.hooks('after-all').elems).to.be(1);
-    expect($group.hooks('before-each')[0] === $before-each ?? 1 !! 0).to.be(1);
-    expect($group.hooks('after-all')[0]   === $after-all   ?? 1 !! 0).to.be(1);
+    expect($group.hooks('before-each')[0] === $before-each).to.be-truthy;
+    expect($group.hooks('after-all')[0]   === $after-all  ).to.be-truthy;
   }
 
   it 'returns an empty list for phases with no registered hooks', {

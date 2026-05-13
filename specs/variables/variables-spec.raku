@@ -43,7 +43,7 @@ describe 'variables inside describe blocks', {
 
   it 'describe-level variables are shared across examples', {
     $counter++;
-    expect($counter > 0).to.be(True);
+    expect($counter > 0).to.be-truthy;
   }
 
   context 'nested context with own variables', {
@@ -222,7 +222,7 @@ describe 'enum definitions', {
 
   it 'enum values have correct numeric equivalents', {
     my $color = Red;
-    expect($color ~~ Color).to.be(True);
+    expect($color ~~ Color).to.be-truthy;
   }
 
   it 'can use enums in variables', {

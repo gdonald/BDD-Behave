@@ -68,7 +68,7 @@ describe 'start-with matcher on arrays', {
     Failures.list = ();
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to start with 1');
-    expect($negated ?? 1 !! 0).to.be(1);
+    expect($negated).to.be-truthy;
   }
 }
 
@@ -204,7 +204,7 @@ describe 'end-with matcher on arrays', {
     Failures.list = ();
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to end with 3');
-    expect($negated ?? 1 !! 0).to.be(1);
+    expect($negated).to.be-truthy;
   }
 }
 

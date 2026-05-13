@@ -66,7 +66,7 @@ describe 'all matcher with custom matcher instances', {
     expect([1, 2, 1]).to.all(1);
     my $message = Failures.list[0].message;
     Failures.list = ();
-    expect($message.contains('to all be 1')).to.be(True);
+    expect($message.contains('to all be 1')).to.be-truthy;
   }
 
   it 'reports which element failed in the failure message', {
@@ -74,8 +74,8 @@ describe 'all matcher with custom matcher instances', {
     expect([1, 2, 1]).to.all(1);
     my $message = Failures.list[0].message;
     Failures.list = ();
-    expect($message.contains('element at index 1')).to.be(True);
-    expect($message.contains('did not match')).to.be(True);
+    expect($message.contains('element at index 1')).to.be-truthy;
+    expect($message.contains('did not match')).to.be-truthy;
   }
 }
 
@@ -134,7 +134,7 @@ describe 'all matcher edge cases', {
     expect(42).to.all(1);
     my $message = Failures.list[0].message;
     Failures.list = ();
-    expect($message.contains('to be a collection')).to.be(True);
+    expect($message.contains('to be a collection')).to.be-truthy;
   }
 }
 
@@ -152,7 +152,7 @@ describe 'all matcher negation', {
     Failures.list = ();
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 1, 1] not to all be 1');
-    expect($negated ?? 1 !! 0).to.be(1);
+    expect($negated).to.be-truthy;
   }
 }
 
@@ -167,7 +167,7 @@ describe 'all matcher preserves Failure metadata', {
   it 'sets Failure.expected to the inner matcher', {
     Failures.list = ();
     expect([1, 2, 3]).to.all(0);
-    expect(Failures.list[0].expected ~~ Matcher).to.be(True);
+    expect(Failures.list[0].expected ~~ Matcher).to.be-truthy;
     Failures.list = ();
   }
 }

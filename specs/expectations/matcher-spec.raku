@@ -21,27 +21,27 @@ class TruthyMatcher does Matcher {
 
 describe 'BeMatcher (built-in smartmatch wrapper)', {
   it 'matches equal values', {
-    expect(BeMatcher.new(:expected(42)).matches(42) ?? 1 !! 0).to.be(1);
+    expect(BeMatcher.new(:expected(42)).matches(42)).to.be-truthy;
   }
 
   it 'rejects unequal values', {
-    expect(BeMatcher.new(:expected(42)).matches(41) ?? 1 !! 0).to.be(0);
+    expect(BeMatcher.new(:expected(42)).matches(41)).to.be-falsy;
   }
 
   it 'preserves smartmatch semantics for types', {
-    expect(BeMatcher.new(:expected(Int)).matches(7) ?? 1 !! 0).to.be(1);
+    expect(BeMatcher.new(:expected(Int)).matches(7)).to.be-truthy;
   }
 
   it 'preserves smartmatch semantics for regex', {
-    expect(BeMatcher.new(:expected(/hell/)).matches('hello') ?? 1 !! 0).to.be(1);
+    expect(BeMatcher.new(:expected(/hell/)).matches('hello')).to.be-truthy;
   }
 
   it 'preserves smartmatch semantics for ranges', {
-    expect(BeMatcher.new(:expected(1..10)).matches(5) ?? 1 !! 0).to.be(1);
+    expect(BeMatcher.new(:expected(1..10)).matches(5)).to.be-truthy;
   }
 
   it 'preserves smartmatch semantics for junctions', {
-    expect(BeMatcher.new(:expected(any(1, 2, 3))).matches(2) ?? 1 !! 0).to.be(1);
+    expect(BeMatcher.new(:expected(any(1, 2, 3))).matches(2)).to.be-truthy;
   }
 }
 
@@ -69,7 +69,7 @@ describe 'custom Matcher plugged into expect.to.be', {
     expect(1).to.not.be(TruthyMatcher.new);
     expect(Failures.list.elems).to.be(1);
     expect(Failures.list[0].message).to.be('expected falsy, got 1');
-    expect(Failures.list[0].negated ?? 1 !! 0).to.be(1);
+    expect(Failures.list[0].negated).to.be-truthy;
     Failures.list = ();
   }
 }
@@ -79,7 +79,7 @@ describe 'BeMatcher path keeps structured given/expected rendering', {
     Failures.list = ();
     expect(42).to.be(41);
     expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message.defined ?? 1 !! 0).to.be(0);
+    expect(Failures.list[0].message.defined).to.be-falsy;
     expect(Failures.list[0].given).to.be(42);
     expect(Failures.list[0].expected).to.be(41);
     Failures.list = ();

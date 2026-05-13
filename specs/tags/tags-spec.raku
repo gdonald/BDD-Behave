@@ -10,7 +10,7 @@ describe 'tagging examples', {
   }
 
   it 'still runs without any tag', {
-    expect(True).to.be(True);
+    expect(True).to.be-truthy;
   }
 }
 

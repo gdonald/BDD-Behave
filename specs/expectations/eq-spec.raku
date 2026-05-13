@@ -76,7 +76,7 @@ describe 'eq matcher (order-dependent structural equality)', {
     my $negated = Failures.list[0].negated;
     Failures.list = ();
     expect($count).to.be(1);
-    expect($negated ?? 1 !! 0).to.be(1);
+    expect($negated).to.be-truthy;
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
@@ -180,7 +180,7 @@ describe 'contain-exactly matcher (order-independent multiset equality)', {
     Failures.list = ();
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to contain exactly 3, 2, 1');
-    expect($negated ?? 1 !! 0).to.be(1);
+    expect($negated).to.be-truthy;
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {

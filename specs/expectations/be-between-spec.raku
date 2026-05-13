@@ -184,7 +184,7 @@ describe 'be-between negation', {
   it 'marks the failure as negated', {
     Failures.list = ();
     expect(5).to.not.be-between(1, 10);
-    expect(Failures.list[0].negated ?? 1 !! 0).to.be(1);
+    expect(Failures.list[0].negated).to.be-truthy;
     Failures.list = ();
   }
 }
