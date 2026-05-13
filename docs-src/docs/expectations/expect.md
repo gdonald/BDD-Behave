@@ -98,6 +98,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-nil`                                 | Undefined-value check (`!$actual.defined`); passes for `Nil`, `Any`, and undefined type objects. See [Matchers › BeNilMatcher](matchers.md#benilmatcher-built-in).                                      |
 | `match`                                  | Regex match against a `Str` (`$actual ~~ /pattern/`); fails (not dies) on undefined or non-`Str` actuals. See [Matchers › MatchMatcher](matchers.md#matchmatcher-built-in).                             |
 | `raise-error`                            | Passes when a `Callable` actual raises an exception when invoked. Wrap the code under test in `{ ... }`. Forms: `raise-error`, `raise-error(Type)`, `raise-error(Type, /pattern/)`, `raise-error(/pattern/)`. Chain `.with-message($str-or-regex)` to filter by exception message (`Str` compares with `eq`, `Regex` with `~~`). See [Matchers › RaiseErrorMatcher](matchers.md#raiseerrormatcher-built-in).                   |
+| `change`                                 | Passes when a `Callable` action changes the value returned by an observable block (compared with `eqv`). Wrap the action and the observable in `{ ... }`. See [Matchers › ChangeMatcher](matchers.md#changematcher-built-in).                                                                                                                                                                                                  |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -132,6 +133,9 @@ expect({ die "code=42" }).to.raise-error(X::AdHoc, /'code=42'/);
 expect({ die "alpha" }).to.raise-error(/alpha/);
 expect({ die "boom" }).to.raise-error.with-message('boom');
 expect({ die "code=42" }).to.raise-error(X::AdHoc).with-message(/'code=42'/);
+my $counter = 0;
+expect({ $counter++ }).to.change({ $counter });
+expect({ 1 + 1 }).to.not.change({ $counter });
 ```
 
 ## Custom matchers

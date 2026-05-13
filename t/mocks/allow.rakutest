@@ -5,7 +5,7 @@ use Test;
 use BDD::Behave;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
-need BDD::Behave::Mock;
+need BDD::Behave::Mock::Stub;
 
 # allow(instance).to.receive(name).and-return(value) stubs that one instance
 {
@@ -18,7 +18,7 @@ need BDD::Behave::Mock;
   is $a.hello('alice'), 'STUB',     'instance-stub returns the stubbed value';
   is $b.hello('bob'),   'hello, bob', 'sibling instance is unaffected';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   is $a.hello('alice'), 'hello, alice', 'clear-all restores original behavior';
 }
 
@@ -31,7 +31,7 @@ need BDD::Behave::Mock;
   allow(Repo).to.receive('find').and-return('mocked');
   is Repo.find(42), 'mocked', 'class-level stub intercepts dispatch through the class';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   is Repo.find(42), 'real:42', 'class-level stub is removed after clear-all';
 }
 
@@ -46,10 +46,10 @@ need BDD::Behave::Mock;
   allow($c).to.receive('foo').and-return('second');
   is $c.foo, 'second', 'second stub replaces first';
 
-  is BDD::Behave::Mock::StubRegistry.active-count, 1,
+  is BDD::Behave::Mock::Stub::StubRegistry.active-count, 1,
     'only one stub is active for a given target+method';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # .and-call-original delegates to the real implementation while still stubbing
@@ -64,7 +64,7 @@ need BDD::Behave::Mock;
   is $c.foo, 'orig',
     '.and-call-original on a re-stubbed method delegates to the original';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # .and-raise raises the supplied exception
@@ -78,7 +78,7 @@ need BDD::Behave::Mock;
   try { $c.bang; CATCH { default { $err = .message } } }
   is $err, 'kaboom', '.and-raise propagates the exception';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # allow on a non-existent method dies at .receive time
@@ -99,7 +99,7 @@ need BDD::Behave::Mock;
   allow($c).to.receive('foo');
   ok !$c.foo.defined, 'allow().receive() with no follow-up returns Any';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   is $c.foo, 'orig', 'cleared cleanly';
 }
 
@@ -110,7 +110,7 @@ need BDD::Behave::Mock;
   is $d.find(7), 'via-allow', 'allow() works on a Double';
   is $d.received('find'), True, 'Double still records the call';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   ok $d.stubs<find>:!exists, 'Double stub removed after clear-all';
 }
 
@@ -122,7 +122,7 @@ need BDD::Behave::Mock;
   allow($d).to.receive('find').and-return('overridden');
   is $d.find(2), 'overridden', 'allow overrides the preset stub';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   is $d.find(3), 'preset', 'preset stub is restored after clear-all';
 }
 
@@ -135,7 +135,7 @@ need BDD::Behave::Mock;
   lives-ok { allow($d).to.receive('hello').and-return('h') },
     'allow on class-based double accepts real methods';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # .and-call-original on a Double dies — there is no original to call
@@ -145,7 +145,7 @@ need BDD::Behave::Mock;
   dies-ok { $setup.and-call-original },
     '.and-call-original on a Double dies';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # Inside a runner-driven example, stubs auto-clear after each example
@@ -203,16 +203,16 @@ need BDD::Behave::Mock;
 
   is $result.passed, 2, 'before-all stub persists across both examples';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # clear-since only pops stubs registered after the snapshot
 {
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   my class C { method m { 'orig' } }
 
   allow(C).to.receive('m').and-return('outer');
-  my $snap = BDD::Behave::Mock::StubRegistry.active-count;
+  my $snap = BDD::Behave::Mock::Stub::StubRegistry.active-count;
 
   my $inner = C.new;
   allow($inner).to.receive('m').and-return('inner');
@@ -220,11 +220,11 @@ need BDD::Behave::Mock;
   is $inner.m,    'inner', 'inner stub takes precedence';
   is C.new.m,     'outer', 'outer stub still applies to other instances';
 
-  BDD::Behave::Mock::StubRegistry.clear-since($snap);
+  BDD::Behave::Mock::Stub::StubRegistry.clear-since($snap);
   is $inner.m,    'outer', 'inner stub removed; outer still active';
   is C.new.m,     'outer', 'outer stub survives clear-since';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
   is C.new.m,     'orig', 'clear-all removes outer stub too';
 }
 
@@ -234,7 +234,7 @@ need BDD::Behave::Mock;
   allow($d).to.receive('compute').and-do(-> $x { $x * 10 });
   is $d.compute(7), 70, 'and-do callable receives args and returns its result';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # and-do on a real class invokes the callable with method args (no self)
@@ -246,7 +246,7 @@ need BDD::Behave::Mock;
   is $c.greet('alice'), 'STUB(alice)',
     '.and-do on a class invokes the callable with the method args';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 done-testing;

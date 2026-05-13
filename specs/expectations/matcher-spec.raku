@@ -1,5 +1,6 @@
 use BDD::Behave;
 use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Core;
 use BDD::Behave::Failures;
 
 class EvenMatcher does Matcher {

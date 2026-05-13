@@ -31,6 +31,31 @@ role Matcher is export {
 | `expected-value`                   | no        | The value stored in `Failure.expected` for tooling.                                                                                     |
 | `description`                      | no        | Human-readable description, useful for error reporting and reflection.                                                                  |
 
+## Where matcher classes live
+
+Almost all users only ever write `use BDD::Behave;` — that pulls in `expect`, every built-in matcher, and the full DSL through the lazy-loading wrapper. Nothing here changes that.
+
+You only need to know about specific submodules when you want to *instantiate* matcher classes directly — typically to compose them inside a custom matcher, or to unit-test a matcher with `Test`. Each family lives in its own submodule so unit tests can import just one and skip the rest:
+
+| Submodule                          | Matcher classes                                                                                                              |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `BDD::Behave::Matcher`             | The `Matcher` role itself.                                                                                                   |
+| `BDD::Behave::Matcher::Core`       | `BeMatcher`, `EqMatcher`                                                                                                     |
+| `BDD::Behave::Matcher::Collection` | `IncludeMatcher`, `ContainExactlyMatcher`, `StartWithMatcher`, `EndWithMatcher`, `AllMatcher`                                |
+| `BDD::Behave::Matcher::Type`       | `BeAMatcher`, `BeAnInstanceOfMatcher`, `RespondToMatcher`, `HaveAttributesMatcher`                                           |
+| `BDD::Behave::Matcher::Numeric`    | `BeGreaterThanMatcher`, `BeGreaterThanOrEqualMatcher`, `BeLessThanMatcher`, `BeLessThanOrEqualMatcher`, `BeBetweenMatcher`, `BeWithinMatcher` |
+| `BDD::Behave::Matcher::Boolean`    | `BeTruthyMatcher`, `BeFalsyMatcher`, `BeNilMatcher`                                                                          |
+| `BDD::Behave::Matcher::String`     | `MatchMatcher`                                                                                                               |
+| `BDD::Behave::Matcher::Exception`  | `RaiseErrorMatcher`                                                                                                          |
+| `BDD::Behave::Matcher::Change`     | `ChangeMatcher`                                                                                                              |
+
+Each submodule already `use`s `BDD::Behave::Matcher` internally, but the role is *not* re-exported. If your code needs both, import both:
+
+```raku
+use BDD::Behave::Matcher;            # for `does Matcher`
+use BDD::Behave::Matcher::Numeric;   # for BeBetweenMatcher, BeWithinMatcher, ...
+```
+
 ## BeMatcher (built-in)
 
 `BeMatcher` wraps Raku's smartmatch operator (`~~`). When you write:
@@ -460,7 +485,8 @@ The matcher composes naturally with other matchers — pass a `Matcher`
 instance as the expected value for any attribute:
 
 ```raku
-use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Collection;   # StartWithMatcher
+use BDD::Behave::Matcher::Type;         # BeAMatcher
 
 expect($alice).to.have-attributes(
   :name(StartWithMatcher.new(:expected(['A']))),
@@ -942,6 +968,81 @@ unset. The matcher itself also exposes `raised-exception` (the captured
 throw) and `miss-reason` (one of `'none'`, `'type'`, `'message'`,
 `'non-callable'`, or `Str` on a pass) for tooling that needs structural
 access.
+
+## ChangeMatcher (built-in)
+
+`change` passes when invoking the actual block changes the value
+returned by an observable block. Both the action and the observable
+are passed unevaluated as `{ ... }` blocks — the matcher invokes the
+observable, runs the action, then invokes the observable again and
+compares the two values via `eqv`:
+
+```raku
+my $counter = 0;
+expect({ $counter++ }).to.change({ $counter });        # passes
+
+my @items;
+expect({ @items.push: 'x' }).to.change({ @items.elems });  # passes
+
+my $counter2 = 5;
+expect({ 1 + 1 }).to.change({ $counter2 });            # fails (unchanged)
+```
+
+The observable can be any expression — a variable, a method call, a
+derived value — as long as the block returns something comparable. The
+matcher uses `eqv` for the before / after comparison, so deep
+structural equality is respected: mutating an array element to the
+same value (`@items[0] = 1` when it was already `1`) does **not**
+register as a change.
+
+### Capturing snapshots
+
+Because `eqv` compares the values *returned* by the observable each
+time, an observable like `{ @items }` returns the *same container* on
+both calls. To detect element-level mutation, snapshot the value:
+
+```raku
+my @items = 1, 2, 3;
+expect({ @items.push: 4 }).to.change({ @items.clone });   # passes
+expect({ @items.push: 5 }).to.change({ @items.elems });   # passes (count)
+```
+
+### Negation
+
+`.not.change` passes when the action does **not** change the
+observable, and fails when it does:
+
+```raku
+my $counter = 5;
+expect({ 1 + 1 }).to.not.change({ $counter });        # passes
+
+expect({ $counter = 9 }).to.not.change({ $counter });
+# fails: expected block not to change observable, but it changed from 5 to 9
+```
+
+### Non-Callable actuals
+
+Non-`Callable` actuals fail rather than throw — `expect(42).to.change({ $x })`
+records a normal expectation failure rather than blowing up. The
+failure message names the unwrapped value:
+
+```text
+expected a Callable for change, but got 42
+```
+
+### Failure messages
+
+```text
+expected block to change observable, but it remained 7
+expected block not to change observable, but it changed from 0 to 9
+```
+
+### Failure metadata
+
+`Failure.given` carries the original action `Callable`. The matcher
+itself exposes `before-value`, `after-value`, `action-ran`, and
+`callable-given` for tooling that needs structural access to the
+captured states.
 
 ## Writing a custom matcher
 

@@ -1,6 +1,8 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
 use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::Collection;
 
 class PositiveMatcher does Matcher {
   method matches($actual --> Bool) { ?($actual.defined && $actual > 0) }

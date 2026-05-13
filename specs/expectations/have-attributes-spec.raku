@@ -1,6 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
 use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Type;
 
 class HAPoint {
   has $.x;

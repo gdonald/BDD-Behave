@@ -1,0 +1,166 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Change;
+use BDD::Behave::Failures;
+
+plan 35;
+
+# does the Matcher role.
+{
+  my $m = ChangeMatcher.new(:observable({ 1 }));
+  ok $m ~~ Matcher, 'ChangeMatcher does Matcher';
+}
+
+# passes when the action changes the observable.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  ok $m.matches({ $counter++ }), 'matches when value changes';
+  is $m.before-value, 0, 'before-value captured';
+  is $m.after-value, 1, 'after-value captured';
+  ok $m.action-ran, 'action-ran is True';
+  ok $m.callable-given, 'callable-given is True';
+}
+
+# rejects when the action does not change the observable.
+{
+  my $counter = 5;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  nok $m.matches({ 1 + 1 }), 'rejects when value unchanged';
+  is $m.before-value, 5, 'before-value still captured';
+  is $m.after-value, 5, 'after-value matches before-value';
+  ok $m.action-ran, 'action-ran is True';
+}
+
+# comparison uses eqv (deep equality).
+{
+  my @items = 1, 2, 3;
+  my $m = ChangeMatcher.new(:observable({ @items.clone }));
+  nok $m.matches({ @items[0] = 1 }), 'rejects when deep-equal under eqv';
+}
+
+# detects element-level mutation when observable returns a snapshot.
+{
+  my @items = 1, 2, 3;
+  my $m = ChangeMatcher.new(:observable({ @items.clone }));
+  ok $m.matches({ @items.push: 4 }), 'detects push via snapshot';
+}
+
+# state resets on repeated matches calls.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  ok $m.matches({ $counter++ }), 'first call: matches';
+  ok $m.matches({ $counter++ }), 'second call: matches';
+  is $m.before-value, 1, 'second call before-value';
+  is $m.after-value, 2, 'second call after-value';
+}
+
+# non-Callable actuals fail rather than throw.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  nok $m.matches(42),       'rejects Int actual';
+  nok $m.callable-given,    'callable-given flag is False';
+  nok $m.action-ran,        'action-ran stays False';
+  nok $m.matches('hello'),  'rejects Str actual';
+  nok $m.matches(Any),      'rejects Any';
+}
+
+# failure messages.
+{
+  my $counter = 7;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  $m.matches({ 1 + 1 });
+  is $m.failure-message({ 1 + 1 }),
+  'expected block to change observable, but it remained 7',
+  'failure-message names the unchanged value';
+
+  my $counter2 = 0;
+  my $m2 = ChangeMatcher.new(:observable({ $counter2 }));
+  $m2.matches({ $counter2 = 9 });
+  is $m2.failure-message-negated({ $counter2 = 9 }),
+  'expected block not to change observable, but it changed from 0 to 9',
+  'failure-message-negated names both states';
+}
+
+# non-callable failure message names the unwrapped actual.
+{
+  my $observable = 0;
+  my $m = ChangeMatcher.new(:observable({ $observable }));
+  $m.matches(42);
+  is $m.failure-message(42),
+  'expected a Callable for change, but got 42',
+  'non-Callable failure message';
+}
+
+# description.
+{
+  my $m = ChangeMatcher.new(:observable({ 1 }));
+  is $m.description, 'change observable', 'description';
+}
+
+# expect({ ... }).to.change({ ... }) integration: passes.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter++ }).to.change({ $counter });
+  is Failures.list.elems, 0, 'passes when block changes value';
+
+  Failures.list = ();
+}
+
+# expect({ ... }).to.change({ ... }) integration: fails.
+{
+  Failures.list = ();
+  my $counter = 7;
+  expect({ 1 + 1 }).to.change({ $counter });
+  is Failures.list.elems, 1, 'fails when block does not change value';
+  is Failures.list[0].message,
+  'expected block to change observable, but it remained 7',
+  'failure-message recorded';
+  Failures.list = ();
+}
+
+# expect(...).to.not.change negation.
+{
+  Failures.list = ();
+  my $counter = 5;
+  expect({ 1 + 1 }).to.not.change({ $counter });
+  is Failures.list.elems, 0, '.not passes when value unchanged';
+
+  Failures.list = ();
+  expect({ $counter = 9 }).to.not.change({ $counter });
+  is Failures.list.elems, 1, '.not fails when value changed';
+  ok Failures.list[0].negated, 'failure marked negated';
+  is Failures.list[0].message,
+  'expected block not to change observable, but it changed from 5 to 9',
+  'negated failure-message recorded';
+  Failures.list = ();
+}
+
+# expect(non-Callable).to.change records a Callable-shape failure.
+{
+  Failures.list = ();
+  my $observable = 0;
+  expect(42).to.change({ $observable });
+  is Failures.list.elems, 1, 'records failure for non-Callable actual';
+  is Failures.list[0].message,
+  'expected a Callable for change, but got 42',
+  'Callable-shape failure message';
+  Failures.list = ();
+}
+
+# Failure.given preserved as the action.
+{
+  Failures.list = ();
+  my $counter = 0;
+  my &action = { 1 + 1 };
+  expect(&action).to.change({ $counter });
+  ok Failures.list[0].given ~~ Callable, 'Failure.given is the Callable action';
+  Failures.list = ();
+}

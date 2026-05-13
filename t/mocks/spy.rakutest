@@ -3,12 +3,13 @@ use lib 'lib';
 use Test;
 
 use BDD::Behave;
-need BDD::Behave::Mock;
+need BDD::Behave::Mock::Double;
+need BDD::Behave::Mock::Stub;
 
 # spy() with no args returns an anonymous Double
 {
   my $s = spy();
-  isa-ok $s, BDD::Behave::Mock::Double, 'spy() returns a Double';
+  isa-ok $s, BDD::Behave::Mock::Double::Double, 'spy() returns a Double';
   is $s.double-name, 'spy', 'anonymous spy is named "spy"';
   $s.poke;
   is $s.received('poke'),    True, 'spy records poke';
@@ -18,7 +19,7 @@ need BDD::Behave::Mock;
 # spy('Name') returns a named Double (alias for double)
 {
   my $s = spy('Logger');
-  isa-ok $s, BDD::Behave::Mock::Double, 'spy(name) returns a Double';
+  isa-ok $s, BDD::Behave::Mock::Double::Double, 'spy(name) returns a Double';
   is $s.double-name, 'Logger', 'named spy carries the name';
   $s.warn('hi');
   is $s.received('warn'), True, 'named spy records calls';
@@ -35,7 +36,7 @@ need BDD::Behave::Mock;
 {
   my class Greeter { method hello { 'hi' } }
   my $s = spy(Greeter);
-  isa-ok $s, BDD::Behave::Mock::Double, 'spy(class) returns a Double';
+  isa-ok $s, BDD::Behave::Mock::Double::Double, 'spy(class) returns a Double';
   is $s.double-class, Greeter, 'class-based spy records the class';
 }
 
@@ -50,11 +51,11 @@ need BDD::Behave::Mock;
   is $g.hello('alice'), 'h alice', 'real method still runs';
   is $g.bye,            'b',       'real bye method still runs';
 
-  my $hello-stub = BDD::Behave::Mock::StubRegistry.find-existing($g, 'hello');
+  my $hello-stub = BDD::Behave::Mock::Stub::StubRegistry.find-existing($g, 'hello');
   ok $hello-stub.defined, 'a stub was installed for hello';
   is $hello-stub.calls-of('hello').elems, 1, 'one hello call was recorded';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # spy on a real instance leaves siblings alone
@@ -67,10 +68,10 @@ need BDD::Behave::Mock;
   is $a.hello, 'real', 'spied instance still returns real';
   is $b.hello, 'real', 'sibling instance unaffected';
 
-  my $stub-a = BDD::Behave::Mock::StubRegistry.find-existing($a, 'hello');
+  my $stub-a = BDD::Behave::Mock::Stub::StubRegistry.find-existing($a, 'hello');
   is $stub-a.calls-of('hello').elems, 1, 'only spied instance recorded';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # spy on a class avoids POPULATE / submethods that can't be wrapped
@@ -79,7 +80,7 @@ need BDD::Behave::Mock;
   my $g = G.new;
 
   lives-ok { spy($g) }, 'spy() does not choke on submethods like POPULATE';
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 done-testing;

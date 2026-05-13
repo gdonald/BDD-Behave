@@ -4,7 +4,7 @@ use BDD::Behave::Colors;
 use BDD::Behave::Failures;
 use BDD::Behave::SpecTree;
 
-need BDD::Behave::Mock;
+need BDD::Behave::Mock::Stub;
 need BDD::Behave::LetRuntime;
 
 constant Suite = BDD::Behave::SpecTree::Suite;
@@ -151,10 +151,10 @@ our class Runner {
     my @lets = $example.get-metadata('lets', :default([])).flat.List;
     my $*LET-RUNTIME = LetRuntime.new(:definitions(@lets));
 
-    my Int $stub-snapshot = BDD::Behave::Mock::StubRegistry.active-count;
+    my Int $stub-snapshot = BDD::Behave::Mock::Stub::StubRegistry.active-count;
     LEAVE {
       if $stub-snapshot.defined {
-        BDD::Behave::Mock::StubRegistry.clear-since($stub-snapshot);
+        BDD::Behave::Mock::Stub::StubRegistry.clear-since($stub-snapshot);
       }
     }
 

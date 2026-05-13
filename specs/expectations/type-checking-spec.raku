@@ -1,6 +1,5 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
-use BDD::Behave::Matcher;
 
 class Animal {}
 class Dog is Animal {}

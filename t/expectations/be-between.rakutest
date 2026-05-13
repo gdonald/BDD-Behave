@@ -4,6 +4,7 @@ use Test;
 
 use BDD::Behave;
 use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Numeric;
 use BDD::Behave::Failures;
 
 plan 54;

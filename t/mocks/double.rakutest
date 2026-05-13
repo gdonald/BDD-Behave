@@ -5,7 +5,6 @@ use Test;
 use BDD::Behave;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
-need BDD::Behave::Mock;
 
 # Ad-hoc double with named-stub returns the stubbed values
 {

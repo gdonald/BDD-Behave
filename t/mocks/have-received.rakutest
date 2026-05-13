@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave;
 use BDD::Behave::Failures;
-need BDD::Behave::Mock;
+need BDD::Behave::Mock::Stub;
 
 sub clear-failures() {
   while Failures.list.elems {
@@ -43,7 +43,7 @@ sub clear-failures() {
   expect($g).to.have-received('hello');
   is Failures.list.elems, 0, 'allow().and-call-original tracked the call';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # expect(real-obj).to.have-received without allow records a clear failure
@@ -110,7 +110,7 @@ sub clear-failures() {
   expect($g).to.have-received('farewell').with(:lang<en>);
   is Failures.list.elems, 0, '.with(named) matches';
 
-  BDD::Behave::Mock::StubRegistry.clear-all;
+  BDD::Behave::Mock::Stub::StubRegistry.clear-all;
 }
 
 # .times(n) checks exact count
