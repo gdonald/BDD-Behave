@@ -241,6 +241,113 @@ describe 'raise-error with message pattern only', {
   }
 }
 
+describe 'raise-error.with-message (Str)', {
+  it 'passes when the message matches exactly', {
+    expect({ die "boom" }).to.raise-error.with-message('boom');
+  }
+
+  it 'passes when chained after a typed raise-error', {
+    expect({ X::Behave::Demo.new(:code(7)).throw })
+      .to.raise-error(X::Behave::Demo).with-message('demo failure: code=7');
+  }
+
+  it 'fails when the message does not match', {
+    Failures.list = ();
+    expect({ die "boom" }).to.raise-error.with-message('bang');
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('with message');
+    expect($msg).to.include('"bang"');
+    expect($msg).to.include('but raised');
+    expect($msg).to.include('boom');
+  }
+
+  it 'fails when nothing is raised', {
+    Failures.list = ();
+    expect({ 1 + 1 }).to.raise-error.with-message('boom');
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.be(
+      'expected block to raise an error with message "boom", but none was raised'
+    );
+  }
+
+  it 'records only one failure when the entire chain fails', {
+    Failures.list = ();
+    expect({ 1 + 1 }).to.raise-error(X::Behave::Demo).with-message('boom');
+    my $count = Failures.list.elems;
+    Failures.list = ();
+    expect($count).to.be(1);
+  }
+
+  it 'records the expected message in Failure.expected', {
+    Failures.list = ();
+    expect({ 1 + 1 }).to.raise-error.with-message('boom');
+    my $expected = Failures.list[0].expected;
+    Failures.list = ();
+    expect($expected).to.be('boom');
+  }
+}
+
+describe 'raise-error.with-message (Regex)', {
+  it 'passes when the regex matches the message', {
+    expect({ die "alpha bravo" }).to.raise-error.with-message(/'bravo'/);
+  }
+
+  it 'passes when chained after a typed raise-error', {
+    expect({ X::Behave::Demo.new(:code(11)).throw })
+      .to.raise-error(X::Behave::Demo).with-message(/'code=11'/);
+  }
+
+  it 'fails when the regex does not match', {
+    Failures.list = ();
+    expect({ die "alpha" }).to.raise-error.with-message(/'bravo'/);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('with message matching');
+    expect($msg).to.include('but raised');
+    expect($msg).to.include('alpha');
+  }
+
+  it 'replaces an earlier failure when reapplied with a different pattern', {
+    Failures.list = ();
+    my $exp = expect({ die "boom" }).to.raise-error.with-message(/'bang'/);
+    my $after-first = Failures.list.elems;
+    $exp.with-message(/'boom'/);
+    my $after-second = Failures.list.elems;
+    Failures.list = ();
+    expect($after-first).to.be(1);
+    expect($after-second).to.be(0);
+  }
+}
+
+describe 'raise-error.with-message under negation', {
+  it 'passes when the message does not match under .not', {
+    expect({ die "boom" }).to.not.raise-error.with-message('bang');
+  }
+
+  it 'passes when nothing is raised under .not', {
+    expect({ 1 + 1 }).to.not.raise-error.with-message('boom');
+  }
+
+  it 'fails when the message matches under .not', {
+    Failures.list = ();
+    expect({ die "boom" }).to.not.raise-error.with-message('boom');
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('expected block not to raise an error');
+    expect($msg).to.include('with message "boom"');
+  }
+}
+
 describe 'raise-error typed negation', {
   it 'passes when a different type is raised under .not(Type)', {
     expect({ die "boom" }).to.not.raise-error(X::Behave::Demo);

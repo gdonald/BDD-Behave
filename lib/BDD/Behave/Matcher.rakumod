@@ -602,7 +602,7 @@ class MatchMatcher does Matcher is export {
 class RaiseErrorMatcher does Matcher is export {
   has Mu $.expected-type;
   has Bool $.has-type = False;
-  has Regex $.expected-message;
+  has $.expected-message;
   has $.raised-exception is rw;
   has Bool $.callable-given is rw = True;
   has Str $.miss-reason is rw;
@@ -612,9 +612,32 @@ class RaiseErrorMatcher does Matcher is export {
     False;
   }
 
+  method !message-matches($actual-message --> Bool) {
+    given $!expected-message {
+      when Regex { ?($actual-message ~~ $_) }
+      default    { $actual-message eq $_.Str }
+    }
+  }
+
+  method check-captured(--> Bool) {
+    $!miss-reason = Str;
+    return self!miss('non-callable') unless $!callable-given;
+    return self!miss('none') unless $!raised-exception.defined;
+
+    if $!has-type && !($!raised-exception ~~ $!expected-type) {
+      return self!miss('type');
+    }
+
+    if $!expected-message.defined
+        && !self!message-matches($!raised-exception.message) {
+      return self!miss('message');
+    }
+
+    True;
+  }
+
   method matches($actual --> Bool) {
     $!raised-exception = Nil;
-    $!miss-reason      = Str;
     $!callable-given   = ?($actual ~~ Callable);
     return self!miss('non-callable') unless $!callable-given;
 
@@ -624,29 +647,23 @@ class RaiseErrorMatcher does Matcher is export {
         default { $!raised-exception = $_; }
       }
     }
-    return self!miss('none') unless $!raised-exception.defined;
-
-    if $!has-type && !($!raised-exception ~~ $!expected-type) {
-      return self!miss('type');
-    }
-
-    if $!expected-message.defined
-        && !($!raised-exception.message ~~ $!expected-message) {
-      return self!miss('message');
-    }
-
-    True;
+    self.check-captured;
   }
 
   method !head(--> Str) {
     $!has-type ?? "raise " ~ $!expected-type.^name !! "raise an error";
   }
 
+  method !message-clause(--> Str) {
+    given $!expected-message {
+      when Regex { " with message matching " ~ $_.raku }
+      default    { " with message " ~ $_.Str.raku }
+    }
+  }
+
   method description(--> Str) {
     my $d = self!head;
-    $!expected-message.defined
-      ?? $d ~ " with message matching " ~ $!expected-message.raku
-      !! $d;
+    $!expected-message.defined ?? $d ~ self!message-clause !! $d;
   }
 
   method !raised-detail(--> Str) {

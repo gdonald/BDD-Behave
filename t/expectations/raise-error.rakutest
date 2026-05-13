@@ -6,7 +6,7 @@ use BDD::Behave;
 use BDD::Behave::Matcher;
 use BDD::Behave::Failures;
 
-plan 74;
+plan 114;
 
 my class X::T::Demo is Exception {
   has $.code;
@@ -283,5 +283,144 @@ my class X::T::WithRole is Exception does X::T::Roleish {
   is Failures.list.elems, 1,         'one typed failure';
   ok Failures.list[0].expected === X::T::Demo,
                                      'Failure.expected is the type';
+  Failures.list = ();
+}
+
+# Matcher accepts a Str expected-message and uses eq comparison.
+{
+  my $m = RaiseErrorMatcher.new(:expected-message('boom'));
+  ok  $m.matches({ die "boom" }),    'Str message matches exactly';
+  nok $m.matches({ die "boomer" }),  'Str message rejects extension';
+  is  $m.miss-reason, 'message',     'miss-reason is message for Str miss';
+  nok $m.matches({ 1 + 1 }),         'Str message rejects no-raise';
+  is  $m.miss-reason, 'none',        'miss-reason is none when nothing raised';
+}
+
+# Matcher description for Str message.
+{
+  my $m = RaiseErrorMatcher.new(:expected-message('boom'));
+  is $m.description, 'raise an error with message "boom"',
+                                     'Str message description';
+}
+
+{
+  my $m = RaiseErrorMatcher.new(
+    :expected-type(X::T::Demo), :has-type, :expected-message('hi'),
+  );
+  is $m.description, 'raise X::T::Demo with message "hi"',
+                                     'typed Str message description';
+}
+
+# with-message (Str) chained off raise-error.
+{
+  Failures.list = ();
+  ok expect({ die "boom" }).to.raise-error.with-message('boom'),
+                                     'with-message Str pass';
+  is Failures.list.elems, 0,         'no failure on with-message pass';
+
+  Failures.list = ();
+  nok expect({ die "boom" }).to.raise-error.with-message('bang'),
+                                     'with-message Str fail';
+  is Failures.list.elems, 1,         'one failure on with-message miss';
+  my $msg = Failures.list[0].message;
+  ok $msg.contains('with message "bang"'),
+                                     'failure includes expected message';
+  ok $msg.contains('but raised'),    'failure includes raised tail';
+  ok $msg.contains('X::AdHoc'),      'failure includes raised type';
+  ok $msg.contains('boom'),          'failure includes raised message';
+  Failures.list = ();
+}
+
+# with-message (Regex) chained off raise-error.
+{
+  Failures.list = ();
+  ok expect({ die "alpha bravo" }).to.raise-error.with-message(/'bravo'/),
+                                     'with-message Regex pass';
+  is Failures.list.elems, 0,         'no failure on Regex pass';
+
+  Failures.list = ();
+  nok expect({ die "alpha" }).to.raise-error.with-message(/'bravo'/),
+                                     'with-message Regex fail';
+  is Failures.list.elems, 1,         'one failure on Regex miss';
+  ok Failures.list[0].message.contains('with message matching'),
+                                     'Regex failure includes "matching"';
+  Failures.list = ();
+}
+
+# with-message clears prior failure when the chained constraint flips.
+{
+  Failures.list = ();
+  my $exp = expect({ die "boom" }).to.raise-error.with-message('bang');
+  is Failures.list.elems, 1,         'first chain records a failure';
+  $exp.with-message('boom');
+  is Failures.list.elems, 0,         'second chain clears the failure';
+  Failures.list = ();
+}
+
+# Reapplied with-message replaces (not appends) the prior failure.
+{
+  Failures.list = ();
+  my $exp = expect({ die "boom" }).to.raise-error.with-message('one');
+  is Failures.list.elems, 1,         'first failure recorded';
+  $exp.with-message('two');
+  is Failures.list.elems, 1,         'still only one failure after replace';
+  ok Failures.list[0].message.contains('with message "two"'),
+                                     'failure reflects latest pattern';
+  Failures.list = ();
+}
+
+# with-message chained after a typed raise-error.
+{
+  Failures.list = ();
+  ok expect({ X::T::Demo.new(:code(7)).throw })
+        .to.raise-error(X::T::Demo).with-message(/'code=7'/),
+                                     'typed + with-message Regex pass';
+  is Failures.list.elems, 0,         'no failure on typed+regex pass';
+
+  Failures.list = ();
+  ok expect({ X::T::Demo.new(:code(7)).throw })
+        .to.raise-error(X::T::Demo).with-message('t-demo failure: code=7'),
+                                     'typed + with-message Str pass';
+  is Failures.list.elems, 0,         'no failure on typed+Str pass';
+
+  Failures.list = ();
+  nok expect({ X::T::Demo.new(:code(7)).throw })
+        .to.raise-error(X::T::Demo).with-message('wrong'),
+                                     'typed + Str miss fails';
+  is Failures.list.elems, 1,         'one failure on typed Str miss';
+  ok Failures.list[0].message.contains('raise X::T::Demo with message "wrong"'),
+                                     'typed Str miss includes description';
+  Failures.list = ();
+}
+
+# with-message under .not.
+{
+  Failures.list = ();
+  ok expect({ die "boom" }).to.not.raise-error.with-message('bang'),
+                                     '.not.with-message passes when msg differs';
+  is Failures.list.elems, 0,         'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect({ die "boom" }).to.not.raise-error.with-message('boom'),
+                                     '.not.with-message fails when msg matches';
+  is Failures.list.elems, 1,         'one failure on negated miss';
+  ok Failures.list[0].message.contains('expected block not to raise an error'),
+                                     'negated head';
+  ok Failures.list[0].message.contains('with message "boom"'),
+                                     'negated message body';
+  Failures.list = ();
+}
+
+# Failure.expected carries the message when with-message is used (untyped).
+{
+  Failures.list = ();
+  expect({ 1 + 1 }).to.raise-error.with-message('boom');
+  is Failures.list[0].expected, 'boom',
+                                     'Failure.expected is the Str message';
+  Failures.list = ();
+
+  expect({ 1 + 1 }).to.raise-error.with-message(/'pat'/);
+  ok Failures.list[0].expected ~~ Regex,
+                                     'Failure.expected is the Regex';
   Failures.list = ();
 }

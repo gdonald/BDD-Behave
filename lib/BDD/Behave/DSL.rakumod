@@ -509,6 +509,115 @@ class WithinExpectation {
   }
 }
 
+class RaiseErrorExpectation {
+  has Mu   $.given;
+  has Bool $.negated = False;
+  has Str  $.file;
+  has Int  $.line;
+  has Mu   $.expected-type;
+  has Bool $.has-type = False;
+  has      $!expected-message;
+  has Mu   $!raised-exception;
+  has Bool $!callable-given = True;
+  has Bool $!ran = False;
+  has Bool $!passed = False;
+  has      $!recorded-failure;
+
+  submethod BUILD(
+    Mu :$given is raw, :$!negated, :$!file, :$!line,
+    Mu :$expected-type, Bool :$has-type, :$expected-message,
+  ) {
+    $!given             := $given;
+    $!expected-type     := $expected-type;
+    $!has-type           = ?$has-type;
+    $!expected-message   = $expected-message;
+  }
+
+  method !run-block(--> Nil) {
+    return if $!ran;
+    $!ran = True;
+    $!callable-given = ?($!given ~~ Callable);
+    return unless $!callable-given;
+    try {
+      $!given.();
+      CATCH { default { $!raised-exception = $_; } }
+    }
+  }
+
+  method !build-matcher() {
+    my $m = RaiseErrorMatcher.new(
+      :expected-type($!expected-type),
+      :$!has-type,
+      :expected-message($!expected-message),
+    );
+    $m.callable-given   = $!callable-given;
+    $m.raised-exception = $!raised-exception;
+    $m;
+  }
+
+  method validate(--> Nil) {
+    self!run-block;
+    my $matcher = self!build-matcher;
+    my $matched = ?$matcher.check-captured;
+    $!passed = $!negated ?? !$matched !! $matched;
+
+    try {
+      if $*BEHAVE-AUTO-MATCHERS.defined {
+        $*BEHAVE-AUTO-MATCHERS.push(%(:$matcher, :negated($!negated)));
+      }
+    }
+
+    if $!passed {
+      self.clear-failure;
+      return;
+    }
+
+    my $message = $!negated
+      ?? $matcher.failure-message-negated($!given)
+      !! $matcher.failure-message($!given);
+
+    self.replace-failure($message, $matcher);
+  }
+
+  method replace-failure(Str $msg, $matcher --> Nil) {
+    self.clear-failure;
+    my $f = Failure.new(
+      :file($!file),
+      :line($!line),
+      :given($!given),
+      :expected($matcher.expected-value),
+      :negated($!negated),
+      :message($msg),
+    );
+    Failures.list.push($f);
+    $!recorded-failure = $f;
+  }
+
+  method clear-failure(--> Nil) {
+    return unless $!recorded-failure.defined;
+    my $list = Failures.list;
+    my $idx  = $list.first({ $_ === $!recorded-failure }, :k);
+    $list.splice($idx, 1) if $idx.defined;
+    $!recorded-failure = Nil;
+  }
+
+  proto method with-message(|) {*}
+
+  multi method with-message(Regex $message) {
+    $!expected-message = $message;
+    self.validate;
+    self;
+  }
+
+  multi method with-message(Str:D $message) {
+    $!expected-message = $message;
+    self.validate;
+    self;
+  }
+
+  method Bool(--> Bool) { $!passed }
+}
+
 class ExpectationBuilder {
   has $.given;
   has Bool $.negated is rw = False;
@@ -727,31 +836,41 @@ class ExpectationBuilder {
     self!apply-matcher(MatchMatcher.new(:$expected));
   }
 
+  method !build-raise-expectation(
+    Mu :$expected-type, Bool :$has-type, :$expected-message,
+  ) {
+    my $expectation = RaiseErrorExpectation.new(
+      :given($!given),
+      :negated($!negated),
+      :file($!file),
+      :line($!line),
+      :$expected-type,
+      :$has-type,
+      :$expected-message,
+    );
+    $expectation.validate;
+    $expectation;
+  }
+
   proto method raise-error(|) {*}
 
   multi method raise-error() {
-    self!apply-matcher(RaiseErrorMatcher.new);
+    self!build-raise-expectation;
   }
 
   multi method raise-error(Regex $message) {
-    self!apply-matcher(
-      RaiseErrorMatcher.new(:expected-message($message))
-    );
+    self!build-raise-expectation(:expected-message($message));
   }
 
   multi method raise-error(Mu \type) {
-    self!apply-matcher(
-      RaiseErrorMatcher.new(:expected-type(type), :has-type)
-    );
+    self!build-raise-expectation(:expected-type(type), :has-type);
   }
 
   multi method raise-error(Mu \type, Regex $message) {
-    self!apply-matcher(
-      RaiseErrorMatcher.new(
-        :expected-type(type),
-        :has-type,
-        :expected-message($message),
-      )
+    self!build-raise-expectation(
+      :expected-type(type),
+      :has-type,
+      :expected-message($message),
     );
   }
 

@@ -859,8 +859,47 @@ expected block to raise X::Demo with message matching /nope/,
   but raised X::Demo: demo
 ```
 
-For exact-string message matching (not regex), see `with-message`
-(landing in a follow-up milestone).
+### Filtering by message via `with-message`
+
+`raise-error` also supports a chained `.with-message(...)` form that
+filters by either an exact `Str` or a `Regex`. The chain is equivalent
+to passing the regex inline but reads more naturally when the message
+constraint is a string:
+
+```raku
+expect({ die "boom" }).to.raise-error.with-message('boom');         # exact
+expect({ die "code=42" }).to.raise-error.with-message(/'code=42'/); # regex
+expect({ X::Demo.new.throw }).to.raise-error(X::Demo).with-message('demo');
+```
+
+`Str` arguments compare with `eq` (the full message must match
+exactly); `Regex` arguments compare with `~~`. The chain may be
+re-applied — only the most recent call's expectation is in effect, and
+any failure recorded by an earlier link in the chain is replaced rather
+than appended:
+
+```raku
+my $exp = expect({ die "boom" }).to.raise-error.with-message('bang');
+# Failures.list has one entry.
+$exp.with-message('boom');
+# Failures.list is now empty — the second call succeeded and cleared
+# the prior failure.
+```
+
+When the chain ultimately fails, the failure message reflects the
+final constraint:
+
+```
+expected block to raise an error with message "bang", but raised X::AdHoc: boom
+expected block to raise X::Demo with message "demo", but raised X::AdHoc: oops
+```
+
+`.with-message` also composes with `.not`:
+
+```raku
+expect({ die "boom" }).to.not.raise-error.with-message('bang');  # passes
+expect({ die "boom" }).to.not.raise-error.with-message('boom');  # fails
+```
 
 ### Negation
 
@@ -896,12 +935,13 @@ expected a Callable for raise-error, but got 42
 ### Failure metadata
 
 `Failure.given` carries the original `Callable`. `Failure.expected`
-carries the expected exception type (when one was supplied) or the
-expected message regex (when only a regex was supplied); for the
-no-argument form it remains unset. The matcher itself also exposes
-`raised-exception` (the captured throw) and `miss-reason` (one of
-`'none'`, `'type'`, `'message'`, `'non-callable'`, or `Str` on a pass)
-for tooling that needs structural access.
+carries the expected exception type (when one was supplied), or the
+expected message (regex or `Str`, whichever was supplied via the inline
+form or `with-message`); for the bare no-argument form it remains
+unset. The matcher itself also exposes `raised-exception` (the captured
+throw) and `miss-reason` (one of `'none'`, `'type'`, `'message'`,
+`'non-callable'`, or `Str` on a pass) for tooling that needs structural
+access.
 
 ## Writing a custom matcher
 
