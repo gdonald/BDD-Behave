@@ -727,6 +727,10 @@ class ExpectationBuilder {
     self!apply-matcher(MatchMatcher.new(:$expected));
   }
 
+  method raise-error() {
+    self!apply-matcher(RaiseErrorMatcher.new);
+  }
+
   method be-within($delta) {
     WithinExpectation.new(
       :given($!given),

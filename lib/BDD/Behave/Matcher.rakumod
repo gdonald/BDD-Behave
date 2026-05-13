@@ -599,6 +599,42 @@ class MatchMatcher does Matcher is export {
   method description(--> Str) { 'match ' ~ $!expected.raku }
 }
 
+class RaiseErrorMatcher does Matcher is export {
+  has $.raised-exception is rw;
+  has Bool $.callable-given is rw = True;
+
+  method matches($actual --> Bool) {
+    $!raised-exception   = Nil;
+    $!callable-given     = ?($actual ~~ Callable);
+    return False unless $!callable-given;
+
+    try {
+      $actual.();
+      CATCH {
+        default { $!raised-exception = $_; }
+      }
+    }
+    ?$!raised-exception.defined;
+  }
+
+  method failure-message($actual --> Str) {
+    unless $!callable-given {
+      return "expected a Callable for raise-error, but got " ~ $actual.raku;
+    }
+    "expected block to raise an error, but none was raised";
+  }
+
+  method failure-message-negated($actual --> Str) {
+    my $detail = '';
+    if $!raised-exception.defined {
+      $detail = " ({$!raised-exception.^name}: {$!raised-exception.message})";
+    }
+    "expected block not to raise an error, but one was raised" ~ $detail;
+  }
+
+  method description(--> Str) { 'raise an error' }
+}
+
 class IncludeMatcher does Matcher is export {
   has $.expected;
 

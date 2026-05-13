@@ -1,0 +1,123 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 36;
+
+# RaiseErrorMatcher does the Matcher role.
+{
+  my $m = RaiseErrorMatcher.new;
+  ok $m ~~ Matcher, 'RaiseErrorMatcher does Matcher';
+}
+
+# Matches when a Callable raises with die.
+{
+  my $m = RaiseErrorMatcher.new;
+  ok $m.matches({ die "boom" }),     'matches block that dies';
+  ok $m.raised-exception ~~ Exception, 'raised-exception captured';
+  is $m.raised-exception.message, 'boom', 'exception message preserved';
+}
+
+# Matches when a Callable throws a typed exception.
+{
+  my $m = RaiseErrorMatcher.new;
+  ok $m.matches({ X::AdHoc.new(payload => 'oops').throw }),
+                                     'matches block that throws X::AdHoc';
+  is $m.raised-exception.^name, 'X::AdHoc', 'caught X::AdHoc type';
+}
+
+# Does not match when the block returns normally.
+{
+  my $m = RaiseErrorMatcher.new;
+  nok $m.matches({ 1 + 1 }),         'rejects block that returns normally';
+  nok $m.raised-exception.defined,   'raised-exception cleared on no-raise';
+}
+
+# Does not match for non-Callable actuals.
+{
+  my $m = RaiseErrorMatcher.new;
+  nok $m.matches(42),                'rejects Int actual';
+  nok $m.callable-given,             'callable-given flag is False';
+  nok $m.matches('hello'),           'rejects Str actual';
+  nok $m.matches([1, 2, 3]),         'rejects Array actual';
+  nok $m.matches(Any),               'rejects Any';
+}
+
+# matches() is repeatable and state resets between calls.
+{
+  my $m = RaiseErrorMatcher.new;
+  ok  $m.matches({ die "first" }),   'first call matches';
+  is  $m.raised-exception.message, 'first', 'first exception captured';
+  nok $m.matches({ 'ok' }),          'second call does not match';
+  nok $m.raised-exception.defined,   'state reset between calls';
+  ok  $m.matches({ die "second" }),  'third call matches again';
+  is  $m.raised-exception.message, 'second', 'third exception captured';
+}
+
+# Failure messages.
+{
+  my $m = RaiseErrorMatcher.new;
+  $m.matches({ 1 + 1 });
+  is $m.failure-message({ 1 + 1 }),
+     'expected block to raise an error, but none was raised',
+     'positive failure-message';
+}
+
+{
+  my $m = RaiseErrorMatcher.new;
+  $m.matches(42);
+  is $m.failure-message(42),
+     'expected a Callable for raise-error, but got 42',
+     'Callable-shape failure-message for non-Callable';
+}
+
+{
+  my $m = RaiseErrorMatcher.new;
+  $m.matches({ die "boom" });
+  is $m.failure-message-negated({ die "boom" }),
+     'expected block not to raise an error, but one was raised (X::AdHoc: boom)',
+     'negated failure-message includes type and message';
+}
+
+# description.
+{
+  my $m = RaiseErrorMatcher.new;
+  is $m.description, 'raise an error', 'description';
+}
+
+# expect(...).to.raise-error integration.
+{
+  Failures.list = ();
+  ok expect({ die "X" }).to.raise-error, 'expect.to.raise-error passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect({ 1 + 1 }).to.raise-error, 'expect.to.raise-error fails';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message,
+     'expected block to raise an error, but none was raised',
+     'failure message preserved';
+  Failures.list = ();
+}
+
+# expect(...).to.not.raise-error integration.
+{
+  Failures.list = ();
+  ok expect({ 1 + 1 }).to.not.raise-error, '.not passes when no raise';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect({ die "boom" }).to.not.raise-error, '.not fails when raises';
+  is Failures.list.elems, 1, 'one failure recorded';
+  my $message = Failures.list[0].message;
+  ok $message.contains('expected block not to raise an error'),
+                                     'negated message head';
+  ok $message.contains('X::AdHoc'),  'negated message includes type';
+  ok $message.contains('boom'),      'negated message includes detail';
+  ok Failures.list[0].negated,       'failure marked negated';
+  Failures.list = ();
+}

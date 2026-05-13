@@ -797,6 +797,48 @@ formatters can inspect either side.
 `match` is regex-only; for substring checks use `include` (see
 [Matchers › IncludeMatcher](matchers.md#includematcher-built-in)).
 
+## RaiseErrorMatcher (built-in)
+
+`raise-error` passes when the actual value is a `Callable` and invoking it
+raises any exception. Because the matcher operates on a `Callable`, the
+block must be passed unevaluated — wrap the code under test in `{ ... }`:
+
+```raku
+expect({ die "boom" }).to.raise-error;
+expect({ X::AdHoc.new(payload => 'x').throw }).to.raise-error;
+expect({ 1 + 1 }).to.not.raise-error;
+```
+
+Any exception type is accepted at this level; typed-exception matching
+and message matching are layered on top in later milestones.
+
+Non-`Callable` actuals fail rather than throw — `expect(42).to.raise-error`
+records a normal expectation failure rather than blowing up. The failure
+message names the unwrapped value so the mistake is obvious:
+
+```
+expected a Callable for raise-error, but got 42
+```
+
+When the block does not raise, the positive failure renders as:
+
+```
+expected block to raise an error, but none was raised
+```
+
+When `.not.raise-error` fails (i.e., the block *did* raise), the negated
+failure includes both the exception type and its message so you can
+diagnose the unexpected throw without re-running the test:
+
+```
+expected block not to raise an error, but one was raised (X::AdHoc: boom)
+```
+
+`Failure.given` carries the original `Callable`. `Failure.expected` is
+unset for this matcher — "any error" is not a single expected value, so
+programmatic consumers should rely on `Failure.message` or the matcher's
+own `raised-exception` accessor.
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:
