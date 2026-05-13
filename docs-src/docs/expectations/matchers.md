@@ -694,6 +694,47 @@ practice.
 `be-nil` takes no arguments. Failure messages render as
 `expected <actual.raku> to be nil` (or `not to be nil` under `.not`).
 
+## MatchMatcher (built-in)
+
+`match` passes when a `Str` actual value smartmatches against a `Regex`
+expected value (`$actual ~~ /pattern/`). It accepts the full Raku regex
+syntax, including character classes, alternation, anchors, modifiers,
+and `rx//`-quoted forms.
+
+```raku
+expect('abc123').to.match(/\d+/);
+expect('hello world').to.match(/world/);
+expect('HELLO').to.match(rx:i/hello/);     # case-insensitive
+expect('hello').to.match(/^hello$/);       # anchored
+```
+
+Negation uses the same `.not` chain:
+
+```raku
+expect('abc').to.not.match(/\d+/);
+expect('cat').to.not.match(/dog/);
+```
+
+Undefined and non-`Str` actuals fail rather than throw — `expect(Any)`,
+`expect(Str)`, `expect(42)`, and `expect([1, 2, 3])` all record a
+failure when matched against any regex, so a stray nil or wrongly typed
+value produces a normal expectation failure instead of a runtime
+exception.
+
+Failure messages render the actual value and the regex via `.raku`:
+
+```
+expected "abc" to match /\d+/
+expected "abc123" not to match /\d+/
+```
+
+`Failure.given` carries the original string and `Failure.expected`
+carries the `Regex` itself, so programmatic consumers and alternate
+formatters can inspect either side.
+
+`match` is regex-only; for substring checks use `include` (see
+[Matchers › IncludeMatcher](matchers.md#includematcher-built-in)).
+
 ## Writing a custom matcher
 
 Define a class that does `Matcher` and pass an instance to `.be(...)`:

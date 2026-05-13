@@ -723,6 +723,10 @@ class ExpectationBuilder {
     self!apply-matcher(BeNilMatcher.new);
   }
 
+  method match(Regex $expected) {
+    self!apply-matcher(MatchMatcher.new(:$expected));
+  }
+
   method be-within($delta) {
     WithinExpectation.new(
       :given($!given),

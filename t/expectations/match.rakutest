@@ -1,0 +1,104 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Failures;
+
+plan 34;
+
+# MatchMatcher does the Matcher role.
+{
+  my $m = MatchMatcher.new(:expected(/\d+/));
+  ok $m ~~ Matcher, 'MatchMatcher does Matcher';
+}
+
+# Basic regex matching against Str.
+{
+  my $digits = MatchMatcher.new(:expected(/\d+/));
+  ok  $digits.matches('abc123'),     'matches when string contains digits';
+  ok  $digits.matches('42'),         'matches a digit-only string';
+  nok $digits.matches('abc'),        'rejects when no digits present';
+  nok $digits.matches(''),           'rejects empty string against \d+';
+}
+
+# Anchored regex.
+{
+  my $m = MatchMatcher.new(:expected(/^hello$/));
+  ok  $m.matches('hello'),           'matches exact anchored';
+  nok $m.matches('hello world'),     'rejects when extra trailing content';
+  nok $m.matches(' hello'),          'rejects when extra leading content';
+}
+
+# Alternation.
+{
+  my $m = MatchMatcher.new(:expected(/cat | dog/));
+  ok  $m.matches('cat'),             'matches first alternative';
+  ok  $m.matches('dog'),             'matches second alternative';
+  nok $m.matches('fish'),            'rejects unmatched alternative';
+}
+
+# Undefined actual.
+{
+  my $m = MatchMatcher.new(:expected(/\d+/));
+  nok $m.matches(Any),               'rejects Any';
+  nok $m.matches(Str),               'rejects undefined Str type object';
+  nok $m.matches(Nil),               'rejects Nil';
+}
+
+# Non-Str actual.
+{
+  my $m = MatchMatcher.new(:expected(/\d+/));
+  nok $m.matches(123),               'rejects Int actual';
+  nok $m.matches([1, 2, 3]),         'rejects Array actual';
+  nok $m.matches({ a => 1 }),        'rejects Hash actual';
+}
+
+# Failure messages.
+{
+  my $m = MatchMatcher.new(:expected(/\d+/));
+  is $m.failure-message('abc'),
+     'expected "abc" to match /\d+/',
+     'failure-message renders given and expected';
+  is $m.failure-message-negated('abc123'),
+     'expected "abc123" not to match /\d+/',
+     'failure-message-negated renders given and expected';
+}
+
+# expected-value and description.
+{
+  my $regex = /\w+/;
+  my $m = MatchMatcher.new(:expected($regex));
+  ok $m.expected-value === $regex,  'expected-value returns the regex';
+  is $m.description, 'match /\w+/',  'description summarises pattern';
+}
+
+# expect(...).to.match(...) integration.
+{
+  Failures.list = ();
+  ok expect('abc123').to.match(/\d+/), 'expect.to.match passes';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect('abc').to.match(/\d+/), 'expect.to.match fails for missing';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected "abc" to match /\d+/', 'failure message preserved';
+  is Failures.list[0].given, 'abc', 'failure given preserved';
+  ok Failures.list[0].expected ~~ Regex, 'failure expected is a Regex';
+  Failures.list = ();
+}
+
+# Negation flow.
+{
+  Failures.list = ();
+  ok expect('abc').to.not.match(/\d+/), '.not passes when no match';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect('abc123').to.not.match(/\d+/), '.not fails when match';
+  is Failures.list.elems, 1, 'one failure on negated miss';
+  is Failures.list[0].message, 'expected "abc123" not to match /\d+/', 'negated message used';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}

@@ -96,6 +96,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-truthy`                              | Boolean coercion check (`?$actual`); empty `Array`/`Hash`, `Nil`, and undefined type objects are not truthy. See [Matchers › BeTruthyMatcher](matchers.md#betruthymatcher-built-in).                    |
 | `be-falsy`                               | Inverse of `be-truthy` (`!$actual`). See [Matchers › BeFalsyMatcher](matchers.md#befalsymatcher-built-in).                                                                                              |
 | `be-nil`                                 | Undefined-value check (`!$actual.defined`); passes for `Nil`, `Any`, and undefined type objects. See [Matchers › BeNilMatcher](matchers.md#benilmatcher-built-in).                                      |
+| `match`                                  | Regex match against a `Str` (`$actual ~~ /pattern/`); fails (not dies) on undefined or non-`Str` actuals. See [Matchers › MatchMatcher](matchers.md#matchmatcher-built-in).                             |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -121,6 +122,8 @@ expect(False).to.be-falsy;
 expect(Nil).to.be-nil;
 expect(Int).to.be-nil;          # undefined type object
 expect(42).to.not.be-nil;
+expect('abc123').to.match(/\d+/);
+expect('HELLO').to.match(rx:i/hello/);
 ```
 
 ## Custom matchers
