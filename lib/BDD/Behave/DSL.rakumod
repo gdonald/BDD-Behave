@@ -727,8 +727,32 @@ class ExpectationBuilder {
     self!apply-matcher(MatchMatcher.new(:$expected));
   }
 
-  method raise-error() {
+  proto method raise-error(|) {*}
+
+  multi method raise-error() {
     self!apply-matcher(RaiseErrorMatcher.new);
+  }
+
+  multi method raise-error(Regex $message) {
+    self!apply-matcher(
+      RaiseErrorMatcher.new(:expected-message($message))
+    );
+  }
+
+  multi method raise-error(Mu \type) {
+    self!apply-matcher(
+      RaiseErrorMatcher.new(:expected-type(type), :has-type)
+    );
+  }
+
+  multi method raise-error(Mu \type, Regex $message) {
+    self!apply-matcher(
+      RaiseErrorMatcher.new(
+        :expected-type(type),
+        :has-type,
+        :expected-message($message),
+      )
+    );
   }
 
   method be-within($delta) {

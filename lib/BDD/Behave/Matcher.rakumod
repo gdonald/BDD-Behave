@@ -600,13 +600,23 @@ class MatchMatcher does Matcher is export {
 }
 
 class RaiseErrorMatcher does Matcher is export {
+  has Mu $.expected-type;
+  has Bool $.has-type = False;
+  has Regex $.expected-message;
   has $.raised-exception is rw;
   has Bool $.callable-given is rw = True;
+  has Str $.miss-reason is rw;
+
+  method !miss(Str $reason --> Bool) {
+    $!miss-reason = $reason;
+    False;
+  }
 
   method matches($actual --> Bool) {
-    $!raised-exception   = Nil;
-    $!callable-given     = ?($actual ~~ Callable);
-    return False unless $!callable-given;
+    $!raised-exception = Nil;
+    $!miss-reason      = Str;
+    $!callable-given   = ?($actual ~~ Callable);
+    return self!miss('non-callable') unless $!callable-given;
 
     try {
       $actual.();
@@ -614,25 +624,71 @@ class RaiseErrorMatcher does Matcher is export {
         default { $!raised-exception = $_; }
       }
     }
-    ?$!raised-exception.defined;
+    return self!miss('none') unless $!raised-exception.defined;
+
+    if $!has-type && !($!raised-exception ~~ $!expected-type) {
+      return self!miss('type');
+    }
+
+    if $!expected-message.defined
+        && !($!raised-exception.message ~~ $!expected-message) {
+      return self!miss('message');
+    }
+
+    True;
+  }
+
+  method !head(--> Str) {
+    $!has-type ?? "raise " ~ $!expected-type.^name !! "raise an error";
+  }
+
+  method description(--> Str) {
+    my $d = self!head;
+    $!expected-message.defined
+      ?? $d ~ " with message matching " ~ $!expected-message.raku
+      !! $d;
+  }
+
+  method !raised-detail(--> Str) {
+    "{$!raised-exception.^name}: {$!raised-exception.message}";
   }
 
   method failure-message($actual --> Str) {
     unless $!callable-given {
       return "expected a Callable for raise-error, but got " ~ $actual.raku;
     }
-    "expected block to raise an error, but none was raised";
+    given $!miss-reason {
+      when 'none' {
+        "expected block to " ~ self.description ~ ", but none was raised";
+      }
+      when 'type' | 'message' {
+        "expected block to " ~ self.description
+          ~ ", but raised " ~ self!raised-detail;
+      }
+      default {
+        "expected block to " ~ self.description;
+      }
+    }
   }
 
   method failure-message-negated($actual --> Str) {
-    my $detail = '';
+    my $head = "expected block not to " ~ self.description;
     if $!raised-exception.defined {
-      $detail = " ({$!raised-exception.^name}: {$!raised-exception.message})";
+      $head ~ ", but one was raised (" ~ self!raised-detail ~ ")";
+    } else {
+      $head ~ ", but one was raised";
     }
-    "expected block not to raise an error, but one was raised" ~ $detail;
   }
 
-  method description(--> Str) { 'raise an error' }
+  method expected-value(--> Mu) {
+    if $!has-type {
+      $!expected-type;
+    } elsif $!expected-message.defined {
+      $!expected-message;
+    } else {
+      Nil;
+    }
+  }
 }
 
 class IncludeMatcher does Matcher is export {

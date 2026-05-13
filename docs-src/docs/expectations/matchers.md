@@ -800,7 +800,7 @@ formatters can inspect either side.
 ## RaiseErrorMatcher (built-in)
 
 `raise-error` passes when the actual value is a `Callable` and invoking it
-raises any exception. Because the matcher operates on a `Callable`, the
+raises an exception. Because the matcher operates on a `Callable`, the
 block must be passed unevaluated — wrap the code under test in `{ ... }`:
 
 ```raku
@@ -809,8 +809,81 @@ expect({ X::AdHoc.new(payload => 'x').throw }).to.raise-error;
 expect({ 1 + 1 }).to.not.raise-error;
 ```
 
-Any exception type is accepted at this level; typed-exception matching
-and message matching are layered on top in later milestones.
+### Filtering by exception type
+
+Pass an exception type as the first argument to require that the raised
+exception is *that* type, a subclass of it, or a class that does it as a
+role (matching uses smartmatch, i.e. `$exception ~~ $type`):
+
+```raku
+class X::Demo is Exception { method message { 'demo' } }
+class X::Sub  is X::Demo  { }
+
+expect({ X::Demo.new.throw }).to.raise-error(X::Demo);   # passes
+expect({ X::Sub.new.throw  }).to.raise-error(X::Demo);   # passes (subclass)
+expect({ die "boom"        }).to.raise-error(X::Demo);   # fails
+```
+
+When the block raises a *different* type, the failure surfaces what
+actually happened:
+
+```
+expected block to raise X::Demo, but raised X::AdHoc: boom
+```
+
+When the block does not raise at all under a typed expectation:
+
+```
+expected block to raise X::Demo, but none was raised
+```
+
+`Failure.expected` carries the expected type, so programmatic consumers
+and alternate formatters can read it directly.
+
+### Filtering by message pattern
+
+Pass a `Regex` (with or without a leading type) to require that the
+raised exception's `.message` matches the regex:
+
+```raku
+expect({ die "code=42"            }).to.raise-error(/'code=42'/);
+expect({ X::Demo.new.throw        }).to.raise-error(X::Demo, /demo/);
+expect({ X::Demo.new.throw        }).to.raise-error(X::Demo, /nope/);  # fails
+```
+
+When the type matches but the message does not (or vice versa), the
+failure says what was raised so the mismatch is diagnosable inline:
+
+```
+expected block to raise X::Demo with message matching /nope/,
+  but raised X::Demo: demo
+```
+
+For exact-string message matching (not regex), see `with-message`
+(landing in a follow-up milestone).
+
+### Negation
+
+`.not.raise-error(...)` passes whenever the block fails to match the
+*full* filter — i.e. nothing was raised, or a different type was raised,
+or the message did not match. It only fails when the block raised
+exactly the forbidden exception:
+
+```raku
+expect({ die "boom" }).to.not.raise-error(X::Demo);   # passes (other type)
+expect({ 1 + 1 }).to.not.raise-error(X::Demo);        # passes (no raise)
+expect({ X::Demo.new.throw }).to.not.raise-error(X::Demo);   # fails
+```
+
+When `.not.raise-error` fails, the negated failure includes the raised
+exception's type and message so you can diagnose without re-running:
+
+```
+expected block not to raise an error, but one was raised (X::AdHoc: boom)
+expected block not to raise X::Demo, but one was raised (X::Demo: demo)
+```
+
+### Non-Callable actuals
 
 Non-`Callable` actuals fail rather than throw — `expect(42).to.raise-error`
 records a normal expectation failure rather than blowing up. The failure
@@ -820,24 +893,15 @@ message names the unwrapped value so the mistake is obvious:
 expected a Callable for raise-error, but got 42
 ```
 
-When the block does not raise, the positive failure renders as:
+### Failure metadata
 
-```
-expected block to raise an error, but none was raised
-```
-
-When `.not.raise-error` fails (i.e., the block *did* raise), the negated
-failure includes both the exception type and its message so you can
-diagnose the unexpected throw without re-running the test:
-
-```
-expected block not to raise an error, but one was raised (X::AdHoc: boom)
-```
-
-`Failure.given` carries the original `Callable`. `Failure.expected` is
-unset for this matcher — "any error" is not a single expected value, so
-programmatic consumers should rely on `Failure.message` or the matcher's
-own `raised-exception` accessor.
+`Failure.given` carries the original `Callable`. `Failure.expected`
+carries the expected exception type (when one was supplied) or the
+expected message regex (when only a regex was supplied); for the
+no-argument form it remains unset. The matcher itself also exposes
+`raised-exception` (the captured throw) and `miss-reason` (one of
+`'none'`, `'type'`, `'message'`, `'non-callable'`, or `Str` on a pass)
+for tooling that needs structural access.
 
 ## Writing a custom matcher
 

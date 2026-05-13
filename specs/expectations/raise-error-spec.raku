@@ -122,3 +122,144 @@ describe 'raise-error preserves Failure metadata', {
     expect($negated).to.be-truthy;
   }
 }
+
+my class X::Behave::Demo is Exception {
+  has $.code;
+  method message { "demo failure: code={$!code}" }
+}
+
+my class X::Behave::Sub is X::Behave::Demo { }
+
+my role X::Behave::Roleish { }
+
+my class X::Behave::WithRole is Exception does X::Behave::Roleish {
+  method message { 'with-role failure' }
+}
+
+describe 'raise-error with an exception type', {
+  it 'passes when the raised exception matches the type', {
+    expect({ X::Behave::Demo.new(:code(7)).throw })
+      .to.raise-error(X::Behave::Demo);
+  }
+
+  it 'passes for a subclass of the expected type', {
+    expect({ X::Behave::Sub.new(:code(9)).throw })
+      .to.raise-error(X::Behave::Demo);
+  }
+
+  it 'passes for a class that does the expected role', {
+    expect({ X::Behave::WithRole.new.throw })
+      .to.raise-error(X::Behave::Roleish);
+  }
+
+  it 'fails when a different exception type is raised', {
+    Failures.list = ();
+    expect({ die "boom" }).to.raise-error(X::Behave::Demo);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('expected block to raise X::Behave::Demo');
+    expect($msg).to.include('but raised');
+    expect($msg).to.include('X::AdHoc');
+    expect($msg).to.include('boom');
+  }
+
+  it 'fails when nothing was raised', {
+    Failures.list = ();
+    expect({ 1 + 1 }).to.raise-error(X::Behave::Demo);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.be(
+      'expected block to raise X::Behave::Demo, but none was raised'
+    );
+  }
+
+  it 'records the expected type in Failure.expected', {
+    Failures.list = ();
+    expect({ 1 + 1 }).to.raise-error(X::Behave::Demo);
+    my $expected = Failures.list[0].expected;
+    Failures.list = ();
+    expect($expected === X::Behave::Demo).to.be-truthy;
+  }
+}
+
+describe 'raise-error with type and message pattern', {
+  it 'passes when type and message both match', {
+    expect({ X::Behave::Demo.new(:code(11)).throw })
+      .to.raise-error(X::Behave::Demo, /'code=11'/);
+  }
+
+  it 'fails when the type matches but the message does not', {
+    Failures.list = ();
+    expect({ X::Behave::Demo.new(:code(11)).throw })
+      .to.raise-error(X::Behave::Demo, /'code=99'/);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('with message matching');
+    expect($msg).to.include('but raised X::Behave::Demo');
+    expect($msg).to.include('code=11');
+  }
+
+  it 'fails when the type does not match even if the regex would', {
+    Failures.list = ();
+    expect({ die "code=11" }).to.raise-error(X::Behave::Demo, /'code=11'/);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('expected block to raise X::Behave::Demo');
+    expect($msg).to.include('with message matching');
+  }
+}
+
+describe 'raise-error with message pattern only', {
+  it 'passes for any exception whose message matches the regex', {
+    expect({ die "alpha bravo" }).to.raise-error(/'bravo'/);
+  }
+
+  it 'passes regardless of exception type so long as the regex matches', {
+    expect({ X::Behave::Demo.new(:code(3)).throw })
+      .to.raise-error(/'code=3'/);
+  }
+
+  it 'fails when the regex does not match', {
+    Failures.list = ();
+    expect({ die "alpha" }).to.raise-error(/'bravo'/);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('expected block to raise an error');
+    expect($msg).to.include('with message matching');
+    expect($msg).to.include('but raised');
+    expect($msg).to.include('alpha');
+  }
+}
+
+describe 'raise-error typed negation', {
+  it 'passes when a different type is raised under .not(Type)', {
+    expect({ die "boom" }).to.not.raise-error(X::Behave::Demo);
+  }
+
+  it 'passes when nothing is raised under .not(Type)', {
+    expect({ 1 + 1 }).to.not.raise-error(X::Behave::Demo);
+  }
+
+  it 'fails when the forbidden type is raised', {
+    Failures.list = ();
+    expect({ X::Behave::Demo.new(:code(5)).throw })
+      .to.not.raise-error(X::Behave::Demo);
+    my $count = Failures.list.elems;
+    my $msg   = Failures.list[0].message;
+    Failures.list = ();
+    expect($count).to.be(1);
+    expect($msg).to.include('expected block not to raise X::Behave::Demo');
+    expect($msg).to.include('X::Behave::Demo');
+    expect($msg).to.include('code=5');
+  }
+}

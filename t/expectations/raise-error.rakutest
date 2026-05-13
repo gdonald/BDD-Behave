@@ -6,7 +6,20 @@ use BDD::Behave;
 use BDD::Behave::Matcher;
 use BDD::Behave::Failures;
 
-plan 36;
+plan 74;
+
+my class X::T::Demo is Exception {
+  has $.code;
+  method message { "t-demo failure: code={$!code}" }
+}
+
+my class X::T::Sub is X::T::Demo { }
+
+my role X::T::Roleish { }
+
+my class X::T::WithRole is Exception does X::T::Roleish {
+  method message { 't-with-role failure' }
+}
 
 # RaiseErrorMatcher does the Matcher role.
 {
@@ -119,5 +132,156 @@ plan 36;
   ok $message.contains('X::AdHoc'),  'negated message includes type';
   ok $message.contains('boom'),      'negated message includes detail';
   ok Failures.list[0].negated,       'failure marked negated';
+  Failures.list = ();
+}
+
+# Typed: matches when exception type matches, including subclasses and roles.
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  ok $m.matches({ X::T::Demo.new(:code(1)).throw }),
+                                     'typed matcher matches exact type';
+  ok $m.matches({ X::T::Sub.new(:code(2)).throw }),
+                                     'typed matcher matches subclass';
+  nok $m.miss-reason.defined,        'no miss-reason on success';
+}
+
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Roleish), :has-type);
+  ok $m.matches({ X::T::WithRole.new.throw }),
+                                     'typed matcher matches role';
+}
+
+# Typed: misses when a different exception type is raised.
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  nok $m.matches({ die "other" }),   'typed matcher rejects other type';
+  is  $m.miss-reason, 'type',        'miss-reason is type';
+  is  $m.raised-exception.message, 'other',
+                                     'raised exception still captured';
+}
+
+# Typed: misses when nothing was raised.
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  nok $m.matches({ 1 + 1 }),         'typed matcher rejects no-raise';
+  is  $m.miss-reason, 'none',        'miss-reason is none';
+}
+
+# Typed: failure messages.
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  $m.matches({ 1 + 1 });
+  is $m.failure-message({ 1 + 1 }),
+     'expected block to raise X::T::Demo, but none was raised',
+     'typed no-raise failure-message';
+}
+
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  $m.matches({ die "boom" });
+  my $msg = $m.failure-message({ die "boom" });
+  ok $msg.contains('expected block to raise X::T::Demo'),
+                                     'typed mismatch head';
+  ok $msg.contains('but raised'),    'typed mismatch tail';
+  ok $msg.contains('X::AdHoc'),      'typed mismatch includes actual type';
+  ok $msg.contains('boom'),          'typed mismatch includes actual message';
+}
+
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  is $m.description, 'raise X::T::Demo',
+                                     'typed description';
+}
+
+# Typed: expected-value returns the type.
+{
+  my $m = RaiseErrorMatcher.new(:expected-type(X::T::Demo), :has-type);
+  ok $m.expected-value === X::T::Demo,
+                                     'typed expected-value is the type';
+}
+
+# Type + message: passes only when both match.
+{
+  my $m = RaiseErrorMatcher.new(
+    :expected-type(X::T::Demo),
+    :has-type,
+    :expected-message(/'code=7'/),
+  );
+  ok $m.matches({ X::T::Demo.new(:code(7)).throw }),
+                                     'type+message matches both';
+  nok $m.matches({ X::T::Demo.new(:code(9)).throw }),
+                                     'type+message rejects bad message';
+  is  $m.miss-reason, 'message',     'miss-reason is message';
+}
+
+{
+  my $m = RaiseErrorMatcher.new(
+    :expected-type(X::T::Demo),
+    :has-type,
+    :expected-message(/'code=7'/),
+  );
+  my $d = $m.description;
+  ok $d.starts-with('raise X::T::Demo with message matching '),
+                                     'type+message description head';
+}
+
+# Message-only: passes for any exception whose message matches.
+{
+  my $m = RaiseErrorMatcher.new(:expected-message(/'alpha'/));
+  ok $m.matches({ die "alpha bravo" }),
+                                     'message-only matches';
+  nok $m.matches({ die "nothing" }), 'message-only rejects bad message';
+  is  $m.miss-reason, 'message',     'miss-reason on message miss';
+}
+
+# Message-only: description.
+{
+  my $m = RaiseErrorMatcher.new(:expected-message(/'alpha'/));
+  my $d = $m.description;
+  ok $d.starts-with('raise an error with message matching '),
+                                     'message-only description head';
+}
+
+# Negation: passes when forbidden type is not raised.
+{
+  Failures.list = ();
+  ok expect({ die "boom" }).to.not.raise-error(X::T::Demo),
+                                     '.not(Type) passes when other type';
+  is Failures.list.elems, 0,         'no failure on negated typed pass';
+
+  Failures.list = ();
+  ok expect({ 1 + 1 }).to.not.raise-error(X::T::Demo),
+                                     '.not(Type) passes when no raise';
+  is Failures.list.elems, 0,         'no failure on negated no-raise';
+}
+
+# Negation: fails when forbidden type IS raised.
+{
+  Failures.list = ();
+  nok expect({ X::T::Demo.new(:code(5)).throw })
+        .to.not.raise-error(X::T::Demo),
+                                     '.not(Type) fails when type raised';
+  is Failures.list.elems, 1,         'one negated typed failure';
+  my $msg = Failures.list[0].message;
+  ok $msg.contains('expected block not to raise X::T::Demo'),
+                                     'negated typed head';
+  ok $msg.contains('X::T::Demo'),    'negated includes actual type';
+  ok $msg.contains('code=5'),        'negated includes actual message';
+  Failures.list = ();
+}
+
+# Typed expect(...).to.raise-error(Type) integration.
+{
+  Failures.list = ();
+  ok expect({ X::T::Demo.new(:code(1)).throw }).to.raise-error(X::T::Demo),
+                                     'typed expect.to.raise-error passes';
+  is Failures.list.elems, 0,         'no failure on typed pass';
+
+  Failures.list = ();
+  nok expect({ die "boom" }).to.raise-error(X::T::Demo),
+                                     'typed expect.to.raise-error fails';
+  is Failures.list.elems, 1,         'one typed failure';
+  ok Failures.list[0].expected === X::T::Demo,
+                                     'Failure.expected is the type';
   Failures.list = ();
 }
