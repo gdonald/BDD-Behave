@@ -37,17 +37,17 @@ Almost all users only ever write `use BDD::Behave;` — that pulls in `expect`, 
 
 You only need to know about specific submodules when you want to *instantiate* matcher classes directly — typically to compose them inside a custom matcher, or to unit-test a matcher with `Test`. Each family lives in its own submodule so unit tests can import just one and skip the rest:
 
-| Submodule                          | Matcher classes                                                                                                              |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `BDD::Behave::Matcher`             | The `Matcher` role itself.                                                                                                   |
-| `BDD::Behave::Matcher::Core`       | `BeMatcher`, `EqMatcher`                                                                                                     |
-| `BDD::Behave::Matcher::Collection` | `IncludeMatcher`, `ContainExactlyMatcher`, `StartWithMatcher`, `EndWithMatcher`, `AllMatcher`                                |
-| `BDD::Behave::Matcher::Type`       | `BeAMatcher`, `BeAnInstanceOfMatcher`, `RespondToMatcher`, `HaveAttributesMatcher`                                           |
+| Submodule                          | Matcher classes                                                                                                                               |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BDD::Behave::Matcher`             | The `Matcher` role itself.                                                                                                                    |
+| `BDD::Behave::Matcher::Core`       | `BeMatcher`, `EqMatcher`                                                                                                                      |
+| `BDD::Behave::Matcher::Collection` | `IncludeMatcher`, `ContainExactlyMatcher`, `StartWithMatcher`, `EndWithMatcher`, `AllMatcher`                                                 |
+| `BDD::Behave::Matcher::Type`       | `BeAMatcher`, `BeAnInstanceOfMatcher`, `RespondToMatcher`, `HaveAttributesMatcher`                                                            |
 | `BDD::Behave::Matcher::Numeric`    | `BeGreaterThanMatcher`, `BeGreaterThanOrEqualMatcher`, `BeLessThanMatcher`, `BeLessThanOrEqualMatcher`, `BeBetweenMatcher`, `BeWithinMatcher` |
-| `BDD::Behave::Matcher::Boolean`    | `BeTruthyMatcher`, `BeFalsyMatcher`, `BeNilMatcher`                                                                          |
-| `BDD::Behave::Matcher::String`     | `MatchMatcher`                                                                                                               |
-| `BDD::Behave::Matcher::Exception`  | `RaiseErrorMatcher`                                                                                                          |
-| `BDD::Behave::Matcher::Change`     | `ChangeMatcher`                                                                                                              |
+| `BDD::Behave::Matcher::Boolean`    | `BeTruthyMatcher`, `BeFalsyMatcher`, `BeNilMatcher`                                                                                           |
+| `BDD::Behave::Matcher::String`     | `MatchMatcher`                                                                                                                                |
+| `BDD::Behave::Matcher::Exception`  | `RaiseErrorMatcher`                                                                                                                           |
+| `BDD::Behave::Matcher::Change`     | `ChangeMatcher`                                                                                                                               |
 
 Each submodule already `use`s `BDD::Behave::Matcher` internally, but the role is *not* re-exported. If your code needs both, import both:
 
@@ -1030,18 +1030,79 @@ failure message names the unwrapped value:
 expected a Callable for change, but got 42
 ```
 
+### Filtering with `.from` and `.to`
+
+`change` returns a chainable expectation that can be narrowed with
+`.from(value)` and `.to(value)` to assert the precise transition:
+
+```raku
+my $counter = 0;
+expect({ $counter = 10 }).to.change({ $counter }).from(0).to(10);
+
+# .from alone — must start at 0 *and* change
+my $a = 0;
+expect({ $a++ }).to.change({ $a }).from(0);
+
+# .to alone — must end at 10 *and* differ from the start
+my $b = 0;
+expect({ $b = 10 }).to.change({ $b }).to(10);
+
+# .to.from order is interchangeable
+my $c = 1;
+expect({ $c = 2 }).to.change({ $c }).to(2).from(1);
+```
+
+`.from` and `.to` use `eqv` for the comparison, so deep structural
+equality is respected (e.g. `.from([])` matches an empty-array
+snapshot). The action block is run exactly once per `.change(...)`
+call — chaining `.from(...).to(...)` after a `.change(...)` does
+not re-run it.
+
+When a chain step fails and a later step passes, the prior failure
+is replaced (rather than duplicated) so the recorded `Failure` list
+always reflects the final state.
+
+### Negation with `.from` / `.to`
+
+The chain participates in the existing `.not` flow with conjunction
+semantics: `.not.change(...).from(x).to(y)` passes when the joint
+constraint (change AND from match AND to match) does *not* hold.
+This means the block may still have changed the observable — just
+not in that particular direction. The negated failure message
+includes the clause for clarity:
+
+```raku
+my $counter = 0;
+expect({ $counter = 7 }).to.not.change({ $counter }).from(0).to(10);
+# passes — the value changed, but not to 10
+
+expect({ $counter = 10 }).to.not.change({ $counter }).from(0).to(10);
+# fails: expected block not to change observable from 0 to 10,
+#        but it changed from 0 to 10
+```
+
 ### Failure messages
 
 ```text
 expected block to change observable, but it remained 7
 expected block not to change observable, but it changed from 0 to 9
+expected block to change observable from 0, but it started as 3
+expected block to change observable to 10, but it ended as 7
+expected block to change observable from 0 to 10, but it started as 3
+expected block to change observable from 0 to 10, but it ended as 7
+expected block to change observable from 5 to 5, but it remained 5
+expected a Callable for change, but got 42
 ```
 
 ### Failure metadata
 
-`Failure.given` carries the original action `Callable`. The matcher
-itself exposes `before-value`, `after-value`, `action-ran`, and
-`callable-given` for tooling that needs structural access to the
+`Failure.given` carries the original action `Callable`.
+`Failure.expected` is `Nil` for the bare form, the from / to value
+alone when only one side was supplied, or `[from, to]` when both
+are supplied. The matcher itself exposes `before-value`,
+`after-value`, `action-ran`, `callable-given`, and `miss-reason`
+(one of `'non-callable'`, `'from'`, `'to'`, `'no-change'`, or `Str`
+on a pass) for tooling that needs structural access to the
 captured states.
 
 ## Writing a custom matcher

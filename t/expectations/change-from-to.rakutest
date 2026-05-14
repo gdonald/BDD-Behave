@@ -1,0 +1,306 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Change;
+use BDD::Behave::Expectation;
+use BDD::Behave::Failures;
+
+plan 51;
+
+# ChangeMatcher with :has-from matches when before equals expected-from and value changes.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-from, :expected-from(0),
+  );
+  ok $m.matches({ $counter++ }), 'matches when from matches and value changes';
+  is $m.miss-reason, Str, 'miss-reason cleared on pass';
+}
+
+# ChangeMatcher with :has-from rejects when before differs from expected-from.
+{
+  my $counter = 3;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-from, :expected-from(0),
+  );
+  nok $m.matches({ $counter++ }), 'rejects when from mismatch';
+  is $m.miss-reason, 'from', 'miss-reason is "from"';
+  is $m.failure-message({}),
+    'expected block to change observable from 0, but it started as 3',
+    'from-mismatch failure-message';
+}
+
+# ChangeMatcher with :has-to rejects when after differs from expected-to.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-to, :expected-to(10),
+  );
+  nok $m.matches({ $counter = 7 }), 'rejects when to mismatch';
+  is $m.miss-reason, 'to', 'miss-reason is "to"';
+  is $m.failure-message({}),
+    'expected block to change observable to 10, but it ended as 7',
+    'to-mismatch failure-message';
+}
+
+# ChangeMatcher with both :has-from and :has-to.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-from, :expected-from(0),
+    :has-to,   :expected-to(10),
+  );
+  ok $m.matches({ $counter = 10 }), 'matches when both endpoints match';
+  is $m.miss-reason, Str, 'miss-reason cleared';
+  is $m.expected-value, [0, 10], 'expected-value returns [from, to] pair';
+}
+
+# from-to-clause renders ' from <val> to <val>'.
+{
+  my $m = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-from, :expected-from(0),
+    :has-to,   :expected-to(10),
+  );
+  is $m.from-to-clause, ' from 0 to 10', 'from-to-clause renders both';
+  is $m.description, 'change observable from 0 to 10', 'description includes clause';
+}
+
+# expected-value reflects single-sided constraints.
+{
+  my $m1 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-from, :expected-from(5),
+  );
+  is $m1.expected-value, 5, 'expected-value returns from when only from set';
+
+  my $m2 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-to, :expected-to(9),
+  );
+  is $m2.expected-value, 9, 'expected-value returns to when only to set';
+
+  my $m3 = ChangeMatcher.new(:observable({ 1 }));
+  ok $m3.expected-value === Nil, 'expected-value is Nil when neither set';
+}
+
+# no-change with from/to specified renders "remained" with the clause.
+{
+  my $value = 5;
+  my $m = ChangeMatcher.new(
+    :observable({ $value }),
+    :has-from, :expected-from(5),
+    :has-to,   :expected-to(5),
+  );
+  nok $m.matches({ $value = 5 }), 'rejects no-change with from/to';
+  is $m.miss-reason, 'no-change', 'miss-reason is "no-change"';
+  is $m.failure-message({}),
+    'expected block to change observable from 5 to 5, but it remained 5',
+    'no-change with from/to failure-message';
+}
+
+# Backwards-compat: nullary (no from/to) failure-message unchanged.
+{
+  my $counter = 7;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  $m.matches({ 1 + 1 });
+  is $m.failure-message({}),
+    'expected block to change observable, but it remained 7',
+    'backwards-compat: nullary failure-message';
+  is $m.description, 'change observable', 'backwards-compat: description';
+}
+
+# Backwards-compat: negated failure-message unchanged for nullary.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(:observable({ $counter }));
+  $m.matches({ $counter = 9 });
+  is $m.failure-message-negated({}),
+    'expected block not to change observable, but it changed from 0 to 9',
+    'backwards-compat: nullary negated failure-message';
+}
+
+# Negated failure-message includes the clause when from/to set.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-from, :expected-from(0),
+    :has-to,   :expected-to(10),
+  );
+  $m.matches({ $counter = 10 });
+  is $m.failure-message-negated({}),
+    'expected block not to change observable from 0 to 10, but it changed from 0 to 10',
+    'negated failure-message with from/to clause';
+}
+
+# ExpectationBuilder.change returns a ChangeExpectation.
+{
+  Failures.list = ();
+  my $counter = 0;
+  my $result = expect({ $counter++ }).to.change({ $counter });
+  ok $result ~~ ChangeExpectation, '.change returns ChangeExpectation';
+  ok $result.Bool, 'passed expectation is True under Bool coercion';
+  Failures.list = ();
+}
+
+# .change.from passes.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter++ }).to.change({ $counter }).from(0);
+  is Failures.list.elems, 0, '.from passes';
+  Failures.list = ();
+}
+
+# .change.from fails on mismatch and records "started as" message.
+{
+  Failures.list = ();
+  my $counter = 3;
+  expect({ $counter++ }).to.change({ $counter }).from(0);
+  is Failures.list.elems, 1, '.from records failure on mismatch';
+  is Failures.list[0].message,
+    'expected block to change observable from 0, but it started as 3',
+    '.from failure-message';
+  is Failures.list[0].expected, 0, 'Failure.expected carries from value';
+  Failures.list = ();
+}
+
+# .change.to passes.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 10 }).to.change({ $counter }).to(10);
+  is Failures.list.elems, 0, '.to passes';
+  Failures.list = ();
+}
+
+# .change.to fails on mismatch and records "ended as" message.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 7 }).to.change({ $counter }).to(10);
+  is Failures.list.elems, 1, '.to records failure on mismatch';
+  is Failures.list[0].message,
+    'expected block to change observable to 10, but it ended as 7',
+    '.to failure-message';
+  is Failures.list[0].expected, 10, 'Failure.expected carries to value';
+  Failures.list = ();
+}
+
+# .change.from.to passes.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 10 }).to.change({ $counter }).from(0).to(10);
+  is Failures.list.elems, 0, '.from.to passes';
+  Failures.list = ();
+}
+
+# .change.from.to fails when from mismatches.
+{
+  Failures.list = ();
+  my $counter = 3;
+  expect({ $counter = 10 }).to.change({ $counter }).from(0).to(10);
+  is Failures.list.elems, 1, '.from.to records failure on from mismatch';
+  is Failures.list[0].message,
+    'expected block to change observable from 0 to 10, but it started as 3',
+    'from-mismatch with full clause';
+  is-deeply Failures.list[0].expected, [0, 10],
+    'Failure.expected is [from, to] pair';
+  Failures.list = ();
+}
+
+# .change.from.to fails when to mismatches.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 7 }).to.change({ $counter }).from(0).to(10);
+  is Failures.list.elems, 1, '.from.to records failure on to mismatch';
+  is Failures.list[0].message,
+    'expected block to change observable from 0 to 10, but it ended as 7',
+    'to-mismatch with full clause';
+  Failures.list = ();
+}
+
+# Chain composition: prior failure is replaced when a later step passes.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 10 }).to.change({ $counter }).from(99).to(10);
+  is Failures.list.elems, 1, 'final state is one failure';
+  is Failures.list[0].message,
+    'expected block to change observable from 99 to 10, but it started as 0',
+    'final failure is from-mismatch (chain replaced)';
+  Failures.list = ();
+}
+
+# Chain composition: .from chained after .to also works.
+{
+  Failures.list = ();
+  my $value = 1;
+  expect({ $value = 2 }).to.change({ $value }).to(2).from(1);
+  is Failures.list.elems, 0, 'to.from chain passes';
+  Failures.list = ();
+}
+
+# Non-Callable actuals fail with the Callable-shape message even when from is set.
+{
+  Failures.list = ();
+  my $observable = 0;
+  expect(42).to.change({ $observable }).from(0);
+  is Failures.list.elems, 1, 'records failure for non-Callable actual';
+  is Failures.list[0].message,
+    'expected a Callable for change, but got 42',
+    'Callable-shape failure message';
+  Failures.list = ();
+}
+
+# .not.change.from.to passes when conjunction fails.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 7 }).to.not.change({ $counter }).from(0).to(10);
+  is Failures.list.elems, 0, '.not passes when conjunction fails';
+  Failures.list = ();
+}
+
+# .not.change.from.to fails when conjunction holds.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter = 10 }).to.not.change({ $counter }).from(0).to(10);
+  is Failures.list.elems, 1, '.not records failure when conjunction holds';
+  is Failures.list[0].message,
+    'expected block not to change observable from 0 to 10, but it changed from 0 to 10',
+    'negated failure-message with clause';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# .from is value-equal (eqv) and compares structures deeply.
+{
+  Failures.list = ();
+  my @items;
+  expect({ @items.push: 'x' }).to.change({ @items.clone }).from([]);
+  is Failures.list.elems, 0, '.from([]) matches an empty array snapshot';
+  Failures.list = ();
+}
+
+# Block is run exactly once across chained re-validations.
+{
+  Failures.list = ();
+  my $run-count = 0;
+  my $value = 0;
+  expect({ $run-count++; $value = 10 }).to.change({ $value }).from(0).to(10);
+  is $run-count, 1, 'block ran exactly once across .from and .to';
+  is Failures.list.elems, 0, 'final chain passes';
+  Failures.list = ();
+}

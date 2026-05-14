@@ -118,6 +118,116 @@ class WithinExpectation is export {
   }
 }
 
+class ChangeExpectation is export {
+  has Mu   $.given;
+  has      &.observable;
+  has Bool $.negated = False;
+  has Str  $.file;
+  has Int  $.line;
+  has      $!expected-from;
+  has Bool $!has-from = False;
+  has      $!expected-to;
+  has Bool $!has-to = False;
+  has      $!before-value;
+  has      $!after-value;
+  has Bool $!callable-given = True;
+  has Bool $!ran = False;
+  has Bool $!passed = False;
+  has      $!recorded-failure;
+
+  submethod BUILD(
+    Mu :$given is raw, :&observable, :$!negated, :$!file, :$!line,
+  ) {
+    $!given      := $given;
+    &!observable  = &observable;
+  }
+
+  method !run-block(--> Nil) {
+    return if $!ran;
+    $!ran = True;
+    $!callable-given = ?($!given ~~ Callable);
+    return unless $!callable-given;
+    $!before-value = &!observable.();
+    $!given.();
+    $!after-value  = &!observable.();
+  }
+
+  method !build-matcher() {
+    my $m = ChangeMatcher.new(:&!observable);
+    $m.callable-given = $!callable-given;
+    $m.action-ran     = $!callable-given;
+    $m.before-value   = $!before-value;
+    $m.after-value    = $!after-value;
+    $m.expected-from  = $!expected-from;
+    $m.has-from       = $!has-from;
+    $m.expected-to    = $!expected-to;
+    $m.has-to         = $!has-to;
+    $m;
+  }
+
+  method validate(--> Nil) {
+    self!run-block;
+    my $matcher = self!build-matcher;
+    my $matched = ?$matcher.check-captured;
+    $!passed = $!negated ?? !$matched !! $matched;
+
+    try {
+      if $*BEHAVE-AUTO-MATCHERS.defined {
+        $*BEHAVE-AUTO-MATCHERS.push(%(:$matcher, :negated($!negated)));
+      }
+    }
+
+    if $!passed {
+      self.clear-failure;
+      return;
+    }
+
+    my $message = $!negated
+      ?? $matcher.failure-message-negated($!given)
+      !! $matcher.failure-message($!given);
+
+    self.replace-failure($message, $matcher);
+  }
+
+  method replace-failure(Str $msg, $matcher --> Nil) {
+    self.clear-failure;
+    my $f = Failure.new(
+      :file($!file),
+      :line($!line),
+      :given($!given),
+      :expected($matcher.expected-value),
+      :negated($!negated),
+      :message($msg),
+    );
+    Failures.list.push($f);
+    $!recorded-failure = $f;
+  }
+
+  method clear-failure(--> Nil) {
+    return unless $!recorded-failure.defined;
+    my $list = Failures.list;
+    my $idx  = $list.first({ $_ === $!recorded-failure }, :k);
+    $list.splice($idx, 1) if $idx.defined;
+    $!recorded-failure = Nil;
+  }
+
+  method from(Mu \value) {
+    $!expected-from := value;
+    $!has-from = True;
+    self.validate;
+    self;
+  }
+
+  method to(Mu \value) {
+    $!expected-to := value;
+    $!has-to = True;
+    self.validate;
+    self;
+  }
+
+  method Bool(--> Bool) { $!passed }
+}
+
 class RaiseErrorExpectation is export {
   has Mu   $.given;
   has Bool $.negated = False;
@@ -484,7 +594,15 @@ class ExpectationBuilder is export {
   }
 
   method change(&observable) {
-    self!apply-matcher(ChangeMatcher.new(:&observable));
+    my $expectation = ChangeExpectation.new(
+      :given($!given),
+      :&observable,
+      :negated($!negated),
+      :file($!file),
+      :line($!line),
+    );
+    $expectation.validate;
+    $expectation;
   }
 
   method be-within($delta) {
