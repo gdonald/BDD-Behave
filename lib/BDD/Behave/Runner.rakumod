@@ -1,6 +1,7 @@
 unit module BDD::Behave::Runner;
 
 use BDD::Behave::Colors;
+use BDD::Behave::Failure;
 use BDD::Behave::Failures;
 use BDD::Behave::SpecTree;
 
@@ -53,6 +54,7 @@ our class Runner {
   has @.include-tags;
   has @.exclude-tags;
   has @.example-patterns;
+  has $.aggregate-failures = False;
   has Bool $!focus-mode = False;
 
   method run(Suite $suite) {
@@ -334,6 +336,19 @@ our class Runner {
     $description.contains($pattern);
   }
 
+  method resolve-auto-aggregation(Example $example --> List) {
+    my $value = $example.effective-metadata-value('aggregate-failures');
+    $value = $!aggregate-failures unless $value.defined;
+
+    return (False, Str).List unless $value.defined;
+    return (False, Str).List if $value === False;
+    if $value ~~ Str {
+      return (False, Str).List unless $value.chars;
+      return (True, $value).List;
+    }
+    (True, Str).List;
+  }
+
   method run-example(Example $example) {
     my Bool $auto = ?$example.get-metadata('auto-description', :default(False));
     my $description = $example.description;
@@ -347,6 +362,8 @@ our class Runner {
       return;
     }
 
+    my ($auto-agg-on, $auto-agg-label) = self.resolve-auto-aggregation($example);
+
     my $initial-failure-count = Failures.list.elems;
 
     if !$auto {
@@ -358,11 +375,22 @@ our class Runner {
     my $error;
     {
       my $*BEHAVE-AUTO-MATCHERS = $auto ?? @captured-matchers !! Array;
+      my $*BEHAVE-AGGREGATION-LABEL = $auto-agg-on ?? ($auto-agg-label // Str) !! Str;
       try {
         $example.execute;
         CATCH {
           default {
-            $error = $_;
+            if $auto-agg-on {
+              my $msg = "exception in {self.full-description($example)}: " ~ .message;
+              Failures.list.push(Failure.new(
+                :file($example.file.Str),
+                :line($example.line),
+                :message($msg),
+                :aggregation-label($auto-agg-label // Str),
+              ));
+            } else {
+              $error = $_;
+            }
           }
         }
       }

@@ -37,6 +37,7 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--exclude-tag NAME` | Skip examples tagged `NAME` (repeatable).                                                                               |
 | `--example PATTERN`  | Run only examples whose full nested description matches `PATTERN` (substring; or `/regex/`). Repeatable; OR semantics.  |
 | `-e PATTERN`         | Alias for `--example`.                                                                                                  |
+| `--aggregate-failures` / `--aggregate-failures=LABEL` | Wrap every example in `aggregate-failures` semantics; converts uncaught example exceptions into recorded failures. With `=LABEL` the label tags each failure. Per-example/group `:aggregate-failures` metadata overrides this. See [Aggregate failures](expectations/aggregate-failures.md#automatic-aggregation). |
 
 ## Filtering by description
 
