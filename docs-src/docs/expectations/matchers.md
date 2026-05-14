@@ -74,6 +74,10 @@ expect($x).to.be(any(1, 2, 3));
 keeps the structured `Expected:` / `to be:` block plus the colorized `Diff:`
 section described in [Diff Output](../diff/diff.md).
 
+Because the underlying operator is `~~`, all four Raku junction kinds (`any`,
+`all`, `one`, `none`) compose with `BeMatcher` directly — see
+[Junctions](junctions.md).
+
 ## EqMatcher (built-in)
 
 `eq` checks order-dependent structural equality using Raku's `eqv` operator.

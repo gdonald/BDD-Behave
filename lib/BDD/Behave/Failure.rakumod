@@ -9,9 +9,11 @@ class Failure is export {
   has Str  $.aggregation-label;
 
   submethod BUILD(
-    :$!file, :$!line, :$!given, :$!expected,
+    :$!file, :$!line, Mu :$given is raw, Mu :$expected is raw,
     :$!negated = False, :$!message = Str, :$aggregation-label,
   ) {
+    $!given = $given;
+    $!expected = $expected;
     my ($path,) = $!file.split(':');
     $!file = $path;
     if $aggregation-label.defined {

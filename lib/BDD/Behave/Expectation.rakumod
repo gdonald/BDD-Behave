@@ -371,6 +371,16 @@ class RaiseErrorExpectation is export {
   method Bool(--> Bool) { $!passed }
 }
 
+multi sub build-be-matcher(Junction:D $expected) {
+  BeMatcher.new(:$expected);
+}
+multi sub build-be-matcher(Matcher:D $expected) {
+  $expected;
+}
+multi sub build-be-matcher($expected) {
+  BeMatcher.new(:$expected);
+}
+
 class ExpectationBuilder is export {
   has $.given;
   has Bool $.negated is rw = False;
@@ -450,11 +460,7 @@ class ExpectationBuilder is export {
       die "be requires either a positional argument or a single named argument";
     }
 
-    my $matcher = $resolved-expected ~~ Matcher
-      ?? $resolved-expected
-      !! BeMatcher.new(:expected($resolved-expected));
-
-    self!apply-matcher($matcher);
+    self!apply-matcher(build-be-matcher($resolved-expected));
   }
 
   method include(**@items, *%pairs) {
