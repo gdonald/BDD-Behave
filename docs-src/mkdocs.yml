@@ -21,6 +21,7 @@ nav:
   - Expectations:
     - expect: expectations/expect.md
     - Matchers: expectations/matchers.md
+    - Custom Matchers: expectations/custom-matchers.md
     - aggregate-failures: expectations/aggregate-failures.md
   - Diff Output: diff/diff.md
   - Classes in specs: classes/classes.md

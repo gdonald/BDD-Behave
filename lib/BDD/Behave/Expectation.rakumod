@@ -11,6 +11,7 @@ use BDD::Behave::Matcher::Boolean;
 use BDD::Behave::Matcher::String;
 use BDD::Behave::Matcher::Exception;
 use BDD::Behave::Matcher::Change;
+use BDD::Behave::Matcher::Custom;
 use BDD::Behave::Mock::HaveReceived;
 
 class BetweenExpectation is export {
@@ -658,5 +659,17 @@ class ExpectationBuilder is export {
     );
     $expectation.validate;
     $expectation;
+  }
+
+  method FALLBACK($name, |c) {
+    my $registry = BDD::Behave::Matcher::Custom::registry();
+    if $registry.exists($name) {
+      my $matcher = $registry.build($name, |c);
+      return self!apply-matcher($matcher);
+    }
+    die X::Method::NotFound.new(
+      method   => $name,
+      typename => self.^name,
+    );
   }
 }

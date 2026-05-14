@@ -7,7 +7,9 @@ value passed to `.be(...)` is either:
 - **a `Matcher`-doing object** — used directly.
 
 This is the seam every built-in matcher and every user-defined matcher plugs
-into.
+into. If you want to add your own matcher without writing a class by hand, see
+[Custom Matchers](custom-matchers.md) — `define-matcher` produces a matcher
+that conforms to this same role.
 
 ## The Matcher role
 
@@ -1192,3 +1194,6 @@ when `.not` fails (i.e., the matcher matched but should not have).
 Built-in matchers and user-supplied matchers go through the same role, so a
 custom matcher you write integrates with `expect` exactly the way the
 built-ins do.
+
+For the DSL-form alternative — defining matchers as a bundle of callbacks
+without writing a class — see [Custom Matchers](custom-matchers.md).

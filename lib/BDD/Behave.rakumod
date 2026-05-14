@@ -282,3 +282,19 @@ sub xcontext(|args) is export {
   };
   $impl(|args);
 }
+
+sub define-matcher(Str:D $name, *%blocks) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&define-matcher');
+  };
+  $impl($name, |%blocks);
+}
+
+sub matcher(Str:D $name, |c) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&matcher');
+  };
+  $impl($name, |c);
+}

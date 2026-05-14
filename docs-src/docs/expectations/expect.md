@@ -29,7 +29,7 @@ expect(5).to.be(1..10);             # range
 expect($x).to.be(any(1, 2, 3));     # junction
 ```
 
-Plain values are wrapped in `BeMatcher` automatically. To plug in your own logic, pass any object that does the [`Matcher`](matchers.md) role.
+Plain values are wrapped in `BeMatcher` automatically. To plug in your own logic, pass any object that does the [`Matcher`](matchers.md) role — or use [`define-matcher`](custom-matchers.md) for the lighter, callback-based form.
 
 ## Negation
 

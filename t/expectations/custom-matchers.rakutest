@@ -1,0 +1,290 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Custom;
+use BDD::Behave::Failures;
+
+plan 67;
+
+# DefinedMatcher does Matcher
+{
+  my &be-multiple-of = define-matcher 'be-multiple-of',
+  match => -> $actual, $expected { ?($actual %% $expected) };
+
+  my $m = be-multiple-of(3);
+  ok $m ~~ Matcher, 'DefinedMatcher does Matcher role';
+  ok $m ~~ DefinedMatcher, 'factory returns DefinedMatcher';
+  is $m.name, 'be-multiple-of', 'name preserved';
+  is-deeply $m.args, (3,), 'args captured';
+  ok $m.matches(9), 'matches when divisible';
+  nok $m.matches(10), 'does not match when not divisible';
+}
+
+# Default messages / description fall back to undefined Str / matcher name
+{
+  my &is-zero = define-matcher 'is-zero',
+  match => -> $actual { $actual == 0 };
+
+  my $m = is-zero();
+  nok $m.failure-message(1).defined, 'default failure-message is undefined Str';
+  nok $m.failure-message-negated(1).defined, 'default failure-message-negated is undefined Str';
+  is $m.description, 'is-zero', 'default description is matcher name';
+}
+
+# Custom failure messages
+{
+  my &be-multiple-of = define-matcher 'be-multiple-of-msg',
+  match => -> $actual, $expected { ?($actual %% $expected) },
+  failure-message => -> $actual, $expected {
+    "expected $actual to be a multiple of $expected";
+  },
+  failure-message-negated => -> $actual, $expected {
+    "expected $actual not to be a multiple of $expected";
+  },
+  description => -> $expected { "be a multiple of $expected" };
+
+  my $m = be-multiple-of(3);
+  is $m.failure-message(10), 'expected 10 to be a multiple of 3', 'failure-message renders';
+  is $m.failure-message-negated(9), 'expected 9 not to be a multiple of 3', 'failure-message-negated renders';
+  is $m.description, 'be a multiple of 3', 'description renders';
+}
+
+# expected-value default behavior
+{
+  my &one-arg = define-matcher 'one-arg-ev',
+  match => -> $actual, $expected { $actual == $expected };
+  is one-arg(7).expected-value, 7, 'single arg: expected-value is that arg';
+
+  my &two-args = define-matcher 'two-arg-ev',
+  match => -> $actual, $a, $b { $actual >= $a && $actual <= $b };
+  is-deeply two-args(1, 10).expected-value, (1, 10), 'multi arg: expected-value is the list';
+
+  my &no-args = define-matcher 'no-arg-ev',
+  match => -> $actual { ?$actual };
+  is-deeply no-args().expected-value, (), 'no args: expected-value is empty list';
+}
+
+# Custom expected-value block
+{
+  my &be-multiple-of = define-matcher 'be-multiple-of-ev',
+  match => -> $actual, $expected { ?($actual %% $expected) },
+  expected-value => -> $expected { "any multiple of $expected" };
+
+  my $m = be-multiple-of(3);
+  is $m.expected-value, 'any multiple of 3', 'custom expected-value block runs';
+}
+
+# Required match block
+{
+  dies-ok {
+    define-matcher 'no-match-block', failure-message => -> $a { 'oops' };
+  }, 'missing match block dies';
+
+  my $err;
+  try {
+    define-matcher 'still-no-match', failure-message => -> $a { 'oops' };
+    CATCH { default { $err = .message } }
+  }
+  ok $err.defined && $err.contains('match block is required'),
+  'error message mentions required match block';
+}
+
+# Reject unknown option keys
+{
+  my $err;
+  try {
+    define-matcher 'bad-opt',
+    match => -> $actual { True },
+    :totally-bogus(-> { 'x' });
+    CATCH { default { $err = .message } }
+  }
+  ok $err.defined && $err.contains('unknown option'),
+  'unknown option key reported';
+}
+
+# Reject non-Callable values
+{
+  my $err;
+  try {
+    define-matcher 'bad-callable',
+    match => -> $actual { True },
+    failure-message => 'not a Callable';
+    CATCH { default { $err = .message } }
+  }
+  ok $err.defined && $err.contains('must be a Callable'),
+  'non-Callable value reported';
+}
+
+# Registry semantics
+{
+  my $reg = BDD::Behave::Matcher::Custom::registry();
+  isa-ok $reg, BDD::Behave::Matcher::Custom::CustomMatcherRegistry, 'registry singleton';
+
+  $reg.clear;
+  is $reg.names.elems, 0, 'cleared registry has no names';
+
+  define-matcher 'r1', match => -> $a { ?$a };
+  define-matcher 'r2', match => -> $a { ?$a };
+  is-deeply $reg.names.List, ('r1', 'r2'), 'names listed sorted';
+  ok $reg.exists('r1'), 'exists returns True for known';
+  nok $reg.exists('nope'), 'exists returns False for unknown';
+
+  dies-ok { $reg.lookup('nope') }, 'lookup of unknown dies';
+
+  $reg.clear;
+  is $reg.names.elems, 0, 'cleared again';
+}
+
+# Lookup helper
+{
+  my $reg = BDD::Behave::Matcher::Custom::registry();
+  $reg.clear;
+
+  define-matcher 'be-even',
+  match => -> $actual { ?($actual %% 2) },
+  failure-message => -> $actual { "expected $actual to be even" };
+
+  my $m = matcher('be-even');
+  ok $m ~~ DefinedMatcher, 'matcher() returns DefinedMatcher';
+  ok $m.matches(4), 'lookup-built matcher works';
+  is $m.failure-message(5), 'expected 5 to be even', 'failure message via lookup';
+
+  dies-ok { matcher('does-not-exist') }, 'matcher() of unknown dies';
+}
+
+# Integration with expect(...).to.be(...) via Matcher role
+{
+  my $reg = BDD::Behave::Matcher::Custom::registry();
+  $reg.clear;
+
+  my &be-even = define-matcher 'be-even-int',
+  match => -> $actual { ?($actual %% 2) },
+  failure-message => -> $actual { "expected $actual to be even" },
+  failure-message-negated => -> $actual { "expected $actual not to be even" };
+
+  Failures.list = ();
+  ok expect(4).to.be(be-even()), 'passes when actual matches';
+  is Failures.list.elems, 0, 'no failure on pass';
+
+  Failures.list = ();
+  nok expect(5).to.be(be-even()), 'fails when actual does not match';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected 5 to be even',
+  'failure message from custom matcher';
+  is Failures.list[0].given , 5, 'failure given preserved';
+
+  Failures.list = ();
+}
+
+# Integration with .not
+{
+  my &be-even = define-matcher 'be-even-not',
+  match => -> $actual { ?($actual %% 2) },
+  failure-message => -> $actual { "expected $actual to be even" },
+  failure-message-negated => -> $actual { "expected $actual not to be even" };
+
+  Failures.list = ();
+  ok expect(5).to.not.be(be-even()), '.not passes when actual mismatches';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  Failures.list = ();
+  nok expect(4).to.not.be(be-even()), '.not fails when actual matches';
+  is Failures.list.elems, 1, 'failure recorded on negated miss';
+  is Failures.list[0].message, 'expected 4 not to be even',
+  'negated message rendered';
+  ok Failures.list[0].negated, 'failure marked negated';
+
+  Failures.list = ();
+}
+
+# FALLBACK dispatch on ExpectationBuilder
+{
+  define-matcher 'be-positive',
+  match => -> $actual { $actual > 0 },
+  failure-message => -> $actual { "expected $actual to be positive" },
+  failure-message-negated => -> $actual { "expected $actual not to be positive" };
+
+  Failures.list = ();
+  ok expect(5).to.be-positive, 'FALLBACK dispatches no-arg matcher';
+  is Failures.list.elems, 0, 'no failure on FALLBACK pass';
+
+  Failures.list = ();
+  nok expect(-1).to.be-positive, 'FALLBACK records failure on miss';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected -1 to be positive', 'FALLBACK uses custom message';
+
+  Failures.list = ();
+}
+
+# FALLBACK with args
+{
+  define-matcher 'be-mult-of',
+  match => -> $actual, $n { ?($actual %% $n) },
+  failure-message => -> $actual, $n { "expected $actual to be a multiple of $n" };
+
+  Failures.list = ();
+  ok expect(9).to.be-mult-of(3), 'FALLBACK with args passes';
+  nok expect(10).to.be-mult-of(3), 'FALLBACK with args fails';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected 10 to be a multiple of 3', 'message rendered';
+  Failures.list = ();
+}
+
+# FALLBACK with .not
+{
+  define-matcher 'be-pos-not',
+  match => -> $actual { $actual > 0 },
+  failure-message-negated => -> $actual { "expected $actual not to be positive" };
+
+  Failures.list = ();
+  ok expect(-1).to.not.be-pos-not, 'FALLBACK + .not passes';
+  Failures.list = ();
+  nok expect(1).to.not.be-pos-not, 'FALLBACK + .not fails when matched';
+  is Failures.list.elems, 1, 'one failure recorded';
+  is Failures.list[0].message, 'expected 1 not to be positive', 'negated message';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# Unknown method still throws X::Method::NotFound
+{
+  dies-ok { expect(1).to.totally-bogus-not-a-matcher }, 'unknown method dies';
+
+  my $err;
+  try {
+    expect(1).to.also-not-real;
+    CATCH { default { $err = $_ } }
+  }
+  ok $err.defined, 'caught error';
+  ok $err.message.contains('also-not-real'),
+  'error message names the missing method';
+}
+
+# Named-arg support in factory call
+{
+  my &range-includes = define-matcher 'range-includes-kw',
+  match => -> $actual, :$min, :$max { $actual >= $min && $actual <= $max };
+
+  my $m = range-includes(min => 1, max => 10);
+  ok $m.matches(5), 'named args reach match block';
+  nok $m.matches(11), 'named args bound correctly';
+  is-deeply $m.kwargs<min>, 1, 'kwargs stored';
+  is-deeply $m.kwargs<max>, 10, 'kwargs stored';
+}
+
+# Redefinition replaces an existing entry
+{
+  my $reg = BDD::Behave::Matcher::Custom::registry();
+  $reg.clear;
+
+  define-matcher 'redef', match => -> $actual { $actual > 100 };
+  define-matcher 'redef', match => -> $actual { $actual < 100 };
+
+  ok $reg.exists('redef'), 'still registered after redefine';
+  ok matcher('redef').matches(50), 'redefinition is what runs';
+  nok matcher('redef').matches(200), 'previous predicate no longer in effect';
+  $reg.clear;
+}

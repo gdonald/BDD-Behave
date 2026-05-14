@@ -24,6 +24,7 @@
     "BDD::Behave::Matcher::Change": "lib/BDD/Behave/Matcher/Change.rakumod",
     "BDD::Behave::Matcher::Collection": "lib/BDD/Behave/Matcher/Collection.rakumod",
     "BDD::Behave::Matcher::Core": "lib/BDD/Behave/Matcher/Core.rakumod",
+    "BDD::Behave::Matcher::Custom": "lib/BDD/Behave/Matcher/Custom.rakumod",
     "BDD::Behave::Matcher::Exception": "lib/BDD/Behave/Matcher/Exception.rakumod",
     "BDD::Behave::Matcher::Numeric": "lib/BDD/Behave/Matcher/Numeric.rakumod",
     "BDD::Behave::Matcher::String": "lib/BDD/Behave/Matcher/String.rakumod",

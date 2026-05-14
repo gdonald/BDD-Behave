@@ -12,6 +12,7 @@ need BDD::Behave::Mock::ArgMatcher;
 need BDD::Behave::Mock::Double;
 need BDD::Behave::Mock::Allow;
 need BDD::Behave::Mock::Spy;
+need BDD::Behave::Matcher::Custom;
 
 sub registry() { BDD::Behave::SpecRegistry::registry() }
 sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
@@ -386,6 +387,14 @@ our sub anything()              is export { BDD::Behave::Mock::ArgMatcher::anyth
 our sub instance-of(Mu \type)   is export { BDD::Behave::Mock::ArgMatcher::instance-of(type) }
 our sub hash-including(*%pairs) is export { BDD::Behave::Mock::ArgMatcher::hash-including(|%pairs) }
 our sub array-including(*@items) is export { BDD::Behave::Mock::ArgMatcher::array-including(|@items) }
+
+our sub define-matcher(Str:D $name, *%blocks) is export {
+  BDD::Behave::Matcher::Custom::define-matcher($name, |%blocks);
+}
+
+our sub matcher(Str:D $name, |c) is export {
+  BDD::Behave::Matcher::Custom::matcher($name, |c);
+}
 
 our proto sub fit(|) is export {*}
 
