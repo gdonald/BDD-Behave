@@ -128,6 +128,12 @@ class ChangeExpectation is export {
   has Bool $!has-from = False;
   has      $!expected-to;
   has Bool $!has-to = False;
+  has      $!expected-by;
+  has Bool $!has-by = False;
+  has      $!expected-by-at-least;
+  has Bool $!has-by-at-least = False;
+  has      $!expected-by-at-most;
+  has Bool $!has-by-at-most = False;
   has      $!before-value;
   has      $!after-value;
   has Bool $!callable-given = True;
@@ -154,14 +160,20 @@ class ChangeExpectation is export {
 
   method !build-matcher() {
     my $m = ChangeMatcher.new(:&!observable);
-    $m.callable-given = $!callable-given;
-    $m.action-ran     = $!callable-given;
-    $m.before-value   = $!before-value;
-    $m.after-value    = $!after-value;
-    $m.expected-from  = $!expected-from;
-    $m.has-from       = $!has-from;
-    $m.expected-to    = $!expected-to;
-    $m.has-to         = $!has-to;
+    $m.callable-given      = $!callable-given;
+    $m.action-ran          = $!callable-given;
+    $m.before-value        = $!before-value;
+    $m.after-value         = $!after-value;
+    $m.expected-from       = $!expected-from;
+    $m.has-from            = $!has-from;
+    $m.expected-to         = $!expected-to;
+    $m.has-to              = $!has-to;
+    $m.expected-by         = $!expected-by;
+    $m.has-by              = $!has-by;
+    $m.expected-by-at-least = $!expected-by-at-least;
+    $m.has-by-at-least     = $!has-by-at-least;
+    $m.expected-by-at-most = $!expected-by-at-most;
+    $m.has-by-at-most      = $!has-by-at-most;
     $m;
   }
 
@@ -221,6 +233,27 @@ class ChangeExpectation is export {
   method to(Mu \value) {
     $!expected-to := value;
     $!has-to = True;
+    self.validate;
+    self;
+  }
+
+  method by(Mu \value) {
+    $!expected-by := value;
+    $!has-by = True;
+    self.validate;
+    self;
+  }
+
+  method by-at-least(Mu \value) {
+    $!expected-by-at-least := value;
+    $!has-by-at-least = True;
+    self.validate;
+    self;
+  }
+
+  method by-at-most(Mu \value) {
+    $!expected-by-at-most := value;
+    $!has-by-at-most = True;
     self.validate;
     self;
   }

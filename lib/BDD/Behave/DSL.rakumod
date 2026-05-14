@@ -1,6 +1,8 @@
 unit module BDD::Behave::DSL;
 
 use BDD::Behave::Expectation;
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
 
 need BDD::Behave::SpecRegistry;
 need BDD::Behave::LetRuntime;
@@ -405,6 +407,45 @@ our multi sub xit(&block, *%meta) is export {
   it(&block, |%meta, :skipped);
 }
 
+
+sub run-aggregate-failures(Str $label, &block, Str $file, Int $line --> Nil) {
+  my $exception;
+  {
+    my $*BEHAVE-AGGREGATION-LABEL = $label;
+    try {
+      block();
+      CATCH {
+        default { $exception = $_; }
+      }
+    }
+  }
+
+  if $exception.defined {
+    my $message = "exception in aggregate-failures: " ~ $exception.message;
+    Failures.list.push(Failure.new(
+      :$file,
+      :$line,
+      :$message,
+      :aggregation-label($label),
+    ));
+  }
+}
+
+our proto sub aggregate-failures(|) is export {*}
+
+our multi sub aggregate-failures(&block) is export {
+  my $caller-file = callframe(1).file.Str;
+  my $caller-line = callframe(1).line.Int;
+  my $inherited;
+  try { $inherited = $*BEHAVE-AGGREGATION-LABEL if $*BEHAVE-AGGREGATION-LABEL.defined; }
+  run-aggregate-failures($inherited // Str, &block, $caller-file, $caller-line);
+}
+
+our multi sub aggregate-failures(Str:D $label, &block) is export {
+  my $caller-file = callframe(1).file.Str;
+  my $caller-line = callframe(1).line.Int;
+  run-aggregate-failures($label, &block, $caller-file, $caller-line);
+}
 
 our sub is-expected() is export {
   my $caller-file = callframe(1).file.Str;

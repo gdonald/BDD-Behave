@@ -67,6 +67,14 @@ sub expect(|args) is export {
   $impl(|args);
 }
 
+sub aggregate-failures(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&aggregate-failures');
+  };
+  $impl(|args);
+}
+
 sub is-expected() is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

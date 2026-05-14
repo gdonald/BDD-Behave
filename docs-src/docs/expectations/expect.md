@@ -98,7 +98,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-nil`                                 | Undefined-value check (`!$actual.defined`); passes for `Nil`, `Any`, and undefined type objects. See [Matchers › BeNilMatcher](matchers.md#benilmatcher-built-in).                                                                                                                                                                                                                                           |
 | `match`                                  | Regex match against a `Str` (`$actual ~~ /pattern/`); fails (not dies) on undefined or non-`Str` actuals. See [Matchers › MatchMatcher](matchers.md#matchmatcher-built-in).                                                                                                                                                                                                                                  |
 | `raise-error`                            | Passes when a `Callable` actual raises an exception when invoked. Wrap the code under test in `{ ... }`. Forms: `raise-error`, `raise-error(Type)`, `raise-error(Type, /pattern/)`, `raise-error(/pattern/)`. Chain `.with-message($str-or-regex)` to filter by exception message (`Str` compares with `eq`, `Regex` with `~~`). See [Matchers › RaiseErrorMatcher](matchers.md#raiseerrormatcher-built-in). |
-| `change`                                 | Passes when a `Callable` action changes the value returned by an observable block (compared with `eqv`). Wrap the action and the observable in `{ ... }`. Chain `.from(value)` / `.to(value)` to constrain the start and / or end value. See [Matchers › ChangeMatcher](matchers.md#changematcher-built-in).                                                                                                 |
+| `change`                                 | Passes when a `Callable` action changes the value returned by an observable block (compared with `eqv`). Wrap the action and the observable in `{ ... }`. Chain `.from(value)` / `.to(value)` to constrain the start and / or end value, or `.by(delta)` / `.by-at-least(delta)` / `.by-at-most(delta)` for numeric deltas. See [Matchers › ChangeMatcher](matchers.md#changematcher-built-in).             |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -140,8 +140,15 @@ my $balance = 0;
 expect({ $balance = 100 }).to.change({ $balance }).from(0).to(100);
 expect({ $balance += 50 }).to.change({ $balance }).from(100);
 expect({ $balance -= 150 }).to.change({ $balance }).to(0);
+expect({ $balance += 25 }).to.change({ $balance }).by(25);
+expect({ $balance -= 10 }).to.change({ $balance }).by(-10);
+expect({ $balance += 5 }).to.change({ $balance }).by-at-least(1).by-at-most(10);
 ```
 
 ## Custom matchers
 
 `be` accepts any object that does the [`Matcher`](matchers.md) role. The matcher's `matches`, `failure-message`, and `failure-message-negated` methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.
+
+## Grouping expectations
+
+Wrap a sequence of related expectations in `aggregate-failures` to label the group and trap any exceptions thrown mid-block. See [aggregate-failures](aggregate-failures.md).

@@ -1,0 +1,333 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Change;
+use BDD::Behave::Expectation;
+use BDD::Behave::Failures;
+
+plan 56;
+
+# ChangeMatcher with :has-by matches when delta equals expected.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by, :expected-by(5),
+  );
+  ok $m.matches({ $counter += 5 }), 'matches when delta equals expected-by';
+  is $m.miss-reason, Str, 'miss-reason cleared on pass';
+}
+
+# ChangeMatcher with :has-by rejects when delta differs from expected.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by, :expected-by(5),
+  );
+  nok $m.matches({ $counter += 3 }), 'rejects when delta mismatch';
+  is $m.miss-reason, 'by', 'miss-reason is "by"';
+  is $m.failure-message({}),
+    'expected block to change observable by 5, but it changed by 3',
+    'by-mismatch failure-message';
+}
+
+# ChangeMatcher with :has-by-at-least.
+{
+  my $counter = 0;
+  my $m1 = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by-at-least, :expected-by-at-least(3),
+  );
+  ok $m1.matches({ $counter += 5 }), 'passes when delta exceeds minimum';
+  is $m1.miss-reason, Str, 'miss-reason cleared';
+
+  $counter = 0;
+  my $m2 = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by-at-least, :expected-by-at-least(5),
+  );
+  nok $m2.matches({ $counter += 2 }), 'fails when delta below minimum';
+  is $m2.miss-reason, 'by-at-least', 'miss-reason is "by-at-least"';
+  is $m2.failure-message({}),
+    'expected block to change observable by at least 5, but it changed by 2',
+    'by-at-least failure-message';
+}
+
+# ChangeMatcher with :has-by-at-most.
+{
+  my $counter = 0;
+  my $m1 = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by-at-most, :expected-by-at-most(10),
+  );
+  ok $m1.matches({ $counter += 5 }), 'passes when delta below maximum';
+
+  $counter = 0;
+  my $m2 = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by-at-most, :expected-by-at-most(5),
+  );
+  nok $m2.matches({ $counter += 8 }), 'fails when delta above maximum';
+  is $m2.miss-reason, 'by-at-most', 'miss-reason is "by-at-most"';
+  is $m2.failure-message({}),
+    'expected block to change observable by at most 5, but it changed by 8',
+    'by-at-most failure-message';
+}
+
+# change-clause renders the by clauses.
+{
+  my $m1 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-by, :expected-by(5),
+  );
+  is $m1.change-clause, ' by 5', 'change-clause renders by';
+  is $m1.description, 'change observable by 5', 'description includes by';
+
+  my $m2 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-by-at-least, :expected-by-at-least(3),
+  );
+  is $m2.change-clause, ' by at least 3', 'change-clause renders by-at-least';
+
+  my $m3 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-by-at-most, :expected-by-at-most(10),
+  );
+  is $m3.change-clause, ' by at most 10', 'change-clause renders by-at-most';
+
+  my $m4 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-from, :expected-from(0),
+    :has-by,   :expected-by(5),
+  );
+  is $m4.change-clause, ' from 0 by 5', 'change-clause composes from and by';
+}
+
+# expected-value reflects by/by-at-least/by-at-most.
+{
+  my $m1 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-by, :expected-by(5),
+  );
+  is $m1.expected-value, 5, 'expected-value returns by';
+
+  my $m2 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-by-at-least, :expected-by-at-least(3),
+  );
+  is $m2.expected-value, 3, 'expected-value returns by-at-least';
+
+  my $m3 = ChangeMatcher.new(
+    :observable({ 1 }),
+    :has-by-at-most, :expected-by-at-most(10),
+  );
+  is $m3.expected-value, 10, 'expected-value returns by-at-most';
+}
+
+# Rat delta support.
+{
+  my $balance = 10.0;
+  my $m = ChangeMatcher.new(
+    :observable({ $balance }),
+    :has-by, :expected-by(1.5),
+  );
+  ok $m.matches({ $balance += 1.5 }), 'matches Rat delta';
+}
+
+# Negative delta.
+{
+  my $counter = 10;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by, :expected-by(-3),
+  );
+  ok $m.matches({ $counter -= 3 }), 'matches negative delta';
+}
+
+# Non-numeric before/after values.
+{
+  my $name = 'alice';
+  my $m = ChangeMatcher.new(
+    :observable({ $name }),
+    :has-by, :expected-by(1),
+  );
+  nok $m.matches({ $name = 'bob' }), 'rejects non-numeric values';
+  is $m.miss-reason, 'by-non-numeric', 'miss-reason is "by-non-numeric"';
+}
+
+# No-change with by set fires the no-change miss-reason (RSpec parity).
+{
+  my $counter = 5;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by, :expected-by(0),
+  );
+  nok $m.matches({ 1 + 1 }), 'rejects no-change even with by(0)';
+  is $m.miss-reason, 'no-change', 'no-change wins over by';
+  is $m.failure-message({}),
+    'expected block to change observable by 0, but it remained 5',
+    'no-change failure-message includes by clause';
+}
+
+# Combined by-at-least and by-at-most.
+{
+  my $counter = 0;
+  my $m = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by-at-least, :expected-by-at-least(1),
+    :has-by-at-most,  :expected-by-at-most(10),
+  );
+  ok $m.matches({ $counter += 5 }), 'matches when delta within range';
+
+  $counter = 0;
+  my $m2 = ChangeMatcher.new(
+    :observable({ $counter }),
+    :has-by-at-least, :expected-by-at-least(1),
+    :has-by-at-most,  :expected-by-at-most(10),
+  );
+  nok $m2.matches({ $counter += 15 }), 'fails when delta above range';
+  is $m2.miss-reason, 'by-at-most', 'by-at-most catches the overflow';
+}
+
+# Backwards-compat: no by-modifier means no by clause anywhere.
+{
+  my $m = ChangeMatcher.new(:observable({ 1 }));
+  is $m.change-clause, '', 'no by clause when nothing set';
+  is $m.description, 'change observable', 'description unchanged when bare';
+}
+
+# ExpectationBuilder .change.by integration.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 5 }).to.change({ $counter }).by(5);
+  is Failures.list.elems, 0, '.by(5) passes';
+  Failures.list = ();
+}
+
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 3 }).to.change({ $counter }).by(5);
+  is Failures.list.elems, 1, '.by(5) fails on mismatch';
+  is Failures.list[0].message,
+    'expected block to change observable by 5, but it changed by 3',
+    'by-mismatch failure-message via expect';
+  is Failures.list[0].expected, 5, 'Failure.expected carries by value';
+  Failures.list = ();
+}
+
+# .by-at-least via expect.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 10 }).to.change({ $counter }).by-at-least(5);
+  is Failures.list.elems, 0, '.by-at-least passes when delta exceeds';
+  Failures.list = ();
+}
+
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 3 }).to.change({ $counter }).by-at-least(5);
+  is Failures.list.elems, 1, '.by-at-least fails when delta short';
+  is Failures.list[0].expected, 5, 'Failure.expected carries by-at-least value';
+  Failures.list = ();
+}
+
+# .by-at-most via expect.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 5 }).to.change({ $counter }).by-at-most(10);
+  is Failures.list.elems, 0, '.by-at-most passes when delta within';
+  Failures.list = ();
+}
+
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 7 }).to.change({ $counter }).by-at-most(5);
+  is Failures.list.elems, 1, '.by-at-most fails when delta above';
+  is Failures.list[0].expected, 5, 'Failure.expected carries by-at-most value';
+  Failures.list = ();
+}
+
+# Composition: .from(0).by(5).
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 5 }).to.change({ $counter }).from(0).by(5);
+  is Failures.list.elems, 0, '.from(0).by(5) passes';
+  Failures.list = ();
+}
+
+# Composition: .from(0).by(5) fails with from-precedence on mismatch.
+{
+  Failures.list = ();
+  my $counter = 99;
+  expect({ $counter += 5 }).to.change({ $counter }).from(0).by(5);
+  is Failures.list.elems, 1, 'from-mismatch via expect';
+  is Failures.list[0].message,
+    'expected block to change observable from 0 by 5, but it started as 99',
+    'from-mismatch failure-message includes both clauses';
+  Failures.list = ();
+}
+
+# Chain replaces a prior failure when a later step passes.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 5 }).to.change({ $counter }).by(99).by(5);
+  is Failures.list.elems, 0, 'prior failure is cleared when later by passes';
+  Failures.list = ();
+}
+
+# Block runs exactly once across chained by-modifiers.
+{
+  Failures.list = ();
+  my $run-count = 0;
+  my $value = 0;
+  expect({ $run-count++; $value += 5 }).to.change({ $value }).by-at-least(1).by-at-most(10);
+  is $run-count, 1, 'block ran exactly once across by-at-least and by-at-most';
+  is Failures.list.elems, 0, 'final chain passes';
+  Failures.list = ();
+}
+
+# Negation: .not.change(...).by(5) passes when delta does not match.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 3 }).to.not.change({ $counter }).by(5);
+  is Failures.list.elems, 0, '.not.change.by passes on mismatch';
+  Failures.list = ();
+}
+
+# Negation: .not.change(...).by(5) fails when delta matches.
+{
+  Failures.list = ();
+  my $counter = 0;
+  expect({ $counter += 5 }).to.not.change({ $counter }).by(5);
+  is Failures.list.elems, 1, '.not.change.by fails when delta matches';
+  is Failures.list[0].message,
+    'expected block not to change observable by 5, but it changed from 0 to 5',
+    'negated failure-message with by clause';
+  ok Failures.list[0].negated, 'failure marked negated';
+  Failures.list = ();
+}
+
+# Non-Callable actuals via expect.
+{
+  Failures.list = ();
+  my $observable = 0;
+  expect(42).to.change({ $observable }).by(5);
+  is Failures.list.elems, 1, 'records failure for non-Callable with by set';
+  is Failures.list[0].message,
+    'expected a Callable for change, but got 42',
+    'Callable-shape failure message wins over by';
+  Failures.list = ();
+}

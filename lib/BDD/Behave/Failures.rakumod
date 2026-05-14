@@ -10,7 +10,11 @@ class Failures is export {
     if Failures.list.elems {
       say red("Failures:") ~ "\n";
       for (Failures.list) -> $failure {
-        say '  [' ~ red(" ✗ ") ~ '] ' ~ $failure.file ~ ':' ~ $failure.line;
+        my $location = $failure.file ~ ':' ~ $failure.line;
+        if $failure.aggregation-label.defined {
+          $location ~= " (aggregate: {$failure.aggregation-label})";
+        }
+        say '  [' ~ red(" ✗ ") ~ '] ' ~ $location;
         if $failure.message.defined {
           for $failure.message.lines -> $line {
             say "      $line";

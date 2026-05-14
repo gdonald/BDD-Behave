@@ -1081,6 +1081,43 @@ expect({ $counter = 10 }).to.not.change({ $counter }).from(0).to(10);
 #        but it changed from 0 to 10
 ```
 
+### Filtering with `.by` / `.by-at-least` / `.by-at-most`
+
+For numeric observables, `.by(delta)` asserts the precise signed
+change, while `.by-at-least(delta)` and `.by-at-most(delta)` bound
+the change from below and above:
+
+```raku
+my $counter = 0;
+expect({ $counter += 5 }).to.change({ $counter }).by(5);
+
+# negative delta
+my $balance = 100;
+expect({ $balance -= 25 }).to.change({ $balance }).by(-25);
+
+# bounded range
+my $score = 0;
+expect({ $score += 5 }).to.change({ $score })
+  .by-at-least(1).by-at-most(10);
+```
+
+All three accept any `Real` (`Int`, `Rat`, `Num`); the matcher
+subtracts `after - before` and compares against the expected delta
+with the usual numeric operators. If the observable returns a
+non-numeric value (e.g. a `Str`), the matcher records a
+`by-non-numeric` failure rather than coercing.
+
+The by-modifiers compose with `.from(...)` and `.to(...)`. From
+and to mismatches still take priority — `.from(0).by(5)` reports
+a from-mismatch when the value did not start at 0, even if the
+delta would otherwise be wrong. RSpec parity: when the value did
+not change at all, the no-change miss-reason fires first, so
+`.by(0)` is effectively unreachable.
+
+When a chain step fails and a later step passes, the prior
+failure is replaced (rather than duplicated) so the recorded
+`Failure` list always reflects the final state.
+
 ### Failure messages
 
 ```text
@@ -1091,19 +1128,26 @@ expected block to change observable to 10, but it ended as 7
 expected block to change observable from 0 to 10, but it started as 3
 expected block to change observable from 0 to 10, but it ended as 7
 expected block to change observable from 5 to 5, but it remained 5
+expected block to change observable by 5, but it changed by 3
+expected block to change observable by at least 5, but it changed by 3
+expected block to change observable by at most 5, but it changed by 7
 expected a Callable for change, but got 42
 ```
 
 ### Failure metadata
 
 `Failure.given` carries the original action `Callable`.
-`Failure.expected` is `Nil` for the bare form, the from / to value
-alone when only one side was supplied, or `[from, to]` when both
-are supplied. The matcher itself exposes `before-value`,
+`Failure.expected` reflects the most-specific constraint
+supplied: `[from, to]` when both endpoints are set, the from / to
+value alone when only one is set, the by / by-at-least /
+by-at-most value when only a delta constraint is set, or `Nil`
+for the bare form. The matcher itself exposes `before-value`,
 `after-value`, `action-ran`, `callable-given`, and `miss-reason`
-(one of `'non-callable'`, `'from'`, `'to'`, `'no-change'`, or `Str`
-on a pass) for tooling that needs structural access to the
-captured states.
+(one of `'non-callable'`, `'from'`, `'to'`, `'no-change'`,
+`'by'`, `'by-at-least'`, `'by-at-most'`, `'by-non-numeric'`, or
+`Str` on a pass) for tooling that needs structural access to the
+captured states. `delta` returns `after - before` when both
+values are `Real`, and `Nil` otherwise.
 
 ## Writing a custom matcher
 
