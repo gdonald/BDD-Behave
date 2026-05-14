@@ -1197,3 +1197,10 @@ built-ins do.
 
 For the DSL-form alternative — defining matchers as a bundle of callbacks
 without writing a class — see [Custom Matchers](custom-matchers.md).
+
+## Composing matchers
+
+Every type that does `Matcher` automatically gets `.and` and `.or` methods
+that build `AndMatcher` / `OrMatcher` composites. They short-circuit, flatten
+across chained calls, and report which inner matcher decided the outcome. See
+[Composable Matchers](composable-matchers.md) for details.

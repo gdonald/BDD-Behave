@@ -1,0 +1,324 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::Numeric;
+use BDD::Behave::Matcher::Collection;
+use BDD::Behave::Matcher::String;
+use BDD::Behave::Failures;
+
+plan 78;
+
+# Matcher.and returns an AndMatcher
+{
+  my $m = BeMatcher.new(:expected(5)).and(BeMatcher.new(:expected(Int)));
+  ok $m ~~ AndMatcher, '.and returns AndMatcher';
+  ok $m ~~ Matcher,    'AndMatcher does Matcher role';
+}
+
+# Matcher.or returns an OrMatcher
+{
+  my $m = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  ok $m ~~ OrMatcher, '.or returns OrMatcher';
+  ok $m ~~ Matcher,   'OrMatcher does Matcher role';
+}
+
+# AND passes when all inner matchers pass
+{
+  my $combo = BeGreaterThanMatcher.new(:expected(0))
+    .and(BeLessThanMatcher.new(:expected(100)));
+  ok $combo.matches(50),   'AND matches when both pass';
+  nok $combo.matches(200), 'AND fails when right fails';
+  nok $combo.matches(-5),  'AND fails when left fails';
+}
+
+# AND short-circuits and records the failing index
+{
+  my $combo = BeGreaterThanMatcher.new(:expected(0))
+    .and(BeLessThanMatcher.new(:expected(100)));
+  $combo.matches(-5);
+  is $combo.failing-index, 0, 'left-failure index recorded';
+
+  $combo.matches(200);
+  is $combo.failing-index, 1, 'right-failure index recorded';
+
+  $combo.matches(50);
+  nok $combo.failing-index.defined, 'no failing index on pass';
+}
+
+# .and chains flatten
+{
+  my $a = BeMatcher.new(:expected(Int));
+  my $b = BeGreaterThanMatcher.new(:expected(0));
+  my $c = BeLessThanMatcher.new(:expected(100));
+  my $combo = $a.and($b).and($c);
+  ok $combo ~~ AndMatcher, 'chained .and stays AndMatcher';
+  is $combo.matchers.elems, 3, 'chained .and flattens to 3';
+}
+
+# .and supports multiple args
+{
+  my $combo = BeMatcher.new(:expected(Int)).and(
+    BeGreaterThanMatcher.new(:expected(0)),
+    BeLessThanMatcher.new(:expected(100)),
+  );
+  is $combo.matchers.elems, 3, 'multi-arg .and combines';
+  ok $combo.matches(50), 'multi-arg .and matches';
+}
+
+# OR passes when any inner matcher passes
+{
+  my $combo = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  ok $combo.matches(5),   'OR matches left';
+  ok $combo.matches(10),  'OR matches right';
+  nok $combo.matches(7),  'OR fails when neither matches';
+}
+
+# OR short-circuits and records the matched index
+{
+  my $combo = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  $combo.matches(10);
+  is $combo.matched-index, 1, 'right-match index recorded';
+
+  $combo.matches(5);
+  is $combo.matched-index, 0, 'left-match index recorded';
+
+  $combo.matches(7);
+  nok $combo.matched-index.defined, 'no matched index on fail';
+}
+
+# .or chains flatten
+{
+  my $combo = BeMatcher.new(:expected(1))
+    .or(BeMatcher.new(:expected(2)))
+    .or(BeMatcher.new(:expected(3)));
+  ok $combo ~~ OrMatcher, 'chained .or stays OrMatcher';
+  is $combo.matchers.elems, 3, 'chained .or flattens to 3';
+}
+
+# .or supports multiple args
+{
+  my $combo = BeMatcher.new(:expected(1)).or(
+    BeMatcher.new(:expected(2)),
+    BeMatcher.new(:expected(3)),
+  );
+  is $combo.matchers.elems, 3, 'multi-arg .or combines';
+  ok $combo.matches(2), 'multi-arg .or matches';
+}
+
+# Mixing .and and .or creates left-associative nesting
+{
+  my $combo = BeMatcher.new(:expected(1))
+    .and(BeMatcher.new(:expected(Int)))
+    .or(BeMatcher.new(:expected(99)));
+  ok $combo ~~ OrMatcher, 'outermost is OrMatcher under left-assoc';
+  ok $combo.matches(1),  'matches via AND branch';
+  ok $combo.matches(99), 'matches via OR branch';
+  nok $combo.matches(7), 'fails when neither branch matches';
+}
+
+# Explicit nesting via inner composites
+{
+  my $inner = BeMatcher.new(:expected(1)).or(BeMatcher.new(:expected(2)));
+  my $combo = BeMatcher.new(:expected(Int)).and($inner);
+  ok $combo ~~ AndMatcher, 'outer is AndMatcher';
+  ok $combo.matches(1),    'nested OR passes via 1';
+  ok $combo.matches(2),    'nested OR passes via 2';
+  nok $combo.matches(3),   'fails for non-1/2 Int';
+}
+
+# AND description
+{
+  my $combo = BeGreaterThanMatcher.new(:expected(0))
+    .and(BeLessThanMatcher.new(:expected(100)));
+  is $combo.description, 'be greater than 0 and be less than 100',
+    'AND description joins with " and "';
+}
+
+# OR description
+{
+  my $combo = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  is $combo.description, 'be 5 or be 10',
+    'OR description joins with " or "';
+}
+
+# AND failure-message identifies the failing inner matcher
+{
+  my $combo = BeGreaterThanMatcher.new(:expected(0))
+    .and(BeLessThanMatcher.new(:expected(100)));
+  $combo.matches(200);
+  my $msg = $combo.failure-message(200);
+  ok $msg.contains('be less than 100'),
+    'AND failure-message names the failing inner';
+  ok $msg.contains('200'),
+    'AND failure-message includes the actual';
+}
+
+# AND failure-message when none failed yet
+{
+  my $combo = BeMatcher.new(:expected(1)).and(BeMatcher.new(:expected(Int)));
+  $combo.matches(1);
+  my $msg = $combo.failure-message(1);
+  ok $msg.defined, 'failure-message defined even when last match passed';
+}
+
+# AND failure-message-negated
+{
+  my $combo = BeMatcher.new(:expected(1)).and(BeMatcher.new(:expected(Int)));
+  my $msg = $combo.failure-message-negated(1);
+  ok $msg.contains('not to'),     'negated message says "not to"';
+  ok $msg.contains('be 1'),       'negated message includes left description';
+  ok $msg.contains('and'),        'negated message includes "and"';
+}
+
+# OR failure-message when none matched
+{
+  my $combo = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  $combo.matches(7);
+  my $msg = $combo.failure-message(7);
+  ok $msg.contains('none matched'), 'OR failure-message mentions none matched';
+  ok $msg.contains('be 5'),         'OR failure-message includes left';
+  ok $msg.contains('be 10'),        'OR failure-message includes right';
+}
+
+# OR failure-message-negated names the matched matcher
+{
+  my $combo = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  $combo.matches(5);
+  my $msg = $combo.failure-message-negated(5);
+  ok $msg.contains('matched'), 'OR negated message names the matched inner';
+  ok $msg.contains('be 5'),    'OR negated message includes the matched';
+}
+
+# Integration: AND through expect(...).to.be(...)
+{
+  Failures.list = ();
+  ok expect(50).to.be(
+    BeGreaterThanMatcher.new(:expected(0))
+      .and(BeLessThanMatcher.new(:expected(100)))
+  ), 'AND composite passes when both inner match';
+  is Failures.list.elems, 0, 'no failure recorded on AND pass';
+
+  Failures.list = ();
+  nok expect(200).to.be(
+    BeGreaterThanMatcher.new(:expected(0))
+      .and(BeLessThanMatcher.new(:expected(100)))
+  ), 'AND composite fails when right fails';
+  is Failures.list.elems, 1, 'one failure recorded on AND fail';
+  ok Failures.list[0].message.contains('be less than 100'),
+    'failure message names failing inner';
+  Failures.list = ();
+}
+
+# Integration: OR through expect(...).to.be(...)
+{
+  Failures.list = ();
+  ok expect(5).to.be(
+    BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+  ), 'OR composite passes when left matches';
+  is Failures.list.elems, 0, 'no failure recorded on OR pass';
+
+  Failures.list = ();
+  ok expect(10).to.be(
+    BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+  ), 'OR composite passes when right matches';
+
+  Failures.list = ();
+  nok expect(7).to.be(
+    BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+  ), 'OR composite fails when neither matches';
+  is Failures.list.elems, 1, 'one failure recorded on OR fail';
+  ok Failures.list[0].message.contains('none matched'),
+    'OR failure mentions none matched';
+  Failures.list = ();
+}
+
+# Negation: .not flips composite results
+{
+  Failures.list = ();
+  ok expect(200).to.not.be(
+    BeGreaterThanMatcher.new(:expected(0))
+      .and(BeLessThanMatcher.new(:expected(100)))
+  ), 'not(AND composite) passes when AND fails';
+  is Failures.list.elems, 0, 'no failure on negated AND pass';
+
+  Failures.list = ();
+  nok expect(50).to.not.be(
+    BeGreaterThanMatcher.new(:expected(0))
+      .and(BeLessThanMatcher.new(:expected(100)))
+  ), 'not(AND composite) fails when AND passes';
+  is Failures.list.elems, 1, 'failure on negated AND miss';
+  ok Failures.list[0].negated, 'failure marked negated';
+  ok Failures.list[0].message.contains('not to'),
+    'negated message uses "not to"';
+  Failures.list = ();
+
+  Failures.list = ();
+  ok expect(7).to.not.be(
+    BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+  ), 'not(OR composite) passes when none match';
+
+  Failures.list = ();
+  nok expect(5).to.not.be(
+    BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+  ), 'not(OR composite) fails when one matches';
+  is Failures.list.elems, 1, 'failure on negated OR miss';
+  ok Failures.list[0].message.contains('matched'),
+    'negated OR message names matched inner';
+  Failures.list = ();
+}
+
+# Composition with define-matcher custom matchers
+{
+  my &positive = define-matcher 'comp-test-positive',
+    match => -> $a { $a > 0 };
+  my &small = define-matcher 'comp-test-small',
+    match => -> $a { $a < 100 };
+
+  my $combo = positive().and(small());
+  ok $combo.matches(50),   'custom .and passes';
+  nok $combo.matches(200), 'custom .and fails on right';
+  nok $combo.matches(-1),  'custom .and fails on left';
+
+  my &is-zero = define-matcher 'comp-test-zero',  match => -> $a { $a == 0 };
+  my &is-one  = define-matcher 'comp-test-one',   match => -> $a { $a == 1 };
+  my $or-combo = is-zero().or(is-one());
+  ok $or-combo.matches(0),  'custom .or matches zero';
+  ok $or-combo.matches(1),  'custom .or matches one';
+  nok $or-combo.matches(2), 'custom .or rejects other';
+}
+
+# Argument validation
+{
+  my $err;
+  try {
+    BeMatcher.new(:expected(1)).and(42);
+    CATCH { default { $err = .message } }
+  }
+  ok $err.defined && $err.contains('requires Matcher'),
+    '.and rejects non-Matcher arg';
+
+  $err = Nil;
+  try {
+    BeMatcher.new(:expected(1)).or('nope');
+    CATCH { default { $err = .message } }
+  }
+  ok $err.defined && $err.contains('requires Matcher'),
+    '.or rejects non-Matcher arg';
+}
+
+# expected-value returns a List of inner expected values
+{
+  my $combo = BeMatcher.new(:expected(5)).and(BeMatcher.new(:expected(Int)));
+  my $ev = $combo.expected-value;
+  ok $ev ~~ List, 'AND expected-value is a List';
+  is $ev.elems, 2, 'AND expected-value has two entries';
+  is $ev[0], 5, 'AND expected-value preserves left';
+
+  my $or-combo = BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)));
+  is $or-combo.expected-value.List, (5, 10),
+    'OR expected-value lists both';
+}
