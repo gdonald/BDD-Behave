@@ -2,8 +2,10 @@ unit module BDD::Behave::Matcher::Async;
 
 use BDD::Behave::Matcher;
 
-constant DEFAULT-PROMISE-TIMEOUT = 5;
-constant DEFAULT-STREAM-WINDOW   = 1;
+constant DEFAULT-PROMISE-TIMEOUT     = 5;
+constant DEFAULT-STREAM-WINDOW       = 1;
+constant DEFAULT-EVENTUALLY-TIMEOUT  = 2;
+constant DEFAULT-EVENTUALLY-INTERVAL = 0.05;
 
 sub bounded-wait(Promise:D $promise, Real:D $timeout --> Nil) {
   if $promise.status === Planned {
@@ -380,4 +382,92 @@ class CompleteMatcher does Matcher is export {
   method description(--> Str) { "complete within {$!window}s" }
 
   method expected-value(--> Mu) { $!window }
+}
+
+class EventuallyMatcher does Matcher is export {
+  has Matcher $.inner is required;
+  has Real $.timeout  = DEFAULT-EVENTUALLY-TIMEOUT;
+  has Real $.interval = DEFAULT-EVENTUALLY-INTERVAL;
+  has Bool $.callable-given is rw = True;
+  has Mu   $.last-actual    is rw;
+  has Mu   $.last-exception is rw;
+  has Int  $.iterations     is rw = 0;
+  has Real $.elapsed        is rw = 0;
+
+  method !reset(--> Nil) {
+    $!callable-given = True;
+    $!last-actual    = Nil;
+    $!last-exception = Nil;
+    $!iterations     = 0;
+    $!elapsed        = 0;
+  }
+
+  method matches($actual --> Bool) {
+    self!reset;
+    $!callable-given = ?($actual ~~ Callable);
+    return False unless $!callable-given;
+
+    my $start    = now;
+    my $deadline = $start + $!timeout;
+
+    loop {
+      $!iterations++;
+      $!last-exception = Nil;
+      my $value;
+      my $caught = False;
+      try {
+        $value = $actual.();
+        CATCH { default { $!last-exception = $_; $caught = True; } }
+      }
+      unless $caught {
+        $!last-actual = $value;
+        if ?$!inner.matches($value) {
+          $!elapsed = now - $start;
+          return True;
+        }
+      }
+      if now >= $deadline {
+        $!elapsed = now - $start;
+        return False;
+      }
+      sleep $!interval if $!interval > 0;
+    }
+  }
+
+  method !timing-suffix(--> Str) {
+    my $plural = $!iterations == 1 ?? '' !! 's';
+    "after {$!iterations} iteration{$plural} in {$!elapsed.fmt('%.2f')}s";
+  }
+
+  method !inner-failure(--> Str) {
+    my $msg = $!inner.failure-message($!last-actual);
+    return $msg if $msg.defined;
+    "did not match {$!inner.description}";
+  }
+
+  method failure-message($actual --> Str) {
+    unless $!callable-given {
+      return "expected a Callable for eventually, but got " ~ $actual.raku;
+    }
+    if $!last-exception.defined {
+      return "eventually: block threw {$!last-exception.^name}: "
+           ~ "{$!last-exception.message} ({self!timing-suffix})";
+    }
+    "eventually: {self!inner-failure} ({self!timing-suffix})";
+  }
+
+  method failure-message-negated($actual --> Str) {
+    unless $!callable-given {
+      return "expected a Callable for eventually, but got " ~ $actual.raku;
+    }
+    "eventually: expected block not to {$!inner.description}, "
+      ~ "but it matched (after {$!iterations} iteration"
+      ~ ($!iterations == 1 ?? '' !! 's') ~ ")";
+  }
+
+  method description(--> Str) {
+    "eventually {$!inner.description}";
+  }
+
+  method expected-value(--> Mu) { $!inner.expected-value }
 }

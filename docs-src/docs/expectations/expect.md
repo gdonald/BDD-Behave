@@ -105,6 +105,7 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `emit`                                   | Passes when a `Supply` or `Channel` actual emits exactly the given values (compared via `eqv`) within the collection window. Pass `:within($seconds)` to change the default 1-second window. See [Matchers › EmitMatcher](matchers.md#emitmatcher-built-in).                                                                                                                                                |
 | `emit-at-least`                          | Passes when a `Supply` or `Channel` actual emits at least the given count of values within the collection window. Pass `:within($seconds)` to change the default 1-second window. See [Matchers › EmitAtLeastMatcher](matchers.md#emitatleastmatcher-built-in).                                                                                                                                              |
 | `complete`                               | Passes when a `Supply` (sending `done`) or `Channel` (closed) completes within the collection window. Pass `:within($seconds)` to change the default 1-second window. See [Matchers › CompleteMatcher](matchers.md#completematcher-built-in).                                                                                                                                                                |
+| `eventually`                             | Re-runs a `Callable` actual on a polling loop until the chained inner matcher passes or the timeout elapses. Chain any matcher method (`be`, `eq`, `match`, `include`, `be-truthy`, `be-greater-than`, ...) or pass a `Matcher` instance via `.matches-with`. Configure with `eventually(:timeout(s), :interval(s))` (defaults: 2s / 0.05s). Useful for eventually-consistent state. See [Matchers › EventuallyMatcher](matchers.md#eventuallymatcher-built-in). |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -157,6 +158,9 @@ expect(Promise.new).to.not.complete-within(0.05);
 expect(Supply.from-list(1, 2, 3)).to.emit(1, 2, 3);
 expect(Supply.from-list(1, 2, 3, 4)).to.emit-at-least(2);
 expect(Supply.from-list(1, 2)).to.complete;
+expect({ get-status() }).to.eventually.be('done');
+expect({ counter() }).to.eventually(:timeout(5), :interval(0.1)).be-greater-than(100);
+expect({ load() }).to.not.eventually(:timeout(0.1)).be('error');
 ```
 
 ## Custom matchers

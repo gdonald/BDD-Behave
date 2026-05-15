@@ -1,0 +1,327 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Expectation;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Async;
+use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::Numeric;
+use BDD::Behave::Matcher::Boolean;
+use BDD::Behave::Matcher::String;
+use BDD::Behave::Failures;
+
+plan 54;
+
+# Matcher contract
+{
+  my $inner = BeMatcher.new(:expected(5));
+  my $m = EventuallyMatcher.new(:$inner);
+  ok $m ~~ Matcher,                             'EventuallyMatcher does Matcher';
+}
+
+# Passes immediately when the block matches on the first iteration
+{
+  my $inner = BeMatcher.new(:expected(5));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(0.5), :interval(0.01));
+  ok $m.matches({ 5 }),                         'matches when block returns expected';
+  is $m.iterations, 1,                          'only one iteration needed';
+  ok $m.callable-given,                         'callable-given is True';
+  ok $m.elapsed >= 0,                           'elapsed is recorded';
+}
+
+# Polls until the block matches
+{
+  my $state = 0;
+  my $inner = BeMatcher.new(:expected(7));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(1), :interval(0.01));
+  start { sleep 0.05; $state = 7; }
+  ok $m.matches({ $state }),                    'matches once state changes';
+  ok $m.iterations >= 2,                        'multiple iterations recorded';
+}
+
+# Fails when the block never matches within timeout
+{
+  my $inner = BeMatcher.new(:expected(99));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(0.05), :interval(0.01));
+  nok $m.matches({ 0 }),                        'does not match when block never returns 99';
+  ok $m.iterations >= 1,                        'at least one iteration ran';
+  ok $m.elapsed >= 0.05,                        'elapsed at least timeout';
+}
+
+# Rejects non-Callable actuals
+{
+  my $inner = BeMatcher.new(:expected(5));
+  my $m = EventuallyMatcher.new(:$inner);
+  nok $m.matches(42),                           'Int rejected';
+  nok $m.callable-given,                        'callable-given is False';
+}
+
+# Failure-message text for non-Callable
+{
+  my $inner = BeMatcher.new(:expected(5));
+  my $m = EventuallyMatcher.new(:$inner);
+  $m.matches(42);
+  is $m.failure-message(42),
+     'expected a Callable for eventually, but got 42',
+     'non-Callable failure-message';
+}
+
+# Failure-message includes iterations + elapsed timing
+{
+  my $inner = BeMatcher.new(:expected(99));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(0.05), :interval(0.01));
+  $m.matches({ 0 });
+  like $m.failure-message({ 0 }),
+       /'eventually:'/,
+       'failure-message starts with eventually:';
+  like $m.failure-message({ 0 }),
+       /'iteration'/,
+       'failure-message mentions iterations';
+}
+
+# Failure-message-negated reports a successful match
+{
+  my $inner = BeMatcher.new(:expected(5));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(0.05), :interval(0.01));
+  $m.matches({ 5 });
+  like $m.failure-message-negated({ 5 }),
+       /'matched'/,
+       'negated message mentions matched';
+  like $m.failure-message-negated({ 5 }),
+       /'iteration'/,
+       'negated message mentions iterations';
+}
+
+# Description and expected-value forward to inner matcher
+{
+  my $inner = BeGreaterThanMatcher.new(:expected(10));
+  my $m = EventuallyMatcher.new(:$inner);
+  is $m.description, 'eventually be greater than 10',
+                                                'description prefixed with eventually';
+  is $m.expected-value, 10,                     'expected-value forwarded';
+}
+
+# Block-thrown exceptions count as misses but keep polling
+{
+  my $count = 0;
+  my $inner = BeMatcher.new(:expected('ready'));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(1), :interval(0.01));
+  ok $m.matches({
+    $count++;
+    die "not yet" if $count < 3;
+    'ready';
+  }),                                           'recovers after exceptions';
+  ok $m.iterations >= 3,                        'iterations include thrown ones';
+}
+
+# Persistent exceptions produce a "block threw" failure message
+{
+  my $inner = BeMatcher.new(:expected(1));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(0.05), :interval(0.01));
+  nok $m.matches({ die "always fails" }),       'never matches when always throws';
+  like $m.failure-message({ }),
+       /'block threw'/,
+       'failure-message mentions thrown';
+  like $m.failure-message({ }),
+       /'always fails'/,
+       'failure-message includes exception message';
+}
+
+# State resets between matches() invocations
+{
+  my $inner = BeMatcher.new(:expected(1));
+  my $m = EventuallyMatcher.new(:$inner, :timeout(0.05), :interval(0.01));
+  $m.matches(42);
+  nok $m.callable-given,                        'first call: not callable';
+  $m.matches({ 1 });
+  ok $m.callable-given,                         'second call: reset to callable';
+  is $m.iterations, 1,                          'iteration count reset';
+}
+
+# Integration via expect(...).to.eventually.be(...) on a passing block
+{
+  Failures.list = ();
+  expect({ 5 }).to.eventually(:timeout(0.5), :interval(0.01)).be(5);
+  is Failures.list.elems, 0,                    'passing eventually records no failure';
+  Failures.list = ();
+}
+
+# Integration: failing eventually records one failure
+{
+  Failures.list = ();
+  expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+  is Failures.list.elems, 1,                    'failing eventually records one failure';
+  Failures.list = ();
+}
+
+# Integration: negated eventually with no match passes
+{
+  Failures.list = ();
+  expect({ 0 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(99);
+  is Failures.list.elems, 0,                    'negated never-matches passes';
+  Failures.list = ();
+}
+
+# Integration: negated eventually that matches fails
+{
+  Failures.list = ();
+  expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
+  is Failures.list.elems, 1,                    'negated match records failure';
+  Failures.list = ();
+}
+
+# Integration: non-Callable to eventually records one failure
+{
+  Failures.list = ();
+  expect(42).to.eventually.be(42);
+  is Failures.list.elems, 1,                    'non-Callable records failure';
+  Failures.list = ();
+}
+
+# Integration: chained matcher methods (eq, match, include)
+{
+  Failures.list = ();
+  expect({ [1, 2, 3] }).to.eventually(:timeout(0.1), :interval(0.01)).eq([1, 2, 3]);
+  is Failures.list.elems, 0,                    'eventually.eq passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ 'hello world' }).to.eventually(:timeout(0.1), :interval(0.01)).match(/world/);
+  is Failures.list.elems, 0,                    'eventually.match passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ <a b c> }).to.eventually(:timeout(0.1), :interval(0.01)).include('b');
+  is Failures.list.elems, 0,                    'eventually.include passes';
+  Failures.list = ();
+}
+
+# Integration: chained matches-with accepts a Matcher directly
+{
+  Failures.list = ();
+  expect({ 50 }).to.eventually(:timeout(0.1), :interval(0.01))
+                 .matches-with(BeGreaterThanMatcher.new(:expected(10)));
+  is Failures.list.elems, 0,                    'eventually.matches-with passes';
+  Failures.list = ();
+}
+
+# Failure.expected carries the inner matcher's expected-value
+{
+  Failures.list = ();
+  expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+  is Failures.list[0].expected, 99,             'Failure.expected = 99';
+  Failures.list = ();
+}
+
+# Failure.given preserves the Callable
+{
+  Failures.list = ();
+  my $block = { 0 };
+  expect($block).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+  ok Failures.list[0].given ~~ Callable,        'Failure.given is Callable';
+  Failures.list = ();
+}
+
+# Failure.negated under .not
+{
+  Failures.list = ();
+  expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
+  ok Failures.list[0].negated,                  'Failure.negated is True under .not';
+  Failures.list = ();
+}
+
+# .to is identity on EventuallyExpectation
+{
+  Failures.list = ();
+  expect({ 5 }).to.eventually(:timeout(0.05), :interval(0.01)).to.be(5);
+  is Failures.list.elems, 0,                    'chained .to.eventually.to passes';
+  Failures.list = ();
+}
+
+# Inner-class methods: be-truthy/be-falsy/be-nil
+{
+  Failures.list = ();
+  expect({ True }).to.eventually(:timeout(0.1), :interval(0.01)).be-truthy;
+  is Failures.list.elems, 0,                    'eventually.be-truthy passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ False }).to.eventually(:timeout(0.1), :interval(0.01)).be-falsy;
+  is Failures.list.elems, 0,                    'eventually.be-falsy passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ Int }).to.eventually(:timeout(0.1), :interval(0.01)).be-nil;
+  is Failures.list.elems, 0,                    'eventually.be-nil passes';
+  Failures.list = ();
+}
+
+# Numeric comparison: be-greater-than / be-less-than
+{
+  Failures.list = ();
+  expect({ 100 }).to.eventually(:timeout(0.1), :interval(0.01)).be-greater-than(50);
+  is Failures.list.elems, 0,                    'eventually.be-greater-than passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ 5 }).to.eventually(:timeout(0.1), :interval(0.01)).be-less-than(10);
+  is Failures.list.elems, 0,                    'eventually.be-less-than passes';
+  Failures.list = ();
+}
+
+# be-a type check
+{
+  Failures.list = ();
+  expect({ 42 }).to.eventually(:timeout(0.1), :interval(0.01)).be-a(Int);
+  is Failures.list.elems, 0,                    'eventually.be-a passes';
+  Failures.list = ();
+}
+
+# start-with / end-with / contain-exactly / match-array
+{
+  Failures.list = ();
+  expect({ [1, 2, 3] }).to.eventually(:timeout(0.1), :interval(0.01)).start-with(1);
+  is Failures.list.elems, 0,                    'eventually.start-with passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ [1, 2, 3] }).to.eventually(:timeout(0.1), :interval(0.01)).end-with(3);
+  is Failures.list.elems, 0,                    'eventually.end-with passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ [3, 1, 2] }).to.eventually(:timeout(0.1), :interval(0.01)).contain-exactly(1, 2, 3);
+  is Failures.list.elems, 0,                    'eventually.contain-exactly passes';
+  Failures.list = ();
+}
+{
+  Failures.list = ();
+  expect({ [1, 2, 3] }).to.eventually(:timeout(0.1), :interval(0.01)).match-array([1, 2, 3]);
+  is Failures.list.elems, 0,                    'eventually.match-array passes';
+  Failures.list = ();
+}
+
+# Arg validation: empty include / start-with / end-with
+{
+  dies-ok { EventuallyExpectation.new(
+              :given({}), :timeout(0.05), :interval(0.01),
+            ).include }, 'empty include dies';
+  dies-ok { EventuallyExpectation.new(
+              :given({}), :timeout(0.05), :interval(0.01),
+            ).start-with }, 'empty start-with dies';
+  dies-ok { EventuallyExpectation.new(
+              :given({}), :timeout(0.05), :interval(0.01),
+            ).end-with }, 'empty end-with dies';
+  dies-ok { EventuallyExpectation.new(
+              :given({}), :timeout(0.05), :interval(0.01),
+            ).match-array(42) }, 'scalar match-array dies';
+}

@@ -382,6 +382,161 @@ multi sub build-be-matcher($expected) {
   BeMatcher.new(:$expected);
 }
 
+class EventuallyExpectation is export {
+  has Mu   $.given;
+  has Bool $.negated = False;
+  has Str  $.file;
+  has Int  $.line;
+  has Real $.timeout  = 2;
+  has Real $.interval = 0.05;
+
+  submethod BUILD(
+    Mu :$given is raw, :$!negated, :$!file, :$!line, :$!timeout, :$!interval,
+  ) {
+    $!given := $given;
+  }
+
+  method to { self }
+
+  method not {
+    EventuallyExpectation.new(
+      :given($!given),
+      :negated(True),
+      :$!file,
+      :$!line,
+      :$!timeout,
+      :$!interval,
+    );
+  }
+
+  method !apply-matcher(Matcher $inner --> Bool) {
+    my $matcher = EventuallyMatcher.new(
+      :$inner, :$!timeout, :$!interval,
+    );
+
+    try {
+      if $*BEHAVE-AUTO-MATCHERS.defined {
+        $*BEHAVE-AUTO-MATCHERS.push(%(:$matcher, :negated($!negated)));
+      }
+    }
+
+    my $matched = ?$matcher.matches($!given);
+    my $passed  = $!negated ?? !$matched !! $matched;
+
+    if !$passed {
+      my $message = $!negated
+        ?? $matcher.failure-message-negated($!given)
+        !! $matcher.failure-message($!given);
+
+      my $failure = Failure.new(
+        :file($!file),
+        :line($!line),
+        :given($!given),
+        :expected($matcher.expected-value),
+        :negated($!negated),
+        :message($message),
+      );
+      Failures.list.push($failure);
+    }
+
+    $passed;
+  }
+
+  method matches-with(Matcher $matcher) {
+    self!apply-matcher($matcher);
+  }
+
+  method be($expected) {
+    self!apply-matcher(build-be-matcher($expected));
+  }
+
+  method eq($expected) {
+    self!apply-matcher(EqMatcher.new(:$expected));
+  }
+
+  method be-truthy() { self!apply-matcher(BeTruthyMatcher.new) }
+  method be-falsy()  { self!apply-matcher(BeFalsyMatcher.new) }
+  method be-nil()    { self!apply-matcher(BeNilMatcher.new) }
+
+  method match(Regex $expected) {
+    self!apply-matcher(MatchMatcher.new(:$expected));
+  }
+
+  method include(**@items, *%pairs) {
+    my @expected = @items;
+    @expected.append: %pairs.pairs;
+    if @expected.elems == 0 {
+      die "include requires at least one item";
+    }
+    self!apply-matcher(IncludeMatcher.new(:expected(@expected)));
+  }
+
+  method contain-exactly(**@items) {
+    self!apply-matcher(ContainExactlyMatcher.new(:expected(@items)));
+  }
+
+  method match-array($expected) {
+    unless $expected ~~ Positional | Iterable {
+      die "match-array requires an array argument";
+    }
+    self!apply-matcher(ContainExactlyMatcher.new(:expected($expected.list)));
+  }
+
+  method start-with(**@items) {
+    if @items.elems == 0 {
+      die "start-with requires at least one item";
+    }
+    self!apply-matcher(StartWithMatcher.new(:expected(@items)));
+  }
+
+  method end-with(**@items) {
+    if @items.elems == 0 {
+      die "end-with requires at least one item";
+    }
+    self!apply-matcher(EndWithMatcher.new(:expected(@items)));
+  }
+
+  method be-a(Mu \type)  { self!apply-matcher(BeAMatcher.new(:type(type))) }
+  method be-an(Mu \type) { self!apply-matcher(BeAMatcher.new(:type(type))) }
+
+  method be-greater-than($expected) {
+    self!apply-matcher(BeGreaterThanMatcher.new(:$expected));
+  }
+  method be-gt($expected) {
+    self!apply-matcher(BeGreaterThanMatcher.new(:$expected));
+  }
+  method be-greater-than-or-equal-to($expected) {
+    self!apply-matcher(BeGreaterThanOrEqualMatcher.new(:$expected));
+  }
+  method be-gte($expected) {
+    self!apply-matcher(BeGreaterThanOrEqualMatcher.new(:$expected));
+  }
+  method be-less-than($expected) {
+    self!apply-matcher(BeLessThanMatcher.new(:$expected));
+  }
+  method be-lt($expected) {
+    self!apply-matcher(BeLessThanMatcher.new(:$expected));
+  }
+  method be-less-than-or-equal-to($expected) {
+    self!apply-matcher(BeLessThanOrEqualMatcher.new(:$expected));
+  }
+  method be-lte($expected) {
+    self!apply-matcher(BeLessThanOrEqualMatcher.new(:$expected));
+  }
+
+  method FALLBACK($name, |c) {
+    my $registry = BDD::Behave::Matcher::Custom::registry();
+    if $registry.exists($name) {
+      my $matcher = $registry.build($name, |c);
+      return self!apply-matcher($matcher);
+    }
+    die X::Method::NotFound.new(
+      method   => $name,
+      typename => self.^name,
+    );
+  }
+}
+
 class ExpectationBuilder is export {
   has $.given;
   has Bool $.negated is rw = False;
@@ -692,6 +847,17 @@ class ExpectationBuilder is export {
 
   method complete(Real :$within = 1) {
     self!apply-matcher(CompleteMatcher.new(:window($within)));
+  }
+
+  method eventually(Real :$timeout = 2, Real :$interval = 0.05) {
+    EventuallyExpectation.new(
+      :given($!given),
+      :negated($!negated),
+      :file($!file),
+      :line($!line),
+      :$timeout,
+      :$interval,
+    );
   }
 
   method have-received(Str:D $method-name) {

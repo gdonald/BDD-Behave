@@ -50,7 +50,7 @@ You only need to know about specific submodules when you want to *instantiate* m
 | `BDD::Behave::Matcher::String`     | `MatchMatcher`                                                                                                                                |
 | `BDD::Behave::Matcher::Exception`  | `RaiseErrorMatcher`                                                                                                                           |
 | `BDD::Behave::Matcher::Change`     | `ChangeMatcher`                                                                                                                               |
-| `BDD::Behave::Matcher::Async`      | `BeKeptMatcher`, `BeBrokenMatcher`, `CompleteWithinMatcher`, `EmitMatcher`, `EmitAtLeastMatcher`, `CompleteMatcher`                            |
+| `BDD::Behave::Matcher::Async`      | `BeKeptMatcher`, `BeBrokenMatcher`, `CompleteWithinMatcher`, `EmitMatcher`, `EmitAtLeastMatcher`, `CompleteMatcher`, `EventuallyMatcher`       |
 
 Each submodule already `use`s `BDD::Behave::Matcher` internally, but the role is *not* re-exported. If your code needs both, import both:
 
@@ -1361,6 +1361,80 @@ from tooling.
 Unlike Promise's `complete-within`, the `complete` matcher does not
 treat a stream-level error (`QUIT`) as completion — only the `done`
 signal counts.
+
+## EventuallyMatcher (built-in)
+
+`eventually` re-runs a `Callable` block on a polling loop until the
+inner matcher passes or the timeout elapses. Useful for asserting on
+eventually-consistent state without hand-rolled polling:
+
+```raku
+expect({ get-job-status() }).to.eventually.be('done');
+expect({ counter() }).to.eventually(:timeout(5)).be-greater-than(100);
+expect({ log-buffer() }).to.eventually.match(/'ready'/);
+```
+
+The chained matcher methods (`.be`, `.eq`, `.match`, `.include`,
+`.be-truthy`, `.be-a`, `.be-greater-than`, etc.) build the appropriate
+inner matcher and feed each polled value through it. For matchers
+outside the built-in chained set, pass a `Matcher` instance through
+`.matches-with`:
+
+```raku
+expect({ load() }).to.eventually.matches-with(MyCustomMatcher.new(...));
+```
+
+The `eventually(...)` call takes two named arguments:
+
+| Name        | Default | Meaning                                      |
+| ----------- | ------- | -------------------------------------------- |
+| `:timeout`  | 2.0     | Max seconds to wait for a match              |
+| `:interval` | 0.05    | Seconds to sleep between iterations          |
+
+Polling exits as soon as the inner matcher passes, so a passing
+assertion completes quickly. A miss runs out the full timeout before
+recording a failure.
+
+Failure messages report the iteration count and the elapsed wall-clock
+time:
+
+```
+eventually: Expected: 99 to be 0 (after 5 iterations in 0.05s)
+```
+
+If the block throws on every iteration, the failure message names the
+last exception:
+
+```
+eventually: block threw X::AdHoc: not yet (after 5 iterations in 0.05s)
+```
+
+Exceptions raised inside the block are caught per-iteration and treated
+as misses — the polling loop continues so the block has a chance to
+recover (e.g., a service warming up).
+
+### Negation
+
+Under `.not`, `eventually` passes only when the inner matcher never
+matched for the full timeout window:
+
+```raku
+expect({ get-status() }).to.not.eventually(:timeout(0.1)).be('error');
+```
+
+Because polling exits at the first match, a negated assertion that
+matches early fails quickly rather than waiting out the timeout.
+
+### Failure metadata
+
+- `Failure.given` is the `Callable` block (preserved as-is)
+- `Failure.expected` is the inner matcher's `expected-value`
+- `Failure.message` includes iteration count and elapsed time
+
+### Non-Callable actuals
+
+`expect(42).to.eventually.be(42)` records a Promise-shape failure
+because the actual is not a `Callable`. The block form is required.
 
 ## Writing a custom matcher
 
