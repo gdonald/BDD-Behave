@@ -8,6 +8,7 @@ nav:
   - Core:
     - describe / context: core/describe.md
     - it: core/it.md
+    - pending: core/pending.md
   - let:
     - let / let-bang: let/let.md
     - subject / subject-bang: let/subject.md

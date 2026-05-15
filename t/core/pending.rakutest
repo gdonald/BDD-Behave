@@ -1,0 +1,83 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Runner;
+plan 16;
+
+registry().clear;
+
+my $body-ran = False;
+
+describe 'pending outer', {
+  pending 'not yet implemented', {
+    $body-ran = True;
+  }
+
+  pending 'no-block reason only';
+
+  pending 'with tag metadata', :tag<wip>, {
+    True;
+  }
+}
+
+my @suites = suites();
+is @suites.elems, 1, 'one suite registered';
+
+my $group = @suites[0].groups[0];
+is $group.examples.elems, 3, 'three pending examples registered';
+
+my $ex = $group.examples[0];
+is $ex.description, 'not yet implemented', 'reason stored as description';
+ok $ex.pending, 'example marked pending';
+is $ex.get-metadata('pending-reason'), 'not yet implemented', 'reason stored in metadata';
+is $body-ran, False, 'body not executed during registration';
+
+my $no-block = $group.examples[1];
+is $no-block.description, 'no-block reason only', 'no-block form registers reason as description';
+ok $no-block.pending, 'no-block form marks pending';
+is $no-block.get-metadata('pending-reason'), 'no-block reason only', 'no-block stores reason';
+
+my $with-tag = $group.examples[2];
+ok $with-tag.tags.elems == 1 && $with-tag.tags[0] eq 'wip', 'tag metadata forwarded';
+ok $with-tag.pending, 'metadata form marks pending';
+
+# Runner integration: synthetic suite with one pending example
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+my $suite = Suite.create(:description('s'), :file('synthetic'.IO), :line(1));
+my $g     = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+$suite.add-group($g);
+my $pending-ex = Example.new(
+  :description('pending'),
+  :file('synthetic'.IO),
+  :line(5),
+  :block({ die 'must not run' }),
+);
+$pending-ex.mark-pending(:reason('todo'));
+$g.add-example($pending-ex);
+
+my $sink = open '/dev/null', :w;
+my $orig-out = $*OUT;
+{
+  my $*OUT = $sink;
+  my $runner = BDD::Behave::Runner::Runner.new;
+  my $result = $runner.run($suite);
+  $*OUT = $orig-out;
+  $sink.close;
+
+  is $result.pending, 1, 'runner increments pending counter';
+  is $result.failed, 0, 'pending does not count as failed';
+  is $result.passed, 0, 'pending does not count as passed';
+  is $result.total, 1, 'pending counts toward total';
+}
+
+require ::('BDD::Behave::DSL');
+my &dsl-pending := ::('BDD::Behave::DSL::&pending');
+is &dsl-pending.candidates.elems, 2,
+  '`pending` is a proto with two multis (with-block and reason-only)';

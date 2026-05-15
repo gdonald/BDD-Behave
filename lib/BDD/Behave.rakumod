@@ -187,6 +187,30 @@ sub xit(|args) is export {
   $impl(|args);
 }
 
+sub specify(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&specify');
+  };
+  $impl(|args);
+}
+
+sub example(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&example');
+  };
+  $impl(|args);
+}
+
+sub pending(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&pending');
+  };
+  $impl(|args);
+}
+
 sub fdescribe(|args) is export {
   state $impl = do {
     require ::('BDD::Behave::DSL');

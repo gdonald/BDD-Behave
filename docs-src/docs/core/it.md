@@ -56,3 +56,37 @@ context 'with a let context parameter', {
 ```
 
 See [`let`](../let/let.md) for the various ways to define and consume let values.
+
+## `specify` alias
+
+`specify` is a direct alias for `it`. It reads more naturally when an example description starts with a non-behavioral noun (a fact, a constraint, a state) rather than a verb. Every form `it` accepts — string + block, block-only one-liner, `:tag` / `:tags` / arbitrary `:meta` keys — is also accepted by `specify`.
+
+```raku
+describe 'a fresh User', {
+  specify 'name defaults to anonymous', {
+    expect(User.new.name).to.be('anonymous');
+  }
+
+  specify 'email is empty', {
+    expect(User.new.email).to.be('');
+  }
+}
+```
+
+`specify` is a registration-only alias: it does not introduce its own focus / skip / metadata semantics. Mix and match with `it` in the same `describe` as you prefer.
+
+## `example` alias
+
+`example` is another direct alias for `it`, useful when "example" reads more naturally in the test text than "it" or "specify". Like `specify`, it accepts every form `it` does (string + block, block-only one-liner, metadata).
+
+```raku
+describe 'String.split', {
+  example 'with a single character separator', {
+    expect('a,b,c'.split(',')).to.eq(<a b c>);
+  }
+
+  example 'with a regex separator', {
+    expect('a1b2c'.split(/\d/)).to.eq(<a b c>);
+  }
+}
+```

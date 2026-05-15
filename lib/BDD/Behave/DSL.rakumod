@@ -416,6 +416,76 @@ our multi sub xit(&block, *%meta) is export {
   it(&block, |%meta, :skipped);
 }
 
+our proto sub specify(|) is export {*}
+
+our multi sub specify(Str $description, &block, *%meta) is export {
+  it($description, &block, |%meta);
+}
+
+our multi sub specify(&block, *%meta) is export {
+  it(&block, |%meta);
+}
+
+our proto sub example(|) is export {*}
+
+our multi sub example(Str $description, &block, *%meta) is export {
+  it($description, &block, |%meta);
+}
+
+our multi sub example(&block, *%meta) is export {
+  it(&block, |%meta);
+}
+
+our proto sub pending(|) is export {*}
+
+our multi sub pending(Str $reason, &block, *%meta) is export {
+  my $file = &block.file.IO;
+  my $line = &block.line;
+  my @tags = normalize-tags(%meta);
+  my %extra-meta = extract-extra-meta(%meta);
+  my $example = registry().register-example(
+    :description($reason),
+    :&block,
+    :$file,
+    :$line,
+    :@tags,
+    :%extra-meta,
+  );
+  $example.mark-pending(:reason($reason));
+  Nil;
+}
+
+sub caller-outside-behave() {
+  my $depth = 1;
+  loop {
+    my $frame = callframe($depth);
+    last unless $frame.defined;
+    my $f = $frame.file // '';
+    last unless $f.contains('BDD/Behave');
+    $depth++;
+  }
+  callframe($depth);
+}
+
+our multi sub pending(Str $reason, *%meta) is export {
+  my $frame = caller-outside-behave();
+  my $file = ($frame.defined ?? $frame.file !! 'unknown').IO;
+  my $line = ($frame.defined ?? $frame.line.Int !! 0);
+  my &block = sub { Nil };
+  my @tags = normalize-tags(%meta);
+  my %extra-meta = extract-extra-meta(%meta);
+  my $example = registry().register-example(
+    :description($reason),
+    :&block,
+    :$file,
+    :$line,
+    :@tags,
+    :%extra-meta,
+  );
+  $example.mark-pending(:reason($reason));
+  Nil;
+}
+
 
 sub run-aggregate-failures(Str $label, &block, Str $file, Int $line --> Nil) {
   my $exception;

@@ -1,0 +1,57 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::SpecRegistry;
+plan 12;
+
+registry().clear;
+
+my $body-ran = False;
+
+describe 'example outer', {
+  example 'string + block', {
+    $body-ran = True;
+  }
+
+  example 'with tag metadata', :tag<demo>, {
+    True;
+  }
+
+  example {
+    True;
+  }
+}
+
+my @suites = suites();
+is @suites.elems, 1, 'one suite registered';
+
+my $suite = @suites[0];
+is $suite.groups.elems, 1, 'suite has one top-level group';
+
+my $group = $suite.groups[0];
+is $group.description, 'example outer', 'enclosing describe registered';
+is $group.examples.elems, 3, 'three examples registered via `example`';
+
+my @descs = $group.examples.map(*.description);
+ok @descs.grep('string + block').elems > 0, 'string + block description recorded';
+ok @descs.grep('with tag metadata').elems > 0, 'metadata-form description recorded';
+ok @descs.grep(/^ 'example at example.rakutest:' /).elems > 0,
+  'block-only form falls back to auto-description placeholder';
+
+my $tagged = $group.examples.first(*.description eq 'with tag metadata');
+ok $tagged.tags.elems == 1 && $tagged.tags[0] eq 'demo',
+  'tag metadata forwarded to underlying example';
+
+my $first = $group.examples.first(*.description eq 'string + block');
+is $first.block.^name, 'Block', 'block stored for deferred execution';
+is $body-ran, False, 'body not executed during registration';
+
+$first.execute;
+is $body-ran, True, 'body executes when example is run';
+
+require ::('BDD::Behave::DSL');
+my &dsl-example := ::('BDD::Behave::DSL::&example');
+is &dsl-example.candidates.elems, 2,
+  '`example` is a proto with two multis (string-form and block-only)';
