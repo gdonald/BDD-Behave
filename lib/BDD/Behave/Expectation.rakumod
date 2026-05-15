@@ -11,6 +11,7 @@ use BDD::Behave::Matcher::Boolean;
 use BDD::Behave::Matcher::String;
 use BDD::Behave::Matcher::Exception;
 use BDD::Behave::Matcher::Change;
+use BDD::Behave::Matcher::Async;
 use BDD::Behave::Matcher::Custom;
 use BDD::Behave::Mock::HaveReceived;
 
@@ -653,6 +654,30 @@ class ExpectationBuilder is export {
       :line($!line),
       :$delta,
     );
+  }
+
+  proto method be-kept(|) {*}
+
+  multi method be-kept() {
+    self!apply-matcher(BeKeptMatcher.new);
+  }
+
+  multi method be-kept(Real:D $timeout) {
+    self!apply-matcher(BeKeptMatcher.new(:$timeout));
+  }
+
+  proto method be-broken(|) {*}
+
+  multi method be-broken() {
+    self!apply-matcher(BeBrokenMatcher.new);
+  }
+
+  multi method be-broken(Real:D $timeout) {
+    self!apply-matcher(BeBrokenMatcher.new(:$timeout));
+  }
+
+  method complete-within(Real:D $duration) {
+    self!apply-matcher(CompleteWithinMatcher.new(:$duration));
   }
 
   method have-received(Str:D $method-name) {

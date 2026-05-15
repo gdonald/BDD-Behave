@@ -99,6 +99,9 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `match`                                  | Regex match against a `Str` (`$actual ~~ /pattern/`); fails (not dies) on undefined or non-`Str` actuals. See [Matchers › MatchMatcher](matchers.md#matchmatcher-built-in).                                                                                                                                                                                                                                  |
 | `raise-error`                            | Passes when a `Callable` actual raises an exception when invoked. Wrap the code under test in `{ ... }`. Forms: `raise-error`, `raise-error(Type)`, `raise-error(Type, /pattern/)`, `raise-error(/pattern/)`. Chain `.with-message($str-or-regex)` to filter by exception message (`Str` compares with `eq`, `Regex` with `~~`). See [Matchers › RaiseErrorMatcher](matchers.md#raiseerrormatcher-built-in). |
 | `change`                                 | Passes when a `Callable` action changes the value returned by an observable block (compared with `eqv`). Wrap the action and the observable in `{ ... }`. Chain `.from(value)` / `.to(value)` to constrain the start and / or end value, or `.by(delta)` / `.by-at-least(delta)` / `.by-at-most(delta)` for numeric deltas. See [Matchers › ChangeMatcher](matchers.md#changematcher-built-in).             |
+| `be-kept`                                | Passes when a `Promise` actual settles in the `Kept` state. Blocks up to a default 5-second timeout; pass `be-kept($seconds)` for a custom timeout. Surfaces the broken cause in failure messages. See [Matchers › BeKeptMatcher](matchers.md#bekeptmatcher-built-in).                                                                                                                                       |
+| `be-broken`                              | Passes when a `Promise` actual settles in the `Broken` state. Same timeout shape as `be-kept`. Surfaces the kept value or the broken cause in failure messages. See [Matchers › BeBrokenMatcher](matchers.md#bebrokenmatcher-built-in).                                                                                                                                                                      |
+| `complete-within`                        | Passes when a `Promise` actual settles (kept or broken) within the given duration (`Real` seconds). See [Matchers › CompleteWithinMatcher](matchers.md#completewithinmatcher-built-in).                                                                                                                                                                                                                      |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -143,6 +146,11 @@ expect({ $balance -= 150 }).to.change({ $balance }).to(0);
 expect({ $balance += 25 }).to.change({ $balance }).by(25);
 expect({ $balance -= 10 }).to.change({ $balance }).by(-10);
 expect({ $balance += 5 }).to.change({ $balance }).by-at-least(1).by-at-most(10);
+expect(Promise.kept('done')).to.be-kept;
+expect(Promise.broken('boom')).to.be-broken;
+expect(start { compute() }).to.be-kept(0.5);
+expect(Promise.kept('done')).to.complete-within(1);
+expect(Promise.new).to.not.complete-within(0.05);
 ```
 
 ## Custom matchers

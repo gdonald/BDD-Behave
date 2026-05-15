@@ -50,6 +50,7 @@ You only need to know about specific submodules when you want to *instantiate* m
 | `BDD::Behave::Matcher::String`     | `MatchMatcher`                                                                                                                                |
 | `BDD::Behave::Matcher::Exception`  | `RaiseErrorMatcher`                                                                                                                           |
 | `BDD::Behave::Matcher::Change`     | `ChangeMatcher`                                                                                                                               |
+| `BDD::Behave::Matcher::Async`      | `BeKeptMatcher`, `BeBrokenMatcher`, `CompleteWithinMatcher`                                                                                   |
 
 Each submodule already `use`s `BDD::Behave::Matcher` internally, but the role is *not* re-exported. If your code needs both, import both:
 
@@ -1154,6 +1155,113 @@ for the bare form. The matcher itself exposes `before-value`,
 `Str` on a pass) for tooling that needs structural access to the
 captured states. `delta` returns `after - before` when both
 values are `Real`, and `Nil` otherwise.
+
+## BeKeptMatcher (built-in)
+
+`be-kept` waits for a `Promise` to settle and passes when it ends in the
+`Kept` state. It blocks up to a configurable timeout (default 5 seconds)
+using `Promise.anyof(...)` so it never hangs forever:
+
+```raku
+expect(Promise.kept('done')).to.be-kept;          # passes immediately
+expect(start { compute() }).to.be-kept;           # passes when start { } finishes
+expect(Promise.broken('oops')).to.not.be-kept;    # passes; broken is not kept
+expect($pending).to.be-kept(0.5);                 # custom timeout in seconds
+```
+
+If the promise broke, the failure message includes the cause's
+class and message so you can see what went wrong without rerunning:
+
+```
+expected Promise to be kept, but it was broken (X::AdHoc: boom)
+```
+
+If the timeout elapsed with the promise still pending, the message
+quotes the timeout:
+
+```
+expected Promise to be kept within 0.05s, but it was still pending
+```
+
+The matcher exposes `value` (set when the promise was kept),
+`cause` (set when the promise was broken), `timed-out`, and
+`promise-given` for tooling.
+
+`be-kept` accepts a positional `Real` timeout in seconds; pass `0.5`
+for 500 ms. Non-Promise actuals fail with a Promise-shape message
+(`expected a Promise for be-kept, but got 42`) rather than dying.
+
+## BeBrokenMatcher (built-in)
+
+`be-broken` is the mirror of `be-kept`: it waits up to the timeout
+(default 5 seconds) and passes when the promise ends in the
+`Broken` state. The captured cause is exposed on the matcher's
+`cause` accessor:
+
+```raku
+expect(Promise.broken('boom')).to.be-broken;
+expect(start { die 'eventual failure' }).to.be-broken;
+expect(Promise.kept('happy')).to.not.be-broken;
+expect($pending).to.be-broken(0.5);               # custom timeout
+```
+
+When the promise was kept instead, the failure message includes
+the kept value:
+
+```
+expected Promise to be broken, but it was kept with "happy"
+```
+
+When the promise was still pending after the timeout:
+
+```
+expected Promise to be broken within 0.05s, but it was still pending
+```
+
+The negated form surfaces the broken cause so you can see what
+broke when you expected it not to:
+
+```
+expected Promise not to be broken, but it was (X::AdHoc: boom)
+```
+
+The matcher exposes `value` (set when the promise was kept), `cause`
+(set when broken), `was-kept`, `timed-out`, and `promise-given`.
+
+## CompleteWithinMatcher (built-in)
+
+`complete-within` passes when the promise settles — either kept or
+broken — within the given duration. The duration is a `Real`
+positional argument in seconds:
+
+```raku
+expect(Promise.kept('done')).to.complete-within(1);
+expect(Promise.broken('boom')).to.complete-within(1);
+expect(start { sleep 0.01; 42 }).to.complete-within(1);
+
+expect($pending).to.not.complete-within(0.05);
+```
+
+The failure message when the promise is still pending:
+
+```
+expected Promise to complete within 0.05s, but it was still pending
+```
+
+The negated form indicates the final status:
+
+```
+expected Promise not to complete within 1s, but it was kept with "done"
+expected Promise not to complete within 1s, but it was broken (X::AdHoc: boom)
+```
+
+`Failure.expected` carries the duration so failure metadata is
+queryable from tooling. The matcher exposes `final-status` (`Kept`,
+`Broken`, or `Nil` when timed out), `value`, `cause`, `timed-out`,
+and `promise-given`.
+
+Unlike `be-kept` / `be-broken`, the duration is required — there's
+no useful default for "how long is too long" without it.
 
 ## Writing a custom matcher
 

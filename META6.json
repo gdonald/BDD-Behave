@@ -20,6 +20,7 @@
     "BDD::Behave::Files": "lib/BDD/Behave/Files.rakumod",
     "BDD::Behave::LetRuntime": "lib/BDD/Behave/LetRuntime.rakumod",
     "BDD::Behave::Matcher": "lib/BDD/Behave/Matcher.rakumod",
+    "BDD::Behave::Matcher::Async": "lib/BDD/Behave/Matcher/Async.rakumod",
     "BDD::Behave::Matcher::Boolean": "lib/BDD/Behave/Matcher/Boolean.rakumod",
     "BDD::Behave::Matcher::Change": "lib/BDD/Behave/Matcher/Change.rakumod",
     "BDD::Behave::Matcher::Collection": "lib/BDD/Behave/Matcher/Collection.rakumod",

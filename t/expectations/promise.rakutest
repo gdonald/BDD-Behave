@@ -1,0 +1,314 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Async;
+use BDD::Behave::Failures;
+
+plan 76;
+
+# Matchers all do the Matcher role.
+{
+  ok BeKeptMatcher.new          ~~ Matcher, 'BeKeptMatcher does Matcher';
+  ok BeBrokenMatcher.new        ~~ Matcher, 'BeBrokenMatcher does Matcher';
+  ok CompleteWithinMatcher.new(:duration(1)) ~~ Matcher,
+                                           'CompleteWithinMatcher does Matcher';
+}
+
+# BeKeptMatcher: kept promises match.
+{
+  my $m = BeKeptMatcher.new;
+  ok $m.matches(Promise.kept('v')),         'kept promise matches';
+  is $m.value, 'v',                          'value captured from kept promise';
+  nok $m.cause.defined,                      'no cause for kept promise';
+  nok $m.timed-out,                          'no timeout for kept promise';
+}
+
+# BeKeptMatcher: broken promises do not match.
+{
+  my $m = BeKeptMatcher.new;
+  nok $m.matches(Promise.broken('oops')),    'broken promise does not match';
+  ok $m.cause ~~ Exception,                  'cause captured from broken promise';
+  is $m.cause.message, 'oops',               'cause message preserved';
+  nok $m.timed-out,                          'no timeout for broken promise';
+}
+
+# BeKeptMatcher: pending promises time out.
+{
+  my $m = BeKeptMatcher.new(:timeout(0.05));
+  my $vow = Promise.new;
+  nok $m.matches($vow),                      'pending promise does not match';
+  ok $m.timed-out,                           'timed-out flag set';
+  nok $m.cause.defined,                      'no cause on timeout';
+}
+
+# BeKeptMatcher: non-Promise actual rejected.
+{
+  my $m = BeKeptMatcher.new;
+  nok $m.matches(42),                        'Int rejected';
+  nok $m.promise-given,                      'promise-given is False';
+  nok $m.matches('hello'),                   'Str rejected';
+  nok $m.matches(Nil),                       'Nil rejected';
+}
+
+# BeKeptMatcher: failure messages.
+{
+  my $m = BeKeptMatcher.new(:timeout(0.05));
+  $m.matches(Promise.broken('boom'));
+  like $m.failure-message(Promise),
+       /'expected Promise to be kept, but it was broken'/,
+       'broken-cause failure message';
+  like $m.failure-message(Promise),
+       /'boom'/,
+       'cause message in failure text';
+
+  $m.matches(Promise.new);
+  like $m.failure-message(Promise),
+       /'expected Promise to be kept within 0.05s, but it was still pending'/,
+       'timeout failure message';
+
+  $m.matches(42);
+  is $m.failure-message(42),
+     'expected a Promise for be-kept, but got 42',
+     'non-Promise failure message';
+
+  is $m.failure-message-negated(Promise.kept('x')),
+     'expected Promise not to be kept',
+     'negated failure message';
+}
+
+# BeKeptMatcher: description.
+{
+  my $m = BeKeptMatcher.new;
+  is $m.description, 'be kept',              'description';
+}
+
+# BeBrokenMatcher: broken promises match.
+{
+  my $m = BeBrokenMatcher.new;
+  ok $m.matches(Promise.broken('boom')),     'broken promise matches';
+  ok $m.cause ~~ Exception,                  'cause captured';
+  is $m.cause.message, 'boom',               'cause message preserved';
+}
+
+# BeBrokenMatcher: kept promises do not match.
+{
+  my $m = BeBrokenMatcher.new;
+  nok $m.matches(Promise.kept('happy')),     'kept promise rejected';
+  ok $m.was-kept,                            'was-kept flag set';
+  is $m.value, 'happy',                      'kept value captured';
+}
+
+# BeBrokenMatcher: pending promises time out.
+{
+  my $m = BeBrokenMatcher.new(:timeout(0.05));
+  nok $m.matches(Promise.new),               'pending promise rejected';
+  ok $m.timed-out,                           'timed-out flag set';
+}
+
+# BeBrokenMatcher: non-Promise actual rejected.
+{
+  my $m = BeBrokenMatcher.new;
+  nok $m.matches('hello'),                   'Str rejected';
+  nok $m.promise-given,                      'promise-given is False';
+}
+
+# BeBrokenMatcher: failure messages.
+{
+  my $m = BeBrokenMatcher.new(:timeout(0.05));
+  $m.matches(Promise.kept('happy'));
+  like $m.failure-message(Promise),
+       /'was kept with'/,
+       'kept-with failure message';
+  like $m.failure-message(Promise),
+       /'happy'/,
+       'kept value in failure text';
+
+  $m.matches(Promise.new);
+  like $m.failure-message(Promise),
+       /'still pending'/,
+       'timeout failure message';
+
+  $m.matches('foo');
+  is $m.failure-message('foo'),
+     'expected a Promise for be-broken, but got "foo"',
+     'non-Promise failure message';
+
+  $m.matches(Promise.broken('boom'));
+  like $m.failure-message-negated(Promise),
+       /'but it was'/,
+       'negated message mentions the broken state';
+  like $m.failure-message-negated(Promise),
+       /'boom'/,
+       'negated message includes cause';
+}
+
+# BeBrokenMatcher: description.
+{
+  my $m = BeBrokenMatcher.new;
+  is $m.description, 'be broken',            'description';
+}
+
+# CompleteWithinMatcher: kept promises match.
+{
+  my $m = CompleteWithinMatcher.new(:duration(1));
+  ok $m.matches(Promise.kept('v')),          'kept promise matches';
+  is $m.value, 'v',                          'value captured';
+  ok $m.final-status === Kept,               'final-status is Kept';
+}
+
+# CompleteWithinMatcher: broken promises match.
+{
+  my $m = CompleteWithinMatcher.new(:duration(1));
+  ok $m.matches(Promise.broken('oops')),     'broken promise matches';
+  ok $m.cause ~~ Exception,                  'cause captured';
+  ok $m.final-status === Broken,             'final-status is Broken';
+}
+
+# CompleteWithinMatcher: pending promises do not match.
+{
+  my $m = CompleteWithinMatcher.new(:duration(0.05));
+  nok $m.matches(Promise.new),               'pending promise rejected';
+  ok $m.timed-out,                           'timed-out flag set';
+}
+
+# CompleteWithinMatcher: non-Promise actual rejected.
+{
+  my $m = CompleteWithinMatcher.new(:duration(1));
+  nok $m.matches([]),                        'Array rejected';
+  nok $m.promise-given,                      'promise-given is False';
+}
+
+# CompleteWithinMatcher: failure messages.
+{
+  my $m = CompleteWithinMatcher.new(:duration(0.05));
+  $m.matches(Promise.new);
+  is $m.failure-message(Promise),
+     'expected Promise to complete within 0.05s, but it was still pending',
+     'pending failure message';
+
+  my $arr = [];
+  $m.matches($arr);
+  is $m.failure-message($arr),
+     'expected a Promise for complete-within, but got ' ~ $arr.raku,
+     'non-Promise failure message';
+
+  $m.matches(Promise.kept('done'));
+  like $m.failure-message-negated(Promise),
+       /'but it was kept with'/,
+       'negated kept message';
+
+  $m.matches(Promise.broken('boom'));
+  like $m.failure-message-negated(Promise),
+       /'but it was broken'/,
+       'negated broken message';
+  like $m.failure-message-negated(Promise),
+       /'boom'/,
+       'negated broken message includes cause';
+}
+
+# CompleteWithinMatcher: description / expected-value.
+{
+  my $m = CompleteWithinMatcher.new(:duration(2));
+  is $m.description, 'complete within 2s',   'description';
+  is $m.expected-value, 2,                   'expected-value is the duration';
+}
+
+# matches() is repeatable and state resets between calls.
+{
+  my $m = BeKeptMatcher.new(:timeout(0.05));
+  ok  $m.matches(Promise.kept('a')),         'first kept match';
+  is  $m.value, 'a',                         'first value captured';
+  nok $m.matches(Promise.broken('boom')),    'second broken does not match';
+  ok  $m.cause.defined,                      'cause captured on second call';
+  nok $m.value.defined,                      'value cleared on second call';
+  nok $m.matches(Promise.new),               'third pending does not match';
+  ok  $m.timed-out,                          'timed-out flag set on third';
+  nok $m.cause.defined,                      'cause cleared on third';
+}
+
+# Integration: expect(...).to.be-kept on a kept promise records no failure.
+{
+  Failures.list = ();
+  expect(Promise.kept('done')).to.be-kept;
+  is Failures.list.elems, 0,                 'be-kept passes on kept promise';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.be-kept on a broken promise records one failure.
+{
+  Failures.list = ();
+  expect(Promise.broken('boom')).to.be-kept;
+  is Failures.list.elems, 1,                 'be-kept fails on broken promise';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.be-kept(timeout) on a pending promise records one failure.
+{
+  Failures.list = ();
+  expect(Promise.new).to.be-kept(0.05);
+  is Failures.list.elems, 1,                 'be-kept fails on pending promise';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.be-broken on a broken promise records no failure.
+{
+  Failures.list = ();
+  expect(Promise.broken('boom')).to.be-broken;
+  is Failures.list.elems, 0,                 'be-broken passes on broken promise';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.be-broken on a kept promise records one failure.
+{
+  Failures.list = ();
+  expect(Promise.kept('happy')).to.be-broken;
+  is Failures.list.elems, 1,                 'be-broken fails on kept promise';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.complete-within on a kept promise records no failure.
+{
+  Failures.list = ();
+  expect(Promise.kept('done')).to.complete-within(1);
+  is Failures.list.elems, 0,                 'complete-within passes on kept';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.complete-within on a broken promise records no failure.
+{
+  Failures.list = ();
+  expect(Promise.broken('boom')).to.complete-within(1);
+  is Failures.list.elems, 0,                 'complete-within passes on broken';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.complete-within on a pending promise records one failure.
+{
+  Failures.list = ();
+  expect(Promise.new).to.complete-within(0.05);
+  is Failures.list.elems, 1,                 'complete-within fails on pending';
+  Failures.list = ();
+}
+
+# Integration: negation works for each matcher.
+{
+  Failures.list = ();
+  expect(Promise.broken('boom')).to.not.be-kept;
+  expect(Promise.kept('done')).to.not.be-broken;
+  expect(Promise.new).to.not.complete-within(0.05);
+  is Failures.list.elems, 0,                 'negation passes for the expected cases';
+  Failures.list = ();
+}
+
+# Failure.expected carries the duration for complete-within.
+{
+  Failures.list = ();
+  expect(Promise.new).to.complete-within(0.05);
+  is Failures.list[0].expected, 0.05,        'Failure.expected is the duration';
+  Failures.list = ();
+}
+
+done-testing;
