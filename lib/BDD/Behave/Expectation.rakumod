@@ -680,6 +680,20 @@ class ExpectationBuilder is export {
     self!apply-matcher(CompleteWithinMatcher.new(:$duration));
   }
 
+  method emit(**@values, Real :$within = 1) {
+    self!apply-matcher(EmitMatcher.new(:expected(@values), :window($within)));
+  }
+
+  method emit-at-least(Int:D $minimum, Real :$within = 1) {
+    self!apply-matcher(
+      EmitAtLeastMatcher.new(:$minimum, :window($within)),
+    );
+  }
+
+  method complete(Real :$within = 1) {
+    self!apply-matcher(CompleteMatcher.new(:window($within)));
+  }
+
   method have-received(Str:D $method-name) {
     my $expectation = HaveReceivedExpectation.new(
       :target($!given),

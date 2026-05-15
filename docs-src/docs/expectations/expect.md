@@ -102,6 +102,9 @@ For diffable shapes (strings, arrays, hashes, sets, bags, mixes), the failure bl
 | `be-kept`                                | Passes when a `Promise` actual settles in the `Kept` state. Blocks up to a default 5-second timeout; pass `be-kept($seconds)` for a custom timeout. Surfaces the broken cause in failure messages. See [Matchers › BeKeptMatcher](matchers.md#bekeptmatcher-built-in).                                                                                                                                       |
 | `be-broken`                              | Passes when a `Promise` actual settles in the `Broken` state. Same timeout shape as `be-kept`. Surfaces the kept value or the broken cause in failure messages. See [Matchers › BeBrokenMatcher](matchers.md#bebrokenmatcher-built-in).                                                                                                                                                                      |
 | `complete-within`                        | Passes when a `Promise` actual settles (kept or broken) within the given duration (`Real` seconds). See [Matchers › CompleteWithinMatcher](matchers.md#completewithinmatcher-built-in).                                                                                                                                                                                                                      |
+| `emit`                                   | Passes when a `Supply` or `Channel` actual emits exactly the given values (compared via `eqv`) within the collection window. Pass `:within($seconds)` to change the default 1-second window. See [Matchers › EmitMatcher](matchers.md#emitmatcher-built-in).                                                                                                                                                |
+| `emit-at-least`                          | Passes when a `Supply` or `Channel` actual emits at least the given count of values within the collection window. Pass `:within($seconds)` to change the default 1-second window. See [Matchers › EmitAtLeastMatcher](matchers.md#emitatleastmatcher-built-in).                                                                                                                                              |
+| `complete`                               | Passes when a `Supply` (sending `done`) or `Channel` (closed) completes within the collection window. Pass `:within($seconds)` to change the default 1-second window. See [Matchers › CompleteMatcher](matchers.md#completematcher-built-in).                                                                                                                                                                |
 
 ```raku
 expect([1, 2, 3]).to.eq([1, 2, 3]);
@@ -151,6 +154,9 @@ expect(Promise.broken('boom')).to.be-broken;
 expect(start { compute() }).to.be-kept(0.5);
 expect(Promise.kept('done')).to.complete-within(1);
 expect(Promise.new).to.not.complete-within(0.05);
+expect(Supply.from-list(1, 2, 3)).to.emit(1, 2, 3);
+expect(Supply.from-list(1, 2, 3, 4)).to.emit-at-least(2);
+expect(Supply.from-list(1, 2)).to.complete;
 ```
 
 ## Custom matchers

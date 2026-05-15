@@ -3,6 +3,7 @@ unit module BDD::Behave::Matcher::Async;
 use BDD::Behave::Matcher;
 
 constant DEFAULT-PROMISE-TIMEOUT = 5;
+constant DEFAULT-STREAM-WINDOW   = 1;
 
 sub bounded-wait(Promise:D $promise, Real:D $timeout --> Nil) {
   if $promise.status === Planned {
@@ -17,6 +18,36 @@ sub capture-cause(Promise:D $promise --> Mu) {
     CATCH { default { $cause = $_; } }
   }
   $cause;
+}
+
+sub is-stream-source($actual --> Bool) {
+  ?($actual ~~ Supply) || ?($actual ~~ Channel);
+}
+
+sub collect-emissions($source, Real:D $window, Int :$max-count) {
+  my @collected;
+  my Bool $completed  = False;
+  my      $quit-cause;
+
+  react {
+    whenever Promise.in($window) {
+      done;
+    }
+    whenever $source -> $value {
+      @collected.push($value);
+      done if $max-count.defined && @collected.elems >= $max-count;
+      LAST {
+        $completed = True;
+        done;
+      }
+      QUIT {
+        $quit-cause = $_;
+        done;
+      }
+    }
+  }
+
+  (@collected, $completed, $quit-cause);
 }
 
 class BeKeptMatcher does Matcher is export {
@@ -184,4 +215,169 @@ class CompleteWithinMatcher does Matcher is export {
   method description(--> Str) { "complete within {$!duration}s" }
 
   method expected-value(--> Mu) { $!duration }
+}
+
+class EmitMatcher does Matcher is export {
+  has @.expected;
+  has Real $.window = DEFAULT-STREAM-WINDOW;
+  has Bool $.source-given is rw = True;
+  has      @.collected    is rw;
+  has Bool $.completed    is rw = False;
+  has Mu   $.quit-cause   is rw;
+
+  method !reset(--> Nil) {
+    $!source-given = True;
+    @!collected    = ();
+    $!completed    = False;
+    $!quit-cause   = Nil;
+  }
+
+  method matches($actual --> Bool) {
+    self!reset;
+    $!source-given = is-stream-source($actual);
+    return False unless $!source-given;
+
+    my ($vals, $done, $cause) = collect-emissions(
+      $actual, $!window, :max-count(@!expected.elems),
+    );
+    @!collected  = $vals.list;
+    $!completed  = $done;
+    $!quit-cause = $cause;
+
+    return False if @!collected.elems != @!expected.elems;
+    for ^@!expected.elems -> $i {
+      return False unless @!collected[$i] eqv @!expected[$i];
+    }
+    True;
+  }
+
+  method failure-message($actual --> Str) {
+    unless $!source-given {
+      return "expected a Supply or Channel for emit, but got " ~ $actual.raku;
+    }
+    if $!quit-cause.defined {
+      return "expected stream to emit " ~ @!expected.raku
+           ~ ", but it quit ({$!quit-cause.^name}: {$!quit-cause.message})";
+    }
+    "expected stream to emit " ~ @!expected.raku
+      ~ " within {$!window}s, but it emitted " ~ @!collected.raku;
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected stream not to emit " ~ @!expected.raku;
+  }
+
+  method description(--> Str) { "emit " ~ @!expected.raku }
+
+  method expected-value(--> Mu) { @!expected.list }
+}
+
+class EmitAtLeastMatcher does Matcher is export {
+  has Int  $.minimum is required;
+  has Real $.window = DEFAULT-STREAM-WINDOW;
+  has Bool $.source-given is rw = True;
+  has      @.collected    is rw;
+  has Bool $.completed    is rw = False;
+  has Mu   $.quit-cause   is rw;
+
+  method !reset(--> Nil) {
+    $!source-given = True;
+    @!collected    = ();
+    $!completed    = False;
+    $!quit-cause   = Nil;
+  }
+
+  method !count-phrase(--> Str) {
+    "{$!minimum} value" ~ ($!minimum == 1 ?? '' !! 's');
+  }
+
+  method matches($actual --> Bool) {
+    self!reset;
+    $!source-given = is-stream-source($actual);
+    return False unless $!source-given;
+
+    my ($vals, $done, $cause) = collect-emissions(
+      $actual, $!window, :max-count($!minimum),
+    );
+    @!collected  = $vals.list;
+    $!completed  = $done;
+    $!quit-cause = $cause;
+
+    @!collected.elems >= $!minimum;
+  }
+
+  method failure-message($actual --> Str) {
+    unless $!source-given {
+      return "expected a Supply or Channel for emit-at-least, but got "
+           ~ $actual.raku;
+    }
+    if $!quit-cause.defined {
+      return "expected stream to emit at least {self!count-phrase}"
+           ~ ", but it quit ({$!quit-cause.^name}: {$!quit-cause.message})"
+           ~ " after {@!collected.elems}";
+    }
+    "expected stream to emit at least {self!count-phrase} within {$!window}s"
+      ~ ", but it emitted {@!collected.elems}";
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected stream not to emit at least {self!count-phrase}";
+  }
+
+  method description(--> Str) { "emit at least {self!count-phrase}" }
+
+  method expected-value(--> Mu) { $!minimum }
+}
+
+class CompleteMatcher does Matcher is export {
+  has Real $.window = DEFAULT-STREAM-WINDOW;
+  has Bool $.source-given is rw = True;
+  has      @.collected    is rw;
+  has Bool $.completed    is rw = False;
+  has Mu   $.quit-cause   is rw;
+
+  method !reset(--> Nil) {
+    $!source-given = True;
+    @!collected    = ();
+    $!completed    = False;
+    $!quit-cause   = Nil;
+  }
+
+  method matches($actual --> Bool) {
+    self!reset;
+    $!source-given = is-stream-source($actual);
+    return False unless $!source-given;
+
+    my ($vals, $done, $cause) = collect-emissions($actual, $!window);
+    @!collected  = $vals.list;
+    $!completed  = $done;
+    $!quit-cause = $cause;
+
+    $!completed;
+  }
+
+  method !emit-phrase(--> Str) {
+    "emitted {@!collected.elems} value" ~ (@!collected.elems == 1 ?? '' !! 's');
+  }
+
+  method failure-message($actual --> Str) {
+    unless $!source-given {
+      return "expected a Supply or Channel for complete, but got "
+           ~ $actual.raku;
+    }
+    if $!quit-cause.defined {
+      return "expected stream to complete within {$!window}s, but it quit"
+           ~ " ({$!quit-cause.^name}: {$!quit-cause.message})";
+    }
+    "expected stream to complete within {$!window}s, but it was still active"
+      ~ " ({self!emit-phrase})";
+  }
+
+  method failure-message-negated($actual --> Str) {
+    "expected stream not to complete within {$!window}s";
+  }
+
+  method description(--> Str) { "complete within {$!window}s" }
+
+  method expected-value(--> Mu) { $!window }
 }

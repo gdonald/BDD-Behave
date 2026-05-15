@@ -1,0 +1,288 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Async;
+use BDD::Behave::Failures;
+
+plan 59;
+
+# Matchers all do the Matcher role.
+{
+  ok EmitMatcher.new          ~~ Matcher, 'EmitMatcher does Matcher';
+  ok EmitAtLeastMatcher.new(:minimum(1)) ~~ Matcher,
+                                          'EmitAtLeastMatcher does Matcher';
+  ok CompleteMatcher.new      ~~ Matcher, 'CompleteMatcher does Matcher';
+}
+
+# EmitMatcher: supply emits exact sequence.
+{
+  my $m = EmitMatcher.new(:expected([1, 2, 3]));
+  ok $m.matches(Supply.from-list(1, 2, 3)),  'exact sequence matches';
+  ok $m.source-given,                         'source-given true';
+  is $m.collected.elems, 3,                   'collected three values';
+  is-deeply $m.collected.List, (1, 2, 3),     'collected matches';
+}
+
+# EmitMatcher: supply emits wrong values.
+{
+  my $m = EmitMatcher.new(:expected([1, 2, 3]));
+  nok $m.matches(Supply.from-list(1, 2, 4)),  'wrong value rejected';
+}
+
+# EmitMatcher: supply emits too few values within window.
+{
+  my $m = EmitMatcher.new(:expected([1, 2, 3]), :window(0.1));
+  nok $m.matches(Supply.from-list(1)),        'too few values rejected';
+}
+
+# EmitMatcher: non-stream actual rejected.
+{
+  my $m = EmitMatcher.new(:expected([1]));
+  nok $m.matches(42),                         'Int rejected';
+  nok $m.source-given,                        'source-given false';
+}
+
+# EmitMatcher: channel emits exact sequence.
+{
+  my $ch = Channel.new;
+  $ch.send(1);
+  $ch.send(2);
+  $ch.close;
+  my $m = EmitMatcher.new(:expected([1, 2]));
+  ok $m.matches($ch),                         'channel sequence matches';
+}
+
+# EmitMatcher: failure messages.
+{
+  my $m = EmitMatcher.new(:expected([1, 2, 3]), :window(0.1));
+  $m.matches(Supply.from-list(1, 2));
+  like $m.failure-message(Nil),
+       /'expected stream to emit'/,
+       'failure message mentions expected';
+  like $m.failure-message(Nil),
+       /'but it emitted'/,
+       'failure message mentions actual';
+
+  $m.matches(42);
+  is $m.failure-message(42),
+     'expected a Supply or Channel for emit, but got 42',
+     'non-stream failure message';
+
+  is $m.failure-message-negated(Supply),
+     'expected stream not to emit [1, 2, 3]',
+     'negated failure message';
+}
+
+# EmitMatcher: description / expected-value.
+{
+  my $m = EmitMatcher.new(:expected([1, 2]));
+  is $m.description, 'emit [1, 2]',           'description';
+  is-deeply $m.expected-value.List, (1, 2),   'expected-value is the list';
+}
+
+# EmitMatcher: eqv-based comparison handles types.
+{
+  my $m = EmitMatcher.new(:expected([1, 'x']));
+  ok $m.matches(Supply.from-list(1, 'x')),    'mixed types match';
+  nok $m.matches(Supply.from-list(1, 1)),     'mismatched value rejected';
+}
+
+# EmitAtLeastMatcher: at least n values matches.
+{
+  my $m = EmitAtLeastMatcher.new(:minimum(2));
+  ok $m.matches(Supply.from-list(1, 2, 3)),   'three values >= 2 matches';
+  is $m.collected.elems, 2,                   'early-stop at threshold';
+}
+
+# EmitAtLeastMatcher: fewer values fails.
+{
+  my $m = EmitAtLeastMatcher.new(:minimum(3), :window(0.1));
+  nok $m.matches(Supply.from-list(1)),        'one value < 3 rejected';
+  is $m.collected.elems, 1,                   'collected single value';
+}
+
+# EmitAtLeastMatcher: exactly n matches.
+{
+  my $m = EmitAtLeastMatcher.new(:minimum(2));
+  ok $m.matches(Supply.from-list('a', 'b')),  'exact threshold matches';
+}
+
+# EmitAtLeastMatcher: failure messages.
+{
+  my $m = EmitAtLeastMatcher.new(:minimum(3), :window(0.1));
+  $m.matches(Supply.from-list(1));
+  like $m.failure-message(Nil),
+       /'emit at least 3 values'/,
+       'failure mentions count';
+  like $m.failure-message(Nil),
+       /'but it emitted 1'/,
+       'failure mentions actual';
+
+  my $m2 = EmitAtLeastMatcher.new(:minimum(1), :window(0.1));
+  $m2.matches(Supply.from-list());
+  like $m2.failure-message(Nil),
+       /'1 value '/,
+       'singular phrase for minimum=1';
+
+  $m.matches('not stream');
+  like $m.failure-message('not stream'),
+       /'expected a Supply or Channel'/,
+       'non-stream failure message';
+}
+
+# EmitAtLeastMatcher: description / expected-value.
+{
+  my $m = EmitAtLeastMatcher.new(:minimum(5));
+  is $m.description, 'emit at least 5 values', 'description';
+  is $m.expected-value, 5,                     'expected-value is minimum';
+}
+
+# CompleteMatcher: completed supply matches.
+{
+  my $m = CompleteMatcher.new;
+  ok $m.matches(Supply.from-list(1, 2)),      'completed supply matches';
+  ok $m.completed,                            'completed flag set';
+}
+
+# CompleteMatcher: closed channel matches.
+{
+  my $ch = Channel.new;
+  $ch.send(1);
+  $ch.close;
+  my $m = CompleteMatcher.new;
+  ok $m.matches($ch),                         'closed channel matches';
+  ok $m.completed,                            'completed flag set';
+}
+
+# CompleteMatcher: pending supply does not match.
+{
+  my $supplier = Supplier.new;
+  my $m = CompleteMatcher.new(:window(0.05));
+  nok $m.matches($supplier.Supply),           'pending supply rejected';
+  nok $m.completed,                           'completed flag false';
+}
+
+# CompleteMatcher: non-stream actual rejected.
+{
+  my $m = CompleteMatcher.new;
+  nok $m.matches(42),                         'Int rejected';
+  nok $m.source-given,                        'source-given false';
+}
+
+# CompleteMatcher: failure messages.
+{
+  my $m = CompleteMatcher.new(:window(0.1));
+  my $supplier = Supplier.new;
+  $m.matches($supplier.Supply);
+  like $m.failure-message(Nil),
+       /'expected stream to complete within 0.1s'/,
+       'failure mentions window';
+  like $m.failure-message(Nil),
+       /'still active'/,
+       'failure mentions active state';
+
+  $m.matches(42);
+  is $m.failure-message(42),
+     'expected a Supply or Channel for complete, but got 42',
+     'non-stream failure message';
+}
+
+# CompleteMatcher: description / expected-value.
+{
+  my $m = CompleteMatcher.new(:window(2));
+  is $m.description, 'complete within 2s',    'description';
+  is $m.expected-value, 2,                    'expected-value is window';
+}
+
+# matches() repeatable: state resets between calls.
+{
+  my $m = EmitMatcher.new(:expected([1, 2]));
+  ok  $m.matches(Supply.from-list(1, 2)),     'first match';
+  is  $m.collected.elems, 2,                  'first collected';
+  nok $m.matches(42),                         'second non-stream rejected';
+  nok $m.source-given,                        'source-given reset';
+  ok  $m.collected.elems == 0,                'collected reset';
+}
+
+# Integration: expect(...).to.emit on matching supply records no failure.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1, 2, 3)).to.emit(1, 2, 3);
+  is Failures.list.elems, 0,                  'emit passes on matching supply';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.emit on mismatch records one failure.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1, 2)).to.emit(1, 2, 3, :within(0.1));
+  is Failures.list.elems, 1,                  'emit fails on mismatch';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.emit-at-least passes when threshold met.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1, 2, 3)).to.emit-at-least(2);
+  is Failures.list.elems, 0,                  'emit-at-least passes';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.emit-at-least fails when threshold not met.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1)).to.emit-at-least(3, :within(0.1));
+  is Failures.list.elems, 1,                  'emit-at-least fails';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.complete passes on completed supply.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1, 2)).to.complete;
+  is Failures.list.elems, 0,                  'complete passes';
+  Failures.list = ();
+}
+
+# Integration: expect(...).to.complete fails on pending supply.
+{
+  Failures.list = ();
+  my $supplier = Supplier.new;
+  expect($supplier.Supply).to.complete(:within(0.1));
+  is Failures.list.elems, 1,                  'complete fails on pending';
+  Failures.list = ();
+}
+
+# Integration: negation works for each matcher.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1, 2, 4)).to.not.emit(1, 2, 3);
+  expect(Supply.from-list(1)).to.not.emit-at-least(3, :within(0.1));
+  my $supplier = Supplier.new;
+  expect($supplier.Supply).to.not.complete(:within(0.1));
+  is Failures.list.elems, 0,                  'negation passes for expected cases';
+  Failures.list = ();
+}
+
+# Failure.expected carries data for each matcher.
+{
+  Failures.list = ();
+  expect(Supply.from-list(1)).to.emit(1, 2);
+  is-deeply Failures.list[0].expected.List, (1, 2),
+                                             'emit Failure.expected is the values list';
+  Failures.list = ();
+
+  expect(Supply.from-list()).to.emit-at-least(3, :within(0.1));
+  is Failures.list[0].expected, 3,           'emit-at-least Failure.expected is minimum';
+  Failures.list = ();
+
+  my $supplier = Supplier.new;
+  expect($supplier.Supply).to.complete(:within(0.1));
+  is Failures.list[0].expected, 0.1,         'complete Failure.expected is window';
+  Failures.list = ();
+}
+
+done-testing;

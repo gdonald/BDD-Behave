@@ -50,7 +50,7 @@ You only need to know about specific submodules when you want to *instantiate* m
 | `BDD::Behave::Matcher::String`     | `MatchMatcher`                                                                                                                                |
 | `BDD::Behave::Matcher::Exception`  | `RaiseErrorMatcher`                                                                                                                           |
 | `BDD::Behave::Matcher::Change`     | `ChangeMatcher`                                                                                                                               |
-| `BDD::Behave::Matcher::Async`      | `BeKeptMatcher`, `BeBrokenMatcher`, `CompleteWithinMatcher`                                                                                   |
+| `BDD::Behave::Matcher::Async`      | `BeKeptMatcher`, `BeBrokenMatcher`, `CompleteWithinMatcher`, `EmitMatcher`, `EmitAtLeastMatcher`, `CompleteMatcher`                            |
 
 Each submodule already `use`s `BDD::Behave::Matcher` internally, but the role is *not* re-exported. If your code needs both, import both:
 
@@ -1262,6 +1262,105 @@ and `promise-given`.
 
 Unlike `be-kept` / `be-broken`, the duration is required — there's
 no useful default for "how long is too long" without it.
+
+## EmitMatcher (built-in)
+
+`emit` taps a `Supply` or iterates a `Channel` and passes when the
+source emits exactly the expected sequence of values within a
+configurable collection window. Comparison is element-by-element via
+`eqv`:
+
+```raku
+expect(Supply.from-list(1, 2, 3)).to.emit(1, 2, 3);
+expect(Supply.from-list('a', 'b')).to.emit('a', 'b');
+
+my $ch = Channel.new;
+$ch.send(1); $ch.send(2); $ch.close;
+expect($ch).to.emit(1, 2);
+
+expect(Supply.from-list(1, 2)).to.not.emit(1, 2, 3);
+```
+
+The collection window defaults to 1 second. Pass `:within(seconds)` to
+change it — useful for slow streams or to fail fast on hung supplies:
+
+```raku
+expect(Supply.from-list(1, 2)).to.emit(1, 2, :within(0.5));
+```
+
+`emit` uses `react`/`whenever` under the hood and stops collecting as
+soon as the expected number of values arrive (the window is only the
+maximum wait). This makes the matcher fast for known-length sequences.
+
+Failure messages render both the expected and the actually-emitted
+sequences:
+
+```
+expected stream to emit [1, 2, 3] within 1s, but it emitted [1, 2]
+```
+
+Non-stream actuals (anything that's neither `Supply` nor `Channel`)
+record a shape-failure rather than dying:
+
+```
+expected a Supply or Channel for emit, but got 42
+```
+
+`Failure.expected` carries the expected values list for tooling.
+
+## EmitAtLeastMatcher (built-in)
+
+`emit-at-least` passes when a `Supply` or `Channel` emits at least the
+given number of values within the collection window. The matcher stops
+collecting as soon as the threshold is reached:
+
+```raku
+expect(Supply.from-list(1, 2, 3, 4)).to.emit-at-least(2);
+expect(Supply.from-list('a')).to.not.emit-at-least(3, :within(0.1));
+```
+
+The `:within` window defaults to 1 second.
+
+Failure messages report the count that was actually emitted:
+
+```
+expected stream to emit at least 3 values within 0.1s, but it emitted 1
+```
+
+`Failure.expected` carries the minimum count.
+
+## CompleteMatcher (built-in)
+
+`complete` waits for a `Supply` to send `done` (or for a `Channel` to
+be closed) within the collection window:
+
+```raku
+expect(Supply.from-list(1, 2, 3)).to.complete;
+
+my $ch = Channel.new;
+$ch.send(1); $ch.close;
+expect($ch).to.complete;
+
+my $supplier = Supplier.new;
+expect($supplier.Supply).to.not.complete(:within(0.1));
+```
+
+The `:within` window defaults to 1 second.
+
+Failure messages report whether the stream was still active or had
+errored:
+
+```
+expected stream to complete within 0.1s, but it was still active (emitted 0 values)
+expected stream to complete within 1s, but it quit (X::AdHoc: boom)
+```
+
+`Failure.expected` carries the window so failure metadata is queryable
+from tooling.
+
+Unlike Promise's `complete-within`, the `complete` matcher does not
+treat a stream-level error (`QUIT`) as completion — only the `done`
+signal counts.
 
 ## Writing a custom matcher
 
