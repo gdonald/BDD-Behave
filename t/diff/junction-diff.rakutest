@@ -1,0 +1,201 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Diff;
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+sub capture-stdout(&block --> Str) {
+  my $tmp = $*TMPDIR.add("behave-junction-diff-{$*PID}-{(now * 1e6).Int}.out");
+  {
+    my $fh = $tmp.open(:w);
+    my $*OUT = $fh;
+    block();
+    $fh.close;
+  }
+  my $captured = $tmp.slurp;
+  $tmp.unlink;
+  $captured;
+}
+
+# is-junction
+
+ok  is-junction(1 | 2),         'detects any-junction';
+ok  is-junction(1 & 2),         'detects all-junction';
+ok  is-junction(1 ^ 2),         'detects one-junction';
+ok  is-junction(none(1, 2)),    'detects none-junction';
+nok is-junction(1),             'rejects Int';
+nok is-junction('hi'),          'rejects Str';
+nok is-junction(Nil),           'rejects Nil';
+nok is-junction([1, 2]),        'rejects Array';
+
+# diffable with junctions
+
+ok diffable(5, 1 | 2 | 3),      'diffable when expected is any-junction';
+ok diffable(5, 1 & 2),          'diffable when expected is all-junction';
+ok diffable(5, 1 ^ 2 ^ 3),      'diffable when expected is one-junction';
+ok diffable(5, none(1, 2)),     'diffable when expected is none-junction';
+ok diffable(Nil, 1 | 2),        'diffable with undefined given and junction expected';
+
+# junction-kind
+
+is junction-kind(1 | 2),        'any',  'kind any from |';
+is junction-kind(any(1, 2)),    'any',  'kind any from any()';
+is junction-kind(1 & 2),        'all',  'kind all from &';
+is junction-kind(all(1, 2)),    'all',  'kind all from all()';
+is junction-kind(1 ^ 2),        'one',  'kind one from ^';
+is junction-kind(one(1, 2)),    'one',  'kind one from one()';
+is junction-kind(none(1, 2)),   'none', 'kind none from none()';
+
+# junction-eigenstates
+
+is-deeply junction-eigenstates(1 | 2 | 3).list, (1, 2, 3),
+  'eigenstates of any-junction';
+is-deeply junction-eigenstates(none('a', 'b')).list, ('a', 'b'),
+  'eigenstates of none-junction';
+
+# render-diff with any junction (no match)
+
+{
+  my $out = strip-ansi(render-diff(5, 1 | 2 | 3));
+  ok $out.starts-with('- any(1, 2, 3)'), 'starts with junction gist';
+  ok $out.contains('+ 5'),                'shows given value';
+  ok $out.contains('Alternatives (none of 3 matched; expected at least one):'),
+    'any-junction failure summary';
+  ok $out.contains('✗ 1'), 'shows ✗ for 1';
+  ok $out.contains('✗ 2'), 'shows ✗ for 2';
+  ok $out.contains('✗ 3'), 'shows ✗ for 3';
+}
+
+# render-diff with all junction (partial)
+
+{
+  my $out = strip-ansi(render-diff('hi', Int & Str));
+  ok $out.contains('1 of 2 matched'),     'all-junction match count';
+  ok $out.contains('✗ Int'),              'shows ✗ for Int';
+  ok $out.contains('✓ Str'),              'shows ✓ for Str';
+  ok $out.contains('expected all'),       'expected-all clause';
+}
+
+# render-diff with one junction (more than one matched)
+
+{
+  my $out = strip-ansi(render-diff(2, 2 ^ 2 ^ 3));
+  ok $out.contains('2 of 3 matched'),       'one-junction match count';
+  ok $out.contains('expected exactly one'), 'expected-exactly-one clause';
+}
+
+# render-diff with none junction (matched one)
+
+{
+  my $out = strip-ansi(render-diff(2, none(1, 2, 3)));
+  ok $out.contains('1 of 3 matched'),  'none-junction match count';
+  ok $out.contains('expected zero'),   'expected-zero clause';
+  ok $out.contains('✓ 2'),             '✓ for matched member';
+  ok $out.contains('✗ 1'),             '✗ for non-matched member';
+}
+
+# render-diff color encoding
+
+{
+  my $out = render-diff(5, 1 | 2 | 3);
+  ok $out.contains("\e[31m"), 'red ANSI present for failing alternatives';
+  ok $out.contains("\e[32m"), 'green ANSI present for + line';
+}
+
+# render-diff type-object alternatives
+
+{
+  my $out = strip-ansi(render-diff('hi', Int | Rat));
+  ok $out.contains('✗ Int'), 'renders Int by name';
+  ok $out.contains('✗ Rat'), 'renders Rat by name';
+}
+
+# render-diff under :negated
+
+{
+  my $out = strip-ansi(render-diff(2, 1 | 2 | 3, :negated));
+  ok $out.contains('expected none under negation'),
+    'any-junction negated summary';
+}
+
+{
+  my $out = strip-ansi(render-diff(5, none(1, 2, 3), :negated));
+  ok $out.contains('expected at least one under negation'),
+    'none-junction negated summary';
+}
+
+{
+  my $out = strip-ansi(render-diff(5, Int & Numeric, :negated));
+  ok $out.contains('expected at least one to fail under negation'),
+    'all-junction negated summary';
+}
+
+{
+  my $out = strip-ansi(render-diff(2, 1 ^ 2 ^ 3, :negated));
+  ok $out.contains('expected zero or more than one under negation'),
+    'one-junction negated summary';
+}
+
+# Failures.say integration: junction failure renders a Diff: section
+
+{
+  Failures.list = ();
+  Failures.list.push(Failure.new(
+    :file('foo.raku'),
+    :line(10),
+    :given(5),
+    :expected(1 | 2 | 3),
+  ));
+  my $out = capture-stdout({ Failures.say });
+  Failures.list = ();
+  ok $out.contains('Diff:'),
+    'Failures.say emits Diff: section for junction expected';
+  ok strip-ansi($out).contains('Alternatives'),
+    'Failures.say includes Alternatives line';
+  ok strip-ansi($out).contains('✗ 1'),
+    'Failures.say includes per-member status';
+}
+
+# Failures.say integration: junction failure renders a Diff: section under negation
+
+{
+  Failures.list = ();
+  Failures.list.push(Failure.new(
+    :file('foo.raku'),
+    :line(10),
+    :given(2),
+    :expected(1 | 2 | 3),
+    :negated(True),
+  ));
+  my $out = capture-stdout({ Failures.say });
+  Failures.list = ();
+  ok $out.contains('Diff:'),
+    'Failures.say emits Diff: section for negated junction expected';
+  ok strip-ansi($out).contains('expected none under negation'),
+    'Failures.say uses negated summary';
+}
+
+# Failures.say still omits Diff: for plain scalar negation
+
+{
+  Failures.list = ();
+  Failures.list.push(Failure.new(
+    :file('foo.raku'),
+    :line(10),
+    :given(1),
+    :expected(1),
+    :negated(True),
+  ));
+  my $out = capture-stdout({ Failures.say });
+  Failures.list = ();
+  nok $out.contains('Diff:'),
+    'Failures.say omits Diff: for negated scalar';
+}
+
+done-testing;

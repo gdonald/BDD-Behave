@@ -23,9 +23,14 @@ class Failures is export {
           my $op = $failure.negated ?? "not to be" !! "to be";
           say "      Expected: " ~ $failure.given.raku;
           say "      $op: " ~ $failure.expected.raku;
-          if !$failure.negated && diffable($failure.given, $failure.expected) {
+          my $expected-is-junction = is-junction($failure.expected);
+          if ($expected-is-junction || !$failure.negated)
+             && diffable($failure.given, $failure.expected) {
             say "      Diff:";
-            for render-diff($failure.given, $failure.expected).lines -> $line {
+            my $rendered = $expected-is-junction
+              ?? render-diff($failure.given, $failure.expected, :negated($failure.negated))
+              !! render-diff($failure.given, $failure.expected);
+            for $rendered.lines -> $line {
               say "        $line";
             }
           }
