@@ -1,0 +1,76 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 16;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
+my $passing = $root.add('specs/expectations/be-between-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub fail-count(Str $out --> Int) {
+  ($out ~~ / (\d+) \s+ 'failed' /) ?? +$0 !! 0;
+}
+
+# Baseline — without --fail-fast the fixture reports every failure.
+{
+  my %r = run-behave($failing.absolute);
+  isnt %r<exit>, 0, 'failing fixture exits non-zero';
+  is fail-count(%r<out>), 3, 'failing fixture reports all 3 failures by default';
+}
+
+# --fail-fast stops after the first failure.
+{
+  my %r = run-behave('--fail-fast', $failing.absolute);
+  isnt %r<exit>, 0, '--fail-fast exits non-zero on failure';
+  is fail-count(%r<out>), 1, '--fail-fast stops after first failure';
+  ok %r<out>.contains('Aborted after 1 failure (--fail-fast)'),
+    '--fail-fast prints abort banner with singular "failure"';
+}
+
+# --fail-fast=2 stops after the second failure.
+{
+  my %r = run-behave('--fail-fast=2', $failing.absolute);
+  isnt %r<exit>, 0, '--fail-fast=2 exits non-zero on failure';
+  is fail-count(%r<out>), 2, '--fail-fast=2 stops after second failure';
+  ok %r<out>.contains('Aborted after 2 failures (--fail-fast)'),
+    '--fail-fast=2 prints abort banner with plural "failures"';
+}
+
+# --fail-fast on a passing run is a no-op.
+{
+  my %r = run-behave('--fail-fast', $passing.absolute);
+  is %r<exit>, 0, '--fail-fast on passing suite exits 0';
+  ok !%r<out>.contains('Aborted after'),
+    '--fail-fast does not print abort banner when nothing fails';
+}
+
+# Invalid --fail-fast values are rejected with a helpful error.
+{
+  my %r = run-behave('--fail-fast=0', $passing.absolute);
+  isnt %r<exit>, 0, '--fail-fast=0 exits non-zero';
+  ok %r<err>.contains('--fail-fast=N requires a positive integer'),
+    '--fail-fast=0 prints helpful error to stderr';
+}
+{
+  my %r = run-behave('--fail-fast=abc', $passing.absolute);
+  isnt %r<exit>, 0, '--fail-fast=abc exits non-zero';
+  ok %r<err>.contains('--fail-fast=N requires a positive integer'),
+    '--fail-fast=abc prints helpful error to stderr';
+}
+
+# Cross-suite: once the threshold is hit, later spec files do not load.
+{
+  my %r = run-behave('--fail-fast', $failing.absolute, $passing.absolute);
+  is fail-count(%r<out>), 1, 'cross-suite --fail-fast stops at threshold';
+  ok !%r<out>.contains('be-between'),
+    'cross-suite --fail-fast does not run later suites';
+}

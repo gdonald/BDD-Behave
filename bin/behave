@@ -14,6 +14,7 @@ my @example-patterns;
 my $aggregate-failures = False;
 my Str $order = 'random';
 my Int $seed;
+my Int $fail-fast = 0;
 
 sub usage() {
   say qq:to/HERE/;
@@ -43,6 +44,8 @@ sub usage() {
                              --order=defined. Auto-generated when omitted
                              and --order=random; the seed is printed at the
                              end of the run for reproduction.
+    --fail-fast              Stop after the first failed example.
+    --fail-fast=N            Stop after N failed examples (N must be >= 1).
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example, and
@@ -95,6 +98,15 @@ while @args {
     $seed = @args.shift.Int;
   } elsif $arg.starts-with('--seed=') {
     $seed = $arg.substr('--seed='.chars).Int;
+  } elsif $arg eq '--fail-fast' {
+    $fail-fast = 1;
+  } elsif $arg.starts-with('--fail-fast=') {
+    my $value = $arg.substr('--fail-fast='.chars);
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --fail-fast=N requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $fail-fast = $value.Int;
   } else {
     @specs.push: $arg;
   }
@@ -143,6 +155,12 @@ for @files -> $file {
 
   say "\n" ~ light-blue($suite.file.basename) if $multi;
 
+  my $remaining-fail-fast = 0;
+  if $fail-fast > 0 {
+    $remaining-fail-fast = $fail-fast - $total-result.failed;
+    last if $remaining-fail-fast <= 0;
+  }
+
   my $runner = BDD::Behave::Runner::Runner.new(
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
@@ -150,6 +168,7 @@ for @files -> $file {
     :aggregate-failures($aggregate-failures),
     :$order,
     :$seed,
+    :fail-fast($remaining-fail-fast),
   );
   my $result = $runner.run($suite);
   $suites-run++;
@@ -161,6 +180,8 @@ for @files -> $file {
     :pending($total-result.pending + $result.pending),
     :skipped($total-result.skipped + $result.skipped),
   );
+
+  last if $fail-fast > 0 && $total-result.failed >= $fail-fast;
 }
 
 if $suites-run > 1 {

@@ -40,6 +40,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--aggregate-failures` / `--aggregate-failures=LABEL` | Wrap every example in `aggregate-failures` semantics; converts uncaught example exceptions into recorded failures. With `=LABEL` the label tags each failure. Per-example/group `:aggregate-failures` metadata overrides this. See [Aggregate failures](expectations/aggregate-failures.md#automatic-aggregation). |
 | `--order ORDER`      | Example execution order: `random` (default) or `defined`. Random order shuffles the children of every group and the suite, surfacing hidden order dependencies. See [Order and seed](#order-and-seed). |
 | `--seed N`           | Seed the random-order RNG for reproducible runs. Ignored when `--order=defined`. Auto-generated when omitted and `--order=random`. See [Order and seed](#order-and-seed). |
+| `--fail-fast`        | Stop after the first failed example. Equivalent to `--fail-fast=1`. See [Fail-fast](#fail-fast). |
+| `--fail-fast=N`      | Stop after `N` failed examples (`N` must be a positive integer). See [Fail-fast](#fail-fast). |
 
 ## Order and seed
 
@@ -101,6 +103,42 @@ my $runner = BDD::Behave::Runner::Runner.new(:order<random>, :seed(42));
 ```
 
 `Runner.new(:order<sideways>)` (or any value other than `'random'` / `'defined'`) dies at construction time.
+
+## Fail-fast
+
+By default, Behave runs every example in the suite even after a failure, so the run produces a complete picture of what is broken. When iterating on a single problem — or when you want a faster signal in CI — pass `--fail-fast` to stop as soon as the first failure occurs:
+
+```shell
+$ behave --fail-fast
+```
+
+After the threshold is hit, Behave prints the normal failure list and counts, plus an abort banner:
+
+```text
+Aborted after 1 failure (--fail-fast)
+```
+
+Pass `--fail-fast=N` to keep running until `N` failures have accumulated:
+
+```shell
+$ behave --fail-fast=3
+```
+
+`N` must be a positive integer; `--fail-fast=0` and non-numeric values exit with a non-zero status and a helpful error on stderr.
+
+When multiple spec files are passed on the command line, the threshold is shared across them — once it is reached, the remaining suites are not loaded. Skipped and pending examples do not count toward the threshold.
+
+### Programmatic use
+
+`BDD::Behave::Runner::Runner.new` accepts `:fail-fast(N)` (default `0`, meaning unbounded). The runner exposes `.aborted` (a `Bool`) after `.run` returns, so callers can distinguish a clean finish from an early abort:
+
+```raku
+my $runner = BDD::Behave::Runner::Runner.new(:fail-fast(1));
+my $result = $runner.run($suite);
+say 'aborted early' if $runner.aborted;
+```
+
+`Runner.new(:fail-fast(-1))` (or any negative integer) dies at construction time.
 
 ## Filtering by description
 

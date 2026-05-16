@@ -59,10 +59,15 @@ our class Runner {
   has Str $.order = 'defined';
   has Int $.seed;
   has Int $!rng-state;
+  has Int $.fail-fast = 0;
+  has Bool $.aborted = False;
 
   submethod TWEAK {
     die "order must be 'random' or 'defined' (got: '$!order')"
       unless $!order eq 'random' | 'defined';
+
+    die "fail-fast must be 0 or a positive integer (got: $!fail-fast)"
+      if $!fail-fast < 0;
 
     if $!order eq 'random' {
       $!seed //= (1 .. 2_147_483_646).pick;
@@ -72,6 +77,10 @@ our class Runner {
       $!rng-state = $!seed % 2_147_483_647;
       $!rng-state = 1 if $!rng-state == 0;
     }
+  }
+
+  method should-abort(--> Bool) {
+    $!fail-fast > 0 && $!result.failed >= $!fail-fast;
   }
 
   method advance-rng(--> Int) {
@@ -120,11 +129,13 @@ our class Runner {
     # A suite is a top-level container for a file
     # Walk all its children (groups and examples)
     for self.shuffled-children($suite) -> $child {
+      last if self.should-abort;
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
         when Example      { self.handle-example($child) if self.example-matches($child) }
       }
     }
+    $!aborted = True if self.should-abort;
   }
 
   method run-group(ExampleGroup $group) {
@@ -185,6 +196,7 @@ our class Runner {
 
   method run-group-body(ExampleGroup $group) {
     for self.shuffled-children($group) -> $child {
+      last if self.should-abort;
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
         when Example      { self.handle-example($child) if self.example-matches($child) }
@@ -574,6 +586,11 @@ our class Runner {
 
     my @parts = ($total-msg, $failed-msg, $pending-msg, $skipped-msg, $passed-msg).grep(*.so);
     say @parts.join(', ');
+
+    if $!aborted {
+      my $word = $!fail-fast == 1 ?? 'failure' !! 'failures';
+      say red("Aborted after $!fail-fast $word (--fail-fast)");
+    }
 
     if $!order eq 'random' && $!seed.defined {
       say "Randomized with seed $!seed";
