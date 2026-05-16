@@ -79,7 +79,7 @@ describe 'RunResult counters', {
 
   it 'captures a per-failure error record with description, file, and line', {
     my $suite  = build-suite(:pass(0), :fail(2));
-    my $result = silent-run($suite);
+    my $result = silent-run($suite, :order<defined>);
 
     expect($result.failed).to.be(2);
     expect($result.errors.elems).to.be(2);

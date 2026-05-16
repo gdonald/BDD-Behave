@@ -63,7 +63,7 @@ describe 'subject is lazy by default', {
   }
 }
 
-describe 'subject-bang eager evaluation', {
+describe 'subject-bang eager evaluation', :order<defined>, {
   my $eager-hits = 0;
   subject-bang({ ++$eager-hits; 'eager-value' });
 

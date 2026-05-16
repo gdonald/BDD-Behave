@@ -1,6 +1,6 @@
 use BDD::Behave;
 
-describe 'around-each wraps a single example', {
+describe 'around-each wraps a single example', :order<defined>, {
   my @log;
 
   before-each {
@@ -76,7 +76,7 @@ describe 'nested around-each inheritance', {
   }
 }
 
-describe 'around-each cleanup with LEAVE', {
+describe 'around-each cleanup with LEAVE', :order<defined>, {
   my @resources;
 
   around-each -> &continue {
@@ -94,7 +94,7 @@ describe 'around-each cleanup with LEAVE', {
   }
 }
 
-describe 'tag-filtered around-each', {
+describe 'tag-filtered around-each', :order<defined>, {
   my @log;
 
   around-each :tag<db>, -> &continue {

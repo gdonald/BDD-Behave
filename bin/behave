@@ -12,6 +12,8 @@ my @include-tags;
 my @exclude-tags;
 my @example-patterns;
 my $aggregate-failures = False;
+my Str $order = 'random';
+my Int $seed;
 
 sub usage() {
   say qq:to/HERE/;
@@ -34,6 +36,13 @@ sub usage() {
                              Same as above but use LABEL as the default
                              aggregation label. Per-example or per-group
                              :aggregate-failures metadata overrides this.
+    --order ORDER            Example execution order: 'random' (default) or
+                             'defined' (declaration order). Random order
+                             shuffles children of every group and the suite.
+    --seed N                 Seed for the random-order RNG. Ignored when
+                             --order=defined. Auto-generated when omitted
+                             and --order=random; the seed is printed at the
+                             end of the run for reproduction.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example, and
@@ -76,9 +85,28 @@ while @args {
     $aggregate-failures = True;
   } elsif $arg.starts-with('--aggregate-failures=') {
     $aggregate-failures = $arg.substr('--aggregate-failures='.chars);
+  } elsif $arg eq '--order' {
+    die "--order requires a value" unless @args;
+    $order = @args.shift;
+  } elsif $arg.starts-with('--order=') {
+    $order = $arg.substr('--order='.chars);
+  } elsif $arg eq '--seed' {
+    die "--seed requires a value" unless @args;
+    $seed = @args.shift.Int;
+  } elsif $arg.starts-with('--seed=') {
+    $seed = $arg.substr('--seed='.chars).Int;
   } else {
     @specs.push: $arg;
   }
+}
+
+unless $order eq 'random' | 'defined' {
+  note "Error: --order must be 'random' or 'defined' (got: '$order')";
+  exit 2;
+}
+
+if $order eq 'random' && !$seed.defined {
+  $seed = (1 .. 2_147_483_646).pick;
 }
 
 # Get list of spec files
@@ -120,6 +148,8 @@ for @files -> $file {
     :exclude-tags(@exclude-tags),
     :example-patterns(@example-patterns),
     :aggregate-failures($aggregate-failures),
+    :$order,
+    :$seed,
   );
   my $result = $runner.run($suite);
   $suites-run++;
@@ -140,6 +170,7 @@ if $suites-run > 1 {
   say light-blue("  {$total-result.pending} pending")  if $total-result.pending > 0;
   say light-blue("  {$total-result.skipped} skipped")  if $total-result.skipped > 0;
   say green("  {$total-result.passed} passed")         if $total-result.passed > 0;
+  say "Randomized with seed $seed" if $order eq 'random';
 }
 
 if @load-errors.elems {

@@ -3,7 +3,7 @@ use BDD::Behave;
 my $eager-counter = 0;
 my $lazy-counter  = 0;
 
-describe 'let-bang vs let with side effects', {
+describe 'let-bang vs let with side effects', :order<defined>, {
   let-bang(:eager, { ++$eager-counter });
   let(:lazy,       { ++$lazy-counter });
 

@@ -1,0 +1,171 @@
+use Test;
+use Test::Output;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub build-recording-suite(@names) {
+  my @recorded;
+  my $suite = Suite.create(:description('s'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+
+  for @names.kv -> $i, $name {
+    $group.add-example(Example.new(
+      :description($name),
+      :file('synthetic'.IO),
+      :line(10 + $i),
+      :block({ @recorded.push($name) }),
+    ));
+  }
+
+  ($suite, @recorded);
+}
+
+sub silent-run($suite, *%runner-args) {
+  my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+  my $result;
+  stdout-from({ $result = $runner.run($suite) });
+  ($runner, $result);
+}
+
+# Defaults
+{
+  my $r = BDD::Behave::Runner::Runner.new;
+  is $r.order, 'defined', 'Runner defaults to defined order';
+  nok $r.seed.defined, 'no seed set by default';
+}
+
+# Defined order runs declared order
+{
+  my ($suite, $recorded) = build-recording-suite(<a b c d e>);
+  silent-run($suite);
+  is-deeply $recorded.Array, <a b c d e>.Array,
+    'defined order runs children in declaration order';
+}
+
+# Random order auto-generates a seed
+{
+  my $r = BDD::Behave::Runner::Runner.new(:order<random>);
+  ok $r.seed.defined, 'random order auto-generates a seed';
+  ok $r.seed >= 1, 'auto-generated seed is positive';
+}
+
+# Same seed → same permutation
+{
+  my ($s1, $r1) = build-recording-suite(<a b c d e f g h>);
+  my ($s2, $r2) = build-recording-suite(<a b c d e f g h>);
+  silent-run($s1, :order<random>, :seed(123456));
+  silent-run($s2, :order<random>, :seed(123456));
+  is-deeply $r1.Array, $r2.Array, 'same seed produces same permutation';
+}
+
+# Different seeds → likely different orders (at least one differs from declared)
+{
+  my $differs = False;
+  for 1..10 -> $seed {
+    my ($suite, $recorded) = build-recording-suite(<a b c d e f g>);
+    silent-run($suite, :order<random>, :seed($seed));
+    $differs = True if $recorded.Array !eqv <a b c d e f g>.Array;
+    last if $differs;
+  }
+  ok $differs, 'at least one seed in 1..10 reorders a 7-element list';
+}
+
+# Invalid order value rejected
+{
+  dies-ok { BDD::Behave::Runner::Runner.new(:order<sideways>) },
+    "Runner.new(:order<sideways>) dies";
+}
+
+# Seed 0 doesn't blow up
+{
+  my ($suite, $recorded) = build-recording-suite(<a b c>);
+  lives-ok { silent-run($suite, :order<random>, :seed(0)) },
+    'seed 0 does not die';
+  is $recorded.elems, 3, 'all examples ran with seed 0';
+}
+
+# :order<defined> metadata on a group overrides runner default
+{
+  my @recorded;
+  my $suite = Suite.create(:description('s'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $group.set-metadata(:order<defined>);
+  $suite.add-group($group);
+
+  for <a b c d e f> -> $name {
+    $group.add-example(Example.new(
+      :description($name),
+      :file('synthetic'.IO),
+      :line(10),
+      :block({ @recorded.push($name) }),
+    ));
+  }
+
+  silent-run($suite, :order<random>, :seed(99));
+
+  is-deeply @recorded.Array, <a b c d e f>.Array,
+    ':order<defined> metadata overrides runner random order';
+}
+
+# :order metadata inherits through nested groups
+{
+  my @recorded;
+  my $suite = Suite.create(:description('s'), :file('synthetic'.IO), :line(1));
+  my $outer = ExampleGroup.new(:description('outer'), :file('synthetic'.IO), :line(1));
+  $outer.set-metadata(:order<defined>);
+  $suite.add-group($outer);
+
+  my $inner = ExampleGroup.new(:description('inner'), :file('synthetic'.IO), :line(2));
+  $outer.add-group($inner);
+
+  for <a b c d e> -> $name {
+    $inner.add-example(Example.new(
+      :description($name),
+      :file('synthetic'.IO),
+      :line(10),
+      :block({ @recorded.push($name) }),
+    ));
+  }
+
+  silent-run($suite, :order<random>, :seed(31337));
+
+  is-deeply @recorded.Array, <a b c d e>.Array,
+    ':order<defined> inherits through nested groups';
+}
+
+# Seed announcement in output
+{
+  my ($suite, $recorded) = build-recording-suite(<a b c>);
+  my $output = stdout-from({
+    BDD::Behave::Runner::Runner.new(:order<random>, :seed(42)).run($suite);
+  });
+  like $output, /'Randomized with seed 42'/, 'random run prints seed line';
+}
+
+# No seed announcement under defined
+{
+  my ($suite, $recorded) = build-recording-suite(<a b c>);
+  my $output = stdout-from({
+    BDD::Behave::Runner::Runner.new.run($suite);
+  });
+  unlike $output, /'Randomized with seed'/, 'defined run omits seed line';
+}
+
+# effective-order honors group override over runner default
+{
+  my $runner = BDD::Behave::Runner::Runner.new(:order<random>, :seed(1));
+  my $g = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  is $runner.effective-order($g), 'random',
+    'effective-order returns runner default when no override';
+
+  $g.set-metadata(:order<defined>);
+  is $runner.effective-order($g), 'defined',
+    'effective-order honors group :order metadata';
+}
+
+done-testing;

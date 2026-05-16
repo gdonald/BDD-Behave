@@ -25,7 +25,7 @@ describe 'metadata-keyed before-each hooks', {
   }
 }
 
-describe 'metadata-keyed after-each hooks', {
+describe 'metadata-keyed after-each hooks', :order<defined>, {
   my @log;
 
   after-each :tag<slow>, {

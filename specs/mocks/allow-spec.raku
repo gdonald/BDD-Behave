@@ -9,7 +9,7 @@ class AllowRepo {
   method find($id) { "real:$id" }
 }
 
-describe 'allow(instance).to.receive(method).and-return(value)', {
+describe 'allow(instance).to.receive(method).and-return(value)', :order<defined>, {
   it 'stubs only the targeted instance', {
     my $a = AllowGreeter.new;
     my $b = AllowGreeter.new;
@@ -38,7 +38,7 @@ describe 'allow(instance).to.receive(method).and-return(value)', {
   }
 }
 
-describe 'allow(class).to.receive(method)', {
+describe 'allow(class).to.receive(method)', :order<defined>, {
   it 'stubs dispatch through the class itself', {
     allow(AllowRepo).to.receive('find').and-return('mocked');
     expect(AllowRepo.find(42)).to.be('mocked');

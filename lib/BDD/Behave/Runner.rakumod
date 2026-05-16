@@ -56,6 +56,48 @@ our class Runner {
   has @.example-patterns;
   has $.aggregate-failures = False;
   has Bool $!focus-mode = False;
+  has Str $.order = 'defined';
+  has Int $.seed;
+  has Int $!rng-state;
+
+  submethod TWEAK {
+    die "order must be 'random' or 'defined' (got: '$!order')"
+      unless $!order eq 'random' | 'defined';
+
+    if $!order eq 'random' {
+      $!seed //= (1 .. 2_147_483_646).pick;
+    }
+
+    if $!seed.defined {
+      $!rng-state = $!seed % 2_147_483_647;
+      $!rng-state = 1 if $!rng-state == 0;
+    }
+  }
+
+  method advance-rng(--> Int) {
+    $!rng-state = ($!rng-state * 48271) % 2_147_483_647;
+    $!rng-state;
+  }
+
+  method effective-order($container --> Str) {
+    if $container ~~ ExampleGroup {
+      my $override = $container.effective-metadata-value('order');
+      return $override if $override.defined;
+    }
+    $!order;
+  }
+
+  method shuffled-children($container --> List) {
+    my @items = $container.children.list;
+    my $effective-order = self.effective-order($container);
+    return @items.List if $effective-order eq 'defined' || @items.elems <= 1;
+    my @result = @items;
+    for (1 ..^ @result.elems).reverse -> $i {
+      my $j = self.advance-rng % ($i + 1);
+      @result[$i, $j] = @result[$j, $i];
+    }
+    @result.List;
+  }
 
   method run(Suite $suite) {
     $!focus-mode = self.has-focus($suite);
@@ -77,7 +119,7 @@ our class Runner {
   method run-suite(Suite $suite) {
     # A suite is a top-level container for a file
     # Walk all its children (groups and examples)
-    for $suite.children -> $child {
+    for self.shuffled-children($suite) -> $child {
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
         when Example      { self.handle-example($child) if self.example-matches($child) }
@@ -91,6 +133,12 @@ our class Runner {
 
     @!description-stack.push($group.description);
     $!indent++;
+
+    my Int $group-stub-snapshot = BDD::Behave::Mock::Stub::StubRegistry.active-count;
+    LEAVE {
+      BDD::Behave::Mock::Stub::StubRegistry.clear-since($group-stub-snapshot)
+        if $group-stub-snapshot.defined;
+    }
 
     my $group-skipped = $group.effective-skipped;
 
@@ -136,7 +184,7 @@ our class Runner {
   }
 
   method run-group-body(ExampleGroup $group) {
-    for $group.children -> $child {
+    for self.shuffled-children($group) -> $child {
       given $child {
         when ExampleGroup { self.run-group($child) if self.group-matches($child) }
         when Example      { self.handle-example($child) if self.example-matches($child) }
@@ -526,5 +574,9 @@ our class Runner {
 
     my @parts = ($total-msg, $failed-msg, $pending-msg, $skipped-msg, $passed-msg).grep(*.so);
     say @parts.join(', ');
+
+    if $!order eq 'random' && $!seed.defined {
+      say "Randomized with seed $!seed";
+    }
   }
 }

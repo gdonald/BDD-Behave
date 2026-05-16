@@ -1,0 +1,58 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 8;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('specs/expectations/be-between-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+# Default (no flags) prints a seed announcement.
+{
+  my %r = run-behave($fixture.absolute);
+  is %r<exit>, 0, 'default run exits successfully';
+  like %r<out>, /'Randomized with seed' \s+ \d+/,
+    'default run prints "Randomized with seed N"';
+}
+
+# --order=defined omits the seed announcement.
+{
+  my %r = run-behave('--order', 'defined', $fixture.absolute);
+  is %r<exit>, 0, '--order=defined exits successfully';
+  unlike %r<out>, /'Randomized with seed'/,
+    '--order=defined omits the seed line';
+}
+
+# --seed N is echoed back exactly.
+{
+  my %r = run-behave('--seed', '12345', $fixture.absolute);
+  ok %r<out>.contains('Randomized with seed 12345'),
+    '--seed value is echoed in the seed line';
+}
+
+# An invalid --order is rejected with a non-zero exit and a stderr message.
+{
+  my %r = run-behave('--order', 'sideways', $fixture.absolute);
+  isnt %r<exit>, 0, 'invalid --order exits non-zero';
+  ok %r<err>.contains("--order must be 'random' or 'defined'"),
+    'invalid --order prints a helpful error to stderr';
+}
+
+# Same seed → identical run output (modulo the seed announcement line itself).
+{
+  my %a = run-behave('--seed', '111', $fixture.absolute);
+  my %b = run-behave('--seed', '111', $fixture.absolute);
+  my $strip = sub ($text) {
+    $text.lines.grep({ !.contains('Randomized with seed') }).join("\n");
+  };
+  is $strip(%a<out>), $strip(%b<out>),
+    'identical seed → identical output (sans seed line)';
+}

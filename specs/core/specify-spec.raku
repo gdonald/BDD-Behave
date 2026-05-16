@@ -8,28 +8,35 @@ constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 # the spec runner actually executed it.
 my $body-ran-count = 0;
 
-describe 'specify-spec fixture', {
-  specify 'specify with description registers an example', {
-    $body-ran-count++;
-    expect(1).to.be(1);
+describe 'specify (file)', :order<defined>, {
+  describe 'specify-spec fixture', {
+    specify 'specify with description registers an example', {
+      $body-ran-count++;
+      expect(1).to.be(1);
+    }
+
+    specify 'specify with metadata', :tag<demo>, {
+      expect(1).to.be(1);
+    }
+
+    specify {
+      expect(1).to.be(1);
+    }
   }
 
-  specify 'specify with metadata', :tag<demo>, {
-    expect(1).to.be(1);
+  sub find-fixture() {
+    my $suite = registry().suites
+      .first({ .file.basename eq 'specify-spec.raku' });
+    for $suite.groups -> $g {
+      return $g if $g.description eq 'specify-spec fixture';
+      for $g.groups -> $inner {
+        return $inner if $inner.description eq 'specify-spec fixture';
+      }
+    }
+    Nil;
   }
 
-  specify {
-    expect(1).to.be(1);
-  }
-}
-
-sub find-fixture() {
-  registry().suites
-    .first({ .file.basename eq 'specify-spec.raku' })
-    .groups.first(*.description eq 'specify-spec fixture');
-}
-
-describe 'specify', {
+  describe 'specify', {
   it 'is exported and registers examples like `it`', {
     my $fixture = find-fixture();
     my @descs   = $fixture.examples.map(*.description);
@@ -57,5 +64,6 @@ describe 'specify', {
 
   it 'specify-registered example bodies run via the spec runner', {
     expect($body-ran-count).to.be-greater-than-or-equal-to(1);
+  }
   }
 }
