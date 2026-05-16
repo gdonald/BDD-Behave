@@ -5,16 +5,20 @@ use lib 'lib';
 use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::Files;
+use BDD::Behave::Bisect;
 
 my $verbose = False;
 my @specs = [];
 my @include-tags;
 my @exclude-tags;
 my @example-patterns;
+my @only-locations;
 my $aggregate-failures = False;
 my Str $order = 'random';
 my Int $seed;
 my Int $fail-fast = 0;
+my $bisect = False;
+my $bisect-data = False;
 
 sub usage() {
   say qq:to/HERE/;
@@ -46,10 +50,23 @@ sub usage() {
                              end of the run for reproduction.
     --fail-fast              Stop after the first failed example.
     --fail-fast=N            Stop after N failed examples (N must be >= 1).
+    --only-example LOC       Run only the example whose file:line matches LOC
+                             (repeatable; OR semantics). LOC is FILE:LINE
+                             (FILE may be absolute, relative, or basename).
+    --bisect                 Bisect mode: find the minimal set of examples
+                             that, when run in declared order before each
+                             failing example, still reproduces the failure.
+                             Uses subprocesses so user-code state cannot
+                             leak across iterations.
+    --bisect-data            Machine-readable output for use by --bisect.
+                             Suppresses normal output; emits one
+                             'behave-executed: FILE:LINE' line per executed
+                             example and one 'behave-failed: FILE:LINE' line
+                             per failed example.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
-  --tag when both match the same example. --tag, --exclude-tag, --example, and
-  focused examples combine with AND semantics.
+  --tag when both match the same example. --tag, --exclude-tag, --example,
+  --only-example, and focused examples combine with AND semantics.
   HERE
 }
 
@@ -107,6 +124,15 @@ while @args {
       exit 2;
     }
     $fail-fast = $value.Int;
+  } elsif $arg eq '--only-example' {
+    die "--only-example requires a value" unless @args;
+    @only-locations.push: @args.shift;
+  } elsif $arg.starts-with('--only-example=') {
+    @only-locations.push: $arg.substr('--only-example='.chars);
+  } elsif $arg eq '--bisect' {
+    $bisect = True;
+  } elsif $arg eq '--bisect-data' {
+    $bisect-data = True;
   } else {
     @specs.push: $arg;
   }
@@ -117,13 +143,40 @@ unless $order eq 'random' | 'defined' {
   exit 2;
 }
 
-if $order eq 'random' && !$seed.defined {
+if $bisect && $bisect-data {
+  note "Error: --bisect and --bisect-data are mutually exclusive";
+  exit 2;
+}
+
+if $order eq 'random' && !$seed.defined && !$bisect-data {
   $seed = (1 .. 2_147_483_646).pick;
 }
 
 # Get list of spec files
 my $files-obj = Files.new;
 my @files = $files-obj.list(@specs);
+
+if $bisect {
+  my @extra-args;
+  for @include-tags -> $t   { @extra-args.append: '--tag', $t }
+  for @exclude-tags -> $t   { @extra-args.append: '--exclude-tag', $t }
+  for @example-patterns -> $p { @extra-args.append: '--example', $p }
+  if $aggregate-failures {
+    if $aggregate-failures ~~ Str {
+      @extra-args.push: "--aggregate-failures=$aggregate-failures";
+    } else {
+      @extra-args.push: '--aggregate-failures';
+    }
+  }
+
+  my $bisector = BDD::Behave::Bisect::Bisector.new(
+    :spec-files(@files.map(*.Str).List),
+    :@extra-args,
+    :$verbose,
+  );
+  my $result = $bisector.run;
+  exit($result.had-failures ?? 1 !! 0);
+}
 
 # Load and eval spec files
 use MONKEY-SEE-NO-EVAL;
@@ -134,16 +187,21 @@ my $total-result = BDD::Behave::Runner::RunResult.new;
 my $multi = @files.elems > 1;
 my $suites-run = 0;
 my @load-errors;
+my @all-execution-order;
+my @all-failures;
+
+# In --bisect-data mode, suppress normal output during runs.
+my $null-handle = $bisect-data ?? open('/dev/null', :w) !! Nil;
 
 for @files -> $file {
-  say "\nLoading: $file" if $verbose;
+  say "\nLoading: $file" if $verbose && !$bisect-data;
   my $load-failed = False;
   try {
     EVALFILE $file;
     CATCH {
       default {
         @load-errors.push: %( :$file, :message(.message) );
-        note red("Error: Could not load $file: {.message}");
+        note red("Error: Could not load $file: {.message}") unless $bisect-data;
         $load-failed = True;
       }
     }
@@ -153,7 +211,7 @@ for @files -> $file {
   my $suite = $registry.suite-for-file($file.IO);
   next unless $suite.defined;
 
-  say "\n" ~ light-blue($suite.file.basename) if $multi;
+  say "\n" ~ light-blue($suite.file.basename) if $multi && !$bisect-data;
 
   my $remaining-fail-fast = 0;
   if $fail-fast > 0 {
@@ -165,13 +223,28 @@ for @files -> $file {
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
     :example-patterns(@example-patterns),
+    :only-locations(@only-locations),
     :aggregate-failures($aggregate-failures),
     :$order,
     :$seed,
     :fail-fast($remaining-fail-fast),
   );
-  my $result = $runner.run($suite);
+
+  my $result;
+  if $bisect-data {
+    my $*OUT = $null-handle;
+    $result = $runner.run($suite);
+  } else {
+    $result = $runner.run($suite);
+  }
   $suites-run++;
+
+  if $bisect-data {
+    @all-execution-order.append: $runner.execution-order;
+    for $runner.result.errors -> $err {
+      @all-failures.push("{$err<file>}:{$err<line>}");
+    }
+  }
 
   $total-result = BDD::Behave::Runner::RunResult.new(
     :total($total-result.total + $result.total),
@@ -182,6 +255,21 @@ for @files -> $file {
   );
 
   last if $fail-fast > 0 && $total-result.failed >= $fail-fast;
+}
+
+$null-handle.close if $null-handle;
+
+if $bisect-data {
+  for @all-execution-order -> $loc {
+    say "behave-executed: $loc";
+  }
+  for @all-failures -> $loc {
+    say "behave-failed: $loc";
+  }
+  for @load-errors -> $err {
+    say "behave-load-error: $err<file>";
+  }
+  exit(($total-result.success && @load-errors.elems == 0) ?? 0 !! 1);
 }
 
 if $suites-run > 1 {

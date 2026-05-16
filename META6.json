@@ -11,6 +11,7 @@
   "test-depends": ["Test", "Test::META", "Test::Output"],
   "provides": {
     "BDD::Behave": "lib/BDD/Behave.rakumod",
+    "BDD::Behave::Bisect": "lib/BDD/Behave/Bisect.rakumod",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
     "BDD::Behave::DSL": "lib/BDD/Behave/DSL.rakumod",
     "BDD::Behave::Diff": "lib/BDD/Behave/Diff.rakumod",

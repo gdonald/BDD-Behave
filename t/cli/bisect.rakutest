@@ -1,0 +1,120 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 27;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $bisect  = $root.add('t/fixtures/bisect-fixture-spec.raku');
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
+my $passing = $root.add('specs/expectations/be-between-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+# --only-example FILE:LINE restricts to one example.
+{
+  my %r = run-behave('--order', 'defined',
+                     '--only-example', "{$bisect.absolute}:29",
+                     $bisect.absolute);
+  is %r<exit>, 0, '--only-example for non-polluted example exits 0';
+  ok %r<out>.contains('1 example,'),    '--only-example runs exactly one';
+  ok %r<out>.contains('expects counter to be zero'),
+    '--only-example runs the targeted example';
+  ok !%r<out>.contains('pollutes counter'),
+    '--only-example skips non-matching examples';
+}
+
+# Repeating --only-example gives OR semantics.
+{
+  my %r = run-behave('--order', 'defined',
+                     '--only-example', "{$bisect.absolute}:20",
+                     '--only-example', "{$bisect.absolute}:29",
+                     $bisect.absolute);
+  isnt %r<exit>, 0, 'repeated --only-example with order-dep failure exits non-zero';
+  ok %r<out>.contains('2 examples,'),
+    'repeated --only-example runs each match';
+  ok %r<out>.contains('1 failed'),      'pollutes counter causes order-dep failure';
+}
+
+# --only-example=LOC equals --only-example LOC.
+{
+  my %r = run-behave('--order', 'defined',
+                     "--only-example={$bisect.absolute}:29",
+                     $bisect.absolute);
+  is %r<exit>, 0, '--only-example=LOC parses';
+  ok %r<out>.contains('1 passed'),      '--only-example=LOC runs the match';
+}
+
+# Matching by basename (rather than absolute path) is supported.
+{
+  my %r = run-behave('--order', 'defined',
+                     '--only-example', 'bisect-fixture-spec.raku:29',
+                     $bisect.absolute);
+  is %r<exit>, 0, '--only-example matches by basename';
+  ok %r<out>.contains('1 passed'),      'basename match runs the example';
+}
+
+# --bisect-data emits machine-readable lines and suppresses normal output.
+{
+  my %r = run-behave('--bisect-data', '--order', 'defined', $bisect.absolute);
+  isnt %r<exit>, 0, '--bisect-data still exits non-zero on failure';
+  my @lines = %r<out>.lines;
+  is @lines.grep(*.starts-with('behave-executed: ')).elems, 5,
+    '--bisect-data emits one behave-executed line per executed example';
+  is @lines.grep(*.starts-with('behave-failed: ')).elems, 1,
+    '--bisect-data emits one behave-failed line per failure';
+  ok !%r<out>.contains('SUCCESS'),
+    '--bisect-data suppresses normal SUCCESS output';
+  ok !%r<out>.contains('Failures:'),
+    '--bisect-data suppresses normal failure summary';
+}
+
+# --bisect and --bisect-data are mutually exclusive.
+{
+  my %r = run-behave('--bisect', '--bisect-data', $bisect.absolute);
+  isnt %r<exit>, 0, '--bisect + --bisect-data exits non-zero';
+  ok %r<err>.contains('mutually exclusive'),
+    '--bisect + --bisect-data prints helpful error';
+}
+
+# Full --bisect run identifies the minimal prior example.
+{
+  my %r = run-behave('--bisect', $bisect.absolute);
+  isnt %r<exit>, 0, '--bisect exits non-zero when failures exist';
+  ok %r<out>.contains('Minimal reproduction'),
+    '--bisect reports a minimal reproduction';
+  ok %r<out>.contains(':20') && %r<out>.contains(':29'),
+    '--bisect identifies polluter and failing example';
+  ok !%r<out>.contains(':12') && !%r<out>.contains(':16') && !%r<out>.contains(':25'),
+    '--bisect prunes non-polluting prior examples';
+}
+
+# --bisect emits a runnable reproduction command.
+{
+  my %r = run-behave('--bisect', $bisect.absolute);
+  ok %r<out>.contains('Reproduce with:'),
+    '--bisect prints reproduction header';
+  ok %r<out>.contains('--only-example') && %r<out>.contains('--order defined'),
+    '--bisect command uses --only-example and --order defined';
+}
+
+# --bisect on a failure that reproduces in isolation flags it.
+{
+  my %r = run-behave('--bisect', $failing.absolute);
+  ok %r<out>.contains('not order-dependent'),
+    '--bisect flags failures that reproduce in isolation';
+}
+
+# --bisect on a clean run has nothing to do.
+{
+  my %r = run-behave('--bisect', $passing.absolute);
+  is %r<exit>, 0, '--bisect on passing suite exits 0';
+  ok %r<out>.contains('no failing examples'),
+    '--bisect on passing suite reports no work';
+}

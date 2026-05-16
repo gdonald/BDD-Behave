@@ -42,6 +42,9 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--seed N`           | Seed the random-order RNG for reproducible runs. Ignored when `--order=defined`. Auto-generated when omitted and `--order=random`. See [Order and seed](#order-and-seed). |
 | `--fail-fast`        | Stop after the first failed example. Equivalent to `--fail-fast=1`. See [Fail-fast](#fail-fast). |
 | `--fail-fast=N`      | Stop after `N` failed examples (`N` must be a positive integer). See [Fail-fast](#fail-fast). |
+| `--only-example LOC` | Run only examples whose `file:line` matches `LOC` (repeatable; OR semantics). `LOC` is `FILE:LINE` — `FILE` may be absolute, relative, or a basename. See [Bisect](#bisect). |
+| `--bisect`           | Find the minimal set of examples that, run in declared order before each failing example, reproduce the failure. See [Bisect](#bisect). |
+| `--bisect-data`      | Machine-readable output for use by `--bisect`. Suppresses normal output and emits `behave-executed:` / `behave-failed:` lines. See [Bisect](#bisect). |
 
 ## Order and seed
 
@@ -139,6 +142,76 @@ say 'aborted early' if $runner.aborted;
 ```
 
 `Runner.new(:fail-fast(-1))` (or any negative integer) dies at construction time.
+
+## Bisect
+
+When a failure shows up only when a specific other example ran first — classic order-dependent test pollution — `--bisect` finds the minimal set of preceding examples needed to reproduce the failure.
+
+```shell
+$ behave --bisect
+```
+
+### What it does
+
+1. **Initial pass** in declared order (`--order defined`); records which examples ran and which failed.
+2. For each failing example, replays subsets of the prior examples in a fresh subprocess and shrinks the prior set until further pruning loses the failure.
+3. Prints the minimal prior set and a ready-to-run reproduction command.
+
+Each iteration spawns `bin/behave --bisect-data --order defined --only-example …` in a fresh subprocess, so user-code state (module-level vars, file handles, registries) cannot leak across iterations.
+
+### Output
+
+```text
+==> Bisect: initial pass
+Bisect: 1 failing example(s) found across 5 executed
+  ✗ t/fixtures/bisect-fixture-spec.raku:29
+
+==> Bisecting t/fixtures/bisect-fixture-spec.raku:29
+  shrunk to 2 prior
+  shrunk to 1 prior
+
+  Minimal reproduction (1 prior + 1 failing):
+    t/fixtures/bisect-fixture-spec.raku:20
+    t/fixtures/bisect-fixture-spec.raku:29  (failing)
+
+  Reproduce with:
+    bin/behave --only-example t/fixtures/bisect-fixture-spec.raku:20 \
+               --only-example t/fixtures/bisect-fixture-spec.raku:29 \
+               --order defined t/fixtures/bisect-fixture-spec.raku
+
+Bisect complete: 6 iteration(s)
+```
+
+If the failing example reproduces alone (no prior needed), Bisect reports `Failure reproduces in isolation — not order-dependent`. If the initial pass has no failures, Bisect exits 0 with `no failing examples`.
+
+### `--only-example FILE:LINE`
+
+`--only-example` is the targeting primitive Bisect uses to replay subsets. It is also useful directly:
+
+```shell
+$ behave --only-example specs/users-spec.raku:42
+$ behave --only-example users-spec.raku:42 specs/users-spec.raku  # basename match
+```
+
+`FILE` matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, `path/to/file.raku` suffix match, or basename equality. `LINE` must equal the line of the `it` block. Repeating `--only-example` is OR semantics; the runner runs every example matching any pattern.
+
+### `--bisect-data`
+
+Used by `--bisect` for inter-process communication and exposed for editor/tool integrations that want a parseable listing of executed and failed examples:
+
+```text
+behave-executed: specs/users-spec.raku:12
+behave-executed: specs/users-spec.raku:24
+behave-failed: specs/users-spec.raku:24
+```
+
+`--bisect-data` suppresses normal output. It is mutually exclusive with `--bisect`.
+
+### Limits
+
+- Bisect uses `--order defined` for sub-runs. Failures that only reproduce under a specific random `--seed` need to be diagnosed differently — re-run with the failing seed and `--order defined` after locking in the order.
+- Sub-runs use the same `--tag`, `--exclude-tag`, `--example`, and `--aggregate-failures` you passed to `bin/behave --bisect`.
+- The shrink uses binary halving first, then one-at-a-time minimization when halving stalls. Iteration count grows roughly with `log(prior) + minimal-prior-count`.
 
 ## Filtering by description
 

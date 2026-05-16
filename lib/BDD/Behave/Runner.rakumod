@@ -54,6 +54,8 @@ our class Runner {
   has @.include-tags;
   has @.exclude-tags;
   has @.example-patterns;
+  has @.only-locations;
+  has @.execution-order;
   has $.aggregate-failures = False;
   has Bool $!focus-mode = False;
   has Str $.order = 'defined';
@@ -351,14 +353,45 @@ our class Runner {
     }
 
     return False unless self.description-matches($example);
+    return False unless self.location-matches($example);
 
     True;
+  }
+
+  method location-matches(Example $example --> Bool) {
+    return True unless @!only-locations.elems;
+    my $ex-loc = "{$example.file}:{$example.line}";
+    for @!only-locations -> $pattern {
+      return True if self.location-matches-pattern($ex-loc, $pattern);
+    }
+    False;
+  }
+
+  method location-matches-pattern(Str $example-loc, Str $pattern --> Bool) {
+    return False unless $pattern.contains(':');
+    my $idx = $pattern.rindex(':');
+    my $pattern-path = $pattern.substr(0, $idx);
+    my $pattern-line = $pattern.substr($idx + 1);
+
+    my $ex-idx = $example-loc.rindex(':');
+    return False unless $ex-idx.defined;
+    my $example-path = $example-loc.substr(0, $ex-idx);
+    my $example-line = $example-loc.substr($ex-idx + 1);
+
+    return False unless $example-line eq $pattern-line;
+
+    return True if $example-path eq $pattern-path;
+    return True if $example-path.IO.absolute eq $pattern-path.IO.absolute;
+    return True if $example-path.ends-with('/' ~ $pattern-path);
+    return True if $example-path.IO.basename eq $pattern-path;
+    False;
   }
 
   method group-matches(ExampleGroup $group --> Bool) {
     return True unless @!include-tags.elems
                     || @!exclude-tags.elems
                     || @!example-patterns.elems
+                    || @!only-locations.elems
                     || $!focus-mode;
 
     for $group.children -> $child {
@@ -421,6 +454,8 @@ our class Runner {
       $!result.add-pending;
       return;
     }
+
+    @!execution-order.push("{$example.file}:{$example.line}");
 
     my ($auto-agg-on, $auto-agg-label) = self.resolve-auto-aggregation($example);
 
