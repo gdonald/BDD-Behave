@@ -18,6 +18,9 @@ class LetContext {
 our class Example is SpecNode {
   has Callable $.block is required;
   has Bool $.pending is rw = False;
+  has Real $.duration is rw;
+  has Instant $.started-at is rw;
+  has Instant $.finished-at is rw;
 
   method execute(*%context) {
     my $existing;

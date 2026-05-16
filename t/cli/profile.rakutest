@@ -1,0 +1,68 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 12;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/profile-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+{
+  my %r = run-behave($fixture.absolute);
+  is %r<exit>, 0, 'baseline run succeeds';
+  nok strip-ansi(%r<out>).contains('slowest example'),
+    'no profile section without --profile';
+  nok strip-ansi(%r<out>).contains('SLOW'),
+    'no SLOW lines without --slow-threshold';
+}
+
+{
+  my %r = run-behave('--profile', $fixture.absolute);
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('slowest example'),
+    '--profile prints a profile section';
+  ok $out.contains('c slow example'),
+    'profile lists the slowest example';
+}
+
+{
+  my %r = run-behave('--profile=2', $fixture.absolute);
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('Top 2 slowest examples'),
+    '--profile=2 caps the section header';
+}
+
+{
+  my %r = run-behave('--profile=0', $fixture.absolute);
+  isnt %r<exit>, 0, '--profile=0 fails';
+  ok %r<err>.contains('--profile=N requires a positive integer'),
+    'error message echoes invalid --profile value';
+}
+
+{
+  my %r = run-behave('--slow-threshold=0.01', $fixture.absolute);
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('SLOW'),
+    '--slow-threshold prints SLOW for slow examples';
+  ok $out.contains('threshold 0.010s'),
+    'SLOW line echoes the configured threshold';
+}
+
+{
+  my %r = run-behave('--slow-threshold=abc', $fixture.absolute);
+  isnt %r<exit>, 0, '--slow-threshold=abc fails';
+  ok %r<err>.contains('--slow-threshold requires a positive number'),
+    'error message echoes invalid --slow-threshold value';
+}

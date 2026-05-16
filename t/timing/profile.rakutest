@@ -1,0 +1,162 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 16;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+sub run-and-capture($suite, *%args) {
+  my $runner = BDD::Behave::Runner::Runner.new(|%args);
+  my $out = stdout-from({ $runner.run($suite) });
+  ($runner, strip-ansi($out));
+}
+
+sub build-suite(@examples) {
+  my $suite = Suite.create(:description('profile'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example($_) for @examples;
+  $suite;
+}
+
+# timed-examples bookkeeping
+{
+  my $a = Example.new(:description('a'), :file('f'.IO), :line(1), :block({ True }));
+  my $b = Example.new(:description('b'), :file('f'.IO), :line(2), :block({ True }));
+  my ($runner, $out) = run-and-capture(build-suite([$a, $b]), :order<defined>);
+  is $runner.timed-examples.elems, 2,
+    'Runner records one timed-examples entry per executed example';
+}
+
+# pending and skipped do not enter timed-examples
+{
+  my $pending = Example.new(:description('p'), :file('f'.IO), :line(3),
+                            :block({ True }));
+  $pending.mark-pending;
+
+  my $skipped = Example.new(:description('s'), :file('f'.IO), :line(4),
+                            :block({ die 'no' }));
+  $skipped.set-metadata(:skipped(True));
+
+  my $passing = Example.new(:description('q'), :file('f'.IO), :line(5),
+                            :block({ True }));
+
+  my ($runner, $out) = run-and-capture(
+    build-suite([$pending, $skipped, $passing]), :order<defined>,
+  );
+
+  is $runner.timed-examples.elems, 1,
+    'pending and skipped are not recorded';
+  ok $runner.timed-examples[0]<description>.contains('q'),
+    'only the executed example is recorded';
+}
+
+# failing examples are recorded
+{
+  my $boom = Example.new(:description('boom'), :file('f'.IO), :line(6),
+                         :block({ die 'intentional' }));
+  my ($runner, $out) = run-and-capture(build-suite([$boom]));
+
+  is $runner.timed-examples.elems, 1, 'failing example is timed';
+  ok $runner.timed-examples[0]<duration> >= 0, 'failing example has duration';
+}
+
+# default: no profile section printed
+{
+  my $ex = Example.new(:description('x'), :file('f'.IO), :line(7), :block({ True }));
+  my ($runner, $out) = run-and-capture(build-suite([$ex]));
+  nok $out.contains('slowest example'),
+    'no profile section without profile-limit';
+}
+
+# profile-limit > 0: section appears
+{
+  my $a = Example.new(:description('alpha'), :file('f'.IO), :line(8),
+                      :block({ True }));
+  my $b = Example.new(:description('beta'),  :file('f'.IO), :line(9),
+                      :block({ sleep 0.03 }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$a, $b]), :profile-limit(2), :order<defined>,
+  );
+  ok $out.contains('Top 2 slowest examples'),
+    'profile header present';
+  ok $out.contains('alpha') && $out.contains('beta'),
+    'both example descriptions present in profile';
+}
+
+# slowest first
+{
+  my $fast = Example.new(:description('fast-x'), :file('f'.IO), :line(10),
+                         :block({ True }));
+  my $slow = Example.new(:description('slow-x'), :file('f'.IO), :line(11),
+                         :block({ sleep 0.04 }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$fast, $slow]), :profile-limit(2), :order<defined>,
+  );
+  my $header = $out.index('Top 2 slowest');
+  my $slow-idx = $out.index('slow-x', $header + 1);
+  my $fast-idx = $out.index('fast-x', $header + 1);
+  ok $header.defined && $slow-idx.defined && $fast-idx.defined
+     && $slow-idx < $fast-idx,
+    'slowest example appears before faster one in profile section';
+}
+
+# default: no SLOW line
+{
+  my $ex = Example.new(:description('plain'), :file('f'.IO), :line(40),
+                       :block({ sleep 0.02 }));
+  my ($runner, $out) = run-and-capture(build-suite([$ex]));
+  nok $out.contains('SLOW'), 'no SLOW lines without slow-threshold';
+}
+
+# slow-threshold triggers a SLOW line
+{
+  my $slow = Example.new(:description('slow'), :file('f'.IO), :line(41),
+                         :block({ sleep 0.03 }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$slow]), :slow-threshold(0.01),
+  );
+  ok $out.contains('SLOW'), 'slow example produces SLOW line';
+  ok $out.contains('threshold 0.010s'),
+    'threshold echoed in the SLOW line';
+}
+
+# under-threshold example produces no SLOW line
+{
+  my $fast = Example.new(:description('fast'), :file('f'.IO), :line(42),
+                         :block({ True }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$fast]), :slow-threshold(5),
+  );
+  nok $out.contains('SLOW'), 'fast example below threshold has no SLOW line';
+}
+
+# slow + failing example
+{
+  my $slow-fail = Example.new(:description('boom'), :file('f'.IO), :line(43),
+                              :block({ sleep 0.03; die 'fail' }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$slow-fail]), :slow-threshold(0.01),
+  );
+  ok $out.contains('FAILURE') && $out.contains('SLOW'),
+    'failing slow example shows both FAILURE and SLOW';
+}
+
+# Constructor validation
+{
+  dies-ok { BDD::Behave::Runner::Runner.new(:profile-limit(-1)) },
+    'negative profile-limit is rejected';
+  dies-ok { BDD::Behave::Runner::Runner.new(:slow-threshold(-0.5)) },
+    'negative slow-threshold is rejected';
+}

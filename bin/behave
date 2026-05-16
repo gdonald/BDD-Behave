@@ -19,6 +19,8 @@ my Int $seed;
 my Int $fail-fast = 0;
 my $bisect = False;
 my $bisect-data = False;
+my Int $profile-limit = 0;
+my Real $slow-threshold = 0;
 
 sub usage() {
   say qq:to/HERE/;
@@ -63,6 +65,12 @@ sub usage() {
                              'behave-executed: FILE:LINE' line per executed
                              example and one 'behave-failed: FILE:LINE' line
                              per failed example.
+    --profile                Print the 10 slowest examples after the run.
+    --profile=N              Print the N slowest examples after the run.
+                             N must be a positive integer.
+    --slow-threshold=SECONDS Print an inline 'SLOW' warning for any example
+                             whose body takes at least SECONDS seconds.
+                             SECONDS may be fractional (e.g. 0.075).
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -133,6 +141,30 @@ while @args {
     $bisect = True;
   } elsif $arg eq '--bisect-data' {
     $bisect-data = True;
+  } elsif $arg eq '--profile' {
+    $profile-limit = 10;
+  } elsif $arg.starts-with('--profile=') {
+    my $value = $arg.substr('--profile='.chars);
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --profile=N requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $profile-limit = $value.Int;
+  } elsif $arg eq '--slow-threshold' {
+    die "--slow-threshold requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ && $value.Num > 0 {
+      note "Error: --slow-threshold requires a positive number (got: '$value')";
+      exit 2;
+    }
+    $slow-threshold = $value.Num;
+  } elsif $arg.starts-with('--slow-threshold=') {
+    my $value = $arg.substr('--slow-threshold='.chars);
+    unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ && $value.Num > 0 {
+      note "Error: --slow-threshold requires a positive number (got: '$value')";
+      exit 2;
+    }
+    $slow-threshold = $value.Num;
   } else {
     @specs.push: $arg;
   }
@@ -189,6 +221,8 @@ my $suites-run = 0;
 my @load-errors;
 my @all-execution-order;
 my @all-failures;
+my @all-timings;
+my $last-runner;
 
 # In --bisect-data mode, suppress normal output during runs.
 my $null-handle = $bisect-data ?? open('/dev/null', :w) !! Nil;
@@ -219,6 +253,8 @@ for @files -> $file {
     last if $remaining-fail-fast <= 0;
   }
 
+  my $runner-profile-limit = $multi ?? 0 !! $profile-limit;
+
   my $runner = BDD::Behave::Runner::Runner.new(
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
@@ -228,7 +264,10 @@ for @files -> $file {
     :$order,
     :$seed,
     :fail-fast($remaining-fail-fast),
+    :profile-limit($runner-profile-limit),
+    :$slow-threshold,
   );
+  $last-runner = $runner;
 
   my $result;
   if $bisect-data {
@@ -245,6 +284,8 @@ for @files -> $file {
       @all-failures.push("{$err<file>}:{$err<line>}");
     }
   }
+
+  @all-timings.append: $runner.timed-examples;
 
   $total-result = BDD::Behave::Runner::RunResult.new(
     :total($total-result.total + $result.total),
@@ -280,6 +321,10 @@ if $suites-run > 1 {
   say light-blue("  {$total-result.skipped} skipped")  if $total-result.skipped > 0;
   say green("  {$total-result.passed} passed")         if $total-result.passed > 0;
   say "Randomized with seed $seed" if $order eq 'random';
+
+  if $profile-limit > 0 && $last-runner.defined && !$bisect-data {
+    $last-runner.print-profile($profile-limit, @all-timings);
+  }
 }
 
 if @load-errors.elems {

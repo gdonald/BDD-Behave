@@ -1,0 +1,159 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 9;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub silent-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $orig-out = $*OUT;
+  {
+    my $*OUT = $sink;
+    my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+    my $result = $runner.run($suite);
+    $*OUT = $orig-out;
+    $sink.close;
+    return $result;
+  }
+}
+
+sub build-suite(@examples) {
+  my $suite = Suite.create(:description('timing'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example($_) for @examples;
+  $suite;
+}
+
+subtest 'duration is undefined on a fresh Example', {
+  plan 3;
+  my $ex = Example.new(
+    :description('inert'),
+    :file('synthetic'.IO), :line(10),
+    :block({ True }),
+  );
+  nok $ex.duration.defined,    'duration is initially undefined';
+  nok $ex.started-at.defined,  'started-at is initially undefined';
+  nok $ex.finished-at.defined, 'finished-at is initially undefined';
+}
+
+subtest 'duration is recorded after running a passing example', {
+  plan 3;
+  my $ex = Example.new(
+    :description('quick'),
+    :file('synthetic'.IO), :line(11),
+    :block({ True }),
+  );
+  silent-run(build-suite([$ex]));
+
+  ok $ex.duration.defined,        'duration is defined';
+  ok $ex.duration ~~ Real,        'duration is a Real';
+  ok $ex.duration >= 0,           'duration is non-negative';
+}
+
+subtest 'started-at and finished-at are Instants after a run', {
+  plan 3;
+  my $ex = Example.new(
+    :description('quick'),
+    :file('synthetic'.IO), :line(12),
+    :block({ True }),
+  );
+  silent-run(build-suite([$ex]));
+
+  ok $ex.started-at  ~~ Instant,            'started-at is an Instant';
+  ok $ex.finished-at ~~ Instant,            'finished-at is an Instant';
+  ok $ex.finished-at >= $ex.started-at,     'finished-at is no earlier than started-at';
+}
+
+subtest 'duration equals finished-at minus started-at', {
+  plan 1;
+  my $ex = Example.new(
+    :description('quick'),
+    :file('synthetic'.IO), :line(13),
+    :block({ True }),
+  );
+  silent-run(build-suite([$ex]));
+
+  my $delta = ($ex.finished-at - $ex.started-at).Real;
+  ok ($ex.duration - $delta).abs < 1e-6, 'duration matches start/finish delta';
+}
+
+subtest 'duration grows when the body sleeps', {
+  plan 1;
+  my $ex = Example.new(
+    :description('slow'),
+    :file('synthetic'.IO), :line(14),
+    :block({ sleep 0.05 }),
+  );
+  silent-run(build-suite([$ex]));
+  ok $ex.duration >= 0.04, 'sleeping body produces a measurable duration';
+}
+
+subtest 'duration is recorded even for a failing example', {
+  plan 2;
+  my $ex = Example.new(
+    :description('boom'),
+    :file('synthetic'.IO), :line(15),
+    :block({ die 'intentional failure' }),
+  );
+  silent-run(build-suite([$ex]));
+
+  ok $ex.duration.defined, 'duration is defined after a failure';
+  ok $ex.duration >= 0,    'duration is non-negative after a failure';
+}
+
+subtest 'pending examples have no recorded duration', {
+  plan 2;
+  my $ex = Example.new(
+    :description('todo'),
+    :file('synthetic'.IO), :line(16),
+    :block({ True }),
+  );
+  $ex.mark-pending;
+  silent-run(build-suite([$ex]));
+
+  nok $ex.duration.defined,   'pending example has no duration';
+  nok $ex.started-at.defined, 'pending example has no start';
+}
+
+subtest 'skipped examples have no recorded duration', {
+  plan 2;
+  my $ex = Example.new(
+    :description('skipped'),
+    :file('synthetic'.IO), :line(17),
+    :block({ die 'should not run' }),
+  );
+  $ex.set-metadata(:skipped(True));
+  silent-run(build-suite([$ex]));
+
+  nok $ex.duration.defined,   'skipped example has no duration';
+  nok $ex.started-at.defined, 'skipped example has no start';
+}
+
+subtest 'siblings receive independent durations', {
+  plan 4;
+  my $fast = Example.new(
+    :description('fast'),
+    :file('synthetic'.IO), :line(18),
+    :block({ True }),
+  );
+  my $slow = Example.new(
+    :description('slow'),
+    :file('synthetic'.IO), :line(19),
+    :block({ sleep 0.03 }),
+  );
+  silent-run(build-suite([$fast, $slow]), :order<defined>);
+
+  ok $fast.duration.defined,            'fast example timed';
+  ok $slow.duration.defined,            'slow example timed';
+  ok $slow.duration >= $fast.duration,  'slower example has greater-or-equal duration';
+  ok $slow.started-at >= $fast.finished-at,
+    'slow example started after fast example finished';
+}

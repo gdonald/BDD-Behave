@@ -45,6 +45,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--only-example LOC` | Run only examples whose `file:line` matches `LOC` (repeatable; OR semantics). `LOC` is `FILE:LINE` — `FILE` may be absolute, relative, or a basename. See [Bisect](#bisect). |
 | `--bisect`           | Find the minimal set of examples that, run in declared order before each failing example, reproduce the failure. See [Bisect](#bisect). |
 | `--bisect-data`      | Machine-readable output for use by `--bisect`. Suppresses normal output and emits `behave-executed:` / `behave-failed:` lines. See [Bisect](#bisect). |
+| `--profile` / `--profile=N` | Print the top N slowest examples after the run (default `N=10`). Across multiple spec files the profile is a single global section after the `Overall:` counts. See [Timing](timing/timing.md#-profile). |
+| `--slow-threshold=SECONDS` | Print an inline `SLOW` line under any example whose body takes at least `SECONDS` seconds. `SECONDS` may be fractional. See [Timing](timing/timing.md#-slow-threshold). |
 
 ## Order and seed
 

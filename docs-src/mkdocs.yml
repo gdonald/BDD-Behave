@@ -27,6 +27,7 @@ nav:
     - Junctions: expectations/junctions.md
     - aggregate-failures: expectations/aggregate-failures.md
   - Diff Output: diff/diff.md
+  - Timing: timing/timing.md
   - Classes in specs: classes/classes.md
   - Variables in specs: variables/variables.md
   - Contributing: contributing.md

@@ -56,6 +56,7 @@ our class Runner {
   has @.example-patterns;
   has @.only-locations;
   has @.execution-order;
+  has @.timed-examples;
   has $.aggregate-failures = False;
   has Bool $!focus-mode = False;
   has Str $.order = 'defined';
@@ -63,6 +64,8 @@ our class Runner {
   has Int $!rng-state;
   has Int $.fail-fast = 0;
   has Bool $.aborted = False;
+  has Real $.slow-threshold = 0;
+  has Int $.profile-limit = 0;
 
   submethod TWEAK {
     die "order must be 'random' or 'defined' (got: '$!order')"
@@ -70,6 +73,12 @@ our class Runner {
 
     die "fail-fast must be 0 or a positive integer (got: $!fail-fast)"
       if $!fail-fast < 0;
+
+    die "slow-threshold must be 0 or positive (got: $!slow-threshold)"
+      if $!slow-threshold < 0;
+
+    die "profile-limit must be 0 or positive (got: $!profile-limit)"
+      if $!profile-limit < 0;
 
     if $!order eq 'random' {
       $!seed //= (1 .. 2_147_483_646).pick;
@@ -468,6 +477,8 @@ our class Runner {
 
     my @captured-matchers;
     my $error;
+    my $started = now;
+    $example.started-at = $started;
     {
       my $*BEHAVE-AUTO-MATCHERS = $auto ?? @captured-matchers !! Array;
       my $*BEHAVE-AGGREGATION-LABEL = $auto-agg-on ?? ($auto-agg-label // Str) !! Str;
@@ -490,6 +501,15 @@ our class Runner {
         }
       }
     }
+    my $finished = now;
+    $example.finished-at = $finished;
+    $example.duration = ($finished - $started).Real;
+
+    @!timed-examples.push: %(
+      example     => $example,
+      description => self.full-description($example),
+      duration    => $example.duration,
+    );
 
     if $auto {
       my $derived = self.derive-auto-description(@captured-matchers);
@@ -507,6 +527,7 @@ our class Runner {
       ));
       self.print-indent;
       say red("  ⮑  FAILURE");
+      self.maybe-print-slow($example);
       return;
     }
 
@@ -525,6 +546,17 @@ our class Runner {
       self.print-indent;
       say green("  ⮑  SUCCESS");
     }
+
+    self.maybe-print-slow($example);
+  }
+
+  method maybe-print-slow(Example $example) {
+    return unless $!slow-threshold > 0;
+    return unless $example.duration.defined;
+    return unless $example.duration >= $!slow-threshold;
+    self.print-indent;
+    say yellow(sprintf '  ⮑  SLOW (%.3fs, threshold %.3fs)',
+                       $example.duration, $!slow-threshold);
   }
 
   method derive-auto-description(@captured) {
@@ -629,6 +661,29 @@ our class Runner {
 
     if $!order eq 'random' && $!seed.defined {
       say "Randomized with seed $!seed";
+    }
+
+    self.print-profile if $!profile-limit > 0;
+  }
+
+  method print-profile(Int $limit = $!profile-limit, @records = @!timed-examples) {
+    return unless $limit > 0;
+    return unless @records.elems;
+
+    my @sorted = @records.sort({ -$^a<duration> });
+    my @top = @sorted[0 ..^ ($limit min @sorted.elems)];
+
+    my $total = @top.map(*<duration>).sum;
+    my $shown = @top.elems;
+    say '';
+    say "Top $shown slowest example" ~ ($shown == 1 ?? '' !! 's')
+        ~ " ({sprintf '%.3f', $total}s total):";
+
+    for @top -> $rec {
+      my $ex = $rec<example>;
+      my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
+      say sprintf '  %.3fs  %s', $rec<duration>, $rec<description>;
+      say "          $loc" if $loc.chars;
     }
   }
 }
