@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 
 use BDD::Behave::Formatter;
-use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Tree;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
@@ -84,6 +84,6 @@ sub build-suite(@example-specs) {
 
 {
   my $runner = BDD::Behave::Runner::Runner.new;
-  ok $runner.formatter ~~ BDD::Behave::Formatter::Default,
-    'runner defaults to the Default formatter when none is supplied';
+  ok $runner.formatter ~~ BDD::Behave::Formatter::Tree,
+    'runner defaults to the Tree formatter when none is supplied';
 }

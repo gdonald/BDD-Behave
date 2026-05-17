@@ -1,0 +1,71 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Files;
+
+plan 11;
+
+sub make-tree(--> IO::Path) {
+  my $root = $*TMPDIR.add("files-{$*PID}-{(now * 1e6).Int}");
+  $root.mkdir;
+  $root.add('top-spec.raku').spurt: '# top';
+  $root.add('helper.raku').spurt:   '# helper';
+  $root.add('nested').mkdir;
+  $root.add('nested').add('inner-spec.raku').spurt: '# inner';
+  $root;
+}
+
+sub rm-tree($p) {
+  for $p.dir -> $entry { $entry.d ?? rm-tree($entry) !! $entry.unlink }
+  $p.rmdir;
+}
+
+{
+  my $tree = make-tree;
+  my $top  = $tree.add('top-spec.raku').absolute;
+  my @r    = Files.new.list([$top]).List;
+  is @r.elems, 1,                 'explicit file: one result';
+  is @r[0], $top,                 'explicit file: same path returned';
+  rm-tree($tree);
+}
+
+{
+  my $tree = make-tree;
+  my @r    = Files.new.list([$tree.absolute]).List.sort;
+  is @r.elems, 2,                                 'dir arg: discovers two spec files';
+  ok @r.join(',').contains('top-spec.raku'),       'dir arg: top spec found';
+  ok @r.join(',').contains('inner-spec.raku'),     'dir arg: nested spec found';
+  nok @r.join(',').contains('helper.raku'),        'dir arg: non-spec files skipped';
+  rm-tree($tree);
+}
+
+{
+  my $tree   = make-tree;
+  my $top    = $tree.add('top-spec.raku').absolute;
+  my $nested = $tree.add('nested').absolute;
+  my @r      = Files.new.list([$top, $nested]).List;
+  is @r.elems, 2,                                 'mixed args: two results';
+  rm-tree($tree);
+}
+
+{
+  my $tmp-err = $*TMPDIR.add("files-err-{$*PID}-{(now * 1e6).Int}.err");
+  my $eh = open $tmp-err, :w;
+  my @r;
+  {
+    my $*ERR = $eh;
+    @r = Files.new.list(['--not-a-file']).List;
+  }
+  $eh.close;
+  my $err = $tmp-err.slurp;
+  $tmp-err.unlink;
+  is @r.elems, 0,                                 'unknown arg: no results';
+  ok $err.contains('--not-a-file'),               'unknown arg: warning names the arg';
+  ok $err.contains('not a spec file or directory'),'unknown arg: warning explains why';
+}
+
+{
+  my @r = Files.new.list([]).List;
+  ok @r.elems > 0,                                'empty @args: auto-discovers specs/';
+}

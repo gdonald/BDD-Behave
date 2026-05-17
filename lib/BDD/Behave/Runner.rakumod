@@ -4,7 +4,7 @@ use BDD::Behave::Colors;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
 use BDD::Behave::Formatter;
-use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
 
 need BDD::Behave::Mock::Stub;
@@ -89,7 +89,7 @@ our class Runner {
   has @.benchmark-regressions;
 
   submethod TWEAK {
-    $!formatter //= BDD::Behave::Formatter::Default.new;
+    $!formatter //= BDD::Behave::Formatter::Tree.new;
 
     die "order must be 'random' or 'defined' (got: '$!order')"
       unless $!order eq 'random' | 'defined';

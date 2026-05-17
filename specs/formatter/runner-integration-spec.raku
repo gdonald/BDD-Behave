@@ -1,6 +1,6 @@
 use BDD::Behave;
 use BDD::Behave::Formatter;
-use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Tree;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
@@ -97,9 +97,9 @@ describe 'Runner integration with a custom formatter', {
     expect($f.events.first({ $_[0] eq 'run-summary' }).defined).to.be-truthy;
   }
 
-  it 'defaults to a Default formatter when none is supplied', {
+  it 'defaults to a Tree formatter when none is supplied', {
     my $runner = BDD::Behave::Runner::Runner.new;
-    expect($runner.formatter).to.be-a(BDD::Behave::Formatter::Default);
+    expect($runner.formatter).to.be-a(BDD::Behave::Formatter::Tree);
   }
 
   it 'accepts a custom formatter via the constructor', {

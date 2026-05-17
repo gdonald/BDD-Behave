@@ -87,7 +87,8 @@ describe 'match matcher edge cases', {
     Failures.list = ();
     expect('abc').to.match(/\d+/);
     expect(Failures.list[0].given).to.be('abc');
-    expect(Failures.list[0].expected).to.be(/\d+/);
+    expect(Failures.list[0].expected).to.be-a(Regex);
+    expect(Failures.list[0].expected.raku).to.eq(/\d+/.raku);
     Failures.list = ();
   }
 }

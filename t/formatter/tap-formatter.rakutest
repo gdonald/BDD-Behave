@@ -1,0 +1,214 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::TAP;
+use BDD::Behave::SpecTree;
+
+plan 23;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-suite(Str $description, Str $file = '/tmp/x-spec.raku') {
+  Suite.create(:$description, :file($file.IO), :line(1));
+}
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False, Int :$line = 1) {
+  Example.new(
+    :$description, :file('synth-spec.raku'.IO), :$line,
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("tap-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub fake-result(%counts) {
+  class :: {
+    has Int $.total   is rw = 0;
+    has Int $.passed  is rw = 0;
+    has Int $.failed  is rw = 0;
+    has Int $.pending is rw = 0;
+    has Int $.skipped is rw = 0;
+  }.new(|%counts);
+}
+
+my $f = BDD::Behave::Formatter::TAP.new;
+ok $f ~~ BDD::Behave::Formatter, 'composes Formatter';
+is $f.name, 'tap',               'name is "tap"';
+
+{
+  my $f2 = BDD::Behave::Formatter::TAP.new;
+  my $g  = make-group('g');
+  my $out = capture({
+    $f2.group-start($g);
+    $f2.example-pass(make-example('only one'));
+    $f2.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  my @lines = $out.lines.grep(*.chars);
+  is @lines[0], 'TAP version 13',                'first line is TAP header';
+  is @lines[1], '1..1',                          'second line is plan 1..1';
+}
+
+{
+  my $f3 = BDD::Behave::Formatter::TAP.new;
+  my $out = capture({
+    $f3.run-summary(fake-result(%( total => 0 )));
+  });
+  ok $out.contains('1..0'),                      'plan 1..0 for empty run';
+}
+
+{
+  my $f4 = BDD::Behave::Formatter::TAP.new;
+  my $s  = make-suite('a', '/tmp/a-spec.raku');
+  my $out = capture({
+    $f4.suite-start($s, :multi-file);
+    $f4.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out, '',                                   'no per-file emit in multi-file';
+}
+
+{
+  my $f5 = BDD::Behave::Formatter::TAP.new;
+  my $s  = make-suite('a', '/tmp/a-spec.raku');
+  my $out = capture({
+    $f5.suite-start($s, :multi-file);
+    $f5.run-summary(fake-result(%( total => 0 )));
+    $f5.multi-file-overall(fake-result(%( total => 0 )), :order('defined'));
+  });
+  is $out.comb(/'TAP version 13'/).elems, 1,     'single document at multi-file-overall';
+}
+
+{
+  my $f6 = BDD::Behave::Formatter::TAP.new;
+  my $out = capture({
+    $f6.run-summary(fake-result(%( total => 0 )));
+    $f6.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out.comb(/'TAP version 13'/).elems, 1,     'never emits twice';
+}
+
+{
+  my $f7 = BDD::Behave::Formatter::TAP.new;
+  my $g  = make-group('Calculator');
+  my $out = capture({
+    $f7.group-start($g);
+    $f7.example-pass(make-example('adds'));
+    $f7.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('ok 1 - Calculator adds'),    'pass: ok N - description';
+}
+
+{
+  Failures.list = ();
+  my $f8 = BDD::Behave::Formatter::TAP.new;
+  my $g  = make-group('g');
+  my $ex = make-example('broken');
+  my $out = capture({
+    $f8.group-start($g);
+    $f8.example-start($ex);
+    Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
+    $f8.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+    $f8.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('not ok 1 - g broken'),       'fail: not ok N - description';
+  ok $out.contains('  ---'),                     'YAML opener present';
+  ok $out.contains('  ...'),                     'YAML closer present';
+  ok $out.contains("got: 'a'"),                  'got value in diag';
+  ok $out.contains("expected: 'b'"),             'expected value in diag';
+  Failures.list = ();
+}
+
+{
+  my $f9 = BDD::Behave::Formatter::TAP.new;
+  my $g  = make-group('g');
+  my $ex = make-example('todo', :pending);
+  $ex.set-metadata(:pending-reason('not yet'));
+  my $out = capture({
+    $f9.group-start($g);
+    $f9.example-pending($ex);
+    $f9.run-summary(fake-result(%( total => 1, pending => 1 )));
+  });
+  ok $out.contains('# TODO not yet'),            'pending: TODO directive with reason';
+}
+
+{
+  my $f10 = BDD::Behave::Formatter::TAP.new;
+  my $g   = make-group('g');
+  my $out = capture({
+    $f10.group-start($g);
+    $f10.example-skipped(make-example('held'));
+    $f10.run-summary(fake-result(%( total => 1, skipped => 1 )));
+  });
+  ok $out.contains('# SKIP skipped'),            'skipped: SKIP directive';
+}
+
+{
+  my $f11 = BDD::Behave::Formatter::TAP.new;
+  my $g   = make-group('g');
+  my $out = capture({
+    $f11.group-start($g);
+    $f11.example-around-skipped(make-example('aborted'));
+    $f11.run-summary(fake-result(%( total => 1, skipped => 1 )));
+  });
+  ok $out.contains('around-each did not invoke continuation'),
+                                                  'around-each-skipped: SKIP message';
+}
+
+{
+  my $f12 = BDD::Behave::Formatter::TAP.new;
+  my $g   = make-group('g');
+  my $out = capture({
+    $f12.group-start($g);
+    $f12.example-pass(make-example('tag #foo edge case'));
+    $f12.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('\\#foo'),                    '# in description is escaped';
+}
+
+{
+  my $f13 = BDD::Behave::Formatter::TAP.new;
+  my $g   = make-group('g');
+  my $ex  = make-example('boom');
+  my $exception;
+  try { die 'kaboom'; CATCH { default { $exception = $_ } } }
+  my $out = capture({
+    $f13.group-start($g);
+    $f13.example-start($ex);
+    $f13.example-fail($ex, :failure-info(%( file => 'x', line => 1, exception => $exception )));
+    $f13.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains("severity: 'error'"),         'exception failure: severity error';
+  ok $out.contains('kaboom'),                    'exception message included';
+}
+
+{
+  my $f14 = BDD::Behave::Formatter::TAP.new;
+  my $g   = make-group('g');
+  my $out = capture({
+    $f14.group-start($g);
+    $f14.example-pass(make-example('a'));
+    $f14.example-pass(make-example('b'));
+    $f14.example-pass(make-example('c'));
+    $f14.run-summary(fake-result(%( total => 3, passed => 3 )));
+  });
+  ok $out.contains('1..3'),                      'plan 1..3 for three examples';
+  ok $out.contains('ok 2 - g b'),                'mid entry numbered sequentially';
+  ok $out.contains('ok 3 - g c'),                'last entry numbered sequentially';
+}

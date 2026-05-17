@@ -52,7 +52,7 @@ sub strip-ansi(Str $s --> Str) {
 }
 
 {
-  my %r = run-behave('--slow-threshold=0.01', $fixture.absolute);
+  my %r = run-behave('--format=tree', '--slow-threshold=0.01', $fixture.absolute);
   my $out = strip-ansi(%r<out>);
   ok $out.contains('SLOW'),
     '--slow-threshold prints SLOW for slow examples';

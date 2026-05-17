@@ -60,7 +60,7 @@ describe 'bin/behave --slow-threshold', {
   }
 
   it 'prints SLOW for examples at or above the threshold (--slow-threshold=0.01)', {
-    my %r = run-behave('--slow-threshold=0.01', $fixture.absolute);
+    my %r = run-behave('--format=tree', '--slow-threshold=0.01', $fixture.absolute);
     expect(%r<exit>).to.be(0);
     my $out = strip-ansi(%r<out>);
     expect($out.contains('SLOW')).to.be-truthy;
@@ -86,7 +86,7 @@ describe 'bin/behave --slow-threshold', {
   }
 
   it 'accepts the space-separated form: --slow-threshold 0.01', {
-    my %r = run-behave('--slow-threshold', '0.01', $fixture.absolute);
+    my %r = run-behave('--format=tree', '--slow-threshold', '0.01', $fixture.absolute);
     expect(%r<exit>).to.be(0);
     expect(strip-ansi(%r<out>).contains('SLOW')).to.be-truthy;
   }

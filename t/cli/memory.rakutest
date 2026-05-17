@@ -50,7 +50,7 @@ sub strip-ansi(Str $s --> Str) {
 }
 
 {
-  my %r = run-behave('--memory-threshold=1', $fixture.absolute);
+  my %r = run-behave('--format=tree', '--memory-threshold=1', $fixture.absolute);
   my $out = strip-ansi(%r<out>);
   ok $out.contains('MEMORY'),
     '--memory-threshold prints MEMORY for examples above the threshold';
@@ -66,7 +66,7 @@ sub strip-ansi(Str $s --> Str) {
 }
 
 {
-  my %r = run-behave('--memory-threshold', '1', $fixture.absolute);
+  my %r = run-behave('--format=tree', '--memory-threshold', '1', $fixture.absolute);
   is %r<exit>, 0, 'space-separated --memory-threshold accepted';
   ok strip-ansi(%r<out>).contains('MEMORY'),
     'space-separated --memory-threshold triggers MEMORY lines';

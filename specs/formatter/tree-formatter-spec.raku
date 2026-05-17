@@ -1,6 +1,6 @@
 use BDD::Behave;
 use BDD::Behave::Formatter;
-use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
@@ -33,18 +33,18 @@ sub capture-formatter-output(&block) {
 
 sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
 
-describe 'BDD::Behave::Formatter::Default', {
+describe 'BDD::Behave::Formatter::Tree', {
   it 'composes the Formatter role', {
-    expect(BDD::Behave::Formatter::Default.new).to.be-a(BDD::Behave::Formatter);
+    expect(BDD::Behave::Formatter::Tree.new).to.be-a(BDD::Behave::Formatter);
   }
 
-  it 'reports its name as "default"', {
-    expect(BDD::Behave::Formatter::Default.new.name).to.eq('default');
+  it 'reports its name as "tree"', {
+    expect(BDD::Behave::Formatter::Tree.new.name).to.eq('tree');
   }
 
   describe 'group output', {
     it 'prints group description with leading marker', {
-      my $f      = BDD::Behave::Formatter::Default.new;
+      my $f      = BDD::Behave::Formatter::Tree.new;
       my $group  = make-group('outer');
       my $output = capture-formatter-output({ $f.group-start($group) });
       expect($output).to.include("'outer'");
@@ -52,7 +52,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'nests indentation for inner groups', {
-      my $f     = BDD::Behave::Formatter::Default.new;
+      my $f     = BDD::Behave::Formatter::Tree.new;
       my $outer = make-group('outer');
       my $inner = make-group('inner');
       my $out   = capture-formatter-output({
@@ -65,7 +65,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'unwinds indentation on group-end', {
-      my $f     = BDD::Behave::Formatter::Default.new;
+      my $f     = BDD::Behave::Formatter::Tree.new;
       my $outer = make-group('outer');
       my $inner = make-group('inner');
       my $out   = capture-formatter-output({
@@ -82,21 +82,21 @@ describe 'BDD::Behave::Formatter::Default', {
 
   describe 'example output', {
     it 'omits the description line when :auto is true', {
-      my $f  = BDD::Behave::Formatter::Default.new;
+      my $f  = BDD::Behave::Formatter::Tree.new;
       my $ex = make-example('described');
       my $out = capture-formatter-output({ $f.example-start($ex, :auto) });
       expect($out).to.eq('');
     }
 
     it 'prints SUCCESS for passing examples', {
-      my $f  = BDD::Behave::Formatter::Default.new;
+      my $f  = BDD::Behave::Formatter::Tree.new;
       my $ex = make-example('p');
       my $out = strip-ansi capture-formatter-output({ $f.example-pass($ex) });
       expect($out).to.include('SUCCESS');
     }
 
     it 'prints FAILURE for failing examples', {
-      my $f  = BDD::Behave::Formatter::Default.new;
+      my $f  = BDD::Behave::Formatter::Tree.new;
       my $ex = make-example('f');
       my $out = strip-ansi capture-formatter-output({
         $f.example-fail($ex, :failure-info(%(description => 'f')));
@@ -105,7 +105,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'prints PENDING for pending examples', {
-      my $f  = BDD::Behave::Formatter::Default.new;
+      my $f  = BDD::Behave::Formatter::Tree.new;
       my $ex = make-example('todo', :pending);
       my $out = strip-ansi capture-formatter-output({ $f.example-pending($ex) });
       expect($out).to.include('PENDING');
@@ -113,7 +113,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'prints SKIPPED for skipped examples', {
-      my $f  = BDD::Behave::Formatter::Default.new;
+      my $f  = BDD::Behave::Formatter::Tree.new;
       my $ex = make-example('s');
       my $out = strip-ansi capture-formatter-output({ $f.example-skipped($ex) });
       expect($out).to.include('SKIPPED');
@@ -122,7 +122,7 @@ describe 'BDD::Behave::Formatter::Default', {
 
   describe 'around-each / around-all skipped output', {
     it 'announces around-each skip with the descriptor', {
-      my $f  = BDD::Behave::Formatter::Default.new;
+      my $f  = BDD::Behave::Formatter::Tree.new;
       my $ex = make-example('ax');
       my $out = strip-ansi capture-formatter-output({ $f.example-around-skipped($ex) });
       expect($out).to.include('SKIPPED');
@@ -130,7 +130,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'announces around-all skip at the group level', {
-      my $f = BDD::Behave::Formatter::Default.new;
+      my $f = BDD::Behave::Formatter::Tree.new;
       my $g = make-group('g');
       my $out = strip-ansi capture-formatter-output({ $f.group-around-skipped($g) });
       expect($out).to.include('SKIPPED');
@@ -150,7 +150,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'emits a counts line that pluralizes correctly', {
-      my $f   = BDD::Behave::Formatter::Default.new;
+      my $f   = BDD::Behave::Formatter::Tree.new;
       my $r   = fake-result(%( total => 3, passed => 3 ));
       my $out = strip-ansi capture-formatter-output({ $f.run-summary($r) });
       expect($out).to.include('3 examples');
@@ -158,14 +158,14 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'singularizes the counts line for one example', {
-      my $f   = BDD::Behave::Formatter::Default.new;
+      my $f   = BDD::Behave::Formatter::Tree.new;
       my $r   = fake-result(%( total => 1, passed => 1 ));
       my $out = strip-ansi capture-formatter-output({ $f.run-summary($r) });
       expect($out).to.include('1 example,');
     }
 
     it 'prints the aborted line when :aborted is true', {
-      my $f = BDD::Behave::Formatter::Default.new;
+      my $f = BDD::Behave::Formatter::Tree.new;
       my $r = fake-result(%( total => 1, failed => 1 ));
       my $out = strip-ansi capture-formatter-output({
         $f.run-summary($r, :aborted, :fail-fast(1));
@@ -174,7 +174,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'prints the seed line only when order is random and seed is defined', {
-      my $f = BDD::Behave::Formatter::Default.new;
+      my $f = BDD::Behave::Formatter::Tree.new;
       my $r = fake-result(%( total => 1, passed => 1 ));
 
       my $with-seed = strip-ansi capture-formatter-output({
@@ -196,19 +196,19 @@ describe 'BDD::Behave::Formatter::Default', {
 
   describe 'profile and memory profile sections', {
     it 'profile-summary stays silent when limit is zero', {
-      my $f   = BDD::Behave::Formatter::Default.new;
+      my $f   = BDD::Behave::Formatter::Tree.new;
       my $out = capture-formatter-output({ $f.profile-summary([], :limit(0)) });
       expect($out).to.eq('');
     }
 
     it 'profile-summary stays silent when records is empty', {
-      my $f   = BDD::Behave::Formatter::Default.new;
+      my $f   = BDD::Behave::Formatter::Tree.new;
       my $out = capture-formatter-output({ $f.profile-summary([], :limit(5)) });
       expect($out).to.eq('');
     }
 
     it 'profile-summary prints the top N slowest examples', {
-      my $f = BDD::Behave::Formatter::Default.new;
+      my $f = BDD::Behave::Formatter::Tree.new;
       my @records = (
         %( description => 'fast', duration => 0.001, example => Any ),
         %( description => 'slow', duration => 0.500, example => Any ),
@@ -224,7 +224,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'memory-profile-summary prints the top N memory-heaviest examples', {
-      my $f = BDD::Behave::Formatter::Default.new;
+      my $f = BDD::Behave::Formatter::Tree.new;
       my @records = (
         %( description => 'small', delta => 10, example => Any ),
         %( description => 'big',   delta => 500, example => Any ),
@@ -240,7 +240,7 @@ describe 'BDD::Behave::Formatter::Default', {
 
   describe 'multi-file output', {
     it 'multi-file-overall prints the separator and totals', {
-      my $f = BDD::Behave::Formatter::Default.new;
+      my $f = BDD::Behave::Formatter::Tree.new;
       my $r = class :: {
         has Int $.total   = 4;
         has Int $.passed  = 3;
@@ -258,7 +258,7 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'suite-start in multi-file mode prints the basename', {
-      my $f     = BDD::Behave::Formatter::Default.new;
+      my $f     = BDD::Behave::Formatter::Tree.new;
       my $suite = Suite.create(:description('s'), :file('/tmp/abc-spec.raku'.IO), :line(1));
       my $out   = strip-ansi capture-formatter-output({
         $f.suite-start($suite, :multi-file);
@@ -267,20 +267,20 @@ describe 'BDD::Behave::Formatter::Default', {
     }
 
     it 'suite-start is silent when :multi-file is false', {
-      my $f     = BDD::Behave::Formatter::Default.new;
+      my $f     = BDD::Behave::Formatter::Tree.new;
       my $suite = Suite.create(:description('s'), :file('/tmp/x.raku'.IO), :line(1));
       my $out   = capture-formatter-output({ $f.suite-start($suite) });
       expect($out).to.eq('');
     }
 
     it 'load-errors prints nothing when @errors is empty', {
-      my $f   = BDD::Behave::Formatter::Default.new;
+      my $f   = BDD::Behave::Formatter::Tree.new;
       my $out = capture-formatter-output({ $f.load-errors([]) });
       expect($out).to.eq('');
     }
 
     it 'load-errors prints each error with its message lines', {
-      my $f   = BDD::Behave::Formatter::Default.new;
+      my $f   = BDD::Behave::Formatter::Tree.new;
       my @errs = (
         %( file => '/tmp/a.raku', message => "syntax err\nat line 5" ),
       );

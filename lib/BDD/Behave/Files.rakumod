@@ -6,7 +6,15 @@ class Files is export {
 
   method list(@args) {
     if @args.elems {
-      gather for @args -> $arg { if $arg ~~ $.test { take $arg } }
+      gather for @args -> $arg {
+        if $arg ~~ $.test {
+          take $arg;
+        } elsif $arg.IO.d {
+          .take for self.find($arg).sort;
+        } else {
+          note "Warning: `$arg` is not a spec file or directory; ignoring";
+        }
+      }
     } else {
       self.find(Files.specs-dir).sort;
     }

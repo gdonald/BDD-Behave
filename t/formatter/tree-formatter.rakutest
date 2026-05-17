@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 
 use BDD::Behave::Formatter;
-use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
 
 plan 25;
@@ -24,7 +24,7 @@ sub make-example(Str $description, Bool :$pending = False) {
 }
 
 sub capture(&block) {
-  my $buf = $*TMPDIR.add("default-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $buf = $*TMPDIR.add("tree-fmt-{$*PID}-{(now * 1e6).Int}.out");
   my $fh  = open $buf, :w;
   { my $*OUT = $fh; block(); }
   $fh.close;
@@ -35,10 +35,10 @@ sub capture(&block) {
 
 sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
 
-my $f = BDD::Behave::Formatter::Default.new;
+my $f = BDD::Behave::Formatter::Tree.new;
 
-ok $f ~~ BDD::Behave::Formatter, 'Default composes the Formatter role';
-is $f.name, 'default',            'Default reports name as "default"';
+ok $f ~~ BDD::Behave::Formatter, 'Tree composes the Formatter role';
+is $f.name, 'tree',               'Tree reports name as "tree"';
 
 my $g = make-group('outer');
 my $group-out = capture({ $f.group-start($g); $f.group-end($g) });

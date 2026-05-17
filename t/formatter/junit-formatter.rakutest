@@ -1,0 +1,192 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::JUnit;
+use BDD::Behave::SpecTree;
+
+plan 21;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-suite(Str $description, Str $file = '/tmp/x-spec.raku') {
+  Suite.create(:$description, :file($file.IO), :line(1));
+}
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False, Int :$line = 1) {
+  Example.new(
+    :$description, :file('synth-spec.raku'.IO), :$line,
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("junit-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub fake-result(%counts) {
+  class :: {
+    has Int $.total   is rw = 0;
+    has Int $.passed  is rw = 0;
+    has Int $.failed  is rw = 0;
+    has Int $.pending is rw = 0;
+    has Int $.skipped is rw = 0;
+  }.new(|%counts);
+}
+
+my $f = BDD::Behave::Formatter::JUnit.new;
+ok $f ~~ BDD::Behave::Formatter, 'composes Formatter';
+is $f.name, 'junit',             'name is "junit"';
+
+{
+  my $f2 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('S', '/tmp/s-spec.raku');
+  my $out = capture({
+    $f2.suite-start($s);
+    $f2.run-summary(fake-result(%( total => 0 )));
+  });
+  ok $out.starts-with('<?xml version="1.0" encoding="UTF-8"?>'),
+                                              'emits XML prolog first';
+  ok $out.contains('<testsuites'),            'opens testsuites';
+  ok $out.contains('</testsuites>'),          'closes testsuites';
+}
+
+{
+  my $f3 = BDD::Behave::Formatter::JUnit.new;
+  my $a  = make-suite('A', '/tmp/a-spec.raku');
+  my $b  = make-suite('B', '/tmp/b-spec.raku');
+  my $out = capture({
+    $f3.suite-start($a, :multi-file);
+    $f3.run-summary(fake-result(%( total => 0 )));
+    $f3.suite-start($b, :multi-file);
+    $f3.run-summary(fake-result(%( total => 0 )));
+    $f3.multi-file-overall(fake-result(%( total => 0 )), :order('defined'));
+  });
+  is $out.comb(/'<testsuite '/).elems, 2,    'one <testsuite> per file';
+}
+
+{
+  my $f4 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('M', '/tmp/m-spec.raku');
+  my $out = capture({
+    $f4.suite-start($s, :multi-file);
+    $f4.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out, '',                                'no per-file emit in multi-file';
+}
+
+{
+  my $f5 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('S', '/tmp/s-spec.raku');
+  my $out = capture({
+    $f5.suite-start($s);
+    $f5.run-summary(fake-result(%( total => 0 )));
+    $f5.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out.comb(/'<?xml'/).elems, 1,           'never emits twice';
+}
+
+{
+  my $f6 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('S', '/tmp/s-spec.raku');
+  my $g  = make-group('Calculator');
+  my $ex = make-example('adds', :line(7));
+  $ex.duration = 0.001;
+  my $out = capture({
+    $f6.suite-start($s);
+    $f6.group-start($g);
+    $f6.example-start($ex);
+    $f6.example-pass($ex);
+    $f6.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('classname="Calculator"'),    'classname matches group';
+  ok $out.contains('name="adds"'),               'name matches example';
+  ok $out.contains('line="7"'),                  'line attribute set';
+}
+
+{
+  Failures.list = ();
+  my $f7 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('S', '/tmp/s-spec.raku');
+  my $g  = make-group('g');
+  my $ex = make-example('broken');
+  my $out = capture({
+    $f7.suite-start($s);
+    $f7.group-start($g);
+    $f7.example-start($ex);
+    Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
+    $f7.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+    $f7.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('<failure'),                   '<failure> child rendered';
+  ok $out.contains('type="Expectation"'),         'expectation type recorded';
+  ok $out.contains('<![CDATA['),                  'failure body in CDATA';
+  Failures.list = ();
+}
+
+{
+  my $f8 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('S', '/tmp/s-spec.raku');
+  my $g  = make-group('g');
+  my $ex = make-example('boom');
+  my $exception;
+  try { die 'kaboom'; CATCH { default { $exception = $_ } } }
+  my $out = capture({
+    $f8.suite-start($s);
+    $f8.group-start($g);
+    $f8.example-start($ex);
+    $f8.example-fail($ex, :failure-info(%( file => 'x', line => 1, exception => $exception )));
+    $f8.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('<error'),                     '<error> child for exception';
+  ok $out.contains('message="kaboom"'),           'exception message included';
+}
+
+{
+  my $f9 = BDD::Behave::Formatter::JUnit.new;
+  my $s  = make-suite('S', '/tmp/s-spec.raku');
+  my $g  = make-group('g');
+  my $pex = make-example('todo', :pending);
+  $pex.set-metadata(:pending-reason('not yet'));
+  my $sex = make-example('held');
+  my $out = capture({
+    $f9.suite-start($s);
+    $f9.group-start($g);
+    $f9.example-pending($pex);
+    $f9.example-skipped($sex);
+    $f9.run-summary(fake-result(%( total => 2, pending => 1, skipped => 1 )));
+  });
+  is $out.comb(/'<skipped'/).elems, 2,            'two <skipped> children';
+  ok $out.contains('pending: not yet'),           'pending reason carried into skip message';
+}
+
+{
+  my $f10 = BDD::Behave::Formatter::JUnit.new;
+  my $s   = make-suite('Calc<&>', '/tmp/s-spec.raku');
+  my $g   = make-group('a & b');
+  my $ex  = make-example('"quoted" <thing>');
+  my $out = capture({
+    $f10.suite-start($s);
+    $f10.group-start($g);
+    $f10.example-pass($ex);
+    $f10.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('name="Calc&lt;&amp;&gt;"'),                 'suite name escaped';
+  ok $out.contains('classname="a &amp; b"'),                    'classname escaped';
+  ok $out.contains('name="&quot;quoted&quot; &lt;thing&gt;"'),  'example name escaped';
+}

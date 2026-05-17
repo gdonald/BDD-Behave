@@ -19,7 +19,7 @@ sub run-behave(*@args) {
 
 # --only-example FILE:LINE restricts to one example.
 {
-  my %r = run-behave('--order', 'defined',
+  my %r = run-behave('--format=tree', '--order', 'defined',
                      '--only-example', "{$bisect.absolute}:29",
                      $bisect.absolute);
   is %r<exit>, 0, '--only-example for non-polluted example exits 0';

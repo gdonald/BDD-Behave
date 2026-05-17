@@ -13,9 +13,8 @@ sub json-string(Str $s --> Str) {
 }
 
 sub json-number($n --> Str) {
-  my $v = $n.Real;
-  return 'null' unless $v.defined;
-  $v.Str;
+  return 'null' unless $n.defined;
+  $n.Real.Str;
 }
 
 our sub to-json($value --> Str) {

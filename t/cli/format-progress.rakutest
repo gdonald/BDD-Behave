@@ -1,0 +1,63 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 13;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $passing = $root.add('specs/expectations/be-between-spec.raku');
+my $mixed   = $root.add('t/fixtures/progress-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+{
+  my %r = run-behave('--help');
+  ok %r<out>.contains('progress'),
+    '--help lists the progress formatter';
+}
+
+{
+  my %r = run-behave('--format', 'progress', '--order', 'defined', $passing.absolute);
+  is %r<exit>, 0, 'all-passing run with --format progress exits 0';
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('.'),
+    'dots stream is emitted';
+  nok $clean.contains('SUCCESS'),
+    'per-example SUCCESS noise is suppressed';
+  nok $clean.contains("⮑"),
+    'per-group marker noise is suppressed';
+}
+
+{
+  my %r = run-behave('--format', 'progress', '--order', 'defined', $passing.absolute);
+  my @lines = strip-ansi(%r<out>).lines.grep(*.chars);
+  is @lines[0].comb.unique.sort.join, '.',
+    'first non-empty line is purely dots';
+  is @lines.grep(*.contains('passed')).elems, 1,
+    'counts line appears exactly once';
+}
+
+{
+  my %r = run-behave('--format=progress', '--order', 'defined', $mixed.absolute);
+  isnt %r<exit>, 0, 'mixed run exits non-zero (failure present)';
+  my $stream = strip-ansi(%r<out>).lines[0];
+  ok $stream.contains('.'), 'progress markers include a dot';
+  ok $stream.contains('F'), 'progress markers include an F';
+  ok $stream.contains('*'), 'progress markers include a *';
+  ok $stream.contains('S'), 'progress markers include an S';
+}
+
+{
+  my %r = run-behave('--format', 'progress', '--order', 'defined', $mixed.absolute);
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('Failures:'),
+    'failure details still emitted under --format progress';
+}

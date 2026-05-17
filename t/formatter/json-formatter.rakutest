@@ -1,0 +1,209 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::JSON;
+use BDD::Behave::SpecTree;
+
+plan 27;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False, Int :$line = 1) {
+  Example.new(
+    :$description, :file('synth-spec.raku'.IO), :$line,
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("json-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub fake-result(%counts) {
+  class :: {
+    has Int $.total   is rw = 0;
+    has Int $.passed  is rw = 0;
+    has Int $.failed  is rw = 0;
+    has Int $.pending is rw = 0;
+    has Int $.skipped is rw = 0;
+  }.new(|%counts);
+}
+
+my $f = BDD::Behave::Formatter::JSON.new;
+
+ok $f ~~ BDD::Behave::Formatter, 'composes Formatter';
+is $f.name, 'json',              'name is "json"';
+
+{
+  my $g = make-group('Calculator');
+  my $ex = make-example('adds positive numbers', :line(7));
+  $ex.duration = 0.001;
+  my $f2 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f2.group-start($g);
+    $f2.example-start($ex);
+    $f2.example-pass($ex);
+    $f2.group-end($g);
+    $f2.run-summary(fake-result(%( total => 1, passed => 1 )), :order('defined'));
+  });
+  my @lines = $out.lines.grep(*.chars);
+  is @lines.elems, 1,                          'one JSON line emitted';
+  ok @lines[0].starts-with('{'),               'starts with {';
+  ok @lines[0].ends-with('}'),                 'ends with }';
+  ok @lines[0].contains('"version":1'),        'includes version 1';
+  ok @lines[0].contains('"status":"passed"'),  'records passed status';
+  ok @lines[0].contains('"full_description":"Calculator adds positive numbers"'),
+                                                'derives full_description';
+  ok @lines[0].contains('"line":7'),           'includes example line';
+}
+
+{
+  my $g = make-group('g');
+  my $ex = make-example('broken');
+  my $f3 = BDD::Behave::Formatter::JSON.new;
+  my $exception;
+  try { die 'boom'; CATCH { default { $exception = $_ } } }
+  my $out = capture({
+    $f3.group-start($g);
+    $f3.example-start($ex);
+    $f3.example-fail($ex, :failure-info(%(
+      file => 'spec.raku', line => 9,
+      exception => $exception,
+    )));
+    $f3.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('"status":"failed"'),       'failed status set';
+  ok $out.contains('"type":"exception"'),      'exception type recorded';
+  ok $out.contains('"message":"boom"'),        'exception message recorded';
+}
+
+{
+  my $g = make-group('g');
+  my $ex = make-example('todo', :pending);
+  $ex.set-metadata(:pending-reason('not yet implemented'));
+  my $f4 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f4.group-start($g);
+    $f4.example-pending($ex);
+    $f4.run-summary(fake-result(%( total => 1, pending => 1 )));
+  });
+  ok $out.contains('"status":"pending"'),                       'pending status set';
+  ok $out.contains('"pending_reason":"not yet implemented"'),   'pending reason recorded';
+}
+
+{
+  my $g = make-group('g');
+  my $ex = make-example('held back');
+  my $f5 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f5.group-start($g);
+    $f5.example-around-skipped($ex);
+    $f5.run-summary(fake-result(%( total => 1, skipped => 1 )));
+  });
+  ok $out.contains('"skip_reason":'),                          'skip_reason recorded';
+  ok $out.contains('around-each did not invoke continuation'), 'around-each phrase included';
+}
+
+{
+  Failures.list = ();
+  my $g = make-group('g');
+  my $ex = make-example('expects');
+  my $f6 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f6.group-start($g);
+    $f6.example-start($ex);
+    Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
+    $f6.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+    $f6.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('"expectations":'),  'expectations list emitted';
+  ok $out.contains('"given":"a"'),      'given value emitted';
+  ok $out.contains('"expected":"b"'),   'expected value emitted';
+  Failures.list = ();
+}
+
+{
+  my $f7 = BDD::Behave::Formatter::JSON.new;
+  my $s = Suite.create(:description('s'), :file('/tmp/a-spec.raku'.IO), :line(1));
+  my $out = capture({
+    $f7.suite-start($s, :multi-file);
+    $f7.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out, '',                                'no per-file emit in multi-file mode';
+}
+
+{
+  my $f8 = BDD::Behave::Formatter::JSON.new;
+  my $s = Suite.create(:description('s'), :file('/tmp/a-spec.raku'.IO), :line(1));
+  my $out = capture({
+    $f8.suite-start($s, :multi-file);
+    $f8.run-summary(fake-result(%( total => 0 )));
+    $f8.multi-file-overall(fake-result(%( total => 0 )), :order('defined'));
+  });
+  is $out.lines.grep(*.starts-with('{')).elems, 1,
+                                              'one emit at multi-file-overall';
+}
+
+{
+  my $f9 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f9.run-summary(fake-result(%( total => 1, passed => 1 )));
+    $f9.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  is $out.lines.grep(*.starts-with('{')).elems, 1,
+                                              'never emits twice';
+}
+
+{
+  my $f10 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f10.load-errors([
+      %( file => '/tmp/a.raku', message => 'syntax error' ),
+    ]);
+    $f10.run-summary(fake-result(%( total => 0 )));
+  });
+  ok $out.contains('"file":"/tmp/a.raku"'),    'load error file recorded';
+  ok $out.contains('"message":"syntax error"'),'load error message recorded';
+}
+
+{
+  my $f11 = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f11.run-summary(fake-result(%( total => 4, failed => 1, passed => 3 )));
+  });
+  ok $out.contains('"summary_line":"4 examples, 1 failed, 3 passed"'),
+                                              'summary_line matches default phrasing';
+}
+
+{
+  my $f12 = BDD::Behave::Formatter::JSON.new;
+  my $g = make-group('Calculator');
+  my $ex = make-example('original');
+  my $out = capture({
+    $f12.group-start($g);
+    $f12.example-start($ex, :auto);
+    $f12.example-auto-description($ex, :description('derived'));
+    $f12.example-pass($ex);
+    $f12.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('"description":"derived"'),
+                                              'auto-description rewrites description';
+  ok $out.contains('"full_description":"Calculator derived"'),
+                                              'auto-description rewrites full_description';
+}

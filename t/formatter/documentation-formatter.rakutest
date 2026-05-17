@@ -1,0 +1,181 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Tree;
+use BDD::Behave::Formatter::Documentation;
+use BDD::Behave::SpecTree;
+
+plan 23;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False) {
+  Example.new(
+    :$description, :file('synth'.IO), :line(1),
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("doc-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+sub fake-result(%counts) {
+  class :: {
+    has Int $.total   is rw = 0;
+    has Int $.passed  is rw = 0;
+    has Int $.failed  is rw = 0;
+    has Int $.pending is rw = 0;
+    has Int $.skipped is rw = 0;
+  }.new(|%counts);
+}
+
+my $f = BDD::Behave::Formatter::Documentation.new;
+
+ok $f ~~ BDD::Behave::Formatter,          'composes Formatter';
+ok $f ~~ BDD::Behave::Formatter::Tree, 'inherits Tree';
+is $f.name, 'documentation',              'name is "documentation"';
+
+my $g     = make-group('Calculator');
+my $inner = make-group('addition');
+
+my $group-out = strip-ansi capture({ $f.group-start($g) });
+is $group-out.lines[0], 'Calculator',     'group description renders without quotes/arrows';
+nok $group-out.contains("⮑"),            'no arrow marker on group line';
+
+my $nested = strip-ansi capture({
+  my $f2 = BDD::Behave::Formatter::Documentation.new;
+  $f2.group-start($g);
+  $f2.group-start($inner);
+});
+my @nested-lines = $nested.lines;
+is @nested-lines[0], 'Calculator',         'outer group at column 0';
+is @nested-lines[1], '  addition',         'inner group indented 2 spaces';
+
+my $unwound = strip-ansi capture({
+  my $f3 = BDD::Behave::Formatter::Documentation.new;
+  $f3.group-start($g);
+  $f3.group-start($inner);
+  $f3.group-end($inner);
+  $f3.group-end($g);
+  $f3.group-start(make-group('Subtraction'));
+});
+is $unwound.lines[*-1], 'Subtraction',     'group-end fully unwinds indent';
+
+my $pass-out = strip-ansi capture({
+  my $f4 = BDD::Behave::Formatter::Documentation.new;
+  $f4.group-start($g);
+  $f4.example-pass(make-example('adds two positive numbers'));
+});
+is $pass-out.lines[1], '  adds two positive numbers',
+   'passing example: indented description only';
+nok $pass-out.contains('SUCCESS'),
+    'no SUCCESS marker';
+
+my $fail-out = strip-ansi capture({
+  my $f5 = BDD::Behave::Formatter::Documentation.new;
+  $f5.group-start($g);
+  $f5.example-fail(make-example('handles overflow'),
+                   :failure-info(%(description => 'handles overflow')));
+});
+is $fail-out.lines[1], '  handles overflow (FAILED)',
+   'failing example: (FAILED) suffix';
+
+my $pending-out = strip-ansi capture({
+  my $f6 = BDD::Behave::Formatter::Documentation.new;
+  $f6.group-start($g);
+  $f6.example-pending(make-example('not yet', :pending));
+});
+is $pending-out.lines[1], '  not yet (PENDING)',
+   'pending example: (PENDING) suffix';
+
+my $skipped-out = strip-ansi capture({
+  my $f7 = BDD::Behave::Formatter::Documentation.new;
+  $f7.group-start($g);
+  $f7.example-skipped(make-example('held back'));
+});
+is $skipped-out.lines[1], '  held back (SKIPPED)',
+   'skipped example: (SKIPPED) suffix';
+
+my $around-skipped-out = strip-ansi capture({
+  my $f8 = BDD::Behave::Formatter::Documentation.new;
+  $f8.group-start($g);
+  $f8.example-around-skipped(make-example('aborted'));
+});
+ok $around-skipped-out.lines[1].contains('aborted (SKIPPED'),
+   'around-each-skipped: SKIPPED suffix';
+ok $around-skipped-out.lines[1].contains('around-each did not invoke continuation'),
+   'around-each-skipped: continuation hint included';
+
+my $auto-out = strip-ansi capture({
+  my $f9 = BDD::Behave::Formatter::Documentation.new;
+  $f9.group-start($g);
+  $f9.example-auto-description(make-example('e'), :description('derived label'));
+});
+is $auto-out.lines[1], '  derived label',
+   'auto-description rendered just like a passing example';
+
+is capture({
+  my $f10 = BDD::Behave::Formatter::Documentation.new;
+  $f10.suite-loading(:file('x.raku'));
+  my $s = Suite.create(:description('s'), :file('/tmp/x-spec.raku'.IO), :line(1));
+  $f10.suite-start($s);
+  $f10.example-start(make-example('e'));
+  $f10.example-start(make-example('e'), :auto);
+  my $ex = make-example('e');
+  $ex.duration = 1.0;
+  $ex.memory-delta = 999;
+  $f10.example-slow($ex, :threshold(0.1.Rat));
+  $f10.example-memory-leak($ex, :threshold(100));
+}), '', 'silent hooks emit nothing in single-file mode';
+
+{
+  my $f-mf = BDD::Behave::Formatter::Documentation.new;
+  my $s = Suite.create(:description('s'), :file('/tmp/abc-spec.raku'.IO), :line(1));
+  my $out = strip-ansi capture({ $f-mf.suite-start($s, :multi-file) });
+  ok $out.contains('abc-spec.raku'),                'suite-start emits file basename in multi-file';
+}
+
+{
+  my $f-mf = BDD::Behave::Formatter::Documentation.new;
+  my $s = Suite.create(:description('s'), :file('/tmp/a-spec.raku'.IO), :line(1));
+  my $out = strip-ansi capture({
+    $f-mf.suite-start($s, :multi-file);
+    $f-mf.group-start(make-group('Calc'));
+    $f-mf.example-pass(make-example('adds'));
+    $f-mf.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('adds'),                          'multi-file: example still rendered';
+  nok $out.contains('1 example,'),                   'multi-file: per-file run-summary deferred';
+}
+
+my $summary-out = strip-ansi capture({
+  my $f11 = BDD::Behave::Formatter::Documentation.new;
+  $f11.run-summary(fake-result(%( total => 3, passed => 2, failed => 1 )));
+});
+ok $summary-out.contains('3 examples'),    'run-summary inherits counts';
+ok $summary-out.contains('1 failed'),      'run-summary inherits failed marker';
+
+my $overall-out = strip-ansi capture({
+  my $f12 = BDD::Behave::Formatter::Documentation.new;
+  $f12.multi-file-overall(fake-result(%( total => 5, passed => 5 )),
+                          :order('defined'));
+});
+ok $overall-out.contains('Overall: 5 examples'),
+   'multi-file-overall inherited';

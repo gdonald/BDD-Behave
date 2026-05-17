@@ -1,0 +1,150 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Tree;
+use BDD::Behave::Formatter::Progress;
+use BDD::Behave::SpecTree;
+
+plan 25;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False) {
+  Example.new(
+    :$description, :file('synth'.IO), :line(1),
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("progress-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+sub fake-result(%counts) {
+  class :: {
+    has Int $.total   is rw = 0;
+    has Int $.passed  is rw = 0;
+    has Int $.failed  is rw = 0;
+    has Int $.pending is rw = 0;
+    has Int $.skipped is rw = 0;
+  }.new(|%counts);
+}
+
+my $f = BDD::Behave::Formatter::Progress.new;
+
+ok $f ~~ BDD::Behave::Formatter,           'Progress composes Formatter';
+ok $f ~~ BDD::Behave::Formatter::Tree,  'Progress inherits Tree';
+is $f.name, 'progress',                    'name is "progress"';
+
+my $p = make-example('p');
+my $q = make-example('q');
+my $r = make-example('r', :pending);
+
+is strip-ansi(capture({ $f.example-pass($p) })),     '.', 'pass prints .';
+is strip-ansi(capture({
+  $f.example-fail($q, :failure-info(%(description => 'q')));
+})), 'F',                                                   'fail prints F';
+is strip-ansi(capture({ $f.example-pending($r) })),  '*', 'pending prints *';
+is strip-ansi(capture({ $f.example-skipped($p) })),  'S', 'skipped prints S';
+is strip-ansi(capture({ $f.example-around-skipped($p) })),
+   'S', 'around-each-skipped prints S';
+is strip-ansi(capture({ $f.group-around-skipped(make-group('g')) })),
+   'S', 'around-all-skipped prints S';
+
+is strip-ansi(capture({
+  $f.example-pass($p);
+  $f.example-fail($q, :failure-info(%(description => 'q')));
+  $f.example-pending($r);
+})), '.F*',                                                 'markers stream without newlines';
+
+is capture({ $f.suite-loading(:file('x.raku')) }), '',      'suite-loading silent';
+is capture({
+  my $s = Suite.create(:description('s'), :file('/tmp/a-spec.raku'.IO), :line(1));
+  $f.suite-start($s);
+  $f.suite-start($s, :multi-file);
+}), '',                                                     'suite-start silent in both modes';
+
+my $g = make-group('outer');
+is capture({ $f.group-start($g); $f.group-end($g) }), '',   'group-start/-end silent';
+is capture({ $f.example-start($p); $f.example-start($p, :auto) }),
+   '',                                                      'example-start silent';
+is capture({ $f.example-auto-description($p, :description('d')) }),
+   '',                                                      'example-auto-description silent';
+
+$p.duration = 0.5;
+is capture({ $f.example-slow($p, :threshold(0.1.Rat)) }),
+   '',                                                      'example-slow silent';
+
+$p.memory-delta = 9999;
+is capture({ $f.example-memory-leak($p, :threshold(1000)) }),
+   '',                                                      'example-memory-leak silent';
+
+my $result = fake-result(%( total => 4, failed => 1, passed => 3 ));
+my $summary-out = strip-ansi capture({
+  BDD::Behave::Formatter::Progress.new.run-summary($result);
+});
+ok $summary-out.contains('4 examples'), 'run-summary inherits counts line';
+ok $summary-out.contains('1 failed'),   'run-summary inherits failed marker';
+
+my $single-file-fmt = BDD::Behave::Formatter::Progress.new;
+my $streamed = strip-ansi capture({
+  $single-file-fmt.example-pass($p);
+  $single-file-fmt.example-pass($q);
+  $single-file-fmt.run-summary(fake-result(%( total => 2, passed => 2 )));
+});
+my @lines = $streamed.lines;
+is @lines[0], '..',                                          'dots line ends before summary';
+ok @lines.grep(*.contains('2 examples')).elems == 1,         'summary line printed once';
+
+my $overall = strip-ansi capture({
+  $f.multi-file-overall(fake-result(%( total => 5, passed => 4, failed => 1 )),
+                        :order('defined'));
+});
+ok $overall.contains('Overall: 5 examples'),                 'multi-file-overall inherited';
+
+my @records = (
+  %( description => 'slow', duration => 0.500, example => Any ),
+);
+my $prof = strip-ansi capture({ $f.profile-summary(@records, :limit(1)) });
+ok $prof.contains('Top 1 slowest'),                          'profile-summary inherited';
+
+{
+  my $mf-fmt = BDD::Behave::Formatter::Progress.new;
+  my $s = Suite.create(:description('s'), :file('/tmp/a-spec.raku'.IO), :line(1));
+  my $out = strip-ansi capture({
+    $mf-fmt.suite-start($s, :multi-file);
+    $mf-fmt.example-pass(make-example('p'));
+    $mf-fmt.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  is $out, '.',                                              'multi-file: per-file run-summary deferred';
+}
+
+{
+  my $mf-fmt = BDD::Behave::Formatter::Progress.new;
+  my $s = Suite.create(:description('s'), :file('/tmp/a-spec.raku'.IO), :line(1));
+  my $out = strip-ansi capture({
+    $mf-fmt.suite-start($s, :multi-file);
+    $mf-fmt.run-summary(fake-result(%( total => 1, passed => 1 )));
+    $mf-fmt.multi-file-overall(
+      fake-result(%( total => 1, passed => 1 )),
+      :order('defined'),
+    );
+  });
+  ok $out.contains('Overall: 1 example'),                     'multi-file: overall emitted at end';
+}

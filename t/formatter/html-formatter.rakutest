@@ -1,0 +1,205 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Failure;
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::HTML;
+use BDD::Behave::SpecTree;
+
+plan 28;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-suite(Str $description, Str $file = '/tmp/x-spec.raku') {
+  Suite.create(:$description, :file($file.IO), :line(1));
+}
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False, Int :$line = 1) {
+  Example.new(
+    :$description, :file('synth-spec.raku'.IO), :$line,
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("html-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub fake-result(%counts) {
+  class :: {
+    has Int $.total   is rw = 0;
+    has Int $.passed  is rw = 0;
+    has Int $.failed  is rw = 0;
+    has Int $.pending is rw = 0;
+    has Int $.skipped is rw = 0;
+  }.new(|%counts);
+}
+
+my $f = BDD::Behave::Formatter::HTML.new;
+ok $f ~~ BDD::Behave::Formatter, 'composes Formatter';
+is $f.name, 'html',              'name is "html"';
+
+{
+  my $f2 = BDD::Behave::Formatter::HTML.new;
+  my $out = capture({ $f2.run-summary(fake-result(%( total => 0 ))) });
+  ok $out.contains('<!DOCTYPE html>'),               'DOCTYPE emitted';
+  ok $out.contains('<title>Behave Test Report</title>'), 'title set';
+  ok $out.contains('<style>'),                       'style block present';
+  ok $out.contains('<body>'),                        'body opens';
+  ok $out.contains('</html>'),                       'html closes';
+}
+
+{
+  my $f3 = BDD::Behave::Formatter::HTML.new;
+  my $out = capture({
+    $f3.run-summary(fake-result(%( total => 0 )));
+    $f3.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out.comb(/'<!DOCTYPE html>'/).elems, 1,        'never emits twice';
+}
+
+{
+  my $f4 = BDD::Behave::Formatter::HTML.new;
+  my $s  = make-suite('a', '/tmp/a-spec.raku');
+  my $out = capture({
+    $f4.suite-start($s, :multi-file);
+    $f4.run-summary(fake-result(%( total => 0 )));
+  });
+  is $out, '',                                       'no per-file emit in multi-file';
+}
+
+{
+  my $f5 = BDD::Behave::Formatter::HTML.new;
+  my $s  = make-suite('a', '/tmp/a-spec.raku');
+  my $out = capture({
+    $f5.suite-start($s, :multi-file);
+    $f5.run-summary(fake-result(%( total => 0 )));
+    $f5.multi-file-overall(fake-result(%( total => 0 )), :order('defined'));
+  });
+  is $out.comb(/'<!DOCTYPE html>'/).elems, 1,        'single document at multi-file-overall';
+}
+
+{
+  my $f6 = BDD::Behave::Formatter::HTML.new;
+  my $out = capture({
+    $f6.run-summary(fake-result(%( total => 3, failed => 1, passed => 2 )));
+  });
+  ok $out.contains('3 examples'),                    'summary: count';
+  ok $out.contains('class="summary has-failures"'),  'summary: has-failures class set';
+}
+
+{
+  my $f7 = BDD::Behave::Formatter::HTML.new;
+  my $out = capture({
+    $f7.run-summary(fake-result(%( total => 0 )), :order('random'), :seed(42));
+  });
+  ok $out.contains('Randomized with seed 42'),       'seed announcement included';
+}
+
+{
+  my $f8 = BDD::Behave::Formatter::HTML.new;
+  my $g  = make-group('Calculator');
+  my $out = capture({
+    $f8.group-start($g);
+    $f8.example-pass(make-example('adds'));
+    $f8.group-end($g);
+    $f8.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('<details open class="group">'),               'group: <details open>';
+  ok $out.contains('<summary class="group-summary">Calculator'),   'group: summary description';
+}
+
+{
+  my $f9 = BDD::Behave::Formatter::HTML.new;
+  my $out = capture({
+    $f9.group-start(make-group('outer'));
+    $f9.group-start(make-group('inner'));
+    $f9.example-pass(make-example('p'));
+    $f9.group-end(make-group('inner'));
+    $f9.group-end(make-group('outer'));
+    $f9.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  is $out.comb(/'<details'/).elems, 2,               'nested: two <details>';
+  is $out.comb(/'</details>'/).elems, 2,             'nested: two </details>';
+}
+
+{
+  my $f10 = BDD::Behave::Formatter::HTML.new;
+  my $g   = make-group('g');
+  my $out = capture({
+    $f10.group-start($g);
+    $f10.example-pass(make-example('p'));
+    $f10.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('class="example pass"'),          'pass: pass class';
+  ok $out.contains('✓'),                            'pass: ✓ marker';
+}
+
+{
+  Failures.list = ();
+  my $f11 = BDD::Behave::Formatter::HTML.new;
+  my $g   = make-group('g');
+  my $ex  = make-example('broken');
+  my $out = capture({
+    $f11.group-start($g);
+    $f11.example-start($ex);
+    Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
+    $f11.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+    $f11.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('class="example fail"'),          'fail: fail class';
+  ok $out.contains('class="failure-detail"'),        'fail: failure-detail block';
+  Failures.list = ();
+}
+
+{
+  my $f12 = BDD::Behave::Formatter::HTML.new;
+  my $g   = make-group('g');
+  my $ex  = make-example('todo', :pending);
+  $ex.set-metadata(:pending-reason('not yet'));
+  my $out = capture({
+    $f12.group-start($g);
+    $f12.example-pending($ex);
+    $f12.run-summary(fake-result(%( total => 1, pending => 1 )));
+  });
+  ok $out.contains('class="example pending"'),       'pending: pending class';
+  ok $out.contains('pending: not yet'),              'pending: reason rendered';
+}
+
+{
+  my $f13 = BDD::Behave::Formatter::HTML.new;
+  my $g   = make-group('a & b');
+  my $ex  = make-example('"quoted" <thing>');
+  my $out = capture({
+    $f13.group-start($g);
+    $f13.example-pass($ex);
+    $f13.run-summary(fake-result(%( total => 1, passed => 1 )));
+  });
+  ok $out.contains('a &amp; b'),                                 'escape: & in group';
+  ok $out.contains('&quot;quoted&quot; &lt;thing&gt;'),          'escape: < / > / " in description';
+}
+
+{
+  my $f14 = BDD::Behave::Formatter::HTML.new;
+  my $out = capture({
+    $f14.load-errors([%( file => '/tmp/a.raku', message => 'syntax error' )]);
+    $f14.run-summary(fake-result(%( total => 0 )));
+  });
+  ok $out.contains('class="load-error"'),            'load-error: block rendered';
+  ok $out.contains('/tmp/a.raku'),                   'load-error: file path';
+  ok $out.contains('syntax error'),                  'load-error: message';
+}

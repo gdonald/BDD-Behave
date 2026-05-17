@@ -15,7 +15,7 @@ sub run-behave(*@args) {
 
 describe 'bin/behave --only-example', {
   it 'restricts execution to a single example by file:line', {
-    my %r = run-behave('--order', 'defined',
+    my %r = run-behave('--format=tree', '--order', 'defined',
                        '--only-example', "{$bisect.absolute}:29",
                        $bisect.absolute);
     expect(%r<exit>).to.be(0);

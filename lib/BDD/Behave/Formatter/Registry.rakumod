@@ -1,5 +1,11 @@
 use BDD::Behave::Formatter;
-use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Documentation;
+use BDD::Behave::Formatter::HTML;
+use BDD::Behave::Formatter::JSON;
+use BDD::Behave::Formatter::JUnit;
+use BDD::Behave::Formatter::Progress;
+use BDD::Behave::Formatter::TAP;
+use BDD::Behave::Formatter::Tree;
 
 class BDD::Behave::Formatter::Registry {
   my %registry;
@@ -33,8 +39,20 @@ class BDD::Behave::Formatter::Registry {
 
   method reset {
     %registry = ();
-    self.register('default', BDD::Behave::Formatter::Default);
+    self.register('documentation', BDD::Behave::Formatter::Documentation);
+    self.register('html',          BDD::Behave::Formatter::HTML);
+    self.register('json',          BDD::Behave::Formatter::JSON);
+    self.register('junit',         BDD::Behave::Formatter::JUnit);
+    self.register('progress',      BDD::Behave::Formatter::Progress);
+    self.register('tap',           BDD::Behave::Formatter::TAP);
+    self.register('tree',          BDD::Behave::Formatter::Tree);
   }
 }
 
-BDD::Behave::Formatter::Registry.register('default', BDD::Behave::Formatter::Default);
+BDD::Behave::Formatter::Registry.register('documentation', BDD::Behave::Formatter::Documentation);
+BDD::Behave::Formatter::Registry.register('html',          BDD::Behave::Formatter::HTML);
+BDD::Behave::Formatter::Registry.register('json',          BDD::Behave::Formatter::JSON);
+BDD::Behave::Formatter::Registry.register('junit',         BDD::Behave::Formatter::JUnit);
+BDD::Behave::Formatter::Registry.register('progress',      BDD::Behave::Formatter::Progress);
+BDD::Behave::Formatter::Registry.register('tap',           BDD::Behave::Formatter::TAP);
+BDD::Behave::Formatter::Registry.register('tree',          BDD::Behave::Formatter::Tree);

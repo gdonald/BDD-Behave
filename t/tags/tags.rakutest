@@ -297,7 +297,7 @@ sub capture-run($suite, *%runner-args) {
     %( :exit($proc.exitcode), :$out );
   }
 
-  my %r = run-behave('--tag', 'fast');
+  my %r = run-behave('--format=tree', '--tag', 'fast');
   is %r<exit>, 0, '--tag fast exits 0';
   ok %r<out>.contains('1 example'),
     '--tag fast runs exactly one example from tags-spec.raku';

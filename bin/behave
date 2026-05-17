@@ -31,7 +31,7 @@ my IO::Path $benchmark-save;
 my Real $benchmark-threshold = 0.10;
 my Str $benchmark-format = 'text';
 my IO::Path $benchmark-output;
-my Str $format = 'default';
+my Str $format = 'progress';
 
 sub usage() {
   say qq:to/HERE/;
@@ -115,7 +115,7 @@ sub usage() {
                              instead of stdout. Useful with --benchmark-
                              format=json for CI ingestion.
     --format NAME            Output formatter to use for the run. NAME is
-                             a registered formatter (default: 'default').
+                             a registered formatter (default: 'progress').
                              Available: {BDD::Behave::Formatter::Registry.names.join(', ')}.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
@@ -475,7 +475,7 @@ if $bisect-data {
   exit(($total-result.success && @load-errors.elems == 0) ?? 0 !! 1);
 }
 
-if $suites-run > 1 {
+if $multi {
   $formatter.multi-file-overall($total-result, :$order, :$seed);
 
   if $profile-limit > 0 && $last-runner.defined && !$bisect-data {

@@ -2,11 +2,12 @@ use BDD::Behave::Colors;
 use BDD::Behave::Failures;
 use BDD::Behave::Formatter;
 
-unit class BDD::Behave::Formatter::Default does BDD::Behave::Formatter;
+unit class BDD::Behave::Formatter::Tree does BDD::Behave::Formatter;
 
 has Int $!indent = 0;
+has Int $!failures-printed = 0;
 
-method name(--> Str) { 'default' }
+method name(--> Str) { 'tree' }
 
 method print-indent {
   print '  ' x $!indent;
@@ -99,7 +100,8 @@ method run-summary(
 ) {
   say '';
 
-  Failures.say;
+  Failures.say(:from($!failures-printed));
+  $!failures-printed = Failures.list.elems;
 
   my $total-msg   = "{$result.total} example" ~ ($result.total == 1 ?? '' !! 's');
   my $failed-msg  = $result.failed  > 0 ?? red("{$result.failed} failed")             !! '';

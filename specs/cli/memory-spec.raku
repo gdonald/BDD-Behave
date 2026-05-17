@@ -57,7 +57,7 @@ describe 'bin/behave --memory-threshold', {
   }
 
   it 'prints MEMORY for examples at or above the threshold', {
-    my %r = run-behave('--memory-threshold=1', $fixture.absolute);
+    my %r = run-behave('--format=tree', '--memory-threshold=1', $fixture.absolute);
     expect(%r<exit>).to.be(0);
     my $out = strip-ansi(%r<out>);
     expect($out.contains('MEMORY')).to.be-truthy;
@@ -83,7 +83,7 @@ describe 'bin/behave --memory-threshold', {
   }
 
   it 'accepts the space-separated form: --memory-threshold 1', {
-    my %r = run-behave('--memory-threshold', '1', $fixture.absolute);
+    my %r = run-behave('--format=tree', '--memory-threshold', '1', $fixture.absolute);
     expect(%r<exit>).to.be(0);
     expect(strip-ansi(%r<out>).contains('MEMORY')).to.be-truthy;
   }
