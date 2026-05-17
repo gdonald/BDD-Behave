@@ -14,7 +14,7 @@
         <link rel="prev" href="../describe/">
       
       
-        <link rel="next" href="../../let/let/">
+        <link rel="next" href="../pending/">
       
       
         
@@ -483,10 +483,60 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#specify-alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        specify alias
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        example alias
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pending
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -901,6 +951,118 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/custom-matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/composable-matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composable Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/junctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Junctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/aggregate-failures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aggregate-failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -923,6 +1085,60 @@
     
   
     Diff Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formatter/formatter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../timing/timing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timing
   
 
     
@@ -1086,6 +1302,28 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#specify-alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        specify alias
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-alias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        example alias
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1164,6 +1402,47 @@
 }
 </code></pre></div></td></tr></table></div>
 <p>See <a href="../../let/let/"><code>let</code></a> for the various ways to define and consume let values.</p>
+<h2 id="specify-alias"><code>specify</code> alias<a class="headerlink" href="#specify-alias" title="Permanent link">&para;</a></h2>
+<p><code>specify</code> is a direct alias for <code>it</code>. It reads more naturally when an example description starts with a non-behavioral noun (a fact, a constraint, a state) rather than a verb. Every form <code>it</code> accepts — string + block, block-only one-liner, <code>:tag</code> / <code>:tags</code> / arbitrary <code>:meta</code> keys — is also accepted by <code>specify</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;a fresh User&#39;</span>, {
+  <span class="n">specify</span> <span class="s">&#39;name defaults to anonymous&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">User</span>.<span class="nb">new</span>.<span class="nb">name</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;anonymous&#39;</span>);
+  }
+
+  <span class="n">specify</span> <span class="s">&#39;email is empty&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">User</span>.<span class="nb">new</span>.<span class="n">email</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;&#39;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p><code>specify</code> is a registration-only alias: it does not introduce its own focus / skip / metadata semantics. Mix and match with <code>it</code> in the same <code>describe</code> as you prefer.</p>
+<h2 id="example-alias"><code>example</code> alias<a class="headerlink" href="#example-alias" title="Permanent link">&para;</a></h2>
+<p><code>example</code> is another direct alias for <code>it</code>, useful when "example" reads more naturally in the test text than "it" or "specify". Like <code>specify</code>, it accepts every form <code>it</code> does (string + block, block-only one-liner, metadata).</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;String.split&#39;</span>, {
+  <span class="n">example</span> <span class="s">&#39;with a single character separator&#39;</span>, {
+    <span class="n">expect</span>(<span class="s">&#39;a,b,c&#39;</span>.<span class="nb">split</span>(<span class="s">&#39;,&#39;</span>)).<span class="nb">to</span>.<span class="o">eq</span>(<span class="s">&lt;a b c&gt;</span>);
+  }
+
+  <span class="n">example</span> <span class="s">&#39;with a regex separator&#39;</span>, {
+    <span class="n">expect</span>(<span class="s">&#39;a1b2c&#39;</span>.<span class="nb">split</span>(<span class="sr">/\d/</span>)).<span class="nb">to</span>.<span class="o">eq</span>(<span class="s">&lt;a b c&gt;</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
 
 
 

@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/getting-started/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/expectations/junctions/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../composable-matchers/">
       
       
-        <link rel="next" href="../running/">
+        <link rel="next" href="../aggregate-failures/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Getting Started - BDD::Behave</title>
+        <title>Junctions - BDD::Behave</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -48,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started" class="md-skip">
+        <a href="#junctions" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+    <a href="../.." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              Junctions
             
           </span>
         </div>
@@ -192,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+    <a href="../.." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -222,7 +222,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -246,37 +246,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -292,70 +265,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Project layout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#your-first-spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Your first spec
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-specs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running specs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Where to go next
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -367,7 +276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../running/" class="md-nav__link">
+      <a href="../../running/" class="md-nav__link">
         
   
   
@@ -441,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/describe/" class="md-nav__link">
+      <a href="../../core/describe/" class="md-nav__link">
         
   
   
@@ -469,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/it/" class="md-nav__link">
+      <a href="../../core/it/" class="md-nav__link">
         
   
   
@@ -497,7 +406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/pending/" class="md-nav__link">
+      <a href="../../core/pending/" class="md-nav__link">
         
   
   
@@ -579,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../let/let/" class="md-nav__link">
+      <a href="../../let/let/" class="md-nav__link">
         
   
   
@@ -607,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../let/subject/" class="md-nav__link">
+      <a href="../../let/subject/" class="md-nav__link">
         
   
   
@@ -642,7 +551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hooks/hooks/" class="md-nav__link">
+      <a href="../../hooks/hooks/" class="md-nav__link">
         
   
   
@@ -669,7 +578,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shared-contexts/shared-contexts/" class="md-nav__link">
+      <a href="../../shared-contexts/shared-contexts/" class="md-nav__link">
         
   
   
@@ -696,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shared-examples/shared-examples/" class="md-nav__link">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -723,7 +632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tags/tags/" class="md-nav__link">
+      <a href="../../tags/tags/" class="md-nav__link">
         
   
   
@@ -750,7 +659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../focus-skip/focus-skip/" class="md-nav__link">
+      <a href="../../focus-skip/focus-skip/" class="md-nav__link">
         
   
   
@@ -777,7 +686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../example-filter/example-filter/" class="md-nav__link">
+      <a href="../../example-filter/example-filter/" class="md-nav__link">
         
   
   
@@ -804,7 +713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../mocks/mocks/" class="md-nav__link">
+      <a href="../../mocks/mocks/" class="md-nav__link">
         
   
   
@@ -828,18 +737,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
         
           
           <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
@@ -860,7 +771,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_13">
             <span class="md-nav__icon md-icon"></span>
             
@@ -878,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/expect/" class="md-nav__link">
+      <a href="../expect/" class="md-nav__link">
         
   
   
@@ -906,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/matchers/" class="md-nav__link">
+      <a href="../matchers/" class="md-nav__link">
         
   
   
@@ -934,7 +845,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/custom-matchers/" class="md-nav__link">
+      <a href="../custom-matchers/" class="md-nav__link">
         
   
   
@@ -962,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/composable-matchers/" class="md-nav__link">
+      <a href="../composable-matchers/" class="md-nav__link">
         
   
   
@@ -987,10 +898,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../expectations/junctions/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Junctions
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1006,6 +944,114 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#any-match-any-one-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        any — match any one alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#all-match-every-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        all — match every alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#one-match-exactly-one-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        one — match exactly one alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#none-match-no-alternative" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        none — match no alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#junction-aware-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Junction-aware diffs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1018,7 +1064,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/aggregate-failures/" class="md-nav__link">
+      <a href="../aggregate-failures/" class="md-nav__link">
         
   
   
@@ -1053,7 +1099,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../diff/diff/" class="md-nav__link">
+      <a href="../../diff/diff/" class="md-nav__link">
         
   
   
@@ -1080,7 +1126,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../formatter/formatter/" class="md-nav__link">
+      <a href="../../formatter/formatter/" class="md-nav__link">
         
   
   
@@ -1107,7 +1153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../timing/timing/" class="md-nav__link">
+      <a href="../../timing/timing/" class="md-nav__link">
         
   
   
@@ -1134,7 +1180,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../classes/classes/" class="md-nav__link">
+      <a href="../../classes/classes/" class="md-nav__link">
         
   
   
@@ -1161,7 +1207,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../variables/variables/" class="md-nav__link">
+      <a href="../../variables/variables/" class="md-nav__link">
         
   
   
@@ -1188,7 +1234,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributing/" class="md-nav__link">
+      <a href="../../contributing/" class="md-nav__link">
         
   
   
@@ -1235,10 +1281,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#any-match-any-one-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project layout
+        any — match any one alternative
       
     </span>
   </a>
@@ -1246,10 +1292,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#your-first-spec" class="md-nav__link">
+  <a href="#all-match-every-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Your first spec
+        all — match every alternative
       
     </span>
   </a>
@@ -1257,10 +1303,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-specs" class="md-nav__link">
+  <a href="#one-match-exactly-one-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running specs
+        one — match exactly one alternative
       
     </span>
   </a>
@@ -1268,10 +1314,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
+  <a href="#none-match-no-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where to go next
+        none — match no alternative
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#negation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#failure-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failure metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#junction-aware-diffs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Junction-aware diffs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
       
     </span>
   </a>
@@ -1298,66 +1388,86 @@
   
 
 
-<h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
-<h2 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
-<p>A Behave project keeps spec files in a <code>specs/</code> directory at the project root. The <code>behave</code> runner picks up any file matching <code>spec.raku</code> (e.g. <code>001-basic-spec.raku</code>, <code>users-spec.raku</code>, <code>subdir/admin-spec.raku</code>).</p>
+<h1 id="junctions">Junctions<a class="headerlink" href="#junctions" title="Permanent link">&para;</a></h1>
+<p><code>expect(actual).to.be(expected)</code> uses Raku smartmatch (<code>~~</code>) through the built-in <code>BeMatcher</code>. Junctions on the right-hand side of a smartmatch are first-class, so every junction form composes with <code>expect</code> without any extra DSL.</p>
+<h2 id="any-match-any-one-alternative"><code>any</code> — match any one alternative<a class="headerlink" href="#any-match-any-one-alternative" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);
+<span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));      <span class="c1"># equivalent</span>
+</code></pre></div></td></tr></table></div>
+<p>Passes when <code>$x</code> smartmatches at least one of the alternatives.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$status</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;green&#39;</span> | <span class="s">&#39;yellow&#39;</span> | <span class="s">&#39;red&#39;</span>);
+<span class="n">expect</span>(<span class="nv">$value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span> | <span class="nb">Str</span>);     <span class="c1"># type-object alternatives</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="all-match-every-alternative"><code>all</code> — match every alternative<a class="headerlink" href="#all-match-every-alternative" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span> &amp; <span class="nb">Numeric</span>);
+<span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">all</span>(<span class="nb">Int</span>, <span class="nb">Numeric</span>)); <span class="c1"># equivalent</span>
+</code></pre></div></td></tr></table></div>
+<p>Passes when <code>$x</code> smartmatches every alternative. Mixing distinct literal values (<code>1 &amp; 2</code>) is effectively unsatisfiable because a single value cannot equal two different literals — combine <code>all</code> with type checks, ranges, or predicates instead.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="k">subset</span> <span class="n">Positive</span> <span class="nb">of</span> <span class="nb">Int</span> <span class="n">where</span> * &gt; <span class="mi">0</span>;
+<span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span> &amp; <span class="n">Positive</span>);
+</code></pre></div></td></tr></table></div>
+<h2 id="one-match-exactly-one-alternative"><code>one</code> — match exactly one alternative<a class="headerlink" href="#one-match-exactly-one-alternative" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span> ^ <span class="mi">2</span> ^ <span class="mi">3</span>);
+<span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">one</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));      <span class="c1"># equivalent</span>
+</code></pre></div></td></tr></table></div>
+<p>Passes when exactly one alternative matches. Useful for mutually exclusive states.</p>
+<h2 id="none-match-no-alternative"><code>none</code> — match no alternative<a class="headerlink" href="#none-match-no-alternative" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">none</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
+</code></pre></div></td></tr></table></div>
+<p>Passes when <code>$x</code> matches none of the listed values.</p>
+<h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
+<p><code>.not</code> flips the outer result; the junction collapses to a <code>Bool</code> first, then <code>.not</code> negates it:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);      <span class="c1"># passes — 5 is not in the set</span>
+<span class="n">expect</span>(<span class="mi">2</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="nb">none</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));  <span class="c1"># passes — 2 is in the set</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="failure-metadata">Failure metadata<a class="headerlink" href="#failure-metadata" title="Permanent link">&para;</a></h2>
+<p>When a junction expectation fails, <code>Failure.expected</code> carries the <code>Junction</code> itself and <code>Failure.given</code> carries the actual value:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);
+<span class="c1"># Failure.given    == 5</span>
+<span class="c1"># Failure.expected == any(1, 2, 3)</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="junction-aware-diffs">Junction-aware diffs<a class="headerlink" href="#junction-aware-diffs" title="Permanent link">&para;</a></h2>
+<p>When a junction expectation fails, the <code>Diff:</code> section collapses the junction to its constituent alternatives, marking each with <code>✓</code> (matched) or <code>✗</code> (didn't match), so the reader sees exactly which alternatives didn't line up with the given value:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>my-project/
-├── lib/
-│   └── MyApp.rakumod
-└── specs/
-    ├── basic-spec.raku
-    └── users/
-        └── auth-spec.raku
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code>Expected: 5
+to be: any(1, 2, 3)
+Diff:
+  - any(1, 2, 3)
+  + 5
+    Alternatives (none of 3 matched; expected at least one):
+      ✗ 1
+      ✗ 2
+      ✗ 3
 </code></pre></div></td></tr></table></div>
-<h2 id="your-first-spec">Your first spec<a class="headerlink" href="#your-first-spec" title="Permanent link">&para;</a></h2>
-<p>Every spec file starts with <code>use BDD::Behave;</code> and then declares one or more top-level <code>describe</code> blocks.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
-
-<span class="n">describe</span> <span class="s">&#39;arithmetic&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;adds integers&#39;</span>, {
-    <span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">2</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;multiplies integers&#39;</span>, {
-    <span class="n">expect</span>(<span class="mi">3</span> * <span class="mi">4</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">12</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="running-specs">Running specs<a class="headerlink" href="#running-specs" title="Permanent link">&para;</a></h2>
-<p>Run all specs found in <code>specs/</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave
-</code></pre></div></td></tr></table></div>
-<p>Run a single spec file:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>specs/basic-spec.raku
-</code></pre></div></td></tr></table></div>
-<p>During local development of an app whose <code>lib/</code> is not yet installed, prefix with <code>raku -Ilib</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave<span class="w"> </span>specs/basic-spec.raku
-</code></pre></div></td></tr></table></div>
-<p>See <a href="../running/">Running Specs</a> for the full set of options.</p>
-<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
+<p>Each junction kind reports its own summary line:</p>
 <ul>
-<li><a href="../core/describe/"><code>describe</code> / <code>context</code></a> — group related examples</li>
-<li><a href="../core/it/"><code>it</code></a> — define an example</li>
-<li><a href="../let/let/"><code>let</code></a> — lazy, memoized values per example</li>
-<li><a href="../hooks/hooks/">Hooks</a> — <code>before-each</code>, <code>after-each</code>, <code>before-all</code>, <code>after-all</code></li>
-<li><a href="../shared-contexts/shared-contexts/">Shared Contexts</a> — reusable <code>let</code>s and hooks via <code>shared-context</code> / <code>include-context</code></li>
-<li><a href="../expectations/expect/"><code>expect</code></a> — assertions</li>
+<li><code>any</code> — <code>none of N matched; expected at least one</code></li>
+<li><code>all</code> — <code>K of N matched; expected all</code></li>
+<li><code>one</code> — <code>K of N matched; expected exactly one</code></li>
+<li><code>none</code> — <code>K of N matched; expected zero</code></li>
+</ul>
+<p>Under <code>.not</code>, the summary phrases the inverted intent (e.g. <code>expected none under negation</code> for negated <code>any</code>, <code>expected at least one under negation</code> for negated <code>none</code>), so the diff stays useful when the matcher fires through negation.</p>
+<p>Type-object alternatives (<code>Int | Rat</code>) render by name; values render via <code>.raku</code>.</p>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../matchers/">Matchers</a> — the matcher role and built-ins.</li>
+<li><a href="../dsl/diff.md">Diff Output</a> — how the <code>Diff:</code> section is constructed for non-junction shapes.</li>
+<li><a href="../composable-matchers/">Composable Matchers</a> — <code>.and</code> / <code>.or</code> on <code>Matcher</code> objects (object-level alternative to Raku's literal junctions).</li>
 </ul>
 
 
@@ -1408,10 +1518,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

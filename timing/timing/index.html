@@ -1,0 +1,2468 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/timing/timing/">
+      
+      
+        <link rel="prev" href="../../formatter/formatter/">
+      
+      
+        <link rel="next" href="../../classes/classes/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Timing - BDD::Behave</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#timing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            BDD::Behave
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Timing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/gdonald/BDD-Behave" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    BDD::Behave
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/gdonald/BDD-Behave" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../running/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Running Specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Core
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Core
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/describe/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    describe / context
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/it/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    it
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/pending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pending
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    let
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    let
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../let/let/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    let / let-bang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../let/subject/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    subject / subject-bang
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hooks/hooks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hooks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shared-contexts/shared-contexts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Contexts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Shared Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tags/tags/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tags
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../focus-skip/focus-skip/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Focus and Skip
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../example-filter/example-filter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example Filter
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mocks/mocks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mocks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        
+          
+          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Expectations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_13">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Expectations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/expect/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    expect
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/custom-matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/composable-matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composable Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/junctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Junctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expectations/aggregate-failures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aggregate-failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../diff/diff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diff Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formatter/formatter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-captured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is captured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-not-captured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not captured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --profile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-slow-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --slow-threshold
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory profiling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory profiling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-memory-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --memory-profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-memory-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --memory-threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-access_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Benchmarking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calling-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calling conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#named-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Named options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#result-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attachment-to-the-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attachment to the example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-iterations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-iterations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-baseline-benchmark-save" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-baseline / --benchmark-save
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--benchmark-baseline / --benchmark-save">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#baseline-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline file format
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-file-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-file runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-access_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output formatting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-access_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../classes/classes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Classes in specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../variables/variables/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variables in specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-captured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is captured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-not-captured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is not captured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reading-the-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reading the values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --profile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-slow-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --slow-threshold
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#memory-profiling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Memory profiling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Memory profiling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-memory-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --memory-profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-memory-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --memory-threshold
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#caveats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Caveats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-access_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmarking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Benchmarking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calling-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calling conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#named-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Named options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#result-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Result shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attachment-to-the-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attachment to the example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-iterations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-iterations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-baseline-benchmark-save" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-baseline / --benchmark-save
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--benchmark-baseline / --benchmark-save">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#baseline-file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Baseline file format
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-file-runs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-file runs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-access_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output formatting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Output formatting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-format
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-benchmark-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --benchmark-output
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-access_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="timing">Timing<a class="headerlink" href="#timing" title="Permanent link">&para;</a></h1>
+<p>Behave records how long each example takes to run. Timing data lives on the
+<code>Example</code> node itself, so any consumer that walks the spec tree after a run
+(formatters, reporters, future <code>--profile</code> output) can read it directly.</p>
+<h2 id="what-is-captured">What is captured<a class="headerlink" href="#what-is-captured" title="Permanent link">&para;</a></h2>
+<p>For every example that the runner actually executes, three values are
+recorded:</p>
+<ul>
+<li><code>started-at</code> — an <code>Instant</code> taken immediately before the example body runs.</li>
+<li><code>finished-at</code> — an <code>Instant</code> taken immediately after the body completes,
+  whether it passed or raised an exception.</li>
+<li><code>duration</code> — <code>finished-at - started-at</code>, expressed as a <code>Real</code> in seconds.</li>
+</ul>
+<p>The capture is scoped to the example body. Hooks (<code>before-each</code>,
+<code>after-each</code>, <code>around-each</code>) run outside this window — their cost is not
+counted toward the example duration.</p>
+<h2 id="what-is-not-captured">What is not captured<a class="headerlink" href="#what-is-not-captured" title="Permanent link">&para;</a></h2>
+<p>The timing slots stay undefined for examples that never run:</p>
+<ul>
+<li><strong>Pending examples</strong> never enter the body, so <code>duration</code>, <code>started-at</code>,
+  and <code>finished-at</code> remain undefined.</li>
+<li><strong>Skipped examples</strong> (<code>xit</code>, <code>xdescribe</code>, <code>:skipped</code> metadata,
+  filter-skipped via <code>--tag</code> / <code>--exclude-tag</code> / <code>--example</code>) likewise
+  remain untouched.</li>
+<li>Examples bypassed by an <code>around-each</code> continuation that never invokes
+  its block stay untouched.</li>
+</ul>
+<h2 id="reading-the-values">Reading the values<a class="headerlink" href="#reading-the-values" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Runner</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::SpecTree</span>;
+
+<span class="k">sub</span> <span class="n">walk-examples</span>(<span class="nv">$node</span>, <span class="nv">&amp;visit</span>) {
+    <span class="k">given</span> <span class="nv">$node</span> {
+        <span class="k">when</span> <span class="n">BDD::Behave::SpecTree::Example</span> { <span class="n">visit</span>(<span class="nv">$node</span>) }
+        <span class="k">default</span> {
+            <span class="k">for</span> <span class="nv">$node</span>.<span class="n">children</span> -&gt; <span class="nv">$child</span> {
+                <span class="n">walk-examples</span>(<span class="nv">$child</span>, <span class="nv">&amp;visit</span>);
+            }
+        }
+    }
+}
+
+<span class="k">my</span> <span class="nv">$runner</span> = <span class="n">BDD::Behave::Runner::Runner</span>.<span class="nb">new</span>;
+<span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
+
+<span class="n">walk-examples</span> <span class="nv">$suite</span>, -&gt; <span class="nv">$ex</span> {
+    <span class="nb">next</span> <span class="k">unless</span> <span class="nv">$ex</span>.<span class="n">duration</span>.<span class="nb">defined</span>;
+    <span class="nb">say</span> <span class="s">&quot;{$ex.description}: {$ex.duration} s&quot;</span>;
+};
+</code></pre></div></td></tr></table></div>
+<p>Failures are still timed — a <code>die</code> inside an example body produces a
+<code>duration</code> reflecting the wall time spent before the exception propagated.</p>
+<h2 id="-profile">--profile<a class="headerlink" href="#-profile" title="Permanent link">&para;</a></h2>
+<p><code>behave --profile</code> prints a "Top N slowest examples" section at the end of
+the run. The default is <code>N=10</code>; pass <code>--profile=N</code> to choose a different
+size. Examples are sorted by <code>duration</code> (descending) and the section's
+total is the sum of the listed examples' durations.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>Top 3 slowest examples (0.187s total):
+  0.120s  profile-fixture c slow example
+          t/fixtures/profile-fixture-spec.raku:11
+  0.052s  profile-fixture b medium example
+          t/fixtures/profile-fixture-spec.raku:6
+  0.015s  profile-fixture a fast example
+          t/fixtures/profile-fixture-spec.raku:2
+</code></pre></div></td></tr></table></div>
+<p>When multiple spec files run, <code>--profile</code> aggregates timings across all
+files and prints a single global section after the <code>Overall:</code> counts.</p>
+<p>Pending and skipped examples are not eligible for the profile — only
+examples whose body actually ran are listed.</p>
+<h2 id="-slow-threshold">--slow-threshold<a class="headerlink" href="#-slow-threshold" title="Permanent link">&para;</a></h2>
+<p><code>behave --slow-threshold=SECONDS</code> prints an inline <code>SLOW (Xs, threshold
+Ys)</code> line under each example whose duration meets or exceeds <code>SECONDS</code>.
+<code>SECONDS</code> may be fractional (<code>0.075</code>).</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;c slow example&#39;
+  ⮑  SUCCESS
+  ⮑  SLOW (0.121s, threshold 0.010s)
+</code></pre></div></td></tr></table></div>
+<p>The threshold is opt-in — without <code>--slow-threshold</code> no <code>SLOW</code> lines are
+printed. The flag composes with <code>--profile</code>: <code>--slow-threshold</code> flags slow
+examples inline as the run progresses; <code>--profile</code> lists the top N at the
+end.</p>
+<p>Construction-time validation: <code>Runner.new(:profile-limit(-1))</code> and
+<code>Runner.new(:slow-threshold(-1))</code> both die — both knobs require a
+non-negative value, with <code>0</code> meaning disabled.</p>
+<h2 id="programmatic-access">Programmatic access<a class="headerlink" href="#programmatic-access" title="Permanent link">&para;</a></h2>
+<p><code>Runner</code> exposes <code>@.timed-examples</code> — a list of <code>Hash</code> records, one per
+executed example:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
+<span class="k">for</span> <span class="nv">$runner</span>.<span class="n">timed-examples</span> -&gt; <span class="nv">%rec</span> {
+    <span class="nb">say</span> <span class="s">&quot;{%rec&lt;duration&gt;}s  {%rec&lt;description&gt;}&quot;</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p>Each record carries <code>example</code> (the <code>Example</code> node), <code>description</code> (the
+full nested description), and <code>duration</code> (a <code>Real</code> in seconds). Pending,
+skipped, and around-skipped examples are not added.</p>
+<p>The same <code>print-profile(Int $limit, @records?)</code> method that <code>--profile</code>
+uses is public; callers can pass a custom record list to print a profile
+across an aggregated run.</p>
+<h2 id="memory-profiling">Memory profiling<a class="headerlink" href="#memory-profiling" title="Permanent link">&para;</a></h2>
+<p>Behave can also track per-example RSS (resident set size) deltas. Memory
+measurement is opt-in because it shells out to <code>ps</code> once before and once
+after each example, which adds a small amount of overhead per example.</p>
+<p><code>Runner</code> exposes three knobs:</p>
+<ul>
+<li><code>memory-profile</code> (<code>Bool</code>, default <code>False</code>) — enables measurement.</li>
+<li><code>memory-profile-limit</code> (<code>Int</code>, default <code>0</code>) — print the top-N
+  memory-heaviest examples after the run; implies measurement.</li>
+<li><code>memory-threshold</code> (<code>Int</code> KB, default <code>0</code>) — print an inline
+  <code>MEMORY (Δ&lt;KB&gt; KB, threshold &lt;KB&gt; KB)</code> line under every example whose
+  delta meets or exceeds the threshold; implies measurement.</li>
+</ul>
+<p>When measurement is on, every executed example writes three slots on its
+<code>Example</code> node — <code>memory-before</code>, <code>memory-after</code>, and <code>memory-delta</code>
+(all <code>Int</code> KB) — and the runner pushes a record onto <code>@.memory-records</code>.</p>
+<p>The measurement window wraps <code>before-each</code>, the example body, and
+<code>after-each</code> — so the delta is a per-example leak signal as well as a
+working-set signal.</p>
+<h3 id="-memory-profile">--memory-profile<a class="headerlink" href="#-memory-profile" title="Permanent link">&para;</a></h3>
+<p><code>behave --memory-profile</code> prints the 10 memory-heaviest examples after
+the run; <code>--memory-profile=N</code> chooses a different size.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>Top 3 memory-heaviest examples (3168 KB total Δ):
+  +2192 KB  memory-fixture a allocates a chunk
+            t/fixtures/memory-fixture-spec.raku:4
+  +864 KB   memory-fixture b allocates a bigger chunk
+            t/fixtures/memory-fixture-spec.raku:9
+  +112 KB   memory-fixture c small example
+            t/fixtures/memory-fixture-spec.raku:14
+</code></pre></div></td></tr></table></div>
+<p>When multiple spec files run, <code>--memory-profile</code> aggregates records
+across all files and prints a single global section after the
+<code>Overall:</code> counts.</p>
+<h3 id="-memory-threshold">--memory-threshold<a class="headerlink" href="#-memory-threshold" title="Permanent link">&para;</a></h3>
+<p><code>behave --memory-threshold=KB</code> prints an inline <code>MEMORY</code> warning under
+every example whose RSS delta meets or exceeds <code>KB</code> kilobytes:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;b allocates a bigger chunk&#39;
+  ⮑  SUCCESS
+  ⮑  MEMORY (Δ864 KB, threshold 200 KB)
+</code></pre></div></td></tr></table></div>
+<p>The threshold is opt-in — without <code>--memory-threshold</code> no <code>MEMORY</code>
+lines are printed. The flag composes with <code>--memory-profile</code>:
+<code>--memory-threshold</code> flags heavy examples inline as the run progresses;
+<code>--memory-profile</code> lists the top N at the end.</p>
+<p>Both <code>--memory-profile=0</code> and <code>--memory-threshold=0</code> are rejected — the
+CLI requires positive integers. Construction-time validation:
+<code>Runner.new(:memory-profile-limit(-1))</code> and
+<code>Runner.new(:memory-threshold(-1))</code> both die.</p>
+<h3 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The measurement is RSS-based, not heap-based — it includes pages
+  shared with libraries and the page cache, and noise from other
+  processes can show up as small positive or negative deltas.</li>
+<li>A negative delta means the OS reclaimed pages between the two
+  samples; this is normal under MoarVM's generational GC and does not
+  indicate that the example shrank the process below its baseline.</li>
+<li>The threshold check is <code>delta &gt;= threshold</code>, so negative deltas
+  never trigger <code>MEMORY</code> warnings.</li>
+<li>Pending and skipped examples are not measured.</li>
+</ul>
+<h3 id="programmatic-access_1">Programmatic access<a class="headerlink" href="#programmatic-access_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
+<span class="k">for</span> <span class="nv">$runner</span>.<span class="n">memory-records</span> -&gt; <span class="nv">%rec</span> {
+    <span class="nb">say</span> <span class="s">&quot;{%rec&lt;delta&gt;} KB  {%rec&lt;description&gt;}&quot;</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p>Each record carries <code>example</code>, <code>description</code>, <code>before</code>, <code>after</code>, and
+<code>delta</code>. The matching <code>print-memory-profile(Int $limit, @records?)</code>
+method is public.</p>
+<h2 id="benchmarking">Benchmarking<a class="headerlink" href="#benchmarking" title="Permanent link">&para;</a></h2>
+<p><code>benchmark { ... }</code> runs a block N times inside an example body and
+captures min, max, mean, median, and total timings across the
+iterations. The result is returned to the caller and also pushed onto
+the example's <code>benchmarks</code> slot for later inspection by reporters.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+
+<span class="n">describe</span> <span class="s">&#39;sum&#39;</span>, {
+    <span class="n">it</span> <span class="s">&#39;is reasonably fast&#39;</span>, {
+        <span class="k">my</span> <span class="nv">$r</span> = <span class="n">benchmark</span> :<span class="n">iterations</span>(<span class="mi">1000</span>), { (<span class="mi">1</span><span class="o">..</span><span class="mi">100</span>).<span class="nb">sum</span> };
+        <span class="n">expect</span>(<span class="nv">$r</span>.<span class="n">median</span>).<span class="nb">to</span>.<span class="n">be-less-than</span>(<span class="mf">0.001</span>);
+    }
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="calling-conventions">Calling conventions<a class="headerlink" href="#calling-conventions" title="Permanent link">&para;</a></h3>
+<p>Two forms are supported:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">benchmark</span> { <span class="nb">code</span> }
+<span class="n">benchmark</span> :<span class="n">iterations</span>(<span class="mi">50</span>), :<span class="n">warmup</span>(<span class="mi">10</span>), :<span class="n">label</span>(<span class="s">&#39;hashing&#39;</span>), { <span class="nb">code</span> }
+<span class="n">benchmark</span> <span class="s">&#39;hashing&#39;</span>, :<span class="n">iterations</span>(<span class="mi">50</span>), { <span class="nb">code</span> }
+</code></pre></div></td></tr></table></div>
+<p>The first positional <code>Str</code> (if present) becomes the label; the block is
+always the trailing positional argument.</p>
+<h3 id="named-options">Named options<a class="headerlink" href="#named-options" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>iterations</code> (<code>Int</code>, default <code>100</code>) — number of timed runs. Must be a
+  positive integer; <code>0</code> or negative values raise an exception.</li>
+<li><code>warmup</code> (<code>Int</code>, default <code>0</code>) — number of untimed warmup runs to
+  execute before measurement begins. Useful for letting JIT, caches, or
+  module-level lazy-init settle. Must be <code>0</code> or positive.</li>
+<li><code>label</code> (<code>Str</code>, optional) — identifies the benchmark when an example
+  contains more than one. Equivalent to passing the label as the first
+  positional argument.</li>
+</ul>
+<h3 id="result-shape">Result shape<a class="headerlink" href="#result-shape" title="Permanent link">&para;</a></h3>
+<p><code>benchmark</code> returns a <code>BDD::Behave::Benchmark::BenchmarkResult</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>label</code></td>
+<td><code>Str</code></td>
+<td>label passed in, or undefined</td>
+</tr>
+<tr>
+<td><code>iterations</code></td>
+<td><code>Int</code></td>
+<td>number of timed runs</td>
+</tr>
+<tr>
+<td><code>timings</code></td>
+<td><code>List</code></td>
+<td>per-iteration seconds (<code>Real</code>)</td>
+</tr>
+<tr>
+<td><code>min</code></td>
+<td><code>Real</code></td>
+<td>smallest per-iteration timing</td>
+</tr>
+<tr>
+<td><code>max</code></td>
+<td><code>Real</code></td>
+<td>largest per-iteration timing</td>
+</tr>
+<tr>
+<td><code>mean</code></td>
+<td><code>Real</code></td>
+<td><code>total / iterations</code></td>
+</tr>
+<tr>
+<td><code>median</code></td>
+<td><code>Real</code></td>
+<td>middle value (or average of two middles for even N)</td>
+</tr>
+<tr>
+<td><code>total</code></td>
+<td><code>Real</code></td>
+<td>sum of timings</td>
+</tr>
+</tbody>
+</table>
+<h3 id="attachment-to-the-example">Attachment to the example<a class="headerlink" href="#attachment-to-the-example" title="Permanent link">&para;</a></h3>
+<p>When <code>benchmark</code> is called from within an example body, the result is
+also pushed onto <code>example.benchmarks</code>. Multiple <code>benchmark</code> calls in a
+single example accumulate in declaration order, so a reporter can walk
+<code>example.benchmarks</code> after the run to surface every measurement.</p>
+<p>Pending and skipped examples never enter the body, so their
+<code>benchmarks</code> slot stays empty. Calling <code>benchmark</code> outside an example
+still returns a valid result, but nothing is attached.</p>
+<p>The example also exposes <code>started-at</code>, <code>finished-at</code>, and <code>duration</code>
+slots (see above); a benchmark's <code>total</code> is normally a fraction of
+<code>duration</code>, with the rest accounted for by the test scaffolding and any
+non-benchmarked work the body does.</p>
+<h3 id="-benchmark-mode">--benchmark mode<a class="headerlink" href="#-benchmark-mode" title="Permanent link">&para;</a></h3>
+<p><code>behave --benchmark</code> walks the suite, finds every example that called
+<code>benchmark { ... }</code>, aggregates the per-call results, and prints a
+<code>Benchmarks</code> section at the end of the run:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>Benchmarks (3 measurements):
+  benchmark-fixture measures a sum  [label:sum]
+          t/fixtures/benchmark-fixture-spec.raku:4
+    iterations=3  min=0.000005s  max=0.000207s  mean=0.000074s  median=0.000009s
+  benchmark-fixture measures two labeled calls  [label:a]
+          t/fixtures/benchmark-fixture-spec.raku:9
+    iterations=2  min=0.000002s  max=0.000003s  mean=0.000002s  median=0.000002s
+</code></pre></div></td></tr></table></div>
+<p>Each row keys on <code>(full nested description, label or position)</code>. A
+labeled <code>benchmark('foo', { ... })</code> becomes <code>label:foo</code>; an unlabeled
+call becomes <code>pos:N</code>, where <code>N</code> is the call's 0-based order within the
+example body. Position resets per body invocation (so <code>--benchmark-iterations</code>
+re-runs do not collide), so prefer labels when an example contains more
+than one unlabeled benchmark.</p>
+<h3 id="-benchmark-iterations">--benchmark-iterations<a class="headerlink" href="#-benchmark-iterations" title="Permanent link">&para;</a></h3>
+<p><code>behave --benchmark-iterations=N</code> re-runs every benchmarked example
+<code>N</code> times (1 = no re-runs, the default) inside the same process,
+aggregating all per-call timings under one summary row. Re-runs are
+silent: their output is suppressed and they do <strong>not</strong> add to the
+passed / failed / skipped counts.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave --benchmark-iterations=5 specs/
+</code></pre></div></td></tr></table></div>
+<p>Each re-run goes through <code>handle-example</code>, so <code>before-each</code>,
+<code>after-each</code>, and <code>around-each</code> hooks fire normally (and so do lets);
+this matches the cost profile of the example as it would run in the
+suite, which is the right baseline for benchmark measurements.</p>
+<h3 id="-benchmark-baseline-benchmark-save">--benchmark-baseline / --benchmark-save<a class="headerlink" href="#-benchmark-baseline-benchmark-save" title="Permanent link">&para;</a></h3>
+<p><code>behave --benchmark-save=PATH</code> writes the current run's benchmark
+medians to <code>PATH</code>. <code>behave --benchmark-baseline=PATH</code> reads the file
+back and adds a comparison block under the Benchmarks section:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>Benchmark regressions (1, threshold 10.0%):
+  ... [label:sum]   median 0.000006s (baseline 0.000007s)   -14.1%
+  ... [label:a]     median 0.000003s (baseline 0.000002s)   +34.0% REGRESSION
+  ... [label:b]     median 0.000002s (baseline 0.000002s)   +7.1%
+</code></pre></div></td></tr></table></div>
+<p>A row is flagged <code>REGRESSION</code> when <code>(current.median - baseline.median) /
+baseline.median &gt; threshold</code>. The default threshold is <code>0.10</code> (10%);
+override it with <code>--benchmark-threshold=PCT</code> (decimal fraction,
+e.g. <code>--benchmark-threshold=0.20</code> for 20%).</p>
+<p>The header phrasing depends on whether anything was flagged:
+<code>Benchmark regressions (N, threshold X%)</code> (red) when at least one row
+exceeded the threshold, or <code>Benchmark comparison (no regressions;
+threshold X%)</code> otherwise. Rows with no matching baseline entry are
+silently dropped; rows whose baseline matched are listed even if they
+did not regress, so you can see the percentage change on every measured
+benchmark.</p>
+<p>Both <code>--benchmark-baseline</code> and <code>--benchmark-save</code> imply <code>--benchmark</code>
+on their own — you do not have to pass both flags.</p>
+<h4 id="baseline-file-format">Baseline file format<a class="headerlink" href="#baseline-file-format" title="Permanent link">&para;</a></h4>
+<p>The baseline is a plain-text, tab-separated file with two header lines:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code># behave-benchmark-baseline v1
+description key iterations  min max mean    median  total
+benchmark-fixture measures a sum    label:sum   3   0.000003792 ...
+benchmark-fixture measures two labeled calls    label:a 2   0.000001666 ...
+</code></pre></div></td></tr></table></div>
+<p>It's diff-friendly, free of any embedded code, and parsed without
+<code>EVAL</code>. Keys match the same <code>(description, key)</code> shape as the
+in-memory summary, so renaming a <code>describe</code>/<code>context</code>/<code>it</code> will detach
+its baseline entry (which is then silently dropped). Lines starting
+with <code>#</code> are treated as comments and ignored after the header.</p>
+<h3 id="multi-file-runs">Multi-file runs<a class="headerlink" href="#multi-file-runs" title="Permanent link">&para;</a></h3>
+<p>When <code>behave</code> is given more than one spec file, per-file Runners run
+in benchmark mode silently and accumulate their summaries; the CLI
+prints <strong>one</strong> combined Benchmarks section after the <code>Overall:</code> counts.
+The baseline comparison and <code>--benchmark-save</code> likewise run once over
+the combined summary set, so a baseline file captures every benchmark
+in the run, not just those from the last file.</p>
+<h3 id="programmatic-access_2">Programmatic access<a class="headerlink" href="#programmatic-access_2" title="Permanent link">&para;</a></h3>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$runner</span> = <span class="n">BDD::Behave::Runner::Runner</span>.<span class="nb">new</span>(
+    :<span class="n">benchmark-mode</span>,
+    :<span class="n">benchmark-iterations</span>(<span class="mi">5</span>),
+    :<span class="n">benchmark-baseline</span>(<span class="s">&#39;baseline.txt&#39;</span>.<span class="nb">IO</span>),
+    :<span class="n">benchmark-threshold</span>(<span class="mf">0.10</span>),
+);
+<span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
+
+<span class="k">for</span> <span class="nv">$runner</span>.<span class="n">benchmark-summaries</span> -&gt; <span class="nv">%s</span> {
+    <span class="nb">say</span> <span class="s">&quot;{%s&lt;description&gt;} [{%s&lt;key&gt;}]  median={%s&lt;median&gt;}s&quot;</span>;
+}
+
+<span class="k">for</span> <span class="nv">$runner</span>.<span class="n">benchmark-regressions</span>.<span class="nb">grep</span>(*<span class="s">&lt;regression&gt;</span>) -&gt; <span class="nv">%r</span> {
+    <span class="nb">note</span> <span class="s">&quot;REGRESSION: {%r&lt;description&gt;} {%r&lt;key&gt;}  +{(%r&lt;delta-pct&gt; * 100).fmt(&#39;%.1f&#39;)}%&quot;</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p><code>benchmark-summaries</code> is a List of Hash records (<code>example</code>,
+<code>description</code>, <code>key</code>, <code>label</code>, <code>position</code>, <code>runs</code>, <code>iterations</code>,
+<code>timings</code>, <code>min</code>, <code>max</code>, <code>mean</code>, <code>median</code>, <code>total</code>).
+<code>benchmark-regressions</code> adds <code>baseline-median</code>, <code>baseline-mean</code>,
+<code>delta-pct</code>, and <code>regression</code> (Bool). Construction-time validation:
+<code>benchmark-iterations</code> must be a positive integer, and
+<code>benchmark-threshold</code> must be <code>&gt;= 0</code> — both die with a clear message
+otherwise.</p>
+<h3 id="output-formatting">Output formatting<a class="headerlink" href="#output-formatting" title="Permanent link">&para;</a></h3>
+<p>The Benchmarks section renders as a pretty table by default with
+aligned columns, a horizontal rule under the header, and one row per
+measurement:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>Benchmarks (3 measurements):
+  DESCRIPTION                                   KEY        ITER    MIN(s)    MAX(s)   MEAN(s)  MEDIAN(s)
+  ────────────────────────────────────────────  ─────────  ────  ────────  ────────  ────────  ─────────
+  benchmark-fixture measures a sum              label:sum     3  0.000004  0.000176  0.000062   0.000006
+  benchmark-fixture measures two labeled calls  label:a       2  0.000002  0.000003  0.000002   0.000002
+  benchmark-fixture measures two labeled calls  label:b       2  0.000002  0.000003  0.000002   0.000002
+</code></pre></div></td></tr></table></div>
+<p>When a baseline comparison is active, a second table appears under it
+with comparison arrows:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>Benchmark regressions (1, threshold 10.0%):
+  DESCRIPTION                                   KEY         BASELINE    CURRENT  DELTA
+  ────────────────────────────────────────────  ─────────  ─────────  ─────────  ───────────────────
+  benchmark-fixture measures a sum              label:sum  0.000006s  0.000007s  ↑ +11.0% REGRESSION
+  benchmark-fixture measures two labeled calls  label:a    0.000002s  0.000002s  ↓ -1.8%
+  benchmark-fixture measures two labeled calls  label:b    0.000002s  0.000002s  → +0.0%
+</code></pre></div></td></tr></table></div>
+<p>Arrows mean:</p>
+<ul>
+<li><code>↑</code> — current is slower than baseline. When the delta exceeds
+  <code>--benchmark-threshold</code>, the row is also colored red and tagged
+  <code>REGRESSION</code>.</li>
+<li><code>↓</code> — current is faster than baseline. When the absolute delta
+  exceeds <code>--benchmark-threshold</code>, the row is also colored green to
+  highlight a real improvement.</li>
+<li><code>→</code> — exactly zero delta (or extremely close).</li>
+</ul>
+<p>The arrow always reflects direction; the color reflects whether the
+delta crossed the threshold in either direction.</p>
+<h4 id="-benchmark-format">--benchmark-format<a class="headerlink" href="#-benchmark-format" title="Permanent link">&para;</a></h4>
+<p><code>behave --benchmark-format=FORMAT</code> chooses how the Benchmarks section
+is rendered. Supported values:</p>
+<ul>
+<li><code>text</code> (default) — the pretty tables shown above.</li>
+<li><code>json</code> — a single JSON object suitable for CI dashboards. Keys are
+  sorted alphabetically for a stable diff; numbers render in their
+  natural Raku string form; strings are JSON-escaped.</li>
+</ul>
+<p>Setting <code>--benchmark-format</code> to anything else exits 2 with a clear
+error. Setting it to <code>json</code> (or any non-<code>text</code> value) auto-enables
+<code>--benchmark</code>.</p>
+<p>The JSON shape:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;benchmarks&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;iterations&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;label:sum&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;label&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;max&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000176</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;mean&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000062</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;median&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000006</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;min&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000004</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;position&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;runs&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;total&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.00018571</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;regressions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;baseline-median&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000007</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;current-median&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.000006</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;delta-pct&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">-0.141</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;key&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;label:sum&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;regression&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;threshold&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<p><code>benchmarks[]</code> always has one entry per current measurement;
+<code>regressions[]</code> is empty unless <code>--benchmark-baseline</code> is set, in
+which case it has one entry per baseline match (or empty if no entries
+matched).</p>
+<h4 id="-benchmark-output">--benchmark-output<a class="headerlink" href="#-benchmark-output" title="Permanent link">&para;</a></h4>
+<p><code>behave --benchmark-output=PATH</code> writes the Benchmarks section to a
+file instead of stdout. Useful with <code>--benchmark-format=json</code> so a CI
+pipeline can ingest the JSON without parsing it out of test output:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--benchmark<span class="w"> </span>--benchmark-format<span class="o">=</span>json<span class="w"> </span><span class="se">\</span>
+<span class="w">       </span>--benchmark-output<span class="o">=</span>benchmarks.json<span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<p><code>--benchmark-output</code> works with text format too, and on its own
+auto-enables <code>--benchmark</code>. The stdout test output is unaffected.</p>
+<h4 id="programmatic-access_3">Programmatic access<a class="headerlink" href="#programmatic-access_3" title="Permanent link">&para;</a></h4>
+<p><code>Runner.render-benchmark-output(@summaries, @regressions, :$threshold,
+:$format)</code> returns the formatted string without printing it, for
+callers that want to embed the output somewhere else.
+<code>Runner.render-bench-summary-table</code> and
+<code>Runner.render-bench-comparison-table</code> are the underlying helpers if
+you only need one of the two tables. The JSON serializer is exposed as
+<code>BDD::Behave::Benchmark::Format::to-json($value)</code>; it supports <code>Bool</code>,
+<code>Numeric</code>, <code>Str</code>, <code>Positional</code>, <code>Associative</code> (keys sorted), and falls
+back to <code>null</code> for undefined values.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -399,6 +399,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../core/pending/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    pending
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -897,6 +925,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#grouping-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grouping expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -934,6 +973,118 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom-matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../composable-matchers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Composable Matchers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../junctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Junctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aggregate-failures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    aggregate-failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -956,6 +1107,60 @@
     
   
     Diff Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../formatter/formatter/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../timing/timing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Timing
   
 
     
@@ -1152,6 +1357,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#grouping-expectations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grouping expectations
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1198,7 +1414,7 @@
 <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);             <span class="c1"># range</span>
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));     <span class="c1"># junction</span>
 </code></pre></div></td></tr></table></div>
-<p>Plain values are wrapped in <code>BeMatcher</code> automatically. To plug in your own logic, pass any object that does the <a href="../matchers/"><code>Matcher</code></a> role.</p>
+<p>Plain values are wrapped in <code>BeMatcher</code> automatically. To plug in your own logic, pass any object that does the <a href="../matchers/"><code>Matcher</code></a> role — or use <a href="../custom-matchers/"><code>define-matcher</code></a> for the lighter, callback-based form. Combine matchers with <code>.and</code> / <code>.or</code>; see <a href="../composable-matchers/">Composable Matchers</a>. For Raku-native <code>any</code> / <code>all</code> / <code>one</code> / <code>none</code> junctions, see <a href="../junctions/">Junctions</a>.</p>
 <h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
 <p><code>.not</code> flips the comparison:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">3</span>);
@@ -1334,7 +1550,35 @@
 </tr>
 <tr>
 <td><code>change</code></td>
-<td>Passes when a <code>Callable</code> action changes the value returned by an observable block (compared with <code>eqv</code>). Wrap the action and the observable in <code>{ ... }</code>. Chain <code>.from(value)</code> / <code>.to(value)</code> to constrain the start and / or end value. See <a href="../matchers/#changematcher-built-in">Matchers › ChangeMatcher</a>.</td>
+<td>Passes when a <code>Callable</code> action changes the value returned by an observable block (compared with <code>eqv</code>). Wrap the action and the observable in <code>{ ... }</code>. Chain <code>.from(value)</code> / <code>.to(value)</code> to constrain the start and / or end value, or <code>.by(delta)</code> / <code>.by-at-least(delta)</code> / <code>.by-at-most(delta)</code> for numeric deltas. See <a href="../matchers/#changematcher-built-in">Matchers › ChangeMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>be-kept</code></td>
+<td>Passes when a <code>Promise</code> actual settles in the <code>Kept</code> state. Blocks up to a default 5-second timeout; pass <code>be-kept($seconds)</code> for a custom timeout. Surfaces the broken cause in failure messages. See <a href="../matchers/#bekeptmatcher-built-in">Matchers › BeKeptMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>be-broken</code></td>
+<td>Passes when a <code>Promise</code> actual settles in the <code>Broken</code> state. Same timeout shape as <code>be-kept</code>. Surfaces the kept value or the broken cause in failure messages. See <a href="../matchers/#bebrokenmatcher-built-in">Matchers › BeBrokenMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>complete-within</code></td>
+<td>Passes when a <code>Promise</code> actual settles (kept or broken) within the given duration (<code>Real</code> seconds). See <a href="../matchers/#completewithinmatcher-built-in">Matchers › CompleteWithinMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>emit</code></td>
+<td>Passes when a <code>Supply</code> or <code>Channel</code> actual emits exactly the given values (compared via <code>eqv</code>) within the collection window. Pass <code>:within($seconds)</code> to change the default 1-second window. See <a href="../matchers/#emitmatcher-built-in">Matchers › EmitMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>emit-at-least</code></td>
+<td>Passes when a <code>Supply</code> or <code>Channel</code> actual emits at least the given count of values within the collection window. Pass <code>:within($seconds)</code> to change the default 1-second window. See <a href="../matchers/#emitatleastmatcher-built-in">Matchers › EmitAtLeastMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>complete</code></td>
+<td>Passes when a <code>Supply</code> (sending <code>done</code>) or <code>Channel</code> (closed) completes within the collection window. Pass <code>:within($seconds)</code> to change the default 1-second window. See <a href="../matchers/#completematcher-built-in">Matchers › CompleteMatcher</a>.</td>
+</tr>
+<tr>
+<td><code>eventually</code></td>
+<td>Re-runs a <code>Callable</code> actual on a polling loop until the chained inner matcher passes or the timeout elapses. Chain any matcher method (<code>be</code>, <code>eq</code>, <code>match</code>, <code>include</code>, <code>be-truthy</code>, <code>be-greater-than</code>, ...) or pass a <code>Matcher</code> instance via <code>.matches-with</code>. Configure with <code>eventually(:timeout(s), :interval(s))</code> (defaults: 2s / 0.05s). Useful for eventually-consistent state. See <a href="../matchers/#eventuallymatcher-built-in">Matchers › EventuallyMatcher</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -1376,7 +1620,21 @@
 <span class="normal">36</span>
 <span class="normal">37</span>
 <span class="normal">38</span>
-<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="o">eq</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]);
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">contain-exactly</span>(<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>);
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">3</span>, <span class="mi">1</span>, <span class="mi">2</span>]);
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">2</span>);
@@ -1415,9 +1673,25 @@
 <span class="n">expect</span>({ <span class="nv">$balance</span> = <span class="mi">100</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$balance</span> }).<span class="nb">from</span>(<span class="mi">0</span>).<span class="nb">to</span>(<span class="mi">100</span>);
 <span class="n">expect</span>({ <span class="nv">$balance</span> += <span class="mi">50</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$balance</span> }).<span class="nb">from</span>(<span class="mi">100</span>);
 <span class="n">expect</span>({ <span class="nv">$balance</span> -= <span class="mi">150</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$balance</span> }).<span class="nb">to</span>(<span class="mi">0</span>);
+<span class="n">expect</span>({ <span class="nv">$balance</span> += <span class="mi">25</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$balance</span> }).<span class="n">by</span>(<span class="mi">25</span>);
+<span class="n">expect</span>({ <span class="nv">$balance</span> -= <span class="mi">10</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$balance</span> }).<span class="n">by</span>(-<span class="mi">10</span>);
+<span class="n">expect</span>({ <span class="nv">$balance</span> += <span class="mi">5</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$balance</span> }).<span class="n">by-at-least</span>(<span class="mi">1</span>).<span class="n">by-at-most</span>(<span class="mi">10</span>);
+<span class="n">expect</span>(<span class="nb">Promise</span>.<span class="nb">kept</span>(<span class="s">&#39;done&#39;</span>)).<span class="nb">to</span>.<span class="n">be-kept</span>;
+<span class="n">expect</span>(<span class="nb">Promise</span>.<span class="nb">broken</span>(<span class="s">&#39;boom&#39;</span>)).<span class="nb">to</span>.<span class="n">be-broken</span>;
+<span class="n">expect</span>(<span class="nb">start</span> { <span class="n">compute</span>() }).<span class="nb">to</span>.<span class="n">be-kept</span>(<span class="mf">0.5</span>);
+<span class="n">expect</span>(<span class="nb">Promise</span>.<span class="nb">kept</span>(<span class="s">&#39;done&#39;</span>)).<span class="nb">to</span>.<span class="n">complete-within</span>(<span class="mi">1</span>);
+<span class="n">expect</span>(<span class="nb">Promise</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">complete-within</span>(<span class="mf">0.05</span>);
+<span class="n">expect</span>(<span class="nb">Supply</span>.<span class="nb">from-list</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>)).<span class="nb">to</span>.<span class="nb">emit</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>);
+<span class="n">expect</span>(<span class="nb">Supply</span>.<span class="nb">from-list</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>, <span class="mi">4</span>)).<span class="nb">to</span>.<span class="n">emit-at-least</span>(<span class="mi">2</span>);
+<span class="n">expect</span>(<span class="nb">Supply</span>.<span class="nb">from-list</span>(<span class="mi">1</span>, <span class="mi">2</span>)).<span class="nb">to</span>.<span class="n">complete</span>;
+<span class="n">expect</span>({ <span class="n">get-status</span>() }).<span class="nb">to</span>.<span class="n">eventually</span>.<span class="n">be</span>(<span class="s">&#39;done&#39;</span>);
+<span class="n">expect</span>({ <span class="n">counter</span>() }).<span class="nb">to</span>.<span class="n">eventually</span>(:<span class="n">timeout</span>(<span class="mi">5</span>), :<span class="n">interval</span>(<span class="mf">0.1</span>)).<span class="n">be-greater-than</span>(<span class="mi">100</span>);
+<span class="n">expect</span>({ <span class="n">load</span>() }).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">eventually</span>(:<span class="n">timeout</span>(<span class="mf">0.1</span>)).<span class="n">be</span>(<span class="s">&#39;error&#39;</span>);
 </code></pre></div></td></tr></table></div>
 <h2 id="custom-matchers">Custom matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h2>
 <p><code>be</code> accepts any object that does the <a href="../matchers/"><code>Matcher</code></a> role. The matcher's <code>matches</code>, <code>failure-message</code>, and <code>failure-message-negated</code> methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.</p>
+<h2 id="grouping-expectations">Grouping expectations<a class="headerlink" href="#grouping-expectations" title="Permanent link">&para;</a></h2>
+<p>Wrap a sequence of related expectations in <code>aggregate-failures</code> to label the group and trap any exceptions thrown mid-block. See <a href="../aggregate-failures/">aggregate-failures</a>.</p>
 
 
 

@@ -8,28 +8,28 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/getting-started/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/formatter/formatter/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../../diff/diff/">
       
       
-        <link rel="next" href="../running/">
+        <link rel="next" href="../../timing/timing/">
       
       
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Getting Started - BDD::Behave</title>
+        <title>Formatters - BDD::Behave</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
       
 
@@ -48,7 +48,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#getting-started" class="md-skip">
+        <a href="#formatters" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+    <a href="../.." title="BDD::Behave" class="md-header__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Getting Started
+              Formatters
             
           </span>
         </div>
@@ -192,7 +192,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
+    <a href="../.." title="BDD::Behave" class="md-nav__button md-logo" aria-label="BDD::Behave" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -222,7 +222,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -246,37 +246,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -292,70 +265,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Project layout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#your-first-spec" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Your first spec
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#running-specs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Running specs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Where to go next
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -367,7 +276,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../running/" class="md-nav__link">
+      <a href="../../running/" class="md-nav__link">
         
   
   
@@ -441,7 +350,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/describe/" class="md-nav__link">
+      <a href="../../core/describe/" class="md-nav__link">
         
   
   
@@ -469,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/it/" class="md-nav__link">
+      <a href="../../core/it/" class="md-nav__link">
         
   
   
@@ -497,7 +406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../core/pending/" class="md-nav__link">
+      <a href="../../core/pending/" class="md-nav__link">
         
   
   
@@ -579,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../let/let/" class="md-nav__link">
+      <a href="../../let/let/" class="md-nav__link">
         
   
   
@@ -607,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../let/subject/" class="md-nav__link">
+      <a href="../../let/subject/" class="md-nav__link">
         
   
   
@@ -642,7 +551,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hooks/hooks/" class="md-nav__link">
+      <a href="../../hooks/hooks/" class="md-nav__link">
         
   
   
@@ -669,7 +578,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shared-contexts/shared-contexts/" class="md-nav__link">
+      <a href="../../shared-contexts/shared-contexts/" class="md-nav__link">
         
   
   
@@ -696,7 +605,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../shared-examples/shared-examples/" class="md-nav__link">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -723,7 +632,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tags/tags/" class="md-nav__link">
+      <a href="../../tags/tags/" class="md-nav__link">
         
   
   
@@ -750,7 +659,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../focus-skip/focus-skip/" class="md-nav__link">
+      <a href="../../focus-skip/focus-skip/" class="md-nav__link">
         
   
   
@@ -777,7 +686,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../example-filter/example-filter/" class="md-nav__link">
+      <a href="../../example-filter/example-filter/" class="md-nav__link">
         
   
   
@@ -804,7 +713,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../mocks/mocks/" class="md-nav__link">
+      <a href="../../mocks/mocks/" class="md-nav__link">
         
   
   
@@ -878,7 +787,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/expect/" class="md-nav__link">
+      <a href="../../expectations/expect/" class="md-nav__link">
         
   
   
@@ -906,7 +815,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/matchers/" class="md-nav__link">
+      <a href="../../expectations/matchers/" class="md-nav__link">
         
   
   
@@ -934,7 +843,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/custom-matchers/" class="md-nav__link">
+      <a href="../../expectations/custom-matchers/" class="md-nav__link">
         
   
   
@@ -962,7 +871,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/composable-matchers/" class="md-nav__link">
+      <a href="../../expectations/composable-matchers/" class="md-nav__link">
         
   
   
@@ -990,7 +899,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/junctions/" class="md-nav__link">
+      <a href="../../expectations/junctions/" class="md-nav__link">
         
   
   
@@ -1018,7 +927,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../expectations/aggregate-failures/" class="md-nav__link">
+      <a href="../../expectations/aggregate-failures/" class="md-nav__link">
         
   
   
@@ -1053,7 +962,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../diff/diff/" class="md-nav__link">
+      <a href="../../diff/diff/" class="md-nav__link">
         
   
   
@@ -1077,10 +986,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../formatter/formatter/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Formatters
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1096,6 +1032,109 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#selecting-a-formatter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selecting a formatter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-bddbehaveformatter-role" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The BDD::Behave::Formatter role
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The BDD::Behave::Formatter role">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-a-custom-formatter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing a custom formatter
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#passing-a-formatter-directly-to-the-runner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passing a formatter directly to the runner
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1107,7 +1146,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../timing/timing/" class="md-nav__link">
+      <a href="../../timing/timing/" class="md-nav__link">
         
   
   
@@ -1134,7 +1173,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../classes/classes/" class="md-nav__link">
+      <a href="../../classes/classes/" class="md-nav__link">
         
   
   
@@ -1161,7 +1200,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../variables/variables/" class="md-nav__link">
+      <a href="../../variables/variables/" class="md-nav__link">
         
   
   
@@ -1188,7 +1227,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contributing/" class="md-nav__link">
+      <a href="../../contributing/" class="md-nav__link">
         
   
   
@@ -1235,10 +1274,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#selecting-a-formatter" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project layout
+        Selecting a formatter
       
     </span>
   </a>
@@ -1246,10 +1285,49 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#your-first-spec" class="md-nav__link">
+  <a href="#the-bddbehaveformatter-role" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Your first spec
+        The BDD::Behave::Formatter role
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The BDD::Behave::Formatter role">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lifecycle-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summary-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary hooks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#writing-a-custom-formatter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Writing a custom formatter
       
     </span>
   </a>
@@ -1257,10 +1335,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#running-specs" class="md-nav__link">
+  <a href="#the-registry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running specs
+        The registry
       
     </span>
   </a>
@@ -1268,10 +1346,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#where-to-go-next" class="md-nav__link">
+  <a href="#passing-a-formatter-directly-to-the-runner" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Where to go next
+        Passing a formatter directly to the runner
       
     </span>
   </a>
@@ -1298,25 +1376,115 @@
   
 
 
-<h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
-<h2 id="project-layout">Project layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
-<p>A Behave project keeps spec files in a <code>specs/</code> directory at the project root. The <code>behave</code> runner picks up any file matching <code>spec.raku</code> (e.g. <code>001-basic-spec.raku</code>, <code>users-spec.raku</code>, <code>subdir/admin-spec.raku</code>).</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>my-project/
-├── lib/
-│   └── MyApp.rakumod
-└── specs/
-    ├── basic-spec.raku
-    └── users/
-        └── auth-spec.raku
+<h1 id="formatters">Formatters<a class="headerlink" href="#formatters" title="Permanent link">&para;</a></h1>
+<p>Behave's runner is decoupled from its output: every line it prints is emitted through a <strong>formatter</strong>. The default formatter reproduces Behave's familiar indented tree output, but you can swap in any class that composes the <code>BDD::Behave::Formatter</code> role to render runs differently — progress dots, hierarchical documentation, JSON, JUnit XML, and so on.</p>
+<h2 id="selecting-a-formatter">Selecting a formatter<a class="headerlink" href="#selecting-a-formatter" title="Permanent link">&para;</a></h2>
+<p>Pass <code>--format NAME</code> to <code>behave</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--format<span class="w"> </span>default<span class="w"> </span>specs/users-spec.raku
 </code></pre></div></td></tr></table></div>
-<h2 id="your-first-spec">Your first spec<a class="headerlink" href="#your-first-spec" title="Permanent link">&para;</a></h2>
-<p>Every spec file starts with <code>use BDD::Behave;</code> and then declares one or more top-level <code>describe</code> blocks.</p>
+<p><code>NAME</code> must be a registered formatter. Out of the box only <code>default</code> is registered. An unknown name fails fast:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --format nope
+Error: unknown --format &#39;nope&#39; (available: default)
+</code></pre></div></td></tr></table></div>
+<p>The currently registered names are also listed in <code>behave --help</code>.</p>
+<h2 id="the-bddbehaveformatter-role">The <code>BDD::Behave::Formatter</code> role<a class="headerlink" href="#the-bddbehaveformatter-role" title="Permanent link">&para;</a></h2>
+<p><code>BDD::Behave::Formatter</code> is a Raku role that declares a hook for every interesting event the runner emits. All hooks have no-op default bodies, so custom formatters only need to override the events they care about.</p>
+<h3 id="lifecycle-hooks">Lifecycle hooks<a class="headerlink" href="#lifecycle-hooks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>When it fires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>suite-loading(:$file)</code></td>
+<td>Before a spec file is loaded (verbose mode only).</td>
+</tr>
+<tr>
+<td><code>suite-start($suite, :$multi-file)</code></td>
+<td>Once per spec file, before its suite runs. <code>:multi-file</code> is true when more than one file was selected.</td>
+</tr>
+<tr>
+<td><code>suite-end($suite)</code></td>
+<td>After a suite completes.</td>
+</tr>
+<tr>
+<td><code>group-start($group)</code> / <code>group-end($group)</code></td>
+<td>Around every <code>describe</code> / <code>context</code> group.</td>
+</tr>
+<tr>
+<td><code>group-around-skipped($group)</code></td>
+<td>When an <code>around-all</code> hook returned without invoking its continuation.</td>
+</tr>
+<tr>
+<td><code>example-start($example, :$auto)</code></td>
+<td>Before an example body executes. <code>:auto</code> is true when the example will have its description derived from a matcher (<code>it { ... }</code>).</td>
+</tr>
+<tr>
+<td><code>example-auto-description($example, :$description)</code></td>
+<td>After an auto-described example finishes, with the derived description.</td>
+</tr>
+<tr>
+<td><code>example-pass($example)</code> / <code>example-fail($example, :$failure-info)</code> / <code>example-pending($example)</code> / <code>example-skipped($example)</code></td>
+<td>Per-example outcomes.</td>
+</tr>
+<tr>
+<td><code>example-around-skipped($example)</code></td>
+<td>When an <code>around-each</code> hook returned without invoking its continuation.</td>
+</tr>
+<tr>
+<td><code>example-slow($example, :$threshold)</code></td>
+<td>When an example's duration meets or exceeds <code>--slow-threshold</code>.</td>
+</tr>
+<tr>
+<td><code>example-memory-leak($example, :$threshold)</code></td>
+<td>When an example's RSS delta meets or exceeds <code>--memory-threshold</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="summary-hooks">Summary hooks<a class="headerlink" href="#summary-hooks" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>When it fires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>run-summary($result, :$aborted, :$fail-fast, :$order, :$seed)</code></td>
+<td>Per-suite summary: failures, counts, aborted line, seed announcement.</td>
+</tr>
+<tr>
+<td><code>profile-summary(@records, :$limit)</code></td>
+<td>"Top N slowest" section when <code>--profile</code> is enabled.</td>
+</tr>
+<tr>
+<td><code>memory-profile-summary(@records, :$limit)</code></td>
+<td>"Top N memory-heaviest" section when <code>--memory-profile</code> is enabled.</td>
+</tr>
+<tr>
+<td><code>benchmark-summary-section(@summaries, @regressions, :$threshold, :$format, :$output, :$runner)</code></td>
+<td>Per-suite benchmark section when <code>--benchmark</code> is enabled.</td>
+</tr>
+<tr>
+<td><code>multi-file-overall($result, :$order, :$seed)</code></td>
+<td>The <code>Overall:</code> block printed when running more than one spec file.</td>
+</tr>
+<tr>
+<td><code>multi-file-profile</code>, <code>multi-file-memory-profile</code>, <code>multi-file-benchmark</code></td>
+<td>Multi-file counterparts of the per-suite summary hooks.</td>
+</tr>
+<tr>
+<td><code>load-errors(@errors)</code></td>
+<td>Reports spec files that failed to compile.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="writing-a-custom-formatter">Writing a custom formatter<a class="headerlink" href="#writing-a-custom-formatter" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1327,38 +1495,73 @@
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Formatter</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::Formatter::Registry</span>;
 
-<span class="n">describe</span> <span class="s">&#39;arithmetic&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;adds integers&#39;</span>, {
-    <span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">2</span>);
-  }
+<span class="k">class</span> <span class="n">DotsFormatter</span> <span class="k">does</span> <span class="n">BDD::Behave::Formatter</span> {
+  <span class="k">method</span> <span class="nb">name</span>(--&gt; <span class="nb">Str</span>) { <span class="s">&#39;dots&#39;</span> }
 
-  <span class="n">it</span> <span class="s">&#39;multiplies integers&#39;</span>, {
-    <span class="n">expect</span>(<span class="mi">3</span> * <span class="mi">4</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">12</span>);
+  <span class="k">method</span> <span class="n">example-pass</span>(<span class="nv">$example</span>)                   { <span class="nb">print</span> <span class="s">&#39;.&#39;</span> }
+  <span class="k">method</span> <span class="n">example-fail</span>(<span class="nv">$example</span>, :<span class="nv">$failure-info</span>)   { <span class="nb">print</span> <span class="s">&#39;F&#39;</span> }
+  <span class="k">method</span> <span class="n">example-pending</span>(<span class="nv">$example</span>)                { <span class="nb">print</span> <span class="s">&#39;*&#39;</span> }
+  <span class="k">method</span> <span class="n">example-skipped</span>(<span class="nv">$example</span>)                { <span class="nb">print</span> <span class="s">&#39;S&#39;</span> }
+  <span class="k">method</span> <span class="n">run-summary</span>(<span class="nv">$result</span>, *%) {
+    <span class="nb">say</span> <span class="s">&quot;&quot;</span>;
+    <span class="nb">say</span> <span class="s">&quot;{$result.total} examples, {$result.failed} failed, {$result.passed} passed&quot;</span>;
   }
 }
+
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">register</span>(<span class="s">&#39;dots&#39;</span>, <span class="n">DotsFormatter</span>);
 </code></pre></div></td></tr></table></div>
-<h2 id="running-specs">Running specs<a class="headerlink" href="#running-specs" title="Permanent link">&para;</a></h2>
-<p>Run all specs found in <code>specs/</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave
+<p>Once registered, the formatter is available to <code>--format</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--format<span class="w"> </span>dots
 </code></pre></div></td></tr></table></div>
-<p>Run a single spec file:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>specs/basic-spec.raku
+<h2 id="the-registry">The registry<a class="headerlink" href="#the-registry" title="Permanent link">&para;</a></h2>
+<p><code>BDD::Behave::Formatter::Registry</code> is a name-to-class lookup the CLI consults when resolving <code>--format</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Formatter::Registry</span>;
+
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">names</span>;
+<span class="c1"># → (default)</span>
+
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">register</span>(<span class="s">&#39;dots&#39;</span>, <span class="n">DotsFormatter</span>);
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">registered</span>(<span class="s">&#39;dots&#39;</span>);   <span class="c1"># True</span>
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="nb">lookup</span>(<span class="s">&#39;dots&#39;</span>);       <span class="c1"># DotsFormatter</span>
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">create</span>(<span class="s">&#39;dots&#39;</span>);       <span class="c1"># DotsFormatter instance</span>
+
+<span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">reset</span>;                <span class="c1"># back to only &#39;default&#39;</span>
 </code></pre></div></td></tr></table></div>
-<p>During local development of an app whose <code>lib/</code> is not yet installed, prefix with <code>raku -Ilib</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>raku<span class="w"> </span>-Ilib<span class="w"> </span>bin/behave<span class="w"> </span>specs/basic-spec.raku
+<p>Duplicate registrations and classes that do not compose the role are rejected with a clear error.</p>
+<h2 id="passing-a-formatter-directly-to-the-runner">Passing a formatter directly to the runner<a class="headerlink" href="#passing-a-formatter-directly-to-the-runner" title="Permanent link">&para;</a></h2>
+<p>The runner accepts a <code>:formatter</code> argument for embedded use cases (custom CLIs, IDE integrations, etc.):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Runner</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::Formatter::Default</span>;
+
+<span class="k">my</span> <span class="nv">$f</span> = <span class="n">BDD::Behave::Formatter::Default</span>.<span class="nb">new</span>;
+<span class="k">my</span> <span class="nv">$runner</span> = <span class="n">BDD::Behave::Runner::Runner</span>.<span class="nb">new</span>(:<span class="n">formatter</span>(<span class="nv">$f</span>));
+<span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
 </code></pre></div></td></tr></table></div>
-<p>See <a href="../running/">Running Specs</a> for the full set of options.</p>
-<h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="../core/describe/"><code>describe</code> / <code>context</code></a> — group related examples</li>
-<li><a href="../core/it/"><code>it</code></a> — define an example</li>
-<li><a href="../let/let/"><code>let</code></a> — lazy, memoized values per example</li>
-<li><a href="../hooks/hooks/">Hooks</a> — <code>before-each</code>, <code>after-each</code>, <code>before-all</code>, <code>after-all</code></li>
-<li><a href="../shared-contexts/shared-contexts/">Shared Contexts</a> — reusable <code>let</code>s and hooks via <code>shared-context</code> / <code>include-context</code></li>
-<li><a href="../expectations/expect/"><code>expect</code></a> — assertions</li>
-</ul>
+<p>When <code>:formatter</code> is omitted, a <code>BDD::Behave::Formatter::Default</code> instance is constructed automatically.</p>
 
 
 
@@ -1408,10 +1611,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

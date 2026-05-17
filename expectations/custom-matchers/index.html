@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/let/let/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/expectations/custom-matchers/">
       
       
-        <link rel="prev" href="../../core/pending/">
+        <link rel="prev" href="../matchers/">
       
       
-        <link rel="next" href="../subject/">
+        <link rel="next" href="../composable-matchers/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>let / let-bang - BDD::Behave</title>
+        <title>Custom Matchers - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#let" class="md-skip">
+        <a href="#custom-matchers" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              let / let-bang
+              Custom Matchers
             
           </span>
         </div>
@@ -438,20 +438,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -472,7 +470,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -487,37 +485,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    let / let-bang
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../let/let/" class="md-nav__link">
         
   
   
@@ -533,181 +504,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-a-let" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining a let
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reading-a-let" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reading a let
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Reading a let">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-named-argument-form-in-expect" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Named-argument form in expect
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-binding-syntax-to-a-normal-variable" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Binding syntax — := to a normal variable
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-context-parameter-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Context-parameter form
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#memoization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Memoization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#nested-lets-and-shadowing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Nested lets and shadowing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#let-bang-eager-evaluation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        let-bang (eager evaluation)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="let-bang (eager evaluation)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#when-to-use-let-bang" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to use let-bang
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#memoization-is-the-same-as-let" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Memoization is the same as let
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ordering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Ordering
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#inheritance-and-shadowing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Inheritance and shadowing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#restrictions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restrictions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -720,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../subject/" class="md-nav__link">
+      <a href="../../let/subject/" class="md-nav__link">
         
   
   
@@ -941,18 +737,20 @@
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
         
           
           <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
@@ -973,7 +771,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_13">
             <span class="md-nav__icon md-icon"></span>
             
@@ -991,7 +789,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expectations/expect/" class="md-nav__link">
+      <a href="../expect/" class="md-nav__link">
         
   
   
@@ -1019,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expectations/matchers/" class="md-nav__link">
+      <a href="../matchers/" class="md-nav__link">
         
   
   
@@ -1044,10 +842,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../expectations/custom-matchers/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom Matchers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1063,6 +888,131 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#define-matcher" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        define-matcher
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="define-matcher">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#options" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Options
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#argument-shape" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Argument shape
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#matchername-args-lookup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        matcher(name, *args) lookup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-method-dispatch-via-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Direct method dispatch via FALLBACK
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-plugs-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it plugs in
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation errors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#putting-it-together" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Putting it together
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1075,7 +1025,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expectations/composable-matchers/" class="md-nav__link">
+      <a href="../composable-matchers/" class="md-nav__link">
         
   
   
@@ -1103,7 +1053,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expectations/junctions/" class="md-nav__link">
+      <a href="../junctions/" class="md-nav__link">
         
   
   
@@ -1131,7 +1081,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../expectations/aggregate-failures/" class="md-nav__link">
+      <a href="../aggregate-failures/" class="md-nav__link">
         
   
   
@@ -1348,33 +1298,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-a-let" class="md-nav__link">
+  <a href="#define-matcher" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining a let
+        define-matcher
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reading-a-let" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reading a let
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Reading a let">
+    <nav class="md-nav" aria-label="define-matcher">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-named-argument-form-in-expect" class="md-nav__link">
+  <a href="#options" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Named-argument form in expect
+        Options
       
     </span>
   </a>
@@ -1382,21 +1321,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-binding-syntax-to-a-normal-variable" class="md-nav__link">
+  <a href="#argument-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Binding syntax — := to a normal variable
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-context-parameter-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Context-parameter form
+        Argument shape
       
     </span>
   </a>
@@ -1409,10 +1337,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#memoization" class="md-nav__link">
+  <a href="#matchername-args-lookup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Memoization
+        matcher(name, *args) lookup
       
     </span>
   </a>
@@ -1420,10 +1348,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#nested-lets-and-shadowing" class="md-nav__link">
+  <a href="#direct-method-dispatch-via-fallback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Nested lets and shadowing
+        Direct method dispatch via FALLBACK
       
     </span>
   </a>
@@ -1431,74 +1359,46 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#let-bang-eager-evaluation" class="md-nav__link">
+  <a href="#how-it-plugs-in" class="md-nav__link">
     <span class="md-ellipsis">
       
-        let-bang (eager evaluation)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="let-bang (eager evaluation)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#when-to-use-let-bang" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to use let-bang
+        How it plugs in
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#memoization-is-the-same-as-let" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#validation-errors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Memoization is the same as let
+        Validation errors
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#ordering" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#the-registry" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Ordering
+        The registry
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#inheritance-and-shadowing" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#putting-it-together" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Inheritance and shadowing
+        Putting it together
       
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#restrictions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restrictions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1522,77 +1422,12 @@
   
 
 
-<h1 id="let">let<a class="headerlink" href="#let" title="Permanent link">&para;</a></h1>
-<p><code>let</code> defines a value that is <strong>lazy</strong> (only computed when first read) and <strong>memoized per example</strong> (reset between examples). Use it for the test subject and any inputs whose construction you'd otherwise repeat.</p>
-<h2 id="defining-a-let">Defining a let<a class="headerlink" href="#defining-a-let" title="Permanent link">&para;</a></h2>
-<p>Two equivalent forms:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(<span class="s">&#39;answer&#39;</span>, { <span class="mi">42</span> });   <span class="c1"># string name</span>
-<span class="k">let</span>(:<span class="n">answer</span>,  { <span class="mi">42</span> });   <span class="c1"># named-argument form</span>
-</code></pre></div></td></tr></table></div>
-<p>A <code>let</code> declared in a <code>describe</code> or <code>context</code> is visible to every example in that group and its nested groups.</p>
-<h2 id="reading-a-let">Reading a let<a class="headerlink" href="#reading-a-let" title="Permanent link">&para;</a></h2>
-<p>There are three ways to read a let value:</p>
-<h3 id="1-named-argument-form-in-expect">1. Named-argument form in <code>expect</code><a class="headerlink" href="#1-named-argument-form-in-expect" title="Permanent link">&para;</a></h3>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;answer&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">answer</span>, { <span class="mi">42</span> });
-
-  <span class="n">it</span> <span class="s">&#39;is 42&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h3 id="2-binding-syntax-to-a-normal-variable">2. Binding syntax — <code>:=</code> to a normal variable<a class="headerlink" href="#2-binding-syntax-to-a-normal-variable" title="Permanent link">&para;</a></h3>
-<p>This is the most flexible form: bind once, then use the variable like any other.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;widget&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;has the expected fields&#39;</span>, {
-    <span class="k">my</span> <span class="nv">$w</span> := <span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
-
-    <span class="n">expect</span>(<span class="nv">$w</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
-    <span class="n">expect</span>(<span class="nv">$w</span>.<span class="n">baz</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h3 id="3-context-parameter-form">3. Context-parameter form<a class="headerlink" href="#3-context-parameter-form" title="Permanent link">&para;</a></h3>
-<p>If the example block takes a positional parameter, the context object exposes lets as methods:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">88</span>)) });
-
-<span class="n">it</span> <span class="s">&#39;reads via the context parameter&#39;</span>, -&gt; <span class="nv">$_</span> {
-  <span class="n">expect</span>(.<span class="n">widget</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">88</span>);
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="memoization">Memoization<a class="headerlink" href="#memoization" title="Permanent link">&para;</a></h2>
-<p>Within a single example, calling a let multiple times returns the same value:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(:<span class="n">counter</span>, { <span class="nv">$n</span>++ });   <span class="c1"># called once per example</span>
-
-<span class="n">it</span> <span class="s">&#39;memoizes within an example&#39;</span>, {
-  <span class="n">expect</span>(:<span class="n">counter</span>).<span class="nb">to</span>.<span class="n">be</span>(:<span class="n">counter</span>);   <span class="c1"># same value both reads</span>
-}
-</code></pre></div></td></tr></table></div>
-<p>Between examples the cache is reset, so each example sees a fresh value.</p>
-<h2 id="nested-lets-and-shadowing">Nested lets and shadowing<a class="headerlink" href="#nested-lets-and-shadowing" title="Permanent link">&para;</a></h2>
-<p>Inner <code>let</code> definitions shadow outer ones with the same name.</p>
+<h1 id="custom-matchers">Custom Matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h1>
+<p>When the built-in matchers don't quite say what you mean, define your own.
+A custom matcher is just a small bundle of callbacks: a <code>match</code> predicate plus
+optional message/description hooks. It plugs into the same
+<a href="../matchers/">Matcher</a> machinery used by every built-in matcher.</p>
+<h2 id="define-matcher"><code>define-matcher</code><a class="headerlink" href="#define-matcher" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1602,62 +1437,200 @@
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;shadowing&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">value</span>, { <span class="s">&#39;outer&#39;</span> });
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">&amp;be-a-multiple-of</span> = <span class="n">define-matcher</span> <span class="s">&#39;be-a-multiple-of&#39;</span>,
+  <span class="nb">match</span> =&gt; -&gt; <span class="nv">$actual</span>, <span class="nv">$expected</span> { ?(<span class="nv">$actual</span> %% <span class="nv">$expected</span>) },
+  <span class="n">failure-message</span> =&gt;
+    -&gt; <span class="nv">$actual</span>, <span class="nv">$expected</span> { <span class="s">&quot;expected $actual to be a multiple of $expected&quot;</span> },
+  <span class="n">failure-message-negated</span> =&gt;
+    -&gt; <span class="nv">$actual</span>, <span class="nv">$expected</span> { <span class="s">&quot;expected $actual not to be a multiple of $expected&quot;</span> },
+  <span class="n">description</span> =&gt; -&gt; <span class="nv">$expected</span> { <span class="s">&quot;be a multiple of $expected&quot;</span> };
 
-  <span class="n">it</span> <span class="s">&#39;sees outer&#39;</span>, { <span class="n">expect</span>(:<span class="n">value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;outer&#39;</span>) }
-
-  <span class="n">context</span> <span class="s">&#39;inside&#39;</span>, {
-    <span class="k">let</span>(:<span class="n">value</span>, { <span class="s">&#39;inner&#39;</span> });
-
-    <span class="n">it</span> <span class="s">&#39;sees inner&#39;</span>, { <span class="n">expect</span>(:<span class="n">value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;inner&#39;</span>) }
-  }
-}
+<span class="n">expect</span>(<span class="mi">9</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">be-a-multiple-of</span>(<span class="mi">3</span>));    <span class="c1"># passes</span>
+<span class="n">expect</span>(<span class="mi">8</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="n">be-a-multiple-of</span>(<span class="mi">3</span>)); <span class="c1"># passes</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="let-bang-eager-evaluation"><code>let-bang</code> (eager evaluation)<a class="headerlink" href="#let-bang-eager-evaluation" title="Permanent link">&para;</a></h2>
-<p><code>let-bang</code> is the Raku-friendly spelling of RSpec's <code>let!</code>. It defines the same kind of memoized value as <code>let</code>, but it is <strong>forced before every example body</strong> so any side effects in the block run whether or not the example reads the value.</p>
-<p><code>let-bang</code> is sugar for:</p>
+<p><code>define-matcher</code> returns a <strong>factory</strong> — call it with the matcher's expected
+args and you get back a <code>DefinedMatcher</code> instance you can pass into
+<code>expect(...).to.be(...)</code>. The matcher is also registered globally so other
+files can reach it through <a href="#matcher-name-args"><code>matcher(...)</code></a>.</p>
+<h3 id="options">Options<a class="headerlink" href="#options" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Required?</th>
+<th>Block receives</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>match</code></td>
+<td>yes</td>
+<td><code>$actual, *@args, *%kwargs</code></td>
+<td>Predicate. Return truthy to pass.</td>
+</tr>
+<tr>
+<td><code>failure-message</code></td>
+<td>no</td>
+<td><code>$actual, *@args, *%kwargs</code></td>
+<td>Message rendered when the expectation fails. Default: undefined <code>Str</code> (falls back to <code>Expected:</code> / <code>to be:</code> rendering).</td>
+</tr>
+<tr>
+<td><code>failure-message-negated</code></td>
+<td>no</td>
+<td><code>$actual, *@args, *%kwargs</code></td>
+<td>Message rendered when a <code>.not</code> expectation fails. Default: undefined <code>Str</code>.</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>no</td>
+<td><code>*@args, *%kwargs</code></td>
+<td>Human-readable description (used for failure context and auto-description of <code>it { ... }</code>). Default: the matcher name.</td>
+</tr>
+<tr>
+<td><code>expected-value</code></td>
+<td>no</td>
+<td><code>*@args, *%kwargs</code></td>
+<td>Value stored in <code>Failure.expected</code>. Default: the single arg, the kwargs Map, or the args List depending on what was passed.</td>
+</tr>
+</tbody>
+</table>
+<p><code>match</code> is the only required block. Anything else can be omitted and you get a
+sensible default. The factory you receive is just sugar over the
+<a href="#the-registry">registry's <code>build</code> method</a>; calling <code>matcher(...)</code> directly
+works identically.</p>
+<h3 id="argument-shape">Argument shape<a class="headerlink" href="#argument-shape" title="Permanent link">&para;</a></h3>
+<p>Every block receives the matcher's arguments after <code>$actual</code>. The shape mirrors
+the factory call site:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(:<span class="n">user</span>, { <span class="n">User</span>.<span class="n">create</span> });
-<span class="o">before-</span><span class="n">each</span> { <span class="n">let-runtime-force</span>(:<span class="n">user</span>) };   <span class="c1"># conceptually</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">&amp;be-mult</span> = <span class="n">define-matcher</span> <span class="s">&#39;be-mult&#39;</span>,
+  <span class="nb">match</span> =&gt; -&gt; <span class="nv">$actual</span>, <span class="nv">$n</span> { ?(<span class="nv">$actual</span> %% <span class="nv">$n</span>) };
+
+<span class="n">be-mult</span>(<span class="mi">3</span>);          <span class="c1"># @args = (3,)</span>
+<span class="n">matcher</span>(<span class="s">&#39;be-mult&#39;</span>, <span class="mi">5</span>); <span class="c1"># @args = (5,)</span>
 </code></pre></div></td></tr></table></div>
-<p>It registers the let definition and a <code>before-each</code> hook in the current group. The two forms accepted are the same as <code>let</code>:</p>
+<p>Named arguments are also supported and arrive as a slurpy hash:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">let-bang</span>(<span class="s">&#39;user&#39;</span>, { <span class="n">User</span>.<span class="n">create</span> });
-<span class="n">let-bang</span>(:<span class="n">user</span>,  { <span class="n">User</span>.<span class="n">create</span> });
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">&amp;in-range</span> = <span class="n">define-matcher</span> <span class="s">&#39;in-range&#39;</span>,
+  <span class="nb">match</span> =&gt; -&gt; <span class="nv">$actual</span>, :<span class="nv">$min</span>, :<span class="nv">$max</span> { <span class="nv">$actual</span> &gt;= <span class="nv">$min</span> &amp;&amp; <span class="nv">$actual</span> &lt;= <span class="nv">$max</span> };
+
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">in-range</span>(<span class="nb">min</span> =&gt; <span class="mi">1</span>, <span class="nb">max</span> =&gt; <span class="mi">10</span>));
 </code></pre></div></td></tr></table></div>
-<h3 id="when-to-use-let-bang">When to use <code>let-bang</code><a class="headerlink" href="#when-to-use-let-bang" title="Permanent link">&para;</a></h3>
-<p>Use <code>let-bang</code> when the <em>creation</em> of a value is itself the test setup — typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain <code>let</code> is preferred because it stays cheap when the example doesn't actually read the value.</p>
+<h2 id="matchername-args-lookup"><code>matcher(name, *args)</code> lookup<a class="headerlink" href="#matchername-args-lookup" title="Permanent link">&para;</a></h2>
+<p>When you only know the matcher's name at runtime, or want to look it up across
+files without sharing the factory closure, use <code>matcher</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">matcher</span>(<span class="s">&#39;be-a-multiple-of&#39;</span>, <span class="mi">3</span>);  <span class="c1"># returns a DefinedMatcher</span>
+<span class="n">expect</span>(<span class="mi">9</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">matcher</span>(<span class="s">&#39;be-a-multiple-of&#39;</span>, <span class="mi">3</span>));
+</code></pre></div></td></tr></table></div>
+<p>Looking up an unregistered name dies with a clear message.</p>
+<h2 id="direct-method-dispatch-via-fallback">Direct method dispatch via <code>FALLBACK</code><a class="headerlink" href="#direct-method-dispatch-via-fallback" title="Permanent link">&para;</a></h2>
+<p><code>ExpectationBuilder</code> falls back to the custom-matcher registry for any unknown
+method name, so once a matcher is registered you can call it as if it were a
+built-in:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
 <span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;invoices index&#39;</span>, {
-  <span class="n">let-bang</span>(:<span class="n">invoice</span>, { <span class="n">Invoice</span>.<span class="n">create</span>(:<span class="n">amount</span>(<span class="mi">100</span>)) });
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">define-matcher</span> <span class="s">&#39;be-positive&#39;</span>,
+  <span class="nb">match</span> =&gt; -&gt; <span class="nv">$actual</span> { <span class="nv">$actual</span> &gt; <span class="mi">0</span> },
+  <span class="n">failure-message</span> =&gt; -&gt; <span class="nv">$actual</span> { <span class="s">&quot;expected $actual to be positive&quot;</span> };
 
-  <span class="n">it</span> <span class="s">&#39;returns invoices&#39;</span>, {
-    <span class="n">expect</span>(<span class="n">Invoice</span>.<span class="nb">all</span>.<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);   <span class="c1"># passes even though we never read :invoice</span>
-  }
-}
+<span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-positive</span>;            <span class="c1"># passes</span>
+<span class="n">expect</span>(-<span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be-positive</span>;           <span class="c1"># fails, with the custom message</span>
+<span class="n">expect</span>(-<span class="mi">1</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be-positive</span>;       <span class="c1"># passes</span>
 </code></pre></div></td></tr></table></div>
-<h3 id="memoization-is-the-same-as-let">Memoization is the same as <code>let</code><a class="headerlink" href="#memoization-is-the-same-as-let" title="Permanent link">&para;</a></h3>
-<p>Within an example, the block runs at most once. Reads after the eager force return the cached value:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">let-bang</span>(:<span class="n">counter</span>, { ++<span class="nv">$n</span> });
-
-<span class="n">it</span> <span class="s">&#39;is forced once per example&#39;</span>, {
-  <span class="n">expect</span>(:<span class="n">counter</span>).<span class="nb">to</span>.<span class="n">be</span>(:<span class="n">counter</span>);   <span class="c1"># one increment, two reads</span>
-}
-</code></pre></div></td></tr></table></div>
-<p>Between examples the cache is reset, so the block runs once per example.</p>
-<h3 id="ordering">Ordering<a class="headerlink" href="#ordering" title="Permanent link">&para;</a></h3>
-<p><code>let-bang</code> registers a real <code>before-each</code> hook on the surrounding group, so it composes with <code>before-each</code> in <strong>declaration order</strong>:</p>
+<p>Existing methods on <code>ExpectationBuilder</code> (<code>be</code>, <code>eq</code>, <code>include</code>, ...) take
+precedence over the registry, and unknown names that aren't registered still
+raise <code>X::Method::NotFound</code> — so a typo doesn't get silently swallowed.</p>
+<h2 id="how-it-plugs-in">How it plugs in<a class="headerlink" href="#how-it-plugs-in" title="Permanent link">&para;</a></h2>
+<p>A <code>DefinedMatcher</code> <code>does Matcher</code>, so it goes through the exact same code path
+as the built-in matchers:</p>
+<ul>
+<li><code>expect(x).to.be($matcher)</code> calls <code>$matcher.matches($actual)</code>.</li>
+<li>On a miss, <code>Failures</code> records the matcher's <code>failure-message($actual)</code> (or
+  the negated variant under <code>.not</code>).</li>
+<li>If you omit <code>failure-message</code>, the failure renders through the structured
+  <code>Expected:</code> / <code>to be:</code> block plus the
+  <a href="../../diff/diff/">diff</a> section, exactly like <code>BeMatcher</code>.</li>
+</ul>
+<p>This means custom matchers compose with everything else the runner already
+does: <code>.not</code>, the
+<a href="../matchers/">matcher architecture</a>, <a href="../aggregate-failures/">aggregate-failures</a>,
+and one-liner <a href="../../let/subject/#one-liner-it-form">auto-descriptions</a>.</p>
+<h2 id="validation-errors">Validation errors<a class="headerlink" href="#validation-errors" title="Permanent link">&para;</a></h2>
+<p><code>define-matcher</code> rejects misuse up front:</p>
+<table>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing <code>match</code> block</td>
+<td><code>define-matcher '&lt;name&gt;': match block is required</code></td>
+</tr>
+<tr>
+<td>Unknown option key</td>
+<td><code>define-matcher '&lt;name&gt;': unknown option ':&lt;key&gt;' (allowed: match, ...)</code></td>
+</tr>
+<tr>
+<td>Non-Callable value for any option</td>
+<td><code>define-matcher '&lt;name&gt;': ':&lt;key&gt;' must be a Callable</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-registry">The registry<a class="headerlink" href="#the-registry" title="Permanent link">&para;</a></h2>
+<p><code>BDD::Behave::Matcher::Custom::registry()</code> returns the singleton
+<code>CustomMatcherRegistry</code>. It is mostly an implementation detail, but it exposes
+a handful of useful methods:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>register($name, %c)</code></td>
+<td>Internal. Used by <code>define-matcher</code> to register a configuration hash.</td>
+</tr>
+<tr>
+<td><code>exists($name)</code></td>
+<td>Does a matcher with this name exist?</td>
+</tr>
+<tr>
+<td><code>lookup($name)</code></td>
+<td>Return the raw config hash, or die if unknown.</td>
+</tr>
+<tr>
+<td><code>build($name, |c)</code></td>
+<td>Construct a <code>DefinedMatcher</code> (this is what <code>matcher(...)</code> calls).</td>
+</tr>
+<tr>
+<td><code>names()</code></td>
+<td>All registered names, sorted.</td>
+</tr>
+<tr>
+<td><code>clear()</code></td>
+<td>Wipe the registry. Useful in tests that re-register a name.</td>
+</tr>
+</tbody>
+</table>
+<p>Redefining a matcher with the same name <em>replaces</em> the previous registration;
+previously returned factory closures pick up the new definition the next time
+they are called.</p>
+<h2 id="putting-it-together">Putting it together<a class="headerlink" href="#putting-it-together" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1669,49 +1642,53 @@
 <span class="normal"> 9</span>
 <span class="normal">10</span>
 <span class="normal">11</span>
-<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;order&#39;</span>, {
-  <span class="o">before-</span><span class="n">each</span>   { <span class="nb">say</span> <span class="s">&#39;be1&#39;</span> };
-  <span class="n">let-bang</span>(:<span class="o">x</span>,  { <span class="nb">say</span> <span class="s">&#39;eager&#39;</span> });
-  <span class="o">before-</span><span class="n">each</span>   { <span class="nb">say</span> <span class="s">&#39;be2&#39;</span> };
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::Matcher</span>;
+<span class="k">use</span> <span class="n">BDD::Behave::Matcher::Custom</span>;
 
-  <span class="n">it</span> <span class="s">&#39;runs&#39;</span>, { <span class="nb">say</span> <span class="s">&#39;body&#39;</span> };
-}
-<span class="c1"># Output per example:</span>
-<span class="c1"># be1</span>
-<span class="c1"># eager</span>
-<span class="c1"># be2</span>
-<span class="c1"># body</span>
-</code></pre></div></td></tr></table></div>
-<p>Multiple <code>let-bang</code> declarations evaluate in the order they appear.</p>
-<h3 id="inheritance-and-shadowing">Inheritance and shadowing<a class="headerlink" href="#inheritance-and-shadowing" title="Permanent link">&para;</a></h3>
-<p>Outer <code>let-bang</code> definitions are inherited by inner <code>describe</code>/<code>context</code> blocks. If an inner group shadows the same name with another <code>let</code> (or <code>let-bang</code>), reads see the inner value, and the inner block is what gets forced:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {
-  <span class="n">let-bang</span>(:<span class="n">value</span>, { <span class="s">&#39;outer&#39;</span> });
-
-  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
-    <span class="k">let</span>(:<span class="n">value</span>, { <span class="s">&#39;inner&#39;</span> });
-
-    <span class="n">it</span> <span class="s">&#39;sees inner&#39;</span>, {
-      <span class="n">expect</span>(:<span class="n">value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;inner&#39;</span>);   <span class="c1"># outer block does not run</span>
+<span class="k">my</span> <span class="nv">&amp;be-a-prime</span> = <span class="n">define-matcher</span> <span class="s">&#39;be-a-prime&#39;</span>,
+  <span class="nb">match</span> =&gt; -&gt; <span class="nv">$actual</span> {
+    <span class="k">return</span> <span class="nb">False</span> <span class="k">if</span> <span class="nv">$actual</span> &lt; <span class="mi">2</span>;
+    <span class="k">return</span> <span class="nb">True</span>  <span class="k">if</span> <span class="nv">$actual</span> == <span class="mi">2</span>;
+    <span class="k">for</span> <span class="mi">2</span>..<span class="nv">$actual</span>.<span class="nb">sqrt</span>.<span class="nb">Int</span> -&gt; <span class="nv">$d</span> {
+      <span class="k">return</span> <span class="nb">False</span> <span class="k">if</span> <span class="nv">$actual</span> %% <span class="nv">$d</span>;
     }
+    <span class="nb">True</span>;
+  },
+  <span class="n">failure-message</span> =&gt;
+    -&gt; <span class="nv">$actual</span> { <span class="s">&quot;expected $actual to be prime&quot;</span> },
+  <span class="n">failure-message-negated</span> =&gt;
+    -&gt; <span class="nv">$actual</span> { <span class="s">&quot;expected $actual not to be prime&quot;</span> },
+  <span class="n">description</span> =&gt; -&gt; { <span class="s">&#39;be prime&#39;</span> };
+
+<span class="n">describe</span> <span class="s">&#39;prime checks&#39;</span>, {
+  <span class="n">it</span> <span class="s">&#39;recognises primes&#39;</span>, {
+    <span class="n">expect</span>(<span class="mi">7</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">be-a-prime</span>());
+    <span class="n">expect</span>(<span class="mi">7</span>).<span class="nb">to</span>.<span class="n">be-a-prime</span>;            <span class="c1"># FALLBACK dispatch</span>
+  }
+
+  <span class="n">it</span> <span class="s">&#39;rejects composites&#39;</span>, {
+    <span class="n">expect</span>(<span class="mi">9</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="n">be-a-prime</span>());
   }
 }
 </code></pre></div></td></tr></table></div>
-<h3 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>let-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope) only plain <code>let</code> is supported.</li>
-<li>Inside an <code>it</code> block, use plain <code>let</code> with binding (<code>my $x := let(:name, { ... })</code>); eager forcing is meaningless once you're already in the example body.</li>
-</ul>
 
 
 
