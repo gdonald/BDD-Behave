@@ -1,0 +1,143 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 22;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+sub run-and-capture($suite, *%args) {
+  my $runner = BDD::Behave::Runner::Runner.new(|%args);
+  my $out = stdout-from({ $runner.run($suite) });
+  ($runner, strip-ansi($out));
+}
+
+sub build-suite(@examples) {
+  my $suite = Suite.create(:description('memory'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example($_) for @examples;
+  $suite;
+}
+
+# Default Runner: no memory measurement
+{
+  my $runner = BDD::Behave::Runner::Runner.new;
+  nok $runner.memory-measurement-enabled,
+    'memory-measurement-enabled is false by default';
+  is $runner.memory-profile-limit, 0,
+    'memory-profile-limit defaults to 0';
+  is $runner.memory-threshold, 0,
+    'memory-threshold defaults to 0';
+  nok $runner.memory-profile,
+    'memory-profile defaults to False';
+}
+
+# memory-measurement-enabled flips on for each knob
+{
+  ok BDD::Behave::Runner::Runner.new(:memory-profile(True))
+       .memory-measurement-enabled,
+    'memory-profile=True enables measurement';
+  ok BDD::Behave::Runner::Runner.new(:memory-profile-limit(3))
+       .memory-measurement-enabled,
+    'memory-profile-limit > 0 enables measurement';
+  ok BDD::Behave::Runner::Runner.new(:memory-threshold(100))
+       .memory-measurement-enabled,
+    'memory-threshold > 0 enables measurement';
+}
+
+# Slots untouched when measurement is disabled
+{
+  my $ex = Example.new(:description('x'), :file('f'.IO), :line(1),
+                       :block({ True }));
+  my ($runner, $out) = run-and-capture(build-suite([$ex]));
+  nok $ex.memory-before.defined,
+    'memory-before is undefined when measurement is disabled';
+  nok $ex.memory-delta.defined,
+    'memory-delta is undefined when measurement is disabled';
+  is $runner.memory-records.elems, 0,
+    'memory-records is empty when measurement is disabled';
+}
+
+# Slots populated when memory-profile is on
+{
+  my $ex = Example.new(:description('tracked'), :file('f'.IO), :line(2),
+                       :block({ True }));
+  my ($runner, $out) = run-and-capture(build-suite([$ex]), :memory-profile(True));
+
+  ok $ex.memory-before ~~ Int, 'memory-before is an Int after a tracked run';
+  ok $ex.memory-after  ~~ Int, 'memory-after is an Int after a tracked run';
+  is $ex.memory-delta, $ex.memory-after - $ex.memory-before,
+    'memory-delta equals memory-after - memory-before';
+  is $runner.memory-records.elems, 1,
+    'one memory record per executed example';
+}
+
+# Pending and skipped get no memory record
+{
+  my $pending = Example.new(:description('p'), :file('f'.IO), :line(3),
+                            :block({ True }));
+  $pending.mark-pending;
+
+  my $skipped = Example.new(:description('s'), :file('f'.IO), :line(4),
+                            :block({ die 'no' }));
+  $skipped.set-metadata(:skipped(True));
+
+  my $passing = Example.new(:description('q'), :file('f'.IO), :line(5),
+                            :block({ True }));
+
+  my ($runner, $out) = run-and-capture(
+    build-suite([$pending, $skipped, $passing]),
+    :memory-profile(True), :order<defined>,
+  );
+
+  is $runner.memory-records.elems, 1,
+    'pending and skipped are not recorded';
+  nok $pending.memory-before.defined,
+    'pending example has no memory-before';
+  nok $skipped.memory-before.defined,
+    'skipped example has no memory-before';
+}
+
+# Failing examples are still tracked
+{
+  my $boom = Example.new(:description('boom'), :file('f'.IO), :line(6),
+                         :block({ die 'intentional' }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$boom]), :memory-profile(True),
+  );
+
+  is $runner.memory-records.elems, 1, 'failing example is recorded';
+  ok $boom.memory-delta.defined, 'failing example has a memory-delta';
+}
+
+# Profile section appears when limit > 0
+{
+  my $a = Example.new(:description('alpha'), :file('f'.IO), :line(7),
+                      :block({ True }));
+  my $b = Example.new(:description('beta'), :file('f'.IO), :line(8),
+                      :block({ True }));
+  my ($runner, $out) = run-and-capture(
+    build-suite([$a, $b]), :memory-profile-limit(2), :order<defined>,
+  );
+  ok $out.contains('Top 2 memory-heaviest examples'),
+    'memory profile header present';
+}
+
+# Constructor validation
+{
+  dies-ok { BDD::Behave::Runner::Runner.new(:memory-profile-limit(-1)) },
+    'negative memory-profile-limit is rejected';
+  dies-ok { BDD::Behave::Runner::Runner.new(:memory-threshold(-1)) },
+    'negative memory-threshold is rejected';
+}

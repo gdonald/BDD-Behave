@@ -21,6 +21,9 @@ our class Example is SpecNode {
   has Real $.duration is rw;
   has Instant $.started-at is rw;
   has Instant $.finished-at is rw;
+  has Int $.memory-before is rw;
+  has Int $.memory-after is rw;
+  has Int $.memory-delta is rw;
 
   method execute(*%context) {
     my $existing;

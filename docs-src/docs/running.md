@@ -47,6 +47,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--bisect-data`      | Machine-readable output for use by `--bisect`. Suppresses normal output and emits `behave-executed:` / `behave-failed:` lines. See [Bisect](#bisect). |
 | `--profile` / `--profile=N` | Print the top N slowest examples after the run (default `N=10`). Across multiple spec files the profile is a single global section after the `Overall:` counts. See [Timing](timing/timing.md#-profile). |
 | `--slow-threshold=SECONDS` | Print an inline `SLOW` line under any example whose body takes at least `SECONDS` seconds. `SECONDS` may be fractional. See [Timing](timing/timing.md#-slow-threshold). |
+| `--memory-profile` / `--memory-profile=N` | Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default `N=10`). See [Memory profiling](timing/timing.md#memory-profiling). |
+| `--memory-threshold=KB` | Print an inline `MEMORY` line under any example whose RSS delta meets or exceeds `KB` kilobytes. Enables measurement on its own. See [Memory profiling](timing/timing.md#memory-profiling). |
 
 ## Order and seed
 

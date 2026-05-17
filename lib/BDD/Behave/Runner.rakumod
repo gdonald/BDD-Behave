@@ -66,6 +66,10 @@ our class Runner {
   has Bool $.aborted = False;
   has Real $.slow-threshold = 0;
   has Int $.profile-limit = 0;
+  has Int $.memory-profile-limit = 0;
+  has Int $.memory-threshold = 0;
+  has Bool $.memory-profile = False;
+  has @.memory-records;
 
   submethod TWEAK {
     die "order must be 'random' or 'defined' (got: '$!order')"
@@ -80,6 +84,12 @@ our class Runner {
     die "profile-limit must be 0 or positive (got: $!profile-limit)"
       if $!profile-limit < 0;
 
+    die "memory-profile-limit must be 0 or positive (got: $!memory-profile-limit)"
+      if $!memory-profile-limit < 0;
+
+    die "memory-threshold must be 0 or positive (got: $!memory-threshold)"
+      if $!memory-threshold < 0;
+
     if $!order eq 'random' {
       $!seed //= (1 .. 2_147_483_646).pick;
     }
@@ -92,6 +102,20 @@ our class Runner {
 
   method should-abort(--> Bool) {
     $!fail-fast > 0 && $!result.failed >= $!fail-fast;
+  }
+
+  method memory-measurement-enabled(--> Bool) {
+    $!memory-profile || $!memory-profile-limit > 0 || $!memory-threshold > 0;
+  }
+
+  method measure-memory-rss(--> Int) {
+    my $proc = run('ps', '-o', 'rss=', '-p', $*PID.Str, :out, :err);
+    my $raw = $proc.out.slurp(:close);
+    $proc.err.slurp(:close);
+    return Int unless $proc.exitcode == 0;
+    my $trimmed = $raw.trim;
+    return Int unless $trimmed ~~ /^ \d+ $/;
+    $trimmed.Int;
   }
 
   method advance-rng(--> Int) {
@@ -231,6 +255,11 @@ our class Runner {
       }
     }
 
+    my Bool $measure-memory = self.memory-measurement-enabled && !$example.pending;
+    if $measure-memory {
+      $example.memory-before = self.measure-memory-rss;
+    }
+
     my @around-hooks = self.matching-around-each-hooks($example);
 
     my $continuation-called = False;
@@ -239,42 +268,59 @@ our class Runner {
       self.run-each-and-example($example);
     };
 
+    my $reached-end = False;
     if !@around-hooks.elems {
       core();
-      return;
-    }
+      $reached-end = True;
+    } else {
+      my &chain = &core;
+      for @around-hooks.reverse -> $hook {
+        my &next = &chain;
+        &chain = sub { ($hook.callback)(&next) };
+      }
 
-    my &chain = &core;
-    for @around-hooks.reverse -> $hook {
-      my &next = &chain;
-      &chain = sub { ($hook.callback)(&next) };
-    }
-
-    try {
-      chain();
-      CATCH {
-        default {
-          if $continuation-called {
-            warn "around-each hook raised after example: {.message}";
-          } else {
-            self.print-indent;
-            say "⮑  '{$example.description}'";
-            $!result.add-fail(%(
-              description => self.full-description($example),
-              file        => $example.file,
-              line        => $example.line,
-              exception   => $_,
-            ));
-            self.print-indent;
-            say red("  ⮑  FAILURE");
+      try {
+        chain();
+        $reached-end = True;
+        CATCH {
+          default {
+            if $continuation-called {
+              warn "around-each hook raised after example: {.message}";
+              $reached-end = True;
+            } else {
+              self.print-indent;
+              say "⮑  '{$example.description}'";
+              $!result.add-fail(%(
+                description => self.full-description($example),
+                file        => $example.file,
+                line        => $example.line,
+                exception   => $_,
+              ));
+              self.print-indent;
+              say red("  ⮑  FAILURE");
+            }
           }
-          return;
         }
       }
     }
 
-    unless $continuation-called {
+    if !$continuation-called && $reached-end {
       self.print-around-skipped($example);
+    }
+
+    if $measure-memory && $continuation-called && !$example.pending {
+      $example.memory-after = self.measure-memory-rss;
+      if $example.memory-before.defined && $example.memory-after.defined {
+        $example.memory-delta = $example.memory-after - $example.memory-before;
+        @!memory-records.push: %(
+          example     => $example,
+          description => self.full-description($example),
+          delta       => $example.memory-delta,
+          before      => $example.memory-before,
+          after       => $example.memory-after,
+        );
+        self.maybe-print-memory-leak($example);
+      }
     }
   }
 
@@ -559,6 +605,15 @@ our class Runner {
                        $example.duration, $!slow-threshold);
   }
 
+  method maybe-print-memory-leak(Example $example) {
+    return unless $!memory-threshold > 0;
+    return unless $example.memory-delta.defined;
+    return unless $example.memory-delta >= $!memory-threshold;
+    self.print-indent;
+    say yellow(sprintf '  ⮑  MEMORY (Δ%d KB, threshold %d KB)',
+                       $example.memory-delta, $!memory-threshold);
+  }
+
   method derive-auto-description(@captured) {
     return Nil unless @captured.elems;
     my %first = @captured[0];
@@ -664,6 +719,7 @@ our class Runner {
     }
 
     self.print-profile if $!profile-limit > 0;
+    self.print-memory-profile if $!memory-profile-limit > 0;
   }
 
   method print-profile(Int $limit = $!profile-limit, @records = @!timed-examples) {
@@ -683,6 +739,28 @@ our class Runner {
       my $ex = $rec<example>;
       my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
       say sprintf '  %.3fs  %s', $rec<duration>, $rec<description>;
+      say "          $loc" if $loc.chars;
+    }
+  }
+
+  method print-memory-profile(Int $limit = $!memory-profile-limit,
+                              @records = @!memory-records) {
+    return unless $limit > 0;
+    return unless @records.elems;
+
+    my @sorted = @records.sort({ -$^a<delta> });
+    my @top = @sorted[0 ..^ ($limit min @sorted.elems)];
+
+    my $total = @top.map(*<delta>).sum;
+    my $shown = @top.elems;
+    say '';
+    say "Top $shown memory-heaviest example" ~ ($shown == 1 ?? '' !! 's')
+        ~ " ({$total} KB total Δ):";
+
+    for @top -> $rec {
+      my $ex = $rec<example>;
+      my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
+      say sprintf '  %+d KB  %s', $rec<delta>, $rec<description>;
       say "          $loc" if $loc.chars;
     }
   }

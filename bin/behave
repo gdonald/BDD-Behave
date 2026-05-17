@@ -21,6 +21,8 @@ my $bisect = False;
 my $bisect-data = False;
 my Int $profile-limit = 0;
 my Real $slow-threshold = 0;
+my Int $memory-profile-limit = 0;
+my Int $memory-threshold = 0;
 
 sub usage() {
   say qq:to/HERE/;
@@ -71,6 +73,13 @@ sub usage() {
     --slow-threshold=SECONDS Print an inline 'SLOW' warning for any example
                              whose body takes at least SECONDS seconds.
                              SECONDS may be fractional (e.g. 0.075).
+    --memory-profile         Track per-example RSS deltas and print the 10
+                             memory-heaviest examples after the run.
+    --memory-profile=N       Same as above but show the top N. N must be a
+                             positive integer.
+    --memory-threshold=KB    Print an inline 'MEMORY' warning for any
+                             example whose RSS delta meets or exceeds KB
+                             kilobytes. Enables measurement on its own.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -165,6 +174,30 @@ while @args {
       exit 2;
     }
     $slow-threshold = $value.Num;
+  } elsif $arg eq '--memory-profile' {
+    $memory-profile-limit = 10;
+  } elsif $arg.starts-with('--memory-profile=') {
+    my $value = $arg.substr('--memory-profile='.chars);
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --memory-profile=N requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $memory-profile-limit = $value.Int;
+  } elsif $arg eq '--memory-threshold' {
+    die "--memory-threshold requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --memory-threshold requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $memory-threshold = $value.Int;
+  } elsif $arg.starts-with('--memory-threshold=') {
+    my $value = $arg.substr('--memory-threshold='.chars);
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --memory-threshold requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $memory-threshold = $value.Int;
   } else {
     @specs.push: $arg;
   }
@@ -222,6 +255,7 @@ my @load-errors;
 my @all-execution-order;
 my @all-failures;
 my @all-timings;
+my @all-memory-records;
 my $last-runner;
 
 # In --bisect-data mode, suppress normal output during runs.
@@ -254,6 +288,7 @@ for @files -> $file {
   }
 
   my $runner-profile-limit = $multi ?? 0 !! $profile-limit;
+  my $runner-memory-profile-limit = $multi ?? 0 !! $memory-profile-limit;
 
   my $runner = BDD::Behave::Runner::Runner.new(
     :include-tags(@include-tags),
@@ -265,6 +300,9 @@ for @files -> $file {
     :$seed,
     :fail-fast($remaining-fail-fast),
     :profile-limit($runner-profile-limit),
+    :memory-profile-limit($runner-memory-profile-limit),
+    :$memory-threshold,
+    :memory-profile($memory-profile-limit > 0 || $memory-threshold > 0),
     :$slow-threshold,
   );
   $last-runner = $runner;
@@ -286,6 +324,7 @@ for @files -> $file {
   }
 
   @all-timings.append: $runner.timed-examples;
+  @all-memory-records.append: $runner.memory-records;
 
   $total-result = BDD::Behave::Runner::RunResult.new(
     :total($total-result.total + $result.total),
@@ -324,6 +363,10 @@ if $suites-run > 1 {
 
   if $profile-limit > 0 && $last-runner.defined && !$bisect-data {
     $last-runner.print-profile($profile-limit, @all-timings);
+  }
+
+  if $memory-profile-limit > 0 && $last-runner.defined && !$bisect-data {
+    $last-runner.print-memory-profile($memory-profile-limit, @all-memory-records);
   }
 }
 
