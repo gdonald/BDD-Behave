@@ -1,0 +1,37 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Formatter;
+
+plan 20;
+
+class TestFormatter does BDD::Behave::Formatter {
+  method name(--> Str) { 'test' }
+}
+
+my $f = TestFormatter.new;
+
+ok $f ~~ BDD::Behave::Formatter, 'custom class composes the role';
+is $f.name, 'test',               'composing class can override name';
+
+# Every hook is a no-op by default and must not raise.
+lives-ok { $f.suite-loading(:file('x.raku')) },           'suite-loading is a no-op';
+lives-ok { $f.suite-start(Any, :multi-file) },            'suite-start is a no-op';
+lives-ok { $f.suite-end(Any) },                           'suite-end is a no-op';
+lives-ok { $f.group-start(Any) },                         'group-start is a no-op';
+lives-ok { $f.group-end(Any) },                           'group-end is a no-op';
+lives-ok { $f.group-around-skipped(Any) },                'group-around-skipped is a no-op';
+lives-ok { $f.example-start(Any) },                       'example-start is a no-op';
+lives-ok { $f.example-auto-description(Any, :description('d')) },
+                                                          'example-auto-description is a no-op';
+lives-ok { $f.example-pass(Any) },                        'example-pass is a no-op';
+lives-ok { $f.example-fail(Any, :failure-info(%())) },    'example-fail is a no-op';
+lives-ok { $f.example-pending(Any) },                     'example-pending is a no-op';
+lives-ok { $f.example-skipped(Any) },                     'example-skipped is a no-op';
+lives-ok { $f.example-around-skipped(Any) },              'example-around-skipped is a no-op';
+lives-ok { $f.example-slow(Any, :threshold(0.1)) },       'example-slow is a no-op';
+lives-ok { $f.example-memory-leak(Any, :threshold(10)) }, 'example-memory-leak is a no-op';
+lives-ok { $f.run-summary(Any) },                         'run-summary is a no-op';
+lives-ok { $f.profile-summary([], :limit(0)) },           'profile-summary is a no-op';
+lives-ok { $f.load-errors([]) },                          'load-errors is a no-op';

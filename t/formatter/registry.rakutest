@@ -1,0 +1,56 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Default;
+use BDD::Behave::Formatter::Registry;
+
+plan 11;
+
+class CustomTestFormatter does BDD::Behave::Formatter {
+  method name(--> Str) { 'custom-test' }
+}
+
+class NotAFormatter { }
+
+BDD::Behave::Formatter::Registry.reset;
+
+ok BDD::Behave::Formatter::Registry.registered('default'),
+  'default is registered out of the box';
+
+BDD::Behave::Formatter::Registry.register('custom-test', CustomTestFormatter);
+is BDD::Behave::Formatter::Registry.names, <custom-test default>.List,
+  'names returns registered names in sorted order';
+
+is BDD::Behave::Formatter::Registry.lookup('default'),
+   BDD::Behave::Formatter::Default,
+   'lookup returns the registered class';
+
+my $f = BDD::Behave::Formatter::Registry.create('default');
+ok $f ~~ BDD::Behave::Formatter::Default,
+  'create returns an instance of the registered class';
+
+nok BDD::Behave::Formatter::Registry.registered('nope'),
+  'registered returns False for unknown names';
+
+dies-ok { BDD::Behave::Formatter::Registry.lookup('nope') },
+  'lookup dies on unknown names';
+
+dies-ok {
+  BDD::Behave::Formatter::Registry.register('custom-test', CustomTestFormatter);
+}, 'duplicate registrations are rejected';
+
+dies-ok {
+  BDD::Behave::Formatter::Registry.register('bad', NotAFormatter);
+}, 'classes that do not compose Formatter are rejected';
+
+BDD::Behave::Formatter::Registry.reset;
+is BDD::Behave::Formatter::Registry.names, <default>.List,
+  'reset restores only the default formatter';
+nok BDD::Behave::Formatter::Registry.registered('custom-test'),
+  'reset removes user-added formatters';
+
+my $f2 = BDD::Behave::Formatter::Registry.create('default');
+ok $f2 ~~ BDD::Behave::Formatter::Default,
+  'create still works after reset';

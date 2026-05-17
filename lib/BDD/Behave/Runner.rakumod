@@ -3,6 +3,8 @@ unit module BDD::Behave::Runner;
 use BDD::Behave::Colors;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Default;
 use BDD::Behave::SpecTree;
 
 need BDD::Behave::Mock::Stub;
@@ -53,9 +55,9 @@ our class RunResult {
 }
 
 our class Runner {
-  has Int $!indent = 0;
   has @!description-stack;
   has RunResult $.result .= new;
+  has BDD::Behave::Formatter $.formatter;
   has @.include-tags;
   has @.exclude-tags;
   has @.example-patterns;
@@ -87,6 +89,8 @@ our class Runner {
   has @.benchmark-regressions;
 
   submethod TWEAK {
+    $!formatter //= BDD::Behave::Formatter::Default.new;
+
     die "order must be 'random' or 'defined' (got: '$!order')"
       unless $!order eq 'random' | 'defined';
 
@@ -350,11 +354,9 @@ our class Runner {
   }
 
   method run-group(ExampleGroup $group) {
-    self.print-indent;
-    say "⮑  '{$group.description}'";
+    $!formatter.group-start($group);
 
     @!description-stack.push($group.description);
-    $!indent++;
 
     my Int $group-stub-snapshot = BDD::Behave::Mock::Stub::StubRegistry.active-count;
     LEAVE {
@@ -401,8 +403,8 @@ our class Runner {
       }
     }
 
-    $!indent--;
     @!description-stack.pop;
+    $!formatter.group-end($group);
   }
 
   method run-group-body(ExampleGroup $group) {
@@ -464,16 +466,15 @@ our class Runner {
               warn "around-each hook raised after example: {.message}";
               $reached-end = True;
             } else {
-              self.print-indent;
-              say "⮑  '{$example.description}'";
-              $!result.add-fail(%(
+              $!formatter.example-start($example);
+              my %failure-info = (
                 description => self.full-description($example),
                 file        => $example.file,
                 line        => $example.line,
                 exception   => $_,
-              ));
-              self.print-indent;
-              say red("  ⮑  FAILURE");
+              );
+              $!result.add-fail(%failure-info);
+              $!formatter.example-fail($example, :failure-info(%failure-info));
             }
           }
         }
@@ -540,16 +541,12 @@ our class Runner {
   }
 
   method print-around-skipped(Example $example) {
-    self.print-indent;
-    say light-blue("⮑  '{$example.description}'");
-    self.print-indent;
-    say light-blue("  ⮑  SKIPPED (around-each did not invoke continuation)");
+    $!formatter.example-around-skipped($example);
     $!result.add-skipped;
   }
 
   method mark-around-all-skipped(ExampleGroup $group) {
-    self.print-indent;
-    say light-blue("⮑  SKIPPED (around-all did not invoke continuation)");
+    $!formatter.group-around-skipped($group);
     for self.runnable-examples($group) -> $example {
       next if $example.effective-skipped;
       $!result.add-skipped;
@@ -557,10 +554,7 @@ our class Runner {
   }
 
   method print-skipped(Example $example) {
-    self.print-indent;
-    say light-blue("⮑  '{$example.description}'");
-    self.print-indent;
-    say light-blue("  ⮑  SKIPPED");
+    $!formatter.example-skipped($example);
     $!result.add-skipped;
   }
 
@@ -678,10 +672,7 @@ our class Runner {
     my $description = $example.description;
 
     if $example.pending {
-      self.print-indent;
-      say light-blue("⮑  '{$description}'");
-      self.print-indent;
-      say light-blue("  ⮑  PENDING");
+      $!formatter.example-pending($example);
       $!result.add-pending;
       return;
     }
@@ -692,10 +683,7 @@ our class Runner {
 
     my $initial-failure-count = Failures.list.elems;
 
-    if !$auto {
-      self.print-indent;
-      say "⮑  '{$description}'";
-    }
+    $!formatter.example-start($example, :$auto) unless $auto;
 
     my @captured-matchers;
     my $error;
@@ -736,19 +724,18 @@ our class Runner {
     if $auto {
       my $derived = self.derive-auto-description(@captured-matchers);
       $description = $derived if $derived.defined;
-      self.print-indent;
-      say "⮑  '{$description}'";
+      $!formatter.example-auto-description($example, :$description);
     }
 
     if $error.defined {
-      $!result.add-fail(%(
+      my %failure-info = (
         description => self.full-description($example),
-        file => $example.file,
-        line => $example.line,
-        exception => $error,
-      ));
-      self.print-indent;
-      say red("  ⮑  FAILURE");
+        file        => $example.file,
+        line        => $example.line,
+        exception   => $error,
+      );
+      $!result.add-fail(%failure-info);
+      $!formatter.example-fail($example, :failure-info(%failure-info));
       self.maybe-print-slow($example);
       return;
     }
@@ -756,17 +743,16 @@ our class Runner {
     my $new-failures = Failures.list.elems - $initial-failure-count;
 
     if $new-failures > 0 {
-      $!result.add-fail(%(
-          description => self.full-description($example),
-          file => $example.file,
-          line => $example.line,
-      ));
-      self.print-indent;
-      say red("  ⮑  FAILURE");
+      my %failure-info = (
+        description => self.full-description($example),
+        file        => $example.file,
+        line        => $example.line,
+      );
+      $!result.add-fail(%failure-info);
+      $!formatter.example-fail($example, :failure-info(%failure-info));
     } else {
       $!result.add-pass;
-      self.print-indent;
-      say green("  ⮑  SUCCESS");
+      $!formatter.example-pass($example);
     }
 
     self.maybe-print-slow($example);
@@ -776,18 +762,14 @@ our class Runner {
     return unless $!slow-threshold > 0;
     return unless $example.duration.defined;
     return unless $example.duration >= $!slow-threshold;
-    self.print-indent;
-    say yellow(sprintf '  ⮑  SLOW (%.3fs, threshold %.3fs)',
-                       $example.duration, $!slow-threshold);
+    $!formatter.example-slow($example, :threshold($!slow-threshold));
   }
 
   method maybe-print-memory-leak(Example $example) {
     return unless $!memory-threshold > 0;
     return unless $example.memory-delta.defined;
     return unless $example.memory-delta >= $!memory-threshold;
-    self.print-indent;
-    say yellow(sprintf '  ⮑  MEMORY (Δ%d KB, threshold %d KB)',
-                       $example.memory-delta, $!memory-threshold);
+    $!formatter.example-memory-leak($example, :threshold($!memory-threshold));
   }
 
   method derive-auto-description(@captured) {
@@ -865,38 +847,23 @@ our class Runner {
     @parts.join(' ');
   }
 
-  method print-indent {
-    print '  ' x $!indent;
-  }
-
   method print-summary {
-    say '';
+    $!formatter.run-summary(
+      $!result,
+      :$!aborted, :$!fail-fast, :$!order, :$!seed,
+    );
 
-    # Print failures if any
-    Failures.say;
-
-    # Print counts
-    my $total-msg = "{$!result.total} example" ~ ($!result.total == 1 ?? '' !! 's');
-    my $failed-msg = $!result.failed > 0 ?? red("{$!result.failed} failed") !! '';
-    my $pending-msg = $!result.pending > 0 ?? light-blue("{$!result.pending} pending") !! '';
-    my $skipped-msg = $!result.skipped > 0 ?? light-blue("{$!result.skipped} skipped") !! '';
-    my $passed-msg = $!result.passed > 0 ?? green("{$!result.passed} passed") !! '';
-
-    my @parts = ($total-msg, $failed-msg, $pending-msg, $skipped-msg, $passed-msg).grep(*.so);
-    say @parts.join(', ');
-
-    if $!aborted {
-      my $word = $!fail-fast == 1 ?? 'failure' !! 'failures';
-      say red("Aborted after $!fail-fast $word (--fail-fast)");
-    }
-
-    if $!order eq 'random' && $!seed.defined {
-      say "Randomized with seed $!seed";
-    }
-
-    self.print-profile if $!profile-limit > 0;
-    self.print-memory-profile if $!memory-profile-limit > 0;
-    self.print-benchmark-summary if $!benchmark-mode && !$!benchmark-quiet;
+    $!formatter.profile-summary(@!timed-examples, :limit($!profile-limit))
+      if $!profile-limit > 0;
+    $!formatter.memory-profile-summary(@!memory-records, :limit($!memory-profile-limit))
+      if $!memory-profile-limit > 0;
+    $!formatter.benchmark-summary-section(
+      @!benchmark-summaries, @!benchmark-regressions,
+      :threshold($!benchmark-threshold),
+      :format($!benchmark-format),
+      :output($!benchmark-output),
+      :runner(self),
+    ) if $!benchmark-mode && !$!benchmark-quiet;
   }
 
   method print-benchmark-summary(
@@ -906,18 +873,10 @@ our class Runner {
     Str  :$format    = $!benchmark-format,
     IO::Path :$output = $!benchmark-output,
   ) {
-    return unless @summaries.elems;
-    my $rendered = self.render-benchmark-output(
+    $!formatter.benchmark-summary-section(
       @summaries, @regressions,
-      :$threshold, :$format,
+      :$threshold, :$format, :$output, :runner(self),
     );
-    if $output.defined {
-      $output.spurt: $rendered ~ "\n";
-    } else {
-      say '';
-      print $rendered;
-      say '' unless $rendered.ends-with("\n");
-    }
   }
 
   method render-benchmark-output(
@@ -1024,45 +983,11 @@ our class Runner {
   }
 
   method print-profile(Int $limit = $!profile-limit, @records = @!timed-examples) {
-    return unless $limit > 0;
-    return unless @records.elems;
-
-    my @sorted = @records.sort({ -$^a<duration> });
-    my @top = @sorted[0 ..^ ($limit min @sorted.elems)];
-
-    my $total = @top.map(*<duration>).sum;
-    my $shown = @top.elems;
-    say '';
-    say "Top $shown slowest example" ~ ($shown == 1 ?? '' !! 's')
-        ~ " ({sprintf '%.3f', $total}s total):";
-
-    for @top -> $rec {
-      my $ex = $rec<example>;
-      my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
-      say sprintf '  %.3fs  %s', $rec<duration>, $rec<description>;
-      say "          $loc" if $loc.chars;
-    }
+    $!formatter.profile-summary(@records, :$limit);
   }
 
   method print-memory-profile(Int $limit = $!memory-profile-limit,
                               @records = @!memory-records) {
-    return unless $limit > 0;
-    return unless @records.elems;
-
-    my @sorted = @records.sort({ -$^a<delta> });
-    my @top = @sorted[0 ..^ ($limit min @sorted.elems)];
-
-    my $total = @top.map(*<delta>).sum;
-    my $shown = @top.elems;
-    say '';
-    say "Top $shown memory-heaviest example" ~ ($shown == 1 ?? '' !! 's')
-        ~ " ({$total} KB total Δ):";
-
-    for @top -> $rec {
-      my $ex = $rec<example>;
-      my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
-      say sprintf '  %+d KB  %s', $rec<delta>, $rec<description>;
-      say "          $loc" if $loc.chars;
-    }
+    $!formatter.memory-profile-summary(@records, :$limit);
   }
 }

@@ -1,0 +1,89 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Default;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 7;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+class RecordingFormatter does BDD::Behave::Formatter {
+  has @.events;
+
+  method group-start($g)            { @!events.push: ('group-start',   $g.description) }
+  method group-end($g)              { @!events.push: ('group-end',     $g.description) }
+  method example-start($e, Bool :$auto = False)
+                                    { @!events.push: ('example-start', $e.description, $auto) }
+  method example-pass($e)           { @!events.push: ('example-pass',  $e.description) }
+  method example-fail($e, :$failure-info)
+                                    { @!events.push: ('example-fail',  $e.description) }
+  method example-pending($e)        { @!events.push: ('example-pending', $e.description) }
+  method run-summary($r, Bool :$aborted = False, Int :$fail-fast = 0,
+                    Str :$order = 'defined', Int :$seed)
+                                    { @!events.push: ('run-summary', $r.total) }
+}
+
+sub build-suite(@example-specs) {
+  my $suite = Suite.create(:description('synthetic'), :file('synth'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('group'), :file('synth'.IO), :line(1));
+  $suite.add-group($group);
+  for @example-specs.kv -> $i, %spec {
+    $group.add-example(Example.new(
+      :description(%spec<description>),
+      :file('synth'.IO),
+      :line(10 + $i),
+      :block(%spec<block>),
+      :pending(%spec<pending> // False),
+    ));
+  }
+  $suite;
+}
+
+{
+  my $f = RecordingFormatter.new;
+  my $suite = build-suite([
+    %( description => 'passes', block => { Nil } ),
+  ]);
+  BDD::Behave::Runner::Runner.new(:formatter($f)).run($suite);
+  my @names = $f.events.map({ $_[0] }).List;
+  ok @names.first({ $_ eq 'group-start' }).defined,
+    'runner routes group-start through the formatter';
+  ok @names.first({ $_ eq 'group-end' }).defined,
+    'runner routes group-end through the formatter';
+  ok @names.first({ $_ eq 'example-pass' }).defined,
+    'runner routes example-pass through the formatter';
+  ok @names.first({ $_ eq 'run-summary' }).defined,
+    'runner invokes run-summary after the suite completes';
+}
+
+{
+  my $f = RecordingFormatter.new;
+  my $suite = build-suite([
+    %( description => 'broken', block => { die 'boom' } ),
+  ]);
+  BDD::Behave::Runner::Runner.new(:formatter($f)).run($suite);
+  ok $f.events.first({ $_[0] eq 'example-fail' }).defined,
+    'runner routes example-fail through the formatter';
+}
+
+{
+  my $f = RecordingFormatter.new;
+  my $suite = build-suite([
+    %( description => 'todo', block => { Nil }, pending => True ),
+  ]);
+  BDD::Behave::Runner::Runner.new(:formatter($f)).run($suite);
+  ok $f.events.first({ $_[0] eq 'example-pending' }).defined,
+    'runner routes example-pending through the formatter';
+}
+
+{
+  my $runner = BDD::Behave::Runner::Runner.new;
+  ok $runner.formatter ~~ BDD::Behave::Formatter::Default,
+    'runner defaults to the Default formatter when none is supplied';
+}

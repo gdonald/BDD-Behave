@@ -49,6 +49,7 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--slow-threshold=SECONDS` | Print an inline `SLOW` line under any example whose body takes at least `SECONDS` seconds. `SECONDS` may be fractional. See [Timing](timing/timing.md#-slow-threshold). |
 | `--memory-profile` / `--memory-profile=N` | Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default `N=10`). See [Memory profiling](timing/timing.md#memory-profiling). |
 | `--memory-threshold=KB` | Print an inline `MEMORY` line under any example whose RSS delta meets or exceeds `KB` kilobytes. Enables measurement on its own. See [Memory profiling](timing/timing.md#memory-profiling). |
+| `--format NAME`      | Select the output formatter for the run. `NAME` is the name of a registered formatter (`default` is built in). See [Formatters](formatter/formatter.md). |
 
 ## Order and seed
 

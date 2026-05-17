@@ -1,0 +1,137 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Default;
+use BDD::Behave::SpecTree;
+
+plan 25;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub make-group(Str $description) {
+  ExampleGroup.new(:$description, :file('synth'.IO), :line(1));
+}
+
+sub make-example(Str $description, Bool :$pending = False) {
+  Example.new(
+    :$description, :file('synth'.IO), :line(1),
+    :block({ Nil }), :$pending,
+  );
+}
+
+sub capture(&block) {
+  my $buf = $*TMPDIR.add("default-fmt-{$*PID}-{(now * 1e6).Int}.out");
+  my $fh  = open $buf, :w;
+  { my $*OUT = $fh; block(); }
+  $fh.close;
+  my $text = $buf.slurp;
+  $buf.unlink;
+  $text;
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+my $f = BDD::Behave::Formatter::Default.new;
+
+ok $f ~~ BDD::Behave::Formatter, 'Default composes the Formatter role';
+is $f.name, 'default',            'Default reports name as "default"';
+
+my $g = make-group('outer');
+my $group-out = capture({ $f.group-start($g); $f.group-end($g) });
+ok $group-out.contains("'outer'"),    'group-start prints group description';
+ok $group-out.contains('⮑'),          'group-start uses the leading marker';
+
+my $inner = make-group('inner');
+my $nested = capture({
+  $f.group-start($g);
+  $f.group-start($inner);
+  $f.group-end($inner);
+  $f.group-end($g);
+});
+my @lines = $nested.lines;
+ok @lines[0].starts-with('⮑'),       'outer group starts at zero indent';
+ok @lines[1].starts-with('  ⮑'),     'inner group indents by two spaces';
+
+ok capture({ $f.example-start(make-example('x'), :auto) }) eq '',
+  'example-start with :auto produces no output';
+
+my $ok-line = strip-ansi capture({ $f.example-pass(make-example('p')) });
+ok $ok-line.contains('SUCCESS'), 'example-pass prints SUCCESS';
+
+my $fail-line = strip-ansi capture({
+  $f.example-fail(make-example('f'), :failure-info(%()));
+});
+ok $fail-line.contains('FAILURE'), 'example-fail prints FAILURE';
+
+my $pending-out = strip-ansi capture({ $f.example-pending(make-example('todo', :pending)) });
+ok $pending-out.contains('PENDING'),   'example-pending prints PENDING';
+ok $pending-out.contains("'todo'"),    'example-pending prints the description';
+
+my $skip-out = strip-ansi capture({ $f.example-skipped(make-example('s')) });
+ok $skip-out.contains('SKIPPED'), 'example-skipped prints SKIPPED';
+
+my $around-each-out = strip-ansi capture({ $f.example-around-skipped(make-example('ax')) });
+ok $around-each-out.contains('SKIPPED (around-each did not invoke continuation)'),
+  'example-around-skipped uses the around-each phrasing';
+
+my $around-all-out = strip-ansi capture({ $f.group-around-skipped($g) });
+ok $around-all-out.contains('SKIPPED (around-all did not invoke continuation)'),
+  'group-around-skipped uses the around-all phrasing';
+
+my class FakeResult {
+  has Int $.total   = 0;
+  has Int $.passed  = 0;
+  has Int $.failed  = 0;
+  has Int $.pending = 0;
+  has Int $.skipped = 0;
+}
+
+my $sum = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(3), :passed(3)));
+});
+ok $sum.contains('3 examples'), 'counts line pluralizes';
+ok $sum.contains('3 passed'),   'counts line shows passed';
+
+my $sum1 = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :passed(1)));
+});
+ok $sum1.contains('1 example,'), 'counts line singularizes for 1';
+
+my $abort = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :failed(1)), :aborted, :fail-fast(1));
+});
+ok $abort.contains('Aborted after 1 failure'), 'aborted line uses singular for fail-fast=1';
+
+my $seed = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :passed(1)), :order('random'), :seed(42));
+});
+ok $seed.contains('Randomized with seed 42'), 'random order prints the seed line';
+
+my $defined-order = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :passed(1)), :order('defined'), :seed(42));
+});
+nok $defined-order.contains('Randomized with seed'),
+  'defined order omits the seed line';
+
+my @records = (
+  %( description => 'fast', duration => 0.001, example => Any ),
+  %( description => 'slow', duration => 0.500, example => Any ),
+);
+my $prof = strip-ansi capture({ $f.profile-summary(@records, :limit(1)) });
+ok $prof.contains('Top 1 slowest'), 'profile-summary prints the heading';
+ok $prof.contains('slow'),          'profile-summary shows the slowest entry';
+
+my @mem = (
+  %( description => 'big', delta => 500, example => Any ),
+);
+my $mem = strip-ansi capture({ $f.memory-profile-summary(@mem, :limit(1)) });
+ok $mem.contains('Top 1 memory-heaviest'), 'memory-profile-summary heading';
+ok $mem.contains('big'),                   'memory-profile-summary shows the entry';
+
+my @errs = (%( file => '/tmp/a.raku', message => "syntax err" ),);
+my $errs-out = strip-ansi capture({ $f.load-errors(@errs) });
+ok $errs-out.contains('Load errors (1)'), 'load-errors prints the count';

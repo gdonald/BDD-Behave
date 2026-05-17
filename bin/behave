@@ -6,6 +6,7 @@ use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::Files;
 use BDD::Behave::Bisect;
+use BDD::Behave::Formatter::Registry;
 
 my $verbose = False;
 my @specs = [];
@@ -30,6 +31,7 @@ my IO::Path $benchmark-save;
 my Real $benchmark-threshold = 0.10;
 my Str $benchmark-format = 'text';
 my IO::Path $benchmark-output;
+my Str $format = 'default';
 
 sub usage() {
   say qq:to/HERE/;
@@ -88,7 +90,7 @@ sub usage() {
                              example whose RSS delta meets or exceeds KB
                              kilobytes. Enables measurement on its own.
     --benchmark              Enable benchmark mode: aggregate per-example
-                             `benchmark { ... }` results into a Benchmarks
+                             `benchmark \{ ... \}` results into a Benchmarks
                              section at the end of the run.
     --benchmark-iterations=N Re-run each benchmarked example N times to
                              collect more samples. N must be a positive
@@ -112,6 +114,9 @@ sub usage() {
     --benchmark-output=PATH  Write the Benchmarks section to PATH
                              instead of stdout. Useful with --benchmark-
                              format=json for CI ingestion.
+    --format NAME            Output formatter to use for the run. NAME is
+                             a registered formatter (default: 'default').
+                             Available: {BDD::Behave::Formatter::Registry.names.join(', ')}.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -282,9 +287,20 @@ while @args {
     $benchmark-output = @args.shift.IO;
   } elsif $arg.starts-with('--benchmark-output=') {
     $benchmark-output = $arg.substr('--benchmark-output='.chars).IO;
+  } elsif $arg eq '--format' {
+    die "--format requires a value" unless @args;
+    $format = @args.shift;
+  } elsif $arg.starts-with('--format=') {
+    $format = $arg.substr('--format='.chars);
   } else {
     @specs.push: $arg;
   }
+}
+
+unless BDD::Behave::Formatter::Registry.registered($format) {
+  note "Error: unknown --format '$format' (available: "
+       ~ BDD::Behave::Formatter::Registry.names.join(', ') ~ ')';
+  exit 2;
 }
 
 unless $order eq 'random' | 'defined' {
@@ -356,8 +372,10 @@ my $last-runner;
 # In --bisect-data mode, suppress normal output during runs.
 my $null-handle = $bisect-data ?? open('/dev/null', :w) !! Nil;
 
+my $formatter = BDD::Behave::Formatter::Registry.create($format);
+
 for @files -> $file {
-  say "\nLoading: $file" if $verbose && !$bisect-data;
+  $formatter.suite-loading(:$file) if $verbose && !$bisect-data;
   my $load-failed = False;
   try {
     EVALFILE $file;
@@ -374,7 +392,7 @@ for @files -> $file {
   my $suite = $registry.suite-for-file($file.IO);
   next unless $suite.defined;
 
-  say "\n" ~ light-blue($suite.file.basename) if $multi && !$bisect-data;
+  $formatter.suite-start($suite, :multi-file($multi)) unless $bisect-data;
 
   my $remaining-fail-fast = 0;
   if $fail-fast > 0 {
@@ -386,6 +404,7 @@ for @files -> $file {
   my $runner-memory-profile-limit = $multi ?? 0 !! $memory-profile-limit;
 
   my $runner = BDD::Behave::Runner::Runner.new(
+    :$formatter,
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
     :example-patterns(@example-patterns),
@@ -457,20 +476,15 @@ if $bisect-data {
 }
 
 if $suites-run > 1 {
-  say "\n" ~ "=" x 60;
-  say "Overall: {$total-result.total} example" ~ ($total-result.total == 1 ?? '' !! 's');
-  say red("  {$total-result.failed} failed")           if $total-result.failed > 0;
-  say light-blue("  {$total-result.pending} pending")  if $total-result.pending > 0;
-  say light-blue("  {$total-result.skipped} skipped")  if $total-result.skipped > 0;
-  say green("  {$total-result.passed} passed")         if $total-result.passed > 0;
-  say "Randomized with seed $seed" if $order eq 'random';
+  $formatter.multi-file-overall($total-result, :$order, :$seed);
 
   if $profile-limit > 0 && $last-runner.defined && !$bisect-data {
-    $last-runner.print-profile($profile-limit, @all-timings);
+    $formatter.multi-file-profile($last-runner, @all-timings, :limit($profile-limit));
   }
 
   if $memory-profile-limit > 0 && $last-runner.defined && !$bisect-data {
-    $last-runner.print-memory-profile($memory-profile-limit, @all-memory-records);
+    $formatter.multi-file-memory-profile(
+      $last-runner, @all-memory-records, :limit($memory-profile-limit));
   }
 
   if $benchmark-mode && $last-runner.defined && !$bisect-data {
@@ -482,7 +496,8 @@ if $suites-run > 1 {
     if $benchmark-save.defined {
       $last-runner.save-benchmark-baseline(@all-benchmark-summaries, $benchmark-save);
     }
-    $last-runner.print-benchmark-summary(
+    $formatter.multi-file-benchmark(
+      $last-runner,
       @all-benchmark-summaries, @regressions,
       :threshold($benchmark-threshold),
       :format($benchmark-format),
@@ -491,15 +506,7 @@ if $suites-run > 1 {
   }
 }
 
-if @load-errors.elems {
-  say "\n" ~ red("Load errors ({@load-errors.elems}):");
-  for @load-errors -> $err {
-    say red("  ✗ ") ~ $err<file>;
-    for $err<message>.lines -> $line {
-      say "      $line";
-    }
-  }
-}
+$formatter.load-errors(@load-errors);
 
 # Exit non-zero if any examples failed or any spec file failed to load
 exit(($total-result.success && @load-errors.elems == 0) ?? 0 !! 1);
