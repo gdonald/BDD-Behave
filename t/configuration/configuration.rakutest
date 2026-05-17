@@ -1,0 +1,229 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Configuration;
+
+constant Configuration = BDD::Behave::Configuration::Configuration;
+constant ConfigInclude = BDD::Behave::Configuration::ConfigInclude;
+constant ConfigHook    = BDD::Behave::Configuration::ConfigHook;
+
+class SampleHelpers {
+  method greet { 'hello' }
+}
+
+plan 61;
+
+# Fresh Configuration
+{
+  my $c = Configuration.new;
+  nok $c.format.defined,             'format starts undefined';
+  nok $c.order.defined,              'order starts undefined';
+  nok $c.seed.defined,               'seed starts undefined';
+  nok $c.fail-fast.defined,          'fail-fast starts undefined';
+  nok $c.verbose.defined,            'verbose starts undefined';
+  nok $c.aggregate-failures.defined, 'aggregate-failures starts undefined';
+
+  is $c.include-tags.elems,             0, 'include-tags starts empty';
+  is $c.exclude-tags.elems,             0, 'exclude-tags starts empty';
+  is $c.example-patterns.elems,         0, 'example-patterns starts empty';
+  is $c.only-locations.elems,           0, 'only-locations starts empty';
+  is $c.spec-paths.elems,               0, 'spec-paths starts empty';
+  is $c.includes.elems,                 0, 'includes starts empty';
+  is $c.hooks.elems,                    0, 'hooks starts empty';
+  is $c.metadata-filters.elems,         0, 'metadata-filters starts empty';
+  is $c.metadata-exclude-filters.elems, 0, 'metadata-exclude-filters starts empty';
+  is $c.match-filters.elems,            0, 'match-filters starts empty';
+}
+
+# Scalar setters
+{
+  my $c = Configuration.new;
+  $c.format = 'documentation';
+  is $c.format, 'documentation', 'format setter';
+  $c.order = 'defined';
+  $c.seed  = 42;
+  is $c.order, 'defined', 'order setter';
+  is $c.seed, 42, 'seed setter';
+}
+
+# List accumulators
+{
+  my $c = Configuration.new;
+  $c.include-tag('focus');
+  $c.include-tag('slow', 'wip');
+  is-deeply $c.include-tags.List, <focus slow wip>.List,
+    'include-tag accumulates';
+
+  $c.exclude-tag('db');
+  is-deeply $c.exclude-tags.List, <db>.List, 'exclude-tag accumulates';
+
+  $c.example-pattern('login');
+  is-deeply $c.example-patterns.List, <login>.List, 'example-pattern accumulates';
+
+  $c.only-location('specs/foo.raku:12');
+  is-deeply $c.only-locations.List, ('specs/foo.raku:12',).List,
+    'only-location accumulates';
+
+  $c.include-spec('specs/');
+  is-deeply $c.spec-paths.List, <specs/>.List, 'include-spec accumulates';
+}
+
+# .include for helpers
+{
+  my $c = Configuration.new;
+  $c.include(SampleHelpers);
+  is $c.includes.elems, 1, 'include registers one entry';
+  ok $c.includes[0] ~~ ConfigInclude, 'entry is a ConfigInclude';
+  is $c.includes[0].key, 'SampleHelpers', 'default key is short class name';
+
+  my $c2 = Configuration.new;
+  $c2.include(SampleHelpers, :as<helpers>);
+  is $c2.includes[0].key, 'helpers', ':as<name> aliases key';
+}
+
+# Global hooks
+{
+  my $c = Configuration.new;
+  $c.before-all({ Nil });
+  is $c.hooks.elems, 1, 'before-all registers a hook';
+  is $c.hooks[0].phase, 'before-all', 'phase is before-all';
+
+  my $c2 = Configuration.new;
+  $c2.after-all({ Nil });
+  is $c2.hooks[0].phase, 'after-all', 'after-all registers as after-all';
+
+  my $c3 = Configuration.new;
+  $c3.before-each({ Nil });
+  $c3.after-each({ Nil });
+  $c3.around-each(-> &n { n() });
+  is-deeply $c3.hooks.map(*.phase).List,
+    <before-each after-each around-each>.List,
+    'all per-example phases register in order';
+
+  my $c4 = Configuration.new;
+  $c4.before-all({ Nil });
+  $c4.after-all({ Nil });
+  is $c4.hooks-for('before-all').elems, 1, 'hooks-for(before-all) returns 1';
+  is $c4.hooks-for('after-all').elems, 1, 'hooks-for(after-all) returns 1';
+  is $c4.hooks-for('before-each').elems, 0, 'hooks-for(before-each) returns 0';
+}
+
+# Metadata filters
+{
+  my $c = Configuration.new;
+  $c.filter(:db);
+  $c.filter(:type<unit>);
+  ok $c.metadata-filters<db>, 'filter(:db) stores truthy';
+  is $c.metadata-filters<type>, 'unit', 'filter(:type<unit>) stores value';
+
+  my $c2 = Configuration.new;
+  $c2.exclude-filter(:slow);
+  ok $c2.metadata-exclude-filters<slow>, 'exclude-filter stores truthy';
+
+  my $c3 = Configuration.new;
+  $c3.filter-run-when-matching('focus');
+  $c3.filter-run-when-matching(:wip);
+  is $c3.match-filters.elems, 2, 'two match-filters registered';
+  is $c3.match-filters[0].key, 'focus', 'first key is focus';
+  is $c3.match-filters[1].key, 'wip',   'second key is wip';
+}
+
+# Merge precedence
+{
+  my $base = Configuration.new;
+  $base.format = 'progress';
+  $base.order  = 'defined';
+
+  my $over = Configuration.new;
+  $over.format = 'documentation';
+
+  my $m = $base.merge($over);
+  is $m.format, 'documentation', 'other overrides format';
+  is $m.order,  'defined',       'base order preserved';
+
+  my $base2 = Configuration.new;
+  $base2.seed = 7;
+  my $over2 = Configuration.new;
+  my $m2 = $base2.merge($over2);
+  is $m2.seed, 7, 'undefined other leaves base seed';
+
+  my $base3 = Configuration.new;
+  $base3.include-tag('a');
+  my $over3 = Configuration.new;
+  $over3.include-tag('b');
+  is-deeply $base3.merge($over3).include-tags.List, <a b>.List,
+    'list accumulators append base-then-other';
+
+  my $base4 = Configuration.new;
+  $base4.filter(:k<base>);
+  my $over4 = Configuration.new;
+  $over4.filter(:k<over>);
+  is $base4.merge($over4).metadata-filters<k>, 'over',
+    'metadata-filter conflict resolved to other';
+
+  my $base5 = Configuration.new;
+  $base5.before-all({ 'a' });
+  my $over5 = Configuration.new;
+  $over5.before-all({ 'b' });
+  is $base5.merge($over5).hooks-for('before-all').elems, 2,
+    'hooks accumulate from both';
+}
+
+# Defaults
+{
+  my $d = BDD::Behave::Configuration::defaults();
+  is $d.format,               'progress', 'defaults format';
+  is $d.order,                'random',   'defaults order';
+  is $d.fail-fast,            0,          'defaults fail-fast';
+  nok $d.verbose,                         'defaults verbose false';
+  is $d.benchmark-iterations, 1,          'defaults benchmark-iterations';
+  is $d.benchmark-format,     'text',     'defaults benchmark-format';
+}
+
+# load-file
+{
+  my $missing = $*TMPDIR.add("behave-missing-{$*PID}-{(now * 1e6).Int}.behave");
+  my $c = BDD::Behave::Configuration::load-file($missing);
+  ok $c ~~ Configuration,    'missing file yields a Configuration';
+  nok $c.format.defined,     'missing file leaves format undefined';
+
+  my $path = $*TMPDIR.add("behave-load-{$*PID}-{(now * 1e6).Int}.behave");
+  $path.spurt(q:to/CONFIG/);
+    use BDD::Behave::Configuration;
+    configure-behave -> $c {
+      $c.format = 'tap';
+      $c.order  = 'defined';
+      $c.include-tag('focus');
+    };
+  CONFIG
+  my $loaded = BDD::Behave::Configuration::load-file($path);
+  $path.unlink;
+  is $loaded.format, 'tap',                         'loaded format';
+  is $loaded.order,  'defined',                     'loaded order';
+  is-deeply $loaded.include-tags.List, <focus>.List, 'loaded include-tag';
+
+  my $bad = $*TMPDIR.add("behave-bad-{$*PID}-{(now * 1e6).Int}.behave");
+  $bad.spurt('die "boom from config";');
+  my $error;
+  try {
+    BDD::Behave::Configuration::load-file($bad);
+    CATCH { default { $error = $_ } }
+  }
+  $bad.unlink;
+  ok $error.defined && $error.message.contains('boom from config'),
+    'load-file rethrows with helpful message';
+}
+
+# configure-behave outside load
+{
+  my $error;
+  try {
+    BDD::Behave::Configuration::configure-behave(-> $ { Nil });
+    CATCH { default { $error = $_ } }
+  }
+  ok $error.defined,
+    'configure-behave outside a load dies';
+  ok $error.message.contains('outside of a .behave config file'),
+    'error message identifies the misuse';
+}

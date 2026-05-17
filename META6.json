@@ -16,6 +16,7 @@
     "BDD::Behave::Benchmark::Format": "lib/BDD/Behave/Benchmark/Format.rakumod",
     "BDD::Behave::Bisect": "lib/BDD/Behave/Bisect.rakumod",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
+    "BDD::Behave::Configuration": "lib/BDD/Behave/Configuration.rakumod",
     "BDD::Behave::DSL": "lib/BDD/Behave/DSL.rakumod",
     "BDD::Behave::Diff": "lib/BDD/Behave/Diff.rakumod",
     "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.rakumod",

@@ -12,6 +12,7 @@ need BDD::Behave::LetRuntime;
 need BDD::Behave::Benchmark;
 need BDD::Behave::Benchmark::Baseline;
 need BDD::Behave::Benchmark::Format;
+need BDD::Behave::Configuration;
 
 constant Suite = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -19,6 +20,7 @@ constant Example = BDD::Behave::SpecTree::Example;
 constant LetRuntime = BDD::Behave::LetRuntime::LetRuntime;
 constant BenchmarkResult = BDD::Behave::Benchmark::BenchmarkResult;
 constant BaselineEntry   = BDD::Behave::Benchmark::Baseline::BaselineEntry;
+constant Configuration   = BDD::Behave::Configuration::Configuration;
 
 our class RunResult {
   has Int $.total   is rw = 0;
@@ -87,6 +89,9 @@ our class Runner {
   has IO::Path $.benchmark-output;
   has @.benchmark-summaries;
   has @.benchmark-regressions;
+  has Configuration $.config;
+  has %!helper-cache;
+  has @!effective-match-filters;
 
   submethod TWEAK {
     $!formatter //= BDD::Behave::Formatter::Tree.new;
@@ -173,10 +178,90 @@ our class Runner {
 
   method run(Suite $suite) {
     $!focus-mode = self.has-focus($suite);
-    self.run-suite($suite);
+    self.compute-match-filters($suite);
+    self.run-config-hooks('before-all');
+    LEAVE { self.run-config-hooks('after-all') }
+    {
+      my %helpers := self.helper-snapshot;
+      my $*BEHAVE-HELPERS = %helpers;
+      self.run-suite($suite);
+    }
     self.execute-benchmark-mode($suite) if $!benchmark-mode;
     self.print-summary;
     $!result;
+  }
+
+  method helper-snapshot(--> Hash) {
+    return %() unless $!config.defined;
+    my %h;
+    for $!config.includes.list -> $entry {
+      %!helper-cache{$entry.key} //= $entry.class.new;
+      %h{$entry.key} = %!helper-cache{$entry.key};
+    }
+    %h;
+  }
+
+  method run-config-hooks(Str $phase, $example = Nil) {
+    return unless $!config.defined;
+    for $!config.hooks-for($phase).list -> $hook {
+      next if $example.defined && !$hook.matches-example($example);
+      try {
+        ($hook.block)();
+        CATCH {
+          default {
+            warn "Config $phase hook failed: {.message}";
+          }
+        }
+      }
+    }
+  }
+
+  method run-config-around-each(Example $example, &core) {
+    return core() unless $!config.defined;
+    my @arounds = $!config.hooks-for('around-each').list
+      .grep({ .matches-example($example) });
+    return core() unless @arounds.elems;
+    my &chain = &core;
+    for @arounds.reverse -> $hook {
+      my &next = &chain;
+      &chain = sub { ($hook.block)(&next) };
+    }
+    chain();
+  }
+
+  method compute-match-filters(Suite $suite) {
+    @!effective-match-filters = [];
+    return unless $!config.defined;
+    for $!config.match-filters.list -> $pair {
+      my $key = $pair.key;
+      my $expected = $pair.value;
+      if self.suite-has-metadata-match($suite, $key, $expected) {
+        @!effective-match-filters.push: $pair;
+      }
+    }
+  }
+
+  method suite-has-metadata-match($node, Str $key, $expected --> Bool) {
+    given $node {
+      when Example {
+        return self.example-metadata-matches($node, $key, $expected);
+      }
+      when ExampleGroup | Suite {
+        for $node.children.list -> $child {
+          return True if self.suite-has-metadata-match($child, $key, $expected);
+        }
+      }
+    }
+    False;
+  }
+
+  method example-metadata-matches(Example $example, Str $key, $expected --> Bool) {
+    my $actual = $example.effective-metadata-value($key);
+    return False unless $actual.defined;
+    if $expected ~~ Bool {
+      return $expected ?? ?$actual !! !$actual;
+    }
+    $actual eq $expected;
   }
 
   method execute-benchmark-mode(Suite $suite) {
@@ -502,15 +587,17 @@ our class Runner {
   }
 
   method run-each-and-example(Example $example) {
+    self.run-config-hooks('before-each', $example);
     for self.ancestor-groups($example) -> $ancestor {
       self.run-each-hooks($ancestor, 'before-each', $example);
     }
 
-    self.run-example($example);
+    self.run-config-around-each($example, { self.run-example($example) });
 
     for self.ancestor-groups($example).reverse -> $ancestor {
       self.run-each-hooks($ancestor, 'after-each', $example);
     }
+    self.run-config-hooks('after-each', $example);
   }
 
   method matching-around-each-hooks(Example $example --> List) {
@@ -579,7 +666,29 @@ our class Runner {
 
     return False unless self.description-matches($example);
     return False unless self.location-matches($example);
+    return False unless self.config-metadata-matches($example);
+    return False unless self.match-filter-matches($example);
 
+    True;
+  }
+
+  method config-metadata-matches(Example $example --> Bool) {
+    return True unless $!config.defined;
+    for $!config.metadata-filters.kv -> $key, $expected {
+      return False unless self.example-metadata-matches($example, $key, $expected);
+    }
+    for $!config.metadata-exclude-filters.kv -> $key, $expected {
+      return False if self.example-metadata-matches($example, $key, $expected);
+    }
+    True;
+  }
+
+  method match-filter-matches(Example $example --> Bool) {
+    return True unless @!effective-match-filters.elems;
+    for @!effective-match-filters.list -> $pair {
+      return False
+        unless self.example-metadata-matches($example, $pair.key, $pair.value);
+    }
     True;
   }
 

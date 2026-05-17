@@ -1,0 +1,254 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Configuration;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Formatter::Tree;
+
+constant Configuration = BDD::Behave::Configuration::Configuration;
+constant Runner        = BDD::Behave::Runner::Runner;
+constant Suite         = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
+constant Example       = BDD::Behave::SpecTree::Example;
+
+plan 17;
+
+class CounterHelper {
+  has Int $.count is rw = 0;
+  method tick { $!count++ }
+}
+
+class GreetHelper {
+  method hello { 'hello' }
+}
+
+sub make-suite($description) {
+  Suite.create(:$description, :file('runner-int'.IO));
+}
+
+sub make-example(Str $description, &block, $parent, *%meta) {
+  my $ex = Example.new(:$description, :file('runner-int'.IO), :line(1), :&block);
+  $ex.set-metadata(|%meta) if %meta.elems;
+  $parent.add-example($ex);
+  $ex;
+}
+
+sub run-quiet($suite, $cfg, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $runner = Runner.new(
+    :formatter(BDD::Behave::Formatter::Tree.new),
+    :order<defined>,
+    :config($cfg),
+    |%runner-args,
+  );
+  {
+    my $*OUT = $sink;
+    $runner.run($suite);
+  }
+  $sink.close;
+  $runner;
+}
+
+# Helper inclusion
+{
+  my $cfg = Configuration.new;
+  $cfg.include(GreetHelper);
+  my $suite = make-suite('greet');
+  my $captured;
+  make-example('uses helper',
+    { $captured = $*BEHAVE-HELPERS<GreetHelper>.hello }, $suite);
+  run-quiet($suite, $cfg);
+  is $captured, 'hello', 'helper exposed by short class name';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.include(GreetHelper, :as<g>);
+  my $suite = make-suite('alias');
+  my $captured;
+  make-example('uses aliased helper',
+    { $captured = $*BEHAVE-HELPERS<g>.hello }, $suite);
+  run-quiet($suite, $cfg);
+  is $captured, 'hello', ':as<name> aliases helper key';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.include(CounterHelper);
+  my $suite = make-suite('counter');
+  make-example('first',  { $*BEHAVE-HELPERS<CounterHelper>.tick }, $suite);
+  make-example('second', { $*BEHAVE-HELPERS<CounterHelper>.tick }, $suite);
+  make-example('third',  { $*BEHAVE-HELPERS<CounterHelper>.tick }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 3, 'all three examples ran with shared helper';
+}
+
+# Global hooks
+{
+  my $cfg = Configuration.new;
+  my @order;
+  $cfg.before-all({ @order.push: 'cfg-before-all' });
+  my $suite = make-suite('hook');
+  make-example('one', { @order.push: 'ex1' }, $suite);
+  make-example('two', { @order.push: 'ex2' }, $suite);
+  run-quiet($suite, $cfg);
+  is-deeply @order.List, <cfg-before-all ex1 ex2>.List,
+    'config before-all fires once before any example';
+}
+
+{
+  my $cfg = Configuration.new;
+  my @order;
+  $cfg.after-all({ @order.push: 'cfg-after-all' });
+  my $suite = make-suite('after');
+  make-example('one', { @order.push: 'ex1' }, $suite);
+  make-example('two', { @order.push: 'ex2' }, $suite);
+  run-quiet($suite, $cfg);
+  is-deeply @order.List, <ex1 ex2 cfg-after-all>.List,
+    'config after-all fires once after all examples';
+}
+
+{
+  my $cfg = Configuration.new;
+  my @order;
+  $cfg.before-each({ @order.push: 'be' });
+  $cfg.after-each({ @order.push: 'ae' });
+  my $suite = make-suite('each');
+  make-example('one', { @order.push: 'ex1' }, $suite);
+  make-example('two', { @order.push: 'ex2' }, $suite);
+  run-quiet($suite, $cfg);
+  is-deeply @order.List, <be ex1 ae be ex2 ae>.List,
+    'config before-each/after-each wrap every example';
+}
+
+{
+  my $cfg = Configuration.new;
+  my @order;
+  $cfg.around-each(-> &next {
+    @order.push: 'pre';
+    next();
+    @order.push: 'post';
+  });
+  my $suite = make-suite('around');
+  make-example('one', { @order.push: 'ex1' }, $suite);
+  run-quiet($suite, $cfg);
+  is-deeply @order.List, <pre ex1 post>.List,
+    'config around-each wraps the example';
+}
+
+{
+  my $cfg = Configuration.new;
+  my @order;
+  $cfg.before-each({ @order.push: 'tag-only' }, :tag<wanted>);
+  my $suite = make-suite('filtered');
+  make-example('in',  { @order.push: 'in' },  $suite, :tags(['wanted']));
+  make-example('out', { @order.push: 'out' }, $suite, :tags(['other']));
+  run-quiet($suite, $cfg);
+  is-deeply @order.List, <tag-only in out>.List,
+    'before-each :tag filter only fires for matching examples';
+}
+
+# Metadata filters
+{
+  my $cfg = Configuration.new;
+  $cfg.filter(:type<unit>);
+  my $suite = make-suite('meta');
+  make-example('u1', { Nil }, $suite, :type<unit>);
+  make-example('u2', { Nil }, $suite, :type<unit>);
+  make-example('i',  { Nil }, $suite, :type<integration>);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 2, 'filter(:type<unit>) selects only unit examples';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.filter(:db);
+  my $suite = make-suite('flag');
+  make-example('db one',  { Nil }, $suite, :db);
+  make-example('no flag', { Nil }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 1, 'filter(:db) selects truthy metadata';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.exclude-filter(:slow);
+  my $suite = make-suite('excl');
+  make-example('fast',  { Nil }, $suite);
+  make-example('slow1', { Nil }, $suite, :slow);
+  make-example('slow2', { Nil }, $suite, :slow);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 1, 'exclude-filter drops matching examples';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.filter(:type<unit>);
+  my $suite = make-suite('and');
+  make-example('uw',  { Nil }, $suite, :type<unit>, :tags(['wanted']));
+  make-example('uo',  { Nil }, $suite, :type<unit>);
+  make-example('iw',  { Nil }, $suite, :type<integration>, :tags(['wanted']));
+  my $r = run-quiet($suite, $cfg, :include-tags(<wanted>));
+  is $r.result.passed, 1, 'config filter AND CLI tag composes correctly';
+}
+
+# Filter-run-when-matching
+{
+  my $cfg = Configuration.new;
+  $cfg.filter-run-when-matching(:focus);
+  my $suite = make-suite('frwm-match');
+  make-example('focused',  { Nil }, $suite, :focus);
+  make-example('other 1',  { Nil }, $suite);
+  make-example('other 2',  { Nil }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 1, 'frwm applies when at least one matches';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.filter-run-when-matching(:focus);
+  my $suite = make-suite('frwm-drop');
+  make-example('one',   { Nil }, $suite);
+  make-example('two',   { Nil }, $suite);
+  make-example('three', { Nil }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 3, 'frwm silently drops when nothing matches';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.filter-run-when-matching(:focus);
+  my $suite = make-suite('frwm-and');
+  make-example('focus + wanted', { Nil }, $suite, :focus, :tags(['wanted']));
+  make-example('focus only',     { Nil }, $suite, :focus);
+  make-example('plain',          { Nil }, $suite);
+  my $r = run-quiet($suite, $cfg, :include-tags(<wanted>));
+  is $r.result.passed, 1, 'frwm composes with CLI --tag under AND';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.filter-run-when-matching('wip');
+  my $suite = make-suite('frwm-str');
+  make-example('wip one', { Nil }, $suite, :wip);
+  make-example('rest',    { Nil }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.passed, 1, 'filter-run-when-matching string key works';
+}
+
+# All four phases together
+{
+  my $cfg = Configuration.new;
+  my @order;
+  $cfg.before-all({ @order.push: 'cfg-ba'  });
+  $cfg.after-all({ @order.push: 'cfg-aa'  });
+  $cfg.before-each({ @order.push: 'cfg-be' });
+  $cfg.after-each({ @order.push: 'cfg-ae'  });
+  my $suite = make-suite('all-phases');
+  make-example('one', { @order.push: 'ex' }, $suite);
+  run-quiet($suite, $cfg);
+  is-deeply @order.List, <cfg-ba cfg-be ex cfg-ae cfg-aa>.List,
+    'all four config phases fire in the correct order';
+}

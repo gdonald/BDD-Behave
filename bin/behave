@@ -7,31 +7,18 @@ use BDD::Behave::SpecRegistry;
 use BDD::Behave::Files;
 use BDD::Behave::Bisect;
 use BDD::Behave::Formatter::Registry;
+use BDD::Behave::Configuration;
 
-my $verbose = False;
-my @specs = [];
-my @include-tags;
-my @exclude-tags;
-my @example-patterns;
-my @only-locations;
-my $aggregate-failures = False;
-my Str $order = 'random';
-my Int $seed;
-my Int $fail-fast = 0;
-my $bisect = False;
+constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
+
+my @specs;
+my $bisect      = False;
 my $bisect-data = False;
-my Int $profile-limit = 0;
-my Real $slow-threshold = 0;
-my Int $memory-profile-limit = 0;
-my Int $memory-threshold = 0;
-my Bool $benchmark-mode = False;
-my Int $benchmark-iterations = 1;
-my IO::Path $benchmark-baseline;
-my IO::Path $benchmark-save;
-my Real $benchmark-threshold = 0.10;
-my Str $benchmark-format = 'text';
-my IO::Path $benchmark-output;
-my Str $format = 'progress';
+my $config-path-arg;
+my $no-config         = False;
+my $no-user-config    = False;
+my $no-project-config = False;
+my $cli-config = CLI-CONFIG.new;
 
 sub usage() {
   say qq:to/HERE/;
@@ -117,10 +104,18 @@ sub usage() {
     --format NAME            Output formatter to use for the run. NAME is
                              a registered formatter (default: 'progress').
                              Available: {BDD::Behave::Formatter::Registry.names.join(', ')}.
+    --config PATH            Load Raku-based config from PATH. Skips the
+                             default ~/.behave and ./.behave lookups.
+    --no-config              Skip all config files (both user and project).
+    --no-user-config         Skip ~/.behave but still read ./.behave.
+    --no-project-config      Skip ./.behave but still read ~/.behave.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
   --only-example, and focused examples combine with AND semantics.
+
+  Configuration precedence (highest wins):
+    CLI flags > ./.behave (project) > ~/.behave (user) > built-in defaults.
   HERE
 }
 
@@ -137,65 +132,65 @@ while @args {
     usage;
     exit;
   } elsif $arg eq '--verbose' {
-    $verbose = True;
+    $cli-config.verbose = True;
   } elsif $arg eq '--tag' {
     die "--tag requires a value" unless @args;
-    @include-tags.push: @args.shift;
+    $cli-config.include-tag(@args.shift);
   } elsif $arg.starts-with('--tag=') {
-    @include-tags.push: $arg.substr('--tag='.chars);
+    $cli-config.include-tag($arg.substr('--tag='.chars));
   } elsif $arg eq '--exclude-tag' {
     die "--exclude-tag requires a value" unless @args;
-    @exclude-tags.push: @args.shift;
+    $cli-config.exclude-tag(@args.shift);
   } elsif $arg.starts-with('--exclude-tag=') {
-    @exclude-tags.push: $arg.substr('--exclude-tag='.chars);
+    $cli-config.exclude-tag($arg.substr('--exclude-tag='.chars));
   } elsif $arg eq '--example' | '-e' {
     die "$arg requires a value" unless @args;
-    @example-patterns.push: @args.shift;
+    $cli-config.example-pattern(@args.shift);
   } elsif $arg.starts-with('--example=') {
-    @example-patterns.push: $arg.substr('--example='.chars);
+    $cli-config.example-pattern($arg.substr('--example='.chars));
   } elsif $arg.starts-with('-e=') {
-    @example-patterns.push: $arg.substr('-e='.chars);
+    $cli-config.example-pattern($arg.substr('-e='.chars));
   } elsif $arg eq '--aggregate-failures' {
-    $aggregate-failures = True;
+    $cli-config.aggregate-failures = True;
   } elsif $arg.starts-with('--aggregate-failures=') {
-    $aggregate-failures = $arg.substr('--aggregate-failures='.chars);
+    $cli-config.aggregate-failures = $arg.substr('--aggregate-failures='.chars);
   } elsif $arg eq '--order' {
     die "--order requires a value" unless @args;
-    $order = @args.shift;
+    $cli-config.order = @args.shift;
   } elsif $arg.starts-with('--order=') {
-    $order = $arg.substr('--order='.chars);
+    $cli-config.order = $arg.substr('--order='.chars);
   } elsif $arg eq '--seed' {
     die "--seed requires a value" unless @args;
-    $seed = @args.shift.Int;
+    $cli-config.seed = @args.shift.Int;
   } elsif $arg.starts-with('--seed=') {
-    $seed = $arg.substr('--seed='.chars).Int;
+    $cli-config.seed = $arg.substr('--seed='.chars).Int;
   } elsif $arg eq '--fail-fast' {
-    $fail-fast = 1;
+    $cli-config.fail-fast = 1;
   } elsif $arg.starts-with('--fail-fast=') {
     my $value = $arg.substr('--fail-fast='.chars);
     unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
       note "Error: --fail-fast=N requires a positive integer (got: '$value')";
       exit 2;
     }
-    $fail-fast = $value.Int;
+    $cli-config.fail-fast = $value.Int;
   } elsif $arg eq '--only-example' {
     die "--only-example requires a value" unless @args;
-    @only-locations.push: @args.shift;
+    $cli-config.only-location(@args.shift);
   } elsif $arg.starts-with('--only-example=') {
-    @only-locations.push: $arg.substr('--only-example='.chars);
+    $cli-config.only-location($arg.substr('--only-example='.chars));
   } elsif $arg eq '--bisect' {
     $bisect = True;
   } elsif $arg eq '--bisect-data' {
     $bisect-data = True;
   } elsif $arg eq '--profile' {
-    $profile-limit = 10;
+    $cli-config.profile-limit = 10;
   } elsif $arg.starts-with('--profile=') {
     my $value = $arg.substr('--profile='.chars);
     unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
       note "Error: --profile=N requires a positive integer (got: '$value')";
       exit 2;
     }
-    $profile-limit = $value.Int;
+    $cli-config.profile-limit = $value.Int;
   } elsif $arg eq '--slow-threshold' {
     die "--slow-threshold requires a value" unless @args;
     my $value = @args.shift;
@@ -203,23 +198,23 @@ while @args {
       note "Error: --slow-threshold requires a positive number (got: '$value')";
       exit 2;
     }
-    $slow-threshold = $value.Num;
+    $cli-config.slow-threshold = $value.Real;
   } elsif $arg.starts-with('--slow-threshold=') {
     my $value = $arg.substr('--slow-threshold='.chars);
     unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ && $value.Num > 0 {
       note "Error: --slow-threshold requires a positive number (got: '$value')";
       exit 2;
     }
-    $slow-threshold = $value.Num;
+    $cli-config.slow-threshold = $value.Real;
   } elsif $arg eq '--memory-profile' {
-    $memory-profile-limit = 10;
+    $cli-config.memory-profile-limit = 10;
   } elsif $arg.starts-with('--memory-profile=') {
     my $value = $arg.substr('--memory-profile='.chars);
     unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
       note "Error: --memory-profile=N requires a positive integer (got: '$value')";
       exit 2;
     }
-    $memory-profile-limit = $value.Int;
+    $cli-config.memory-profile-limit = $value.Int;
   } elsif $arg eq '--memory-threshold' {
     die "--memory-threshold requires a value" unless @args;
     my $value = @args.shift;
@@ -227,16 +222,16 @@ while @args {
       note "Error: --memory-threshold requires a positive integer (got: '$value')";
       exit 2;
     }
-    $memory-threshold = $value.Int;
+    $cli-config.memory-threshold = $value.Int;
   } elsif $arg.starts-with('--memory-threshold=') {
     my $value = $arg.substr('--memory-threshold='.chars);
     unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
       note "Error: --memory-threshold requires a positive integer (got: '$value')";
       exit 2;
     }
-    $memory-threshold = $value.Int;
+    $cli-config.memory-threshold = $value.Int;
   } elsif $arg eq '--benchmark' {
-    $benchmark-mode = True;
+    $cli-config.benchmark-mode = True;
   } elsif $arg eq '--benchmark-iterations' {
     die "--benchmark-iterations requires a value" unless @args;
     my $value = @args.shift;
@@ -244,24 +239,24 @@ while @args {
       note "Error: --benchmark-iterations requires a positive integer (got: '$value')";
       exit 2;
     }
-    $benchmark-iterations = $value.Int;
+    $cli-config.benchmark-iterations = $value.Int;
   } elsif $arg.starts-with('--benchmark-iterations=') {
     my $value = $arg.substr('--benchmark-iterations='.chars);
     unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
       note "Error: --benchmark-iterations requires a positive integer (got: '$value')";
       exit 2;
     }
-    $benchmark-iterations = $value.Int;
+    $cli-config.benchmark-iterations = $value.Int;
   } elsif $arg eq '--benchmark-baseline' {
     die "--benchmark-baseline requires a value" unless @args;
-    $benchmark-baseline = @args.shift.IO;
+    $cli-config.benchmark-baseline = @args.shift.IO;
   } elsif $arg.starts-with('--benchmark-baseline=') {
-    $benchmark-baseline = $arg.substr('--benchmark-baseline='.chars).IO;
+    $cli-config.benchmark-baseline = $arg.substr('--benchmark-baseline='.chars).IO;
   } elsif $arg eq '--benchmark-save' {
     die "--benchmark-save requires a value" unless @args;
-    $benchmark-save = @args.shift.IO;
+    $cli-config.benchmark-save = @args.shift.IO;
   } elsif $arg.starts-with('--benchmark-save=') {
-    $benchmark-save = $arg.substr('--benchmark-save='.chars).IO;
+    $cli-config.benchmark-save = $arg.substr('--benchmark-save='.chars).IO;
   } elsif $arg eq '--benchmark-threshold' {
     die "--benchmark-threshold requires a value" unless @args;
     my $value = @args.shift;
@@ -269,33 +264,94 @@ while @args {
       note "Error: --benchmark-threshold requires a non-negative number (got: '$value')";
       exit 2;
     }
-    $benchmark-threshold = $value.Num;
+    $cli-config.benchmark-threshold = $value.Real;
   } elsif $arg.starts-with('--benchmark-threshold=') {
     my $value = $arg.substr('--benchmark-threshold='.chars);
     unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ {
       note "Error: --benchmark-threshold requires a non-negative number (got: '$value')";
       exit 2;
     }
-    $benchmark-threshold = $value.Num;
+    $cli-config.benchmark-threshold = $value.Real;
   } elsif $arg eq '--benchmark-format' {
     die "--benchmark-format requires a value" unless @args;
-    $benchmark-format = @args.shift;
+    $cli-config.benchmark-format = @args.shift;
   } elsif $arg.starts-with('--benchmark-format=') {
-    $benchmark-format = $arg.substr('--benchmark-format='.chars);
+    $cli-config.benchmark-format = $arg.substr('--benchmark-format='.chars);
   } elsif $arg eq '--benchmark-output' {
     die "--benchmark-output requires a value" unless @args;
-    $benchmark-output = @args.shift.IO;
+    $cli-config.benchmark-output = @args.shift.IO;
   } elsif $arg.starts-with('--benchmark-output=') {
-    $benchmark-output = $arg.substr('--benchmark-output='.chars).IO;
+    $cli-config.benchmark-output = $arg.substr('--benchmark-output='.chars).IO;
   } elsif $arg eq '--format' {
     die "--format requires a value" unless @args;
-    $format = @args.shift;
+    $cli-config.format = @args.shift;
   } elsif $arg.starts-with('--format=') {
-    $format = $arg.substr('--format='.chars);
+    $cli-config.format = $arg.substr('--format='.chars);
+  } elsif $arg eq '--config' {
+    die "--config requires a value" unless @args;
+    $config-path-arg = @args.shift;
+  } elsif $arg.starts-with('--config=') {
+    $config-path-arg = $arg.substr('--config='.chars);
+  } elsif $arg eq '--no-config' {
+    $no-config = True;
+  } elsif $arg eq '--no-user-config' {
+    $no-user-config = True;
+  } elsif $arg eq '--no-project-config' {
+    $no-project-config = True;
   } else {
     @specs.push: $arg;
   }
 }
+
+my $disable-config = $no-config || %*ENV<BEHAVE_DISABLE_CONFIG>;
+
+my $user-config    = CLI-CONFIG.new;
+my $project-config = CLI-CONFIG.new;
+
+if $config-path-arg.defined {
+  my $path = $config-path-arg.IO;
+  unless $path.e {
+    note "Error: --config path '$config-path-arg' does not exist";
+    exit 2;
+  }
+  $project-config = BDD::Behave::Configuration::load-file($path);
+} elsif !$disable-config {
+  unless $no-user-config {
+    my $up = BDD::Behave::Configuration::user-config-path;
+    $user-config = BDD::Behave::Configuration::load-file($up) if $up.defined && $up.e;
+  }
+  unless $no-project-config {
+    my $pp = BDD::Behave::Configuration::project-config-path;
+    $project-config = BDD::Behave::Configuration::load-file($pp) if $pp.defined && $pp.e;
+  }
+}
+
+my $final-config = BDD::Behave::Configuration::defaults()
+  .merge($user-config)
+  .merge($project-config)
+  .merge($cli-config);
+
+my $format               = $final-config.format;
+my $order                = $final-config.order;
+my $seed                 = $final-config.seed;
+my $fail-fast            = $final-config.fail-fast;
+my $verbose              = ?$final-config.verbose;
+my $aggregate-failures   = $final-config.aggregate-failures;
+my $profile-limit        = $final-config.profile-limit;
+my $slow-threshold       = $final-config.slow-threshold;
+my $memory-profile-limit = $final-config.memory-profile-limit;
+my $memory-threshold     = $final-config.memory-threshold;
+my $benchmark-mode       = ?$final-config.benchmark-mode;
+my $benchmark-iterations = $final-config.benchmark-iterations;
+my $benchmark-baseline   = $final-config.benchmark-baseline;
+my $benchmark-save       = $final-config.benchmark-save;
+my $benchmark-threshold  = $final-config.benchmark-threshold;
+my $benchmark-format     = $final-config.benchmark-format;
+my $benchmark-output     = $final-config.benchmark-output;
+my @include-tags         = $final-config.include-tags.list;
+my @exclude-tags         = $final-config.exclude-tags.list;
+my @example-patterns     = $final-config.example-patterns.list;
+my @only-locations       = $final-config.only-locations.list;
 
 unless BDD::Behave::Formatter::Registry.registered($format) {
   note "Error: unknown --format '$format' (available: "
@@ -327,9 +383,11 @@ if $order eq 'random' && !$seed.defined && !$bisect-data {
   $seed = (1 .. 2_147_483_646).pick;
 }
 
-# Get list of spec files
+my @config-spec-paths = $final-config.spec-paths.list;
+my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
+
 my $files-obj = Files.new;
-my @files = $files-obj.list(@specs);
+my @files = $files-obj.list(@effective-specs);
 
 if $bisect {
   my @extra-args;
@@ -343,6 +401,7 @@ if $bisect {
       @extra-args.push: '--aggregate-failures';
     }
   }
+  @extra-args.push: '--no-config';
 
   my $bisector = BDD::Behave::Bisect::Bisector.new(
     :spec-files(@files.map(*.Str).List),
@@ -426,6 +485,7 @@ for @files -> $file {
     :benchmark-threshold($benchmark-threshold),
     :benchmark-format($benchmark-format),
     :benchmark-output($multi ?? IO::Path !! $benchmark-output),
+    :config($final-config),
   );
   $last-runner = $runner;
 

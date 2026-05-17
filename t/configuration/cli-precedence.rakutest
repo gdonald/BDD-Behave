@@ -1,0 +1,133 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 14;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $passing = $root.add('specs/expectations/be-between-spec.raku');
+
+sub run-behave-with-env(%env, *@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args,
+                 :out, :err, :env(|%*ENV, |%env));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+sub tmp-config(Str $body --> IO::Path) {
+  my $path = $*TMPDIR.add("behave-cli-prec-t-{$*PID}-{(now * 1e6).Int}.behave");
+  $path.spurt($body);
+  $path;
+}
+
+# --help mentions new flags
+{
+  my %r = run-behave-with-env(%(), '--help');
+  is %r<exit>, 0, '--help exits 0';
+  ok %r<out>.contains('--config PATH'), '--help mentions --config PATH';
+  ok %r<out>.contains('--no-config'),   '--help mentions --no-config';
+  ok %r<out>.contains('Configuration precedence'),
+    '--help describes precedence';
+}
+
+# --config applies
+{
+  my $cfg = tmp-config(q:to/CONFIG/);
+    use BDD::Behave::Configuration;
+    configure-behave -> $c { $c.format = 'documentation' };
+  CONFIG
+  my %r = run-behave-with-env(
+    %(BEHAVE_DISABLE_CONFIG => '1'),
+    '--config', $cfg.absolute,
+    '--order', 'defined',
+    $passing.absolute,
+  );
+  $cfg.unlink;
+  is %r<exit>, 0, '--config run exits 0';
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('be-between'),  'documentation render shows group';
+  nok $clean.contains('SUCCESS'),    'no tree SUCCESS markers';
+}
+
+# CLI overrides --config
+{
+  my $cfg = tmp-config(q:to/CONFIG/);
+    use BDD::Behave::Configuration;
+    configure-behave -> $c { $c.format = 'documentation' };
+  CONFIG
+  my %r = run-behave-with-env(
+    %(BEHAVE_DISABLE_CONFIG => '1'),
+    '--config', $cfg.absolute,
+    '--format', 'progress',
+    '--order', 'defined',
+    $passing.absolute,
+  );
+  $cfg.unlink;
+  is %r<exit>, 0, 'CLI override run exits 0';
+  my @lines = strip-ansi(%r<out>).lines.grep(*.chars);
+  is @lines[0].comb.unique.sort.join, '.',
+    'CLI --format progress wins over config documentation';
+}
+
+# Missing --config path errors
+{
+  my %r = run-behave-with-env(
+    %(BEHAVE_DISABLE_CONFIG => '1'),
+    '--config', '/tmp/behave-nonexistent-PATH-99999.behave',
+    $passing.absolute,
+  );
+  is %r<exit>, 2, 'missing --config exits 2';
+  ok %r<err>.contains('does not exist'),
+    'error message mentions path';
+}
+
+# BEHAVE_DISABLE_CONFIG=1 disables defaults
+{
+  my %r = run-behave-with-env(
+    %(BEHAVE_DISABLE_CONFIG => '1'),
+    '--order', 'defined',
+    $passing.absolute,
+  );
+  is %r<exit>, 0, 'env-disabled run still works';
+}
+
+# config include-tag accumulates with CLI --tag
+{
+  my $cfg = tmp-config(q:to/CONFIG/);
+    use BDD::Behave::Configuration;
+    configure-behave -> $c { $c.include-tag('nonexistent-config-tag-1') };
+  CONFIG
+  my %r = run-behave-with-env(
+    %(BEHAVE_DISABLE_CONFIG => '1'),
+    '--config', $cfg.absolute,
+    '--order', 'defined',
+    $passing.absolute,
+  );
+  $cfg.unlink;
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('0 examples'),
+    'include-tag from config filters everything out';
+}
+
+# Both CLI and config tags apply
+{
+  my $cfg = tmp-config(q:to/CONFIG/);
+    use BDD::Behave::Configuration;
+    configure-behave -> $c { $c.include-tag('a') };
+  CONFIG
+  my %r = run-behave-with-env(
+    %(BEHAVE_DISABLE_CONFIG => '1'),
+    '--config', $cfg.absolute,
+    '--tag', 'b',
+    '--order', 'defined',
+    $passing.absolute,
+  );
+  $cfg.unlink;
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('0 examples'),
+    'both CLI and config tags must match (none, so 0 examples)';
+}

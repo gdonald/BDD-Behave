@@ -50,6 +50,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--memory-profile` / `--memory-profile=N` | Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default `N=10`). See [Memory profiling](timing/timing.md#memory-profiling). |
 | `--memory-threshold=KB` | Print an inline `MEMORY` line under any example whose RSS delta meets or exceeds `KB` kilobytes. Enables measurement on its own. See [Memory profiling](timing/timing.md#memory-profiling). |
 | `--format NAME`      | Select the output formatter for the run. `NAME` is the name of a registered formatter (`default` is built in). See [Formatters](formatter/formatter.md). |
+| `--config PATH`      | Load Raku-based config from `PATH`. Skips the default `~/.behave` and `./.behave` lookups. See [Configuration](configuration/configuration.md). |
+| `--no-config` / `--no-user-config` / `--no-project-config` | Skip all / user / project config files for this run. `BEHAVE_DISABLE_CONFIG=1` is equivalent to `--no-config`. See [Configuration](configuration/configuration.md). |
 
 ## Order and seed
 
