@@ -7,19 +7,24 @@ use BDD::Behave::SpecTree;
 
 need BDD::Behave::Mock::Stub;
 need BDD::Behave::LetRuntime;
+need BDD::Behave::Benchmark;
+need BDD::Behave::Benchmark::Baseline;
+need BDD::Behave::Benchmark::Format;
 
 constant Suite = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example = BDD::Behave::SpecTree::Example;
 constant LetRuntime = BDD::Behave::LetRuntime::LetRuntime;
+constant BenchmarkResult = BDD::Behave::Benchmark::BenchmarkResult;
+constant BaselineEntry   = BDD::Behave::Benchmark::Baseline::BaselineEntry;
 
 our class RunResult {
-  has Int $.total = 0;
-  has Int $.passed = 0;
-  has Int $.failed = 0;
-  has Int $.pending = 0;
-  has Int $.skipped = 0;
-  has @.errors;
+  has Int $.total   is rw = 0;
+  has Int $.passed  is rw = 0;
+  has Int $.failed  is rw = 0;
+  has Int $.pending is rw = 0;
+  has Int $.skipped is rw = 0;
+  has @.errors      is rw;
 
   method add-pass {
     $!total++;
@@ -70,6 +75,16 @@ our class Runner {
   has Int $.memory-threshold = 0;
   has Bool $.memory-profile = False;
   has @.memory-records;
+  has Bool     $.benchmark-mode      = False;
+  has Bool     $.benchmark-quiet     = False;
+  has Int      $.benchmark-iterations = 1;
+  has IO::Path $.benchmark-baseline;
+  has IO::Path $.benchmark-save;
+  has Real     $.benchmark-threshold = 0.10;
+  has Str      $.benchmark-format    = 'text';
+  has IO::Path $.benchmark-output;
+  has @.benchmark-summaries;
+  has @.benchmark-regressions;
 
   submethod TWEAK {
     die "order must be 'random' or 'defined' (got: '$!order')"
@@ -89,6 +104,15 @@ our class Runner {
 
     die "memory-threshold must be 0 or positive (got: $!memory-threshold)"
       if $!memory-threshold < 0;
+
+    die "benchmark-iterations must be a positive integer (got: $!benchmark-iterations)"
+      if $!benchmark-iterations < 1;
+
+    die "benchmark-threshold must be 0 or positive (got: $!benchmark-threshold)"
+      if $!benchmark-threshold < 0;
+
+    die "benchmark-format must be 'text' or 'json' (got: '$!benchmark-format')"
+      unless $!benchmark-format eq 'text' | 'json';
 
     if $!order eq 'random' {
       $!seed //= (1 .. 2_147_483_646).pick;
@@ -146,8 +170,160 @@ our class Runner {
   method run(Suite $suite) {
     $!focus-mode = self.has-focus($suite);
     self.run-suite($suite);
+    self.execute-benchmark-mode($suite) if $!benchmark-mode;
     self.print-summary;
     $!result;
+  }
+
+  method execute-benchmark-mode(Suite $suite) {
+    my @benchmarked = self.collect-benchmarked-examples($suite);
+
+    if $!benchmark-iterations > 1 {
+      for @benchmarked -> $example {
+        for 2 .. $!benchmark-iterations {
+          self.silent-rerun($example);
+        }
+      }
+    }
+
+    @!benchmark-summaries = self.aggregate-benchmark-summaries(@benchmarked);
+
+    if !$!benchmark-quiet && $!benchmark-baseline.defined {
+      @!benchmark-regressions =
+        self.compare-with-baseline(@!benchmark-summaries, $!benchmark-baseline);
+    }
+
+    if !$!benchmark-quiet && $!benchmark-save.defined {
+      self.save-benchmark-baseline(@!benchmark-summaries, $!benchmark-save);
+    }
+  }
+
+  method collect-benchmarked-examples($node --> List) {
+    my @found;
+    given $node {
+      when Example {
+        @found.push: $node if $node.benchmarks.elems;
+      }
+      default {
+        for $node.children -> $child {
+          @found.append: self.collect-benchmarked-examples($child);
+        }
+      }
+    }
+    @found.List;
+  }
+
+  method silent-rerun(Example $example) {
+    my $saved-result          = $!result;
+    my @saved-execution-order = @!execution-order;
+    my @saved-timed-examples  = @!timed-examples;
+    my @saved-memory-records  = @!memory-records;
+
+    $!result          = RunResult.new;
+    @!execution-order = [];
+    @!timed-examples  = [];
+    @!memory-records  = [];
+
+    my $sink = open '/dev/null', :w;
+    {
+      my $*OUT = $sink;
+      try {
+        self.handle-example($example);
+        CATCH { default { } }
+      }
+    }
+    $sink.close;
+
+    $!result          = $saved-result;
+    @!execution-order = @saved-execution-order;
+    @!timed-examples  = @saved-timed-examples;
+    @!memory-records  = @saved-memory-records;
+  }
+
+  method aggregate-benchmark-summaries(@examples --> List) {
+    my @summaries;
+    for @examples -> $example {
+      my $description = self.full-nested-description($example);
+      my %by-key;
+      for $example.benchmarks.list -> $bench {
+        %by-key{$bench.key}.push: $bench;
+      }
+      for %by-key.pairs.sort(*.key) -> $pair {
+        my $key         = $pair.key;
+        my @runs        = $pair.value.list;
+        my @all-timings = @runs.map(*.timings.flat).flat.list;
+        my $iterations  = [+] @runs.map(*.iterations);
+        my $label       = @runs[0].label;
+        my $position    = @runs[0].position;
+        my %summary     = self.compute-summary(@all-timings);
+        @summaries.push: %(
+          example     => $example,
+          description => $description,
+          key         => $key,
+          label       => $label,
+          position    => $position,
+          runs        => @runs.elems,
+          iterations  => $iterations,
+          timings     => @all-timings,
+          |%summary,
+        );
+      }
+    }
+    @summaries.sort({ $^a<description> cmp $^b<description> || $^a<key> cmp $^b<key> }).List;
+  }
+
+  method compute-summary(@timings --> Hash) {
+    return %( min => Real, max => Real, mean => Real, median => Real, total => Real )
+      unless @timings.elems;
+    my @sorted = @timings.sort;
+    my $total  = [+] @timings;
+    my $mean   = $total / @timings.elems;
+    my $n      = @sorted.elems;
+    my $median = $n %% 2
+      ?? (@sorted[$n div 2 - 1] + @sorted[$n div 2]) / 2
+      !! @sorted[$n div 2];
+    %(
+      min    => @sorted[0],
+      max    => @sorted[*-1],
+      mean   => $mean,
+      median => $median,
+      total  => $total,
+    );
+  }
+
+  method compare-with-baseline(@summaries, IO::Path $path --> List) {
+    my @entries = BDD::Behave::Benchmark::Baseline::load($path);
+    my %index   = BDD::Behave::Benchmark::Baseline::index-by-key(@entries);
+    my @regressions;
+    for @summaries -> %s {
+      my $entry = %index{%s<description>}{%s<key>};
+      next unless $entry.defined;
+      my $delta-pct = $entry.median == 0 ?? 0
+                                          !! (%s<median> - $entry.median) / $entry.median;
+      my %row = (|%s,
+                 baseline-median => $entry.median,
+                 baseline-mean   => $entry.mean,
+                 delta-pct       => $delta-pct,
+                 regression      => $delta-pct > $!benchmark-threshold);
+      @regressions.push: %row;
+    }
+    @regressions.List;
+  }
+
+  method save-benchmark-baseline(@summaries, IO::Path $path --> Nil) {
+    my BaselineEntry @entries = @summaries.map: -> %s {
+      BaselineEntry.new(
+        :description(%s<description>),
+        :key(%s<key>),
+        :iterations(%s<iterations>),
+        :min(%s<min>.Real),
+        :max(%s<max>.Real),
+        :mean(%s<mean>.Real),
+        :median(%s<median>.Real),
+        :total(%s<total>.Real),
+      );
+    };
+    BDD::Behave::Benchmark::Baseline::save($path, @entries);
   }
 
   method has-focus($node --> Bool) {
@@ -720,6 +896,131 @@ our class Runner {
 
     self.print-profile if $!profile-limit > 0;
     self.print-memory-profile if $!memory-profile-limit > 0;
+    self.print-benchmark-summary if $!benchmark-mode && !$!benchmark-quiet;
+  }
+
+  method print-benchmark-summary(
+    @summaries       = @!benchmark-summaries,
+    @regressions     = @!benchmark-regressions,
+    Real :$threshold = $!benchmark-threshold,
+    Str  :$format    = $!benchmark-format,
+    IO::Path :$output = $!benchmark-output,
+  ) {
+    return unless @summaries.elems;
+    my $rendered = self.render-benchmark-output(
+      @summaries, @regressions,
+      :$threshold, :$format,
+    );
+    if $output.defined {
+      $output.spurt: $rendered ~ "\n";
+    } else {
+      say '';
+      print $rendered;
+      say '' unless $rendered.ends-with("\n");
+    }
+  }
+
+  method render-benchmark-output(
+    @summaries, @regressions,
+    Real :$threshold = $!benchmark-threshold,
+    Str  :$format    = $!benchmark-format,
+    --> Str
+  ) {
+    given $format {
+      when 'json' {
+        BDD::Behave::Benchmark::Format::to-json-document(
+          @summaries, @regressions, $threshold,
+        );
+      }
+      default {
+        self.render-benchmark-text(@summaries, @regressions, :$threshold);
+      }
+    }
+  }
+
+  method render-benchmark-text(
+    @summaries, @regressions,
+    Real :$threshold = $!benchmark-threshold,
+    --> Str
+  ) {
+    my @blocks;
+    @blocks.push: self.render-bench-summary-table(@summaries);
+    if @regressions.elems {
+      @blocks.push: '';
+      @blocks.push: self.render-bench-comparison-table(@regressions, :$threshold);
+    }
+    @blocks.join("\n");
+  }
+
+  method render-bench-summary-table(@summaries --> Str) {
+    my $count   = @summaries.elems;
+    my $heading = "Benchmarks ($count measurement" ~ ($count == 1 ?? '' !! 's') ~ '):';
+
+    my @headers = <DESCRIPTION KEY ITER MIN(s) MAX(s) MEAN(s) MEDIAN(s)>;
+    my @aligns  = <left left right right right right right>;
+    my @rows;
+    for @summaries -> %s {
+      @rows.push: [
+        %s<description>,
+        %s<key>,
+        %s<iterations>.Str,
+        sprintf('%.6f', %s<min>),
+        sprintf('%.6f', %s<max>),
+        sprintf('%.6f', %s<mean>),
+        sprintf('%.6f', %s<median>),
+      ];
+    }
+    my @widths = BDD::Behave::Benchmark::Format::column-widths(@headers, @rows);
+    $heading ~ "\n" ~
+      BDD::Behave::Benchmark::Format::render-table(@headers, @rows, @widths, @aligns);
+  }
+
+  method render-bench-comparison-table(@regressions, Real :$threshold = $!benchmark-threshold --> Str) {
+    my @hits          = @regressions.grep(*<regression>);
+    my $threshold-pct = sprintf '%.1f%%', $threshold * 100;
+    my $heading       = @hits.elems
+      ?? red("Benchmark regressions ({@hits.elems}, threshold $threshold-pct):")
+      !! "Benchmark comparison (no regressions; threshold $threshold-pct):";
+
+    my @headers = <DESCRIPTION KEY BASELINE CURRENT DELTA>;
+    my @aligns  = <left left right right left>;
+    my @rows;
+    for @regressions -> %r {
+      @rows.push: [
+        %r<description>,
+        %r<key>,
+        sprintf('%.6fs', %r<baseline-median>),
+        sprintf('%.6fs', %r<median>),
+        self.render-delta-cell(%r),
+      ];
+    }
+    my @widths = BDD::Behave::Benchmark::Format::column-widths(@headers, @rows);
+    $heading ~ "\n" ~
+      BDD::Behave::Benchmark::Format::render-table(@headers, @rows, @widths, @aligns);
+  }
+
+  method render-delta-cell(%r --> Str) {
+    my $delta-pct = %r<delta-pct>;
+    my $sign      = $delta-pct >= 0 ?? '+' !! '';
+    my $body      = sprintf '%s%.1f%%', $sign, $delta-pct * 100;
+    my ($arrow, $colored);
+    if %r<regression> {
+      $arrow   = '↑';
+      $colored = red("$arrow $body REGRESSION");
+    } elsif $delta-pct < -$!benchmark-threshold {
+      $arrow   = '↓';
+      $colored = green("$arrow $body");
+    } elsif $delta-pct > 0 {
+      $arrow   = '↑';
+      $colored = "$arrow $body";
+    } elsif $delta-pct < 0 {
+      $arrow   = '↓';
+      $colored = "$arrow $body";
+    } else {
+      $arrow   = '→';
+      $colored = "$arrow $body";
+    }
+    $colored;
   }
 
   method print-profile(Int $limit = $!profile-limit, @records = @!timed-examples) {

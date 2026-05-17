@@ -322,3 +322,11 @@ sub matcher(Str:D $name, |c) is export {
   };
   $impl($name, |c);
 }
+
+sub benchmark(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&benchmark');
+  };
+  $impl(|args);
+}

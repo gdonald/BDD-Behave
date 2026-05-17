@@ -1,0 +1,125 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 11;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/benchmark-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/\e '[' \d+ 'm'/, '', :g);
+}
+
+sub tmp-baseline(--> IO::Path) {
+  $*TMPDIR.add("behave-baseline-test-{$*PID}-{(now * 1e6).Int}.txt");
+}
+
+subtest 'Benchmarks section is opt-in', {
+  plan 2;
+  my %r = run-behave($fixture.absolute);
+  is %r<exit>, 0, 'baseline run succeeds';
+  nok strip-ansi(%r<out>).contains('Benchmarks ('),
+    'no Benchmarks section without --benchmark';
+}
+
+subtest '--benchmark prints a Benchmarks section', {
+  plan 3;
+  my %r = run-behave('--benchmark', $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('Benchmarks ('), 'header present';
+  ok $out.contains('label:sum'),    'labeled benchmark listed';
+}
+
+subtest 'labeled benchmarks appear under separate keys', {
+  plan 2;
+  my %r = run-behave('--benchmark', $fixture.absolute);
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('label:a'), 'first label listed';
+  ok $out.contains('label:b'), 'second label listed';
+}
+
+subtest '--benchmark-iterations > 1 implies --benchmark', {
+  plan 2;
+  my %r = run-behave('--benchmark-iterations=2', $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  ok strip-ansi(%r<out>).contains('Benchmarks ('),
+    'Benchmarks section printed';
+}
+
+subtest '--benchmark-iterations=0 is rejected', {
+  plan 2;
+  my %r = run-behave('--benchmark-iterations=0', $fixture.absolute);
+  isnt %r<exit>, 0, 'non-zero exit';
+  ok %r<err>.contains('positive integer'),
+    'error mentions positive integer';
+}
+
+subtest '--benchmark-iterations=abc is rejected', {
+  plan 2;
+  my %r = run-behave('--benchmark-iterations=abc', $fixture.absolute);
+  isnt %r<exit>, 0, 'non-zero exit';
+  ok %r<err>.contains('positive integer'),
+    'error mentions positive integer';
+}
+
+subtest '--benchmark-threshold=abc is rejected', {
+  plan 2;
+  my %r = run-behave('--benchmark-threshold=abc', $fixture.absolute);
+  isnt %r<exit>, 0, 'non-zero exit';
+  ok %r<err>.contains('non-negative number'),
+    'error mentions non-negative number';
+}
+
+subtest '--benchmark-save writes a baseline file', {
+  plan 4;
+  my $tmp = tmp-baseline();
+  my %r = run-behave("--benchmark-save={$tmp.absolute}", $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  ok $tmp.e, 'file created';
+  my $content = $tmp.slurp;
+  ok $content.starts-with('# behave-benchmark-baseline'),
+    'baseline header written';
+  ok $content.contains('label:sum'),
+    'sum label persisted';
+  $tmp.unlink;
+}
+
+subtest '--benchmark-save implies --benchmark', {
+  plan 1;
+  my $tmp = tmp-baseline();
+  my %r = run-behave("--benchmark-save={$tmp.absolute}", $fixture.absolute);
+  ok strip-ansi(%r<out>).contains('Benchmarks ('),
+    'Benchmarks section printed';
+  $tmp.unlink;
+}
+
+subtest '--benchmark-baseline prints a comparison block', {
+  plan 2;
+  my $tmp = tmp-baseline();
+  run-behave("--benchmark-save={$tmp.absolute}", $fixture.absolute);
+  my %r = run-behave("--benchmark-baseline={$tmp.absolute}", $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('BASELINE')
+     || $out.contains('Benchmark regressions')
+     || $out.contains('Benchmark comparison'),
+    'comparison block printed';
+  $tmp.unlink;
+}
+
+subtest '--benchmark-baseline fails on missing file', {
+  plan 1;
+  my %r = run-behave('--benchmark-baseline=/tmp/no-such-baseline-file.txt',
+                     $fixture.absolute);
+  isnt %r<exit>, 0, 'non-zero exit when baseline file missing';
+}

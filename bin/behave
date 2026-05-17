@@ -23,6 +23,13 @@ my Int $profile-limit = 0;
 my Real $slow-threshold = 0;
 my Int $memory-profile-limit = 0;
 my Int $memory-threshold = 0;
+my Bool $benchmark-mode = False;
+my Int $benchmark-iterations = 1;
+my IO::Path $benchmark-baseline;
+my IO::Path $benchmark-save;
+my Real $benchmark-threshold = 0.10;
+my Str $benchmark-format = 'text';
+my IO::Path $benchmark-output;
 
 sub usage() {
   say qq:to/HERE/;
@@ -80,6 +87,31 @@ sub usage() {
     --memory-threshold=KB    Print an inline 'MEMORY' warning for any
                              example whose RSS delta meets or exceeds KB
                              kilobytes. Enables measurement on its own.
+    --benchmark              Enable benchmark mode: aggregate per-example
+                             `benchmark { ... }` results into a Benchmarks
+                             section at the end of the run.
+    --benchmark-iterations=N Re-run each benchmarked example N times to
+                             collect more samples. N must be a positive
+                             integer (default 1, no re-runs).
+    --benchmark-baseline=PATH
+                             Compare current benchmark medians against
+                             PATH (a baseline file produced by
+                             --benchmark-save). Implies --benchmark.
+    --benchmark-save=PATH    Save current benchmark medians to PATH.
+                             Implies --benchmark.
+    --benchmark-threshold=PCT
+                             Regression threshold as a decimal fraction
+                             (default 0.10 = 10%). A current median is
+                             flagged when it exceeds baseline by more
+                             than PCT.
+    --benchmark-format=FORMAT
+                             Output format for the Benchmarks section.
+                             FORMAT is 'text' (default; pretty table
+                             with comparison arrows) or 'json' (single
+                             JSON object for CI dashboards).
+    --benchmark-output=PATH  Write the Benchmarks section to PATH
+                             instead of stdout. Useful with --benchmark-
+                             format=json for CI ingestion.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -198,6 +230,58 @@ while @args {
       exit 2;
     }
     $memory-threshold = $value.Int;
+  } elsif $arg eq '--benchmark' {
+    $benchmark-mode = True;
+  } elsif $arg eq '--benchmark-iterations' {
+    die "--benchmark-iterations requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --benchmark-iterations requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $benchmark-iterations = $value.Int;
+  } elsif $arg.starts-with('--benchmark-iterations=') {
+    my $value = $arg.substr('--benchmark-iterations='.chars);
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --benchmark-iterations requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $benchmark-iterations = $value.Int;
+  } elsif $arg eq '--benchmark-baseline' {
+    die "--benchmark-baseline requires a value" unless @args;
+    $benchmark-baseline = @args.shift.IO;
+  } elsif $arg.starts-with('--benchmark-baseline=') {
+    $benchmark-baseline = $arg.substr('--benchmark-baseline='.chars).IO;
+  } elsif $arg eq '--benchmark-save' {
+    die "--benchmark-save requires a value" unless @args;
+    $benchmark-save = @args.shift.IO;
+  } elsif $arg.starts-with('--benchmark-save=') {
+    $benchmark-save = $arg.substr('--benchmark-save='.chars).IO;
+  } elsif $arg eq '--benchmark-threshold' {
+    die "--benchmark-threshold requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ {
+      note "Error: --benchmark-threshold requires a non-negative number (got: '$value')";
+      exit 2;
+    }
+    $benchmark-threshold = $value.Num;
+  } elsif $arg.starts-with('--benchmark-threshold=') {
+    my $value = $arg.substr('--benchmark-threshold='.chars);
+    unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ {
+      note "Error: --benchmark-threshold requires a non-negative number (got: '$value')";
+      exit 2;
+    }
+    $benchmark-threshold = $value.Num;
+  } elsif $arg eq '--benchmark-format' {
+    die "--benchmark-format requires a value" unless @args;
+    $benchmark-format = @args.shift;
+  } elsif $arg.starts-with('--benchmark-format=') {
+    $benchmark-format = $arg.substr('--benchmark-format='.chars);
+  } elsif $arg eq '--benchmark-output' {
+    die "--benchmark-output requires a value" unless @args;
+    $benchmark-output = @args.shift.IO;
+  } elsif $arg.starts-with('--benchmark-output=') {
+    $benchmark-output = $arg.substr('--benchmark-output='.chars).IO;
   } else {
     @specs.push: $arg;
   }
@@ -205,6 +289,16 @@ while @args {
 
 unless $order eq 'random' | 'defined' {
   note "Error: --order must be 'random' or 'defined' (got: '$order')";
+  exit 2;
+}
+
+if $benchmark-baseline.defined || $benchmark-save.defined || $benchmark-iterations > 1
+   || $benchmark-format ne 'text' || $benchmark-output.defined {
+  $benchmark-mode = True;
+}
+
+unless $benchmark-format eq 'text' | 'json' {
+  note "Error: --benchmark-format must be 'text' or 'json' (got: '$benchmark-format')";
   exit 2;
 }
 
@@ -256,6 +350,7 @@ my @all-execution-order;
 my @all-failures;
 my @all-timings;
 my @all-memory-records;
+my @all-benchmark-summaries;
 my $last-runner;
 
 # In --bisect-data mode, suppress normal output during runs.
@@ -304,6 +399,14 @@ for @files -> $file {
     :$memory-threshold,
     :memory-profile($memory-profile-limit > 0 || $memory-threshold > 0),
     :$slow-threshold,
+    :benchmark-mode($benchmark-mode),
+    :benchmark-quiet($multi),
+    :benchmark-iterations($benchmark-iterations),
+    :benchmark-baseline($multi ?? IO::Path !! $benchmark-baseline),
+    :benchmark-save($multi ?? IO::Path !! $benchmark-save),
+    :benchmark-threshold($benchmark-threshold),
+    :benchmark-format($benchmark-format),
+    :benchmark-output($multi ?? IO::Path !! $benchmark-output),
   );
   $last-runner = $runner;
 
@@ -325,6 +428,7 @@ for @files -> $file {
 
   @all-timings.append: $runner.timed-examples;
   @all-memory-records.append: $runner.memory-records;
+  @all-benchmark-summaries.append: $runner.benchmark-summaries;
 
   $total-result = BDD::Behave::Runner::RunResult.new(
     :total($total-result.total + $result.total),
@@ -367,6 +471,23 @@ if $suites-run > 1 {
 
   if $memory-profile-limit > 0 && $last-runner.defined && !$bisect-data {
     $last-runner.print-memory-profile($memory-profile-limit, @all-memory-records);
+  }
+
+  if $benchmark-mode && $last-runner.defined && !$bisect-data {
+    my @regressions;
+    if $benchmark-baseline.defined {
+      @regressions =
+        $last-runner.compare-with-baseline(@all-benchmark-summaries, $benchmark-baseline);
+    }
+    if $benchmark-save.defined {
+      $last-runner.save-benchmark-baseline(@all-benchmark-summaries, $benchmark-save);
+    }
+    $last-runner.print-benchmark-summary(
+      @all-benchmark-summaries, @regressions,
+      :threshold($benchmark-threshold),
+      :format($benchmark-format),
+      :output($benchmark-output),
+    );
   }
 }
 

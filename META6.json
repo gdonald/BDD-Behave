@@ -11,6 +11,9 @@
   "test-depends": ["Test", "Test::META", "Test::Output"],
   "provides": {
     "BDD::Behave": "lib/BDD/Behave.rakumod",
+    "BDD::Behave::Benchmark": "lib/BDD/Behave/Benchmark.rakumod",
+    "BDD::Behave::Benchmark::Baseline": "lib/BDD/Behave/Benchmark/Baseline.rakumod",
+    "BDD::Behave::Benchmark::Format": "lib/BDD/Behave/Benchmark/Format.rakumod",
     "BDD::Behave::Bisect": "lib/BDD/Behave/Bisect.rakumod",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
     "BDD::Behave::DSL": "lib/BDD/Behave/DSL.rakumod",

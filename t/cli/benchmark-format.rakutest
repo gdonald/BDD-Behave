@@ -1,0 +1,92 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 7;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/benchmark-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s --> Str) { $s.subst(/\e '[' \d+ 'm'/, '', :g) }
+
+sub tmp-path(Str $ext --> IO::Path) {
+  $*TMPDIR.add("behave-fmt-test-{$*PID}-{(now * 1e6).Int}.$ext");
+}
+
+subtest '--benchmark renders an aligned text table', {
+  plan 3;
+  my %r = run-behave('--benchmark', $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('DESCRIPTION'), 'header present';
+  ok $out.contains('─'),           'horizontal rule rendered';
+}
+
+subtest '--benchmark-format rejects unknown values', {
+  plan 2;
+  my %r = run-behave('--benchmark-format=yaml', $fixture.absolute);
+  isnt %r<exit>, 0, 'non-zero exit';
+  ok %r<err>.contains("must be 'text' or 'json'"),
+    'error mentions allowed formats';
+}
+
+subtest '--benchmark-format=json implies --benchmark', {
+  plan 2;
+  my %r = run-behave('--benchmark-format=json', $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  ok %r<out>.contains('"benchmarks":'), 'JSON body present';
+}
+
+subtest '--benchmark-format=json emits version and threshold', {
+  plan 2;
+  my %r = run-behave('--benchmark-format=json', $fixture.absolute);
+  ok %r<out>.contains('"version":1'),  'version present';
+  ok %r<out>.contains('"threshold":'), 'threshold present';
+}
+
+subtest '--benchmark-output writes the section to a file (json)', {
+  plan 4;
+  my $tmp = tmp-path('json');
+  my %r = run-behave('--benchmark-format=json',
+                     "--benchmark-output={$tmp.absolute}",
+                     $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  ok $tmp.e, 'output file created';
+  ok $tmp.slurp.contains('"benchmarks":'),
+    'file contains JSON benchmarks';
+  nok %r<out>.contains('"benchmarks":'),
+    'stdout does not contain JSON benchmarks';
+  $tmp.unlink;
+}
+
+subtest '--benchmark-output writes the section to a file (text)', {
+  plan 2;
+  my $tmp = tmp-path('txt');
+  my %r = run-behave("--benchmark-output={$tmp.absolute}",
+                     $fixture.absolute);
+  is %r<exit>, 0, 'exit 0';
+  ok strip-ansi($tmp.slurp).contains('DESCRIPTION'),
+    'file contains the table header';
+  $tmp.unlink;
+}
+
+subtest 'comparison block prints arrow markers', {
+  plan 1;
+  my $tmp = tmp-path('base');
+  run-behave("--benchmark-save={$tmp.absolute}", $fixture.absolute);
+  my %r = run-behave("--benchmark-baseline={$tmp.absolute}",
+                     '--benchmark-threshold=0.0',
+                     $fixture.absolute);
+  my $out = strip-ansi(%r<out>);
+  ok $out.contains('↑') || $out.contains('↓') || $out.contains('→'),
+    'at least one arrow present';
+  $tmp.unlink;
+}

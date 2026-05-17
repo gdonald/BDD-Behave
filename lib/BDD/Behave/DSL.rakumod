@@ -13,6 +13,7 @@ need BDD::Behave::Mock::Double;
 need BDD::Behave::Mock::Allow;
 need BDD::Behave::Mock::Spy;
 need BDD::Behave::Matcher::Custom;
+need BDD::Behave::Benchmark;
 
 sub registry() { BDD::Behave::SpecRegistry::registry() }
 sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
@@ -394,6 +395,10 @@ our sub define-matcher(Str:D $name, *%blocks) is export {
 
 our sub matcher(Str:D $name, |c) is export {
   BDD::Behave::Matcher::Custom::matcher($name, |c);
+}
+
+our sub benchmark(|c) is export {
+  BDD::Behave::Benchmark::benchmark(|c);
 }
 
 our proto sub fit(|) is export {*}

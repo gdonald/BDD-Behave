@@ -1,0 +1,203 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Benchmark;
+
+plan 19;
+
+constant Suite           = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup    = BDD::Behave::SpecTree::ExampleGroup;
+constant Example         = BDD::Behave::SpecTree::Example;
+constant BenchmarkResult = BDD::Behave::Benchmark::BenchmarkResult;
+
+sub silent-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $orig-out = $*OUT;
+  {
+    my $*OUT = $sink;
+    my $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+    my $result = $runner.run($suite);
+    $*OUT = $orig-out;
+    $sink.close;
+    return $result;
+  }
+}
+
+sub build-suite(@examples) {
+  my $suite = Suite.create(:description('benchmark'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example($_) for @examples;
+  $suite;
+}
+
+subtest 'BenchmarkResult computes summary statistics', {
+  plan 5;
+  my $r = BenchmarkResult.new(:iterations(5), :timings(0.10, 0.20, 0.30, 0.40, 0.50));
+  is $r.min,    0.10, 'min is the smallest timing';
+  is $r.max,    0.50, 'max is the largest timing';
+  is $r.total,  1.50, 'total is the sum of timings';
+  is $r.mean,   0.30, 'mean is total over iterations';
+  is $r.median, 0.30, 'median is the middle element for odd N';
+}
+
+subtest 'BenchmarkResult median for even N averages the two middle values', {
+  plan 1;
+  my $r = BenchmarkResult.new(:iterations(4), :timings(0.10, 0.20, 0.30, 0.40));
+  is $r.median, 0.25, 'median averages the two middle values';
+}
+
+subtest 'BenchmarkResult sorts unordered timings for stats', {
+  plan 3;
+  my $r = BenchmarkResult.new(:iterations(3), :timings(0.30, 0.10, 0.20));
+  is $r.min,    0.10, 'min comes from sort';
+  is $r.max,    0.30, 'max comes from sort';
+  is $r.median, 0.20, 'median comes from sort';
+}
+
+subtest 'BenchmarkResult carries iterations and timings', {
+  plan 2;
+  my $r = BenchmarkResult.new(:iterations(3), :timings(0.01, 0.02, 0.03));
+  is $r.iterations,    3, 'iterations preserved';
+  is $r.timings.elems, 3, 'all timings preserved';
+}
+
+subtest 'BenchmarkResult label is optional', {
+  plan 2;
+  my $unlabeled = BenchmarkResult.new(:iterations(1), :timings(0.01));
+  my $labeled   = BenchmarkResult.new(:iterations(1), :timings(0.01), :label('hashing'));
+  nok $unlabeled.label.defined, 'no label by default';
+  is  $labeled.label, 'hashing', 'label preserved';
+}
+
+subtest 'benchmark returns a BenchmarkResult', {
+  plan 1;
+  my $r = BDD::Behave::Benchmark::benchmark(:iterations(3), { Nil });
+  ok $r ~~ BenchmarkResult, 'returns a BenchmarkResult';
+}
+
+subtest 'benchmark defaults to 100 iterations', {
+  plan 2;
+  my $r = BDD::Behave::Benchmark::benchmark({ Nil });
+  is $r.iterations,    100, 'iterations default to 100';
+  is $r.timings.elems, 100, '100 timings recorded';
+}
+
+subtest 'benchmark honors a custom iteration count', {
+  plan 2;
+  my $r = BDD::Behave::Benchmark::benchmark(:iterations(7), { Nil });
+  is $r.iterations,    7, 'iterations match the named argument';
+  is $r.timings.elems, 7, 'one timing per iteration';
+}
+
+subtest 'benchmark runs warmup iterations without recording them', {
+  plan 3;
+  my $calls = 0;
+  my $r = BDD::Behave::Benchmark::benchmark(:iterations(5), :warmup(3), { $calls++ });
+  is $r.iterations,    5, 'iterations match';
+  is $r.timings.elems, 5, 'warmup not in timings';
+  is $calls,           8, 'block called warmup + iterations times';
+}
+
+subtest 'benchmark records non-negative timings', {
+  plan 1;
+  my $r = BDD::Behave::Benchmark::benchmark(:iterations(5), { Nil });
+  ok $r.timings.all >= 0, 'every timing is non-negative';
+}
+
+subtest 'benchmark accepts a positional label', {
+  plan 2;
+  my $r = BDD::Behave::Benchmark::benchmark('fast path', :iterations(4), { Nil });
+  is $r.label,      'fast path', 'label preserved';
+  is $r.iterations, 4,           'iterations preserved';
+}
+
+subtest 'benchmark rejects zero iterations', {
+  plan 1;
+  dies-ok { BDD::Behave::Benchmark::benchmark(:iterations(0), { Nil }) },
+    'zero iterations dies';
+}
+
+subtest 'benchmark rejects negative iterations', {
+  plan 1;
+  dies-ok { BDD::Behave::Benchmark::benchmark(:iterations(-1), { Nil }) },
+    'negative iterations dies';
+}
+
+subtest 'benchmark rejects negative warmup', {
+  plan 1;
+  dies-ok { BDD::Behave::Benchmark::benchmark(:iterations(1), :warmup(-1), { Nil }) },
+    'negative warmup dies';
+}
+
+subtest 'benchmark works outside an example', {
+  plan 1;
+  my $r = BDD::Behave::Benchmark::benchmark(:iterations(2), { Nil });
+  ok $r ~~ BenchmarkResult, 'returns a result when called standalone';
+}
+
+subtest 'Example.benchmarks starts empty', {
+  plan 1;
+  my $ex = Example.new(
+    :description('inert'),
+    :file('synthetic'.IO), :line(1),
+    :block({ True }),
+  );
+  is $ex.benchmarks.elems, 0, 'empty until something runs';
+}
+
+subtest 'benchmark attaches to the running example', {
+  plan 3;
+  my $ex = Example.new(
+    :description('with benchmark'),
+    :file('synthetic'.IO), :line(2),
+    :block({
+      BDD::Behave::Benchmark::benchmark(:iterations(3), { Nil });
+    }),
+  );
+  silent-run(build-suite([$ex]));
+  is $ex.benchmarks.elems,         1,                   'one benchmark attached';
+  ok $ex.benchmarks[0] ~~ BenchmarkResult, 'entry is a BenchmarkResult';
+  is $ex.benchmarks[0].iterations, 3,                   'iterations recorded';
+}
+
+subtest 'benchmark does not attach to pending or skipped examples', {
+  plan 2;
+
+  my $pending = Example.new(
+    :description('todo'),
+    :file('synthetic'.IO), :line(3),
+    :block({ BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil }) }),
+  );
+  $pending.mark-pending;
+  silent-run(build-suite([$pending]));
+  is $pending.benchmarks.elems, 0, 'pending example records no benchmark';
+
+  my $skipped = Example.new(
+    :description('skip me'),
+    :file('synthetic'.IO), :line(4),
+    :block({ BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil }) }),
+  );
+  $skipped.set-metadata(:skipped(True));
+  silent-run(build-suite([$skipped]));
+  is $skipped.benchmarks.elems, 0, 'skipped example records no benchmark';
+}
+
+subtest 'multiple benchmark calls accumulate in declaration order', {
+  plan 3;
+  my $ex = Example.new(
+    :description('two benchmarks'),
+    :file('synthetic'.IO), :line(5),
+    :block({
+      BDD::Behave::Benchmark::benchmark('alpha', :iterations(2), { Nil });
+      BDD::Behave::Benchmark::benchmark('beta',  :iterations(2), { Nil });
+    }),
+  );
+  silent-run(build-suite([$ex]));
+  is $ex.benchmarks.elems,    2,       'two benchmarks captured';
+  is $ex.benchmarks[0].label, 'alpha', 'first is alpha';
+  is $ex.benchmarks[1].label, 'beta',  'second is beta';
+}

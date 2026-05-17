@@ -24,8 +24,12 @@ our class Example is SpecNode {
   has Int $.memory-before is rw;
   has Int $.memory-after is rw;
   has Int $.memory-delta is rw;
+  has @.benchmarks;
 
   method execute(*%context) {
+    my $*BEHAVE-CURRENT-EXAMPLE = self;
+    my $*BEHAVE-BENCHMARK-COUNTER = 0;
+
     my $existing;
     try { $existing = $*LET-RUNTIME if $*LET-RUNTIME.defined }
 

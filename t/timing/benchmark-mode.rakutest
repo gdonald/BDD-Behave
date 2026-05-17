@@ -1,0 +1,297 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Benchmark;
+use BDD::Behave::Benchmark::Baseline;
+
+plan 18;
+
+constant Suite           = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup    = BDD::Behave::SpecTree::ExampleGroup;
+constant Example         = BDD::Behave::SpecTree::Example;
+constant BenchmarkResult = BDD::Behave::Benchmark::BenchmarkResult;
+constant BaselineEntry   = BDD::Behave::Benchmark::Baseline::BaselineEntry;
+
+sub silent-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $orig-out = $*OUT;
+  my ($runner, $result);
+  {
+    my $*OUT = $sink;
+    $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+    $result = $runner.run($suite);
+    $*OUT = $orig-out;
+    $sink.close;
+  }
+  ($runner, $result);
+}
+
+sub make-example(Str $description, &block, Int :$line = 1) {
+  Example.new(:$description, :file('synthetic'.IO), :$line, :&block);
+}
+
+sub build-suite(@examples, Str :$desc = 'bench') {
+  my $suite = Suite.create(:description($desc), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example($_) for @examples;
+  $suite;
+}
+
+subtest 'BenchmarkResult.key uses label when present', {
+  plan 2;
+  my $r = BenchmarkResult.new(:label('sum'), :position(0), :iterations(1), :timings(0.01));
+  is $r.key, 'label:sum', 'labeled key uses label';
+
+  my $r2 = BenchmarkResult.new(:position(2), :iterations(1), :timings(0.01));
+  is $r2.key, 'pos:2', 'unlabeled key uses position';
+}
+
+subtest 'benchmark assigns 0-based positions within an example body', {
+  plan 3;
+  my $ex = make-example('positions', {
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+  });
+  silent-run(build-suite([$ex]));
+  is $ex.benchmarks[0].position, 0, 'first benchmark is position 0';
+  is $ex.benchmarks[1].position, 1, 'second benchmark is position 1';
+  is $ex.benchmarks[2].position, 2, 'third benchmark is position 2';
+}
+
+subtest 'benchmark resets position counter on each body invocation', {
+  plan 4;
+  my $ex = make-example('two per body', {
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+  });
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-iterations(2),
+  );
+  is $ex.benchmarks.elems,        4, 'two body invocations × two benchmarks each';
+  is $ex.benchmarks[0].position,  0, 'first body, first benchmark is pos 0';
+  is $ex.benchmarks[1].position,  1, 'first body, second benchmark is pos 1';
+  is $ex.benchmarks[2].position,  0, 'second body resets to pos 0';
+}
+
+subtest 'Runner validates benchmark-iterations', {
+  plan 2;
+  dies-ok { BDD::Behave::Runner::Runner.new(:benchmark-iterations(0)) },
+    'zero iterations rejected';
+  dies-ok { BDD::Behave::Runner::Runner.new(:benchmark-iterations(-1)) },
+    'negative iterations rejected';
+}
+
+subtest 'Runner validates benchmark-threshold', {
+  plan 1;
+  dies-ok { BDD::Behave::Runner::Runner.new(:benchmark-threshold(-0.1)) },
+    'negative threshold rejected';
+}
+
+subtest 'benchmark-mode is opt-in', {
+  plan 1;
+  my $ex = make-example('inactive', {
+    BDD::Behave::Benchmark::benchmark(:iterations(2), { Nil });
+  });
+  my ($runner, $result) = silent-run(build-suite([$ex]));
+  is $runner.benchmark-summaries.elems, 0, 'no summaries unless benchmark-mode';
+}
+
+subtest 'benchmark-mode collects summaries for benchmarked examples', {
+  plan 2;
+  my $ex = make-example('one bench', {
+    BDD::Behave::Benchmark::benchmark('sum', :iterations(3), { Nil });
+  });
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode,
+  );
+  is $runner.benchmark-summaries.elems, 1, 'one summary captured';
+  is $runner.benchmark-summaries[0]<key>, 'label:sum', 'key is label-based';
+}
+
+subtest 'benchmark-mode does not inflate result counts on re-run', {
+  plan 2;
+  my $ex = make-example('counted once', {
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+  });
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-iterations(3),
+  );
+  is $result.total,  1, 'total counted once';
+  is $result.passed, 1, 'passed counted once';
+}
+
+subtest 'benchmark-mode skips non-benchmarked examples', {
+  plan 2;
+  my $with = make-example('with', {
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+  }, :line(10));
+  my $without = make-example('without', { Nil }, :line(11));
+  my ($runner, $result) = silent-run(
+    build-suite([$with, $without]),
+    :benchmark-mode, :benchmark-iterations(2), :order<defined>,
+  );
+  is $runner.benchmark-summaries.elems, 1, 'only benchmarked example summarized';
+  is $without.benchmarks.elems,         0, 'non-benchmarked example untouched';
+}
+
+subtest 'benchmark-mode re-runs accumulate timings into one summary', {
+  plan 2;
+  my $ex = make-example('accumulates', {
+    BDD::Behave::Benchmark::benchmark(:iterations(2), { Nil });
+  });
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-iterations(3),
+  );
+  is $runner.benchmark-summaries.elems, 1, 'still one summary';
+  is $runner.benchmark-summaries[0]<runs>, 3, 'three runs aggregated';
+}
+
+subtest 'aggregated stats are computed from all timings', {
+  plan 3;
+  my $ex = make-example('stats', {
+    BDD::Behave::Benchmark::benchmark(:iterations(2), { Nil });
+  });
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-iterations(3),
+  );
+  my %s = $runner.benchmark-summaries[0];
+  is %s<timings>.elems, 6, '6 total timings (2 iter × 3 runs)';
+  ok %s<min> <= %s<median>, 'min ≤ median';
+  ok %s<median> <= %s<max>, 'median ≤ max';
+}
+
+subtest 'BaselineEntry serializes round-trip via to-line/from-line', {
+  plan 8;
+  my $e = BaselineEntry.new(
+    :description('foo bar'), :key('label:sum'), :iterations(10),
+    :min(0.01), :max(0.05), :mean(0.03), :median(0.025), :total(0.30),
+  );
+  my $line = $e.to-line;
+  my $back = BaselineEntry.from-line($line);
+  is $back.description, 'foo bar',   'description preserved';
+  is $back.key,         'label:sum', 'key preserved';
+  is $back.iterations,  10,          'iterations preserved';
+  is $back.min,         0.01,        'min preserved';
+  is $back.max,         0.05,        'max preserved';
+  is $back.mean,        0.03,        'mean preserved';
+  is $back.median,      0.025,       'median preserved';
+  is $back.total,       0.30,        'total preserved';
+}
+
+subtest 'Baseline serialize/parse round-trip', {
+  plan 2;
+  my @entries = (
+    BaselineEntry.new(
+      :description('alpha'), :key('label:a'), :iterations(1),
+      :min(0.1), :max(0.1), :mean(0.1), :median(0.1), :total(0.1)),
+    BaselineEntry.new(
+      :description('beta'), :key('pos:0'), :iterations(2),
+      :min(0.2), :max(0.2), :mean(0.2), :median(0.2), :total(0.4)),
+  );
+  my $text = BDD::Behave::Benchmark::Baseline::serialize(@entries);
+  my @parsed = BDD::Behave::Benchmark::Baseline::parse($text);
+  is @parsed.elems, 2, 'two entries parsed';
+  is @parsed[1].description, 'beta', 'order preserved';
+}
+
+subtest 'Baseline parse rejects missing header', {
+  plan 1;
+  dies-ok { BDD::Behave::Benchmark::Baseline::parse("no header\n") },
+    'missing header dies';
+}
+
+subtest 'Baseline.load and save via filesystem', {
+  plan 2;
+  my $tmp = $*TMPDIR.add("benchmark-baseline-{$*PID}-{(now * 1e6).Int}.txt");
+  my @entries = (
+    BaselineEntry.new(
+      :description('foo'), :key('label:bar'), :iterations(5),
+      :min(0.001), :max(0.005), :mean(0.003), :median(0.003), :total(0.015)),
+  );
+  BDD::Behave::Benchmark::Baseline::save($tmp, @entries);
+  ok $tmp.e, 'baseline file written';
+  my @loaded = BDD::Behave::Benchmark::Baseline::load($tmp);
+  is @loaded[0].description, 'foo', 'entry round-trips through filesystem';
+  $tmp.unlink;
+}
+
+subtest 'benchmark-save writes baseline file with current summaries', {
+  plan 2;
+  my $ex = make-example('save me', {
+    BDD::Behave::Benchmark::benchmark('saved', :iterations(2), { Nil });
+  });
+  my $tmp = $*TMPDIR.add("behave-bench-save-{$*PID}-{(now * 1e6).Int}.txt");
+  silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-save($tmp),
+  );
+  ok $tmp.e, 'save file created';
+  my @loaded = BDD::Behave::Benchmark::Baseline::load($tmp);
+  is @loaded[0].key, 'label:saved', 'saved key reflects label';
+  $tmp.unlink;
+}
+
+subtest 'benchmark-baseline comparison produces a regression record', {
+  plan 3;
+  my $ex = make-example('compare me', {
+    BDD::Behave::Benchmark::benchmark('cmp', :iterations(2), { Nil });
+  });
+  my $tmp = $*TMPDIR.add("behave-bench-base-{$*PID}-{(now * 1e6).Int}.txt");
+  my @entries = (
+    BaselineEntry.new(
+      :description('g compare me'),
+      :key('label:cmp'),
+      :iterations(2),
+      :min(0.0001), :max(0.0001), :mean(0.0001),
+      :median(0.0000000001),
+      :total(0.0002),
+    ),
+  );
+  BDD::Behave::Benchmark::Baseline::save($tmp, @entries);
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode,
+    :benchmark-baseline($tmp),
+    :benchmark-threshold(0.10),
+  );
+  is $runner.benchmark-regressions.elems, 1, 'one regression record';
+  ok $runner.benchmark-regressions[0]<delta-pct> > 0.10, 'delta exceeds threshold';
+  ok $runner.benchmark-regressions[0]<regression>,       'flagged as regression';
+  $tmp.unlink;
+}
+
+subtest 'benchmark-baseline within threshold is not a regression', {
+  plan 1;
+  my $ex = make-example('quick', {
+    BDD::Behave::Benchmark::benchmark('quick', :iterations(2), { Nil });
+  });
+  my $tmp = $*TMPDIR.add("behave-bench-base2-{$*PID}-{(now * 1e6).Int}.txt");
+  my @entries = (
+    BaselineEntry.new(
+      :description('g quick'),
+      :key('label:quick'),
+      :iterations(2),
+      :min(1e9), :max(1e9), :mean(1e9), :median(1e9), :total(2e9),
+    ),
+  );
+  BDD::Behave::Benchmark::Baseline::save($tmp, @entries);
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode,
+    :benchmark-baseline($tmp),
+    :benchmark-threshold(0.10),
+  );
+  nok $runner.benchmark-regressions[0]<regression>,
+    'much-faster current is not flagged';
+  $tmp.unlink;
+}

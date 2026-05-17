@@ -1,0 +1,185 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Benchmark;
+use BDD::Behave::Benchmark::Baseline;
+use BDD::Behave::Benchmark::Format;
+
+plan 11;
+
+constant Suite           = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup    = BDD::Behave::SpecTree::ExampleGroup;
+constant Example         = BDD::Behave::SpecTree::Example;
+constant BaselineEntry   = BDD::Behave::Benchmark::Baseline::BaselineEntry;
+
+sub silent-run($suite, *%runner-args) {
+  my $sink = open '/dev/null', :w;
+  my $orig-out = $*OUT;
+  my ($runner, $result);
+  {
+    my $*OUT = $sink;
+    $runner = BDD::Behave::Runner::Runner.new(|%runner-args);
+    $result = $runner.run($suite);
+    $*OUT = $orig-out;
+    $sink.close;
+  }
+  ($runner, $result);
+}
+
+sub make-example(Str $description, &block, Int :$line = 1) {
+  Example.new(:$description, :file('synthetic'.IO), :$line, :&block);
+}
+
+sub build-suite(@examples) {
+  my $suite = Suite.create(:description('bench'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example($_) for @examples;
+  $suite;
+}
+
+sub strip-ansi(Str $s --> Str) { $s.subst(/\e '[' \d+ 'm'/, '', :g) }
+
+subtest 'benchmark-format defaults to text', {
+  plan 1;
+  my $r = BDD::Behave::Runner::Runner.new;
+  is $r.benchmark-format, 'text', 'default is text';
+}
+
+subtest 'benchmark-format accepts json', {
+  plan 1;
+  my $r = BDD::Behave::Runner::Runner.new(:benchmark-format<json>);
+  is $r.benchmark-format, 'json', 'json accepted';
+}
+
+subtest 'benchmark-format rejects unknown values', {
+  plan 1;
+  dies-ok { BDD::Behave::Runner::Runner.new(:benchmark-format<xml>) },
+    'unknown format dies';
+}
+
+subtest 'text formatter renders table headers and a horizontal rule', {
+  plan 4;
+  my $ex = make-example('one', {
+    BDD::Behave::Benchmark::benchmark('sum', :iterations(2), { Nil });
+  });
+  my ($runner, $result) = silent-run(build-suite([$ex]), :benchmark-mode);
+  my $rendered = strip-ansi(
+    $runner.render-benchmark-output(
+      $runner.benchmark-summaries, $runner.benchmark-regressions));
+  ok $rendered.contains('DESCRIPTION'), 'header has DESCRIPTION';
+  ok $rendered.contains('MEDIAN(s)'),   'header has MEDIAN(s)';
+  ok $rendered.contains('label:sum'),   'row contains the key';
+  ok $rendered.contains('─'),           'horizontal rule rendered';
+}
+
+subtest 'text formatter singularizes heading for one measurement', {
+  plan 1;
+  my $ex = make-example('lonely', {
+    BDD::Behave::Benchmark::benchmark(:iterations(1), { Nil });
+  });
+  my ($runner, $result) = silent-run(build-suite([$ex]), :benchmark-mode);
+  my $rendered = strip-ansi(
+    $runner.render-benchmark-output(
+      $runner.benchmark-summaries, $runner.benchmark-regressions));
+  ok $rendered.contains('Benchmarks (1 measurement):'),
+    'heading uses singular';
+}
+
+subtest 'comparison renders an up arrow and REGRESSION for a regressed row', {
+  plan 2;
+  my $ex = make-example('regress', {
+    BDD::Behave::Benchmark::benchmark('r', :iterations(1), { Nil });
+  });
+  my $tmp = $*TMPDIR.add("behave-rep-{$*PID}-{(now * 1e6).Int}.txt");
+  my @entries = (
+    BaselineEntry.new(
+      :description('g regress'), :key('label:r'), :iterations(1),
+      :min(1e-9), :max(1e-9), :mean(1e-9), :median(1e-9), :total(1e-9)),
+  );
+  BDD::Behave::Benchmark::Baseline::save($tmp, @entries);
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-baseline($tmp), :benchmark-threshold(0.10),
+  );
+  my $rendered = strip-ansi(
+    $runner.render-benchmark-output(
+      $runner.benchmark-summaries, $runner.benchmark-regressions));
+  ok $rendered.contains('↑'),          'up arrow present';
+  ok $rendered.contains('REGRESSION'), 'REGRESSION label present';
+  $tmp.unlink;
+}
+
+subtest 'comparison renders a down arrow for a much-faster current', {
+  plan 2;
+  my $ex = make-example('faster', {
+    BDD::Behave::Benchmark::benchmark('f', :iterations(1), { Nil });
+  });
+  my $tmp = $*TMPDIR.add("behave-rep2-{$*PID}-{(now * 1e6).Int}.txt");
+  my @entries = (
+    BaselineEntry.new(
+      :description('g faster'), :key('label:f'), :iterations(1),
+      :min(1e9), :max(1e9), :mean(1e9), :median(1e9), :total(1e9)),
+  );
+  BDD::Behave::Benchmark::Baseline::save($tmp, @entries);
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-baseline($tmp), :benchmark-threshold(0.10),
+  );
+  my $rendered = strip-ansi(
+    $runner.render-benchmark-output(
+      $runner.benchmark-summaries, $runner.benchmark-regressions));
+  ok $rendered.contains('↓'),         'down arrow present';
+  nok $rendered.contains('REGRESSION'), 'no REGRESSION when improved';
+  $tmp.unlink;
+}
+
+subtest 'JSON output is a single object with the expected top-level keys', {
+  plan 6;
+  my $ex = make-example('json one', {
+    BDD::Behave::Benchmark::benchmark('jk', :iterations(2), { Nil });
+  });
+  my ($runner, $result) = silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-format<json>,
+  );
+  my $rendered = $runner.render-benchmark-output(
+    $runner.benchmark-summaries, $runner.benchmark-regressions);
+  ok $rendered.starts-with('{'),         'JSON starts with {';
+  ok $rendered.ends-with('}'),           'JSON ends with }';
+  ok $rendered.contains('"benchmarks":'), 'has benchmarks array';
+  ok $rendered.contains('"regressions":'), 'has regressions array';
+  ok $rendered.contains('"version":1'),  'has version';
+  ok $rendered.contains('"threshold":'), 'has threshold';
+}
+
+subtest 'JSON formatter sorts object keys deterministically', {
+  plan 1;
+  my %h = c => 1, a => 2, b => 3;
+  my $json = BDD::Behave::Benchmark::Format::to-json(%h);
+  is $json, '{"a":2,"b":3,"c":1}', 'keys are sorted';
+}
+
+subtest 'JSON formatter escapes special characters', {
+  plan 1;
+  my $json = BDD::Behave::Benchmark::Format::to-json('a"b\\c' ~ "\n");
+  is $json, '"a\"b\\\\c\n"', 'special characters escaped';
+}
+
+subtest 'benchmark-output writes a file instead of stdout', {
+  plan 2;
+  my $ex = make-example('output me', {
+    BDD::Behave::Benchmark::benchmark('o', :iterations(1), { Nil });
+  });
+  my $tmp = $*TMPDIR.add("behave-rep-out-{$*PID}-{(now * 1e6).Int}.json");
+  silent-run(
+    build-suite([$ex]),
+    :benchmark-mode, :benchmark-format<json>, :benchmark-output($tmp),
+  );
+  ok $tmp.e, 'output file written';
+  ok $tmp.slurp.contains('"label:o"'), 'expected key present';
+  $tmp.unlink;
+}
