@@ -8,6 +8,7 @@ use BDD::Behave::Files;
 use BDD::Behave::Bisect;
 use BDD::Behave::Formatter::Registry;
 use BDD::Behave::Configuration;
+use BDD::Behave::DocExtractor;
 
 constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
 
@@ -18,13 +19,16 @@ my $config-path-arg;
 my $no-config         = False;
 my $no-user-config    = False;
 my $no-project-config = False;
+my $doc-mode    = False;
+my $doc-format  = 'markdown';
+my $doc-output;
 my $cli-config = CLI-CONFIG.new;
 
 sub usage() {
   say qq:to/HERE/;
   Usage: behave [options...] [specs/spec_file.raku]
-    Runs the new tree-based runner against specs in the local `specs` directory
-    or against a list of spec files provided on the command line.
+    Runs behave in the local `specs` directory or against a list of spec files
+    provided on the command line.
 
   Options:
     --help                   Displays how to run behave.
@@ -109,6 +113,14 @@ sub usage() {
     --no-config              Skip all config files (both user and project).
     --no-user-config         Skip ~/.behave but still read ./.behave.
     --no-project-config      Skip ./.behave but still read ~/.behave.
+    --doc                    Documentation mode: load specs but skip
+                             execution, then emit a hierarchical document
+                             of describe/context/it descriptions to stdout
+                             (or to --doc-output PATH). Honors --tag,
+                             --exclude-tag, and --example.
+    --doc-format=FORMAT      Output format for --doc. FORMAT is 'markdown'
+                             (default), 'html', or 'json'.
+    --doc-output=PATH        Write --doc output to PATH instead of stdout.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -298,6 +310,18 @@ while @args {
     $no-user-config = True;
   } elsif $arg eq '--no-project-config' {
     $no-project-config = True;
+  } elsif $arg eq '--doc' {
+    $doc-mode = True;
+  } elsif $arg eq '--doc-format' {
+    die "--doc-format requires a value" unless @args;
+    $doc-format = @args.shift;
+  } elsif $arg.starts-with('--doc-format=') {
+    $doc-format = $arg.substr('--doc-format='.chars);
+  } elsif $arg eq '--doc-output' {
+    die "--doc-output requires a value" unless @args;
+    $doc-output = @args.shift.IO;
+  } elsif $arg.starts-with('--doc-output=') {
+    $doc-output = $arg.substr('--doc-output='.chars).IO;
   } else {
     @specs.push: $arg;
   }
@@ -355,7 +379,7 @@ my @only-locations       = $final-config.only-locations.list;
 
 unless BDD::Behave::Formatter::Registry.registered($format) {
   note "Error: unknown --format '$format' (available: "
-       ~ BDD::Behave::Formatter::Registry.names.join(', ') ~ ')';
+  ~ BDD::Behave::Formatter::Registry.names.join(', ') ~ ')';
   exit 2;
 }
 
@@ -365,7 +389,7 @@ unless $order eq 'random' | 'defined' {
 }
 
 if $benchmark-baseline.defined || $benchmark-save.defined || $benchmark-iterations > 1
-   || $benchmark-format ne 'text' || $benchmark-output.defined {
+|| $benchmark-format ne 'text' || $benchmark-output.defined {
   $benchmark-mode = True;
 }
 
@@ -388,6 +412,50 @@ my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
 
 my $files-obj = Files.new;
 my @files = $files-obj.list(@effective-specs);
+
+if $doc-mode {
+  unless $doc-format eq 'markdown' | 'html' | 'json' {
+    note "Error: --doc-format must be 'markdown', 'html', or 'json' (got: '$doc-format')";
+    exit 2;
+  }
+
+  use MONKEY-SEE-NO-EVAL;
+  my $registry = BDD::Behave::SpecRegistry::registry();
+  my @doc-load-errors;
+  my @doc-suites;
+  for @files -> $file {
+    my $load-failed = False;
+    try {
+      EVALFILE $file;
+      CATCH {
+        default {
+          @doc-load-errors.push: %( :$file, :message(.message) );
+          note "Error: Could not load $file: {.message}";
+          $load-failed = True;
+        }
+      }
+    }
+    next if $load-failed;
+    my $suite = $registry.suite-for-file($file.IO);
+    @doc-suites.push: $suite if $suite.defined;
+  }
+
+  my $extractor = BDD::Behave::DocExtractor::DocExtractor.new(
+    :format($doc-format),
+    :include-tags(@include-tags),
+    :exclude-tags(@exclude-tags),
+    :example-patterns(@example-patterns),
+  );
+  my $text = $extractor.extract(@doc-suites);
+
+  if $doc-output.defined {
+    $doc-output.spurt($text);
+  } else {
+    print $text;
+  }
+
+  exit(@doc-load-errors.elems == 0 ?? 0 !! 1);
+}
 
 if $bisect {
   my @extra-args;
@@ -551,7 +619,7 @@ if $multi {
     my @regressions;
     if $benchmark-baseline.defined {
       @regressions =
-        $last-runner.compare-with-baseline(@all-benchmark-summaries, $benchmark-baseline);
+      $last-runner.compare-with-baseline(@all-benchmark-summaries, $benchmark-baseline);
     }
     if $benchmark-save.defined {
       $last-runner.save-benchmark-baseline(@all-benchmark-summaries, $benchmark-save);

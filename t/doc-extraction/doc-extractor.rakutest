@@ -1,0 +1,253 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::DocExtractor;
+use BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant DocExtractor = BDD::Behave::DocExtractor::DocExtractor;
+
+plan 48;
+
+sub build-suite() {
+  my $suite = Suite.create(
+    :description('demo-spec.raku'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(0),
+  );
+
+  my $calc = ExampleGroup.new(
+    :description('Calculator'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(3),
+  );
+  $suite.add-group($calc);
+
+  my $add = ExampleGroup.new(
+    :description('addition'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(5),
+  );
+  $calc.add-group($add);
+
+  my $ex1 = Example.new(
+    :description('adds two positive numbers'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(6),
+    :block({ Nil }),
+  );
+  $ex1.set-metadata(:tags(<user-facing>));
+  $ex1.set-metadata(:type<unit>);
+  $add.add-example($ex1);
+
+  my $ex2 = Example.new(
+    :description('handles zero'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(7),
+    :block({ Nil }),
+  );
+  $ex2.set-metadata(:type<unit>);
+  $add.add-example($ex2);
+
+  my $ex-pending = Example.new(
+    :description('handles overflow'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(8),
+    :block({ Nil }),
+    :pending,
+  );
+  $add.add-example($ex-pending);
+
+  my $sub = ExampleGroup.new(
+    :description('subtraction'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(10),
+  );
+  $calc.add-group($sub);
+
+  my $ex3 = Example.new(
+    :description('subtracts two numbers'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(11),
+    :block({ Nil }),
+  );
+  $ex3.set-metadata(:tags(<internal>));
+  $sub.add-example($ex3);
+
+  my $skipped = Example.new(
+    :description('skipped one'),
+    :file('/tmp/demo-spec.raku'.IO),
+    :line(12),
+    :block({ Nil }),
+  );
+  $skipped.set-metadata(:skipped(True));
+  $sub.add-example($skipped);
+
+  $suite;
+}
+
+# Construction
+{
+  my $ex = DocExtractor.new;
+  is $ex.format, 'markdown', 'defaults to markdown format';
+
+  for <markdown html json> -> $f {
+    my $e = DocExtractor.new(:format($f));
+    is $e.format, $f, "accepts $f format";
+  }
+
+  dies-ok { DocExtractor.new(:format('xml')) }, 'rejects unknown format';
+
+  nok DocExtractor.new.has-filters, 'no filters by default';
+}
+
+# Markdown output
+{
+  my $suite = build-suite();
+  my $ex    = DocExtractor.new;
+  my $out   = $ex.extract([$suite]);
+
+  ok $out.contains('# Calculator'),  'markdown: top-level heading';
+  ok $out.contains('## addition'),   'markdown: nested heading';
+  ok $out.contains('## subtraction'),'markdown: nested heading 2';
+  ok $out.contains('- adds two positive numbers'),
+    'markdown: example as bullet';
+  ok $out.contains('handles overflow (PENDING)'),
+    'markdown: pending suffix';
+  ok $out.contains('skipped one (SKIPPED)'),
+    'markdown: skipped suffix';
+  ok $out.contains('adds two positive numbers [user-facing]'),
+    'markdown: tag annotation';
+  ok $out.starts-with('# Calculator'),
+    'markdown: single-suite skips suite heading';
+}
+
+# Markdown multi-suite
+{
+  my $s1 = build-suite();
+  my $s2 = Suite.create(
+    :description('other-spec.raku'),
+    :file('/tmp/other-spec.raku'.IO),
+    :line(0),
+  );
+  my $g  = ExampleGroup.new(:description('Other'),
+                            :file('/tmp/other-spec.raku'.IO), :line(1));
+  $s2.add-group($g);
+  $g.add-example(Example.new(
+    :description('does something'),
+    :file('/tmp/other-spec.raku'.IO), :line(2),
+    :block({ Nil }),
+  ));
+
+  my $ex  = DocExtractor.new;
+  my $out = $ex.extract([$s1, $s2]);
+  ok $out.contains('# demo-spec.raku'),  'markdown: suite 1 heading';
+  ok $out.contains('# other-spec.raku'), 'markdown: suite 2 heading';
+  ok $out.contains('## Other'),          'markdown: nested group in suite 2';
+}
+
+# HTML output
+{
+  my $suite = build-suite();
+  my $ex    = DocExtractor.new(:format<html>);
+  my $out   = $ex.extract([$suite]);
+
+  ok $out.contains('<!DOCTYPE html>'),  'html: doctype';
+  ok $out.contains('<section class="group">'),
+    'html: groups wrapped in section';
+  ok $out.contains('<h2>Calculator</h2>'),
+    'html: heading depth 2 for top group';
+  ok $out.contains('<h3>addition</h3>'),
+    'html: heading depth 3 for nested group';
+  ok $out.contains('<ul class="examples">'),
+    'html: examples in ul';
+  ok $out.contains('class="example status-pending"'),
+    'html: pending status class';
+  ok $out.contains('<em class="status">(pending)</em>'),
+    'html: pending em label';
+}
+
+# HTML escaping
+{
+  my $s = Suite.create(
+    :description('s-spec.raku'),
+    :file('/tmp/s-spec.raku'.IO), :line(0),
+  );
+  my $g = ExampleGroup.new(
+    :description('Has <html> & "quotes"'),
+    :file('/tmp/s-spec.raku'.IO), :line(1),
+  );
+  $s.add-group($g);
+  $g.add-example(Example.new(
+    :description('handles >special< chars'),
+    :file('/tmp/s-spec.raku'.IO), :line(2),
+    :block({ Nil }),
+  ));
+
+  my $ex  = DocExtractor.new(:format<html>);
+  my $out = $ex.extract([$s]);
+  ok $out.contains('Has &lt;html&gt; &amp; &quot;quotes&quot;'),
+    'html: escapes group description';
+  ok $out.contains('handles &gt;special&lt; chars'),
+    'html: escapes example description';
+}
+
+# JSON output
+{
+  my $suite = build-suite();
+  my $ex    = DocExtractor.new(:format<json>);
+  my $out   = $ex.extract([$suite]);
+
+  ok $out.contains('"version":1'),                     'json: version key';
+  ok $out.contains('"suites":'),                       'json: suites key';
+  ok $out.contains('"description":"Calculator"'),      'json: group desc';
+  ok $out.contains('"line":3'),                        'json: includes line';
+  ok $out.contains('"pending":true'),                  'json: pending true';
+  ok $out.contains('"skipped":true'),                  'json: skipped true';
+  ok $out.contains('"tags":["user-facing"]'),          'json: example tags';
+}
+
+# Filtering
+{
+  my $suite = build-suite();
+
+  my $inc = DocExtractor.new(:include-tags(<user-facing>));
+  ok $inc.has-filters, 'has-filters true when include-tags supplied';
+  my $out = $inc.extract([$suite]);
+  ok $out.contains('adds two positive numbers'),       'include-tag keeps tagged';
+  nok $out.contains('subtracts two numbers'),          'include-tag drops untagged';
+  nok $out.contains('## subtraction'),                 'include-tag drops empty groups';
+
+  my $exc = DocExtractor.new(:exclude-tags(<internal>));
+  my $exc-out = $exc.extract([$suite]);
+  nok $exc-out.contains('subtracts two numbers'),      'exclude-tag drops';
+  ok $exc-out.contains('adds two positive numbers'),   'exclude-tag keeps others';
+
+  my $mf  = DocExtractor.new(:metadata-filters(%(type => 'unit')));
+  my $mf-out = $mf.extract([$suite]);
+  ok $mf-out.contains('adds two positive numbers'),    'metadata-filters keeps matching';
+  nok $mf-out.contains('subtracts two numbers'),       'metadata-filters drops non-matching';
+
+  my $mxf = DocExtractor.new(:metadata-exclude-filters(%(type => 'unit')));
+  my $mxf-out = $mxf.extract([$suite]);
+  nok $mxf-out.contains('adds two positive numbers'),  'metadata-exclude-filters drops';
+  ok $mxf-out.contains('subtracts two numbers'),       'metadata-exclude-filters keeps';
+
+  my $pat = DocExtractor.new(:example-patterns(['adds two']));
+  my $pat-out = $pat.extract([$suite]);
+  ok $pat-out.contains('adds two positive numbers'),   'example-pattern substring keeps match';
+  nok $pat-out.contains('subtracts two numbers'),      'example-pattern substring drops';
+
+  my $rx = DocExtractor.new(:example-patterns(['/handles\s\w+/']));
+  my $rx-out = $rx.extract([$suite]);
+  ok $rx-out.contains('handles zero'),                 'example-pattern regex matches';
+  ok $rx-out.contains('handles overflow'),             'example-pattern regex matches 2';
+
+  my $none = DocExtractor.new(:include-tags(<no-such-tag>));
+  is $none.extract([$suite]).trim, '',                 'no-match suite yields empty';
+}
+
+done-testing;
