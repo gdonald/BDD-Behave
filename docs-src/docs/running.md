@@ -202,6 +202,49 @@ $ behave --only-example users-spec.raku:42 specs/users-spec.raku  # basename mat
 
 `FILE` matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, `path/to/file.raku` suffix match, or basename equality. `LINE` must equal the line of the `it` block. Repeating `--only-example` is OR semantics; the runner runs every example matching any pattern.
 
+#### Positional `FILE:LINE` shorthand
+
+A positional argument of the form `FILE:LINE` is shorthand for "load `FILE`, then run only the example at `LINE`" — equivalent to passing `FILE` plus `--only-example FILE:LINE`. The shorthand only triggers when `FILE` exists on disk; an arg matching the `:N` pattern but pointing at a non-existent file is left alone (and will surface as a normal "could not load" error).
+
+```shell
+$ behave specs/users-spec.raku:42                       # single example
+$ behave specs/users-spec.raku:42 specs/users-spec.raku:88   # both run
+$ behave specs/users-spec.raku:42 --tag focus           # AND with --tag
+```
+
+The shorthand and explicit `--only-example` compose freely; both append to the same internal list, so all matching examples run.
+
+#### Line snapping (editor integration)
+
+`LINE` does not have to land exactly on the `it` / `describe` / `context` keyword. Both the `FILE:LINE` shorthand and `--only-example FILE:LINE` apply a **text-based snap**: if `LINE` does not point at one of those keywords, Behave scans `FILE` for the nearest preceding line whose first non-whitespace token is `describe`, `context`, `fdescribe`, `fcontext`, `xdescribe`, `xcontext`, `it`, `fit`, `xit`, or `pending`, and uses that line instead.
+
+Given this fixture:
+
+```raku
+describe 'outer', {            # line 1
+  it 'alpha', {                # line 2
+    my $x = 1;                 # line 3
+    expect($x).to.eq(1);       # line 4
+  }                            # line 5
+
+  context 'inner', {           # line 7
+    it 'beta', { ... }         # line 8
+  }
+}
+```
+
+| You pass        | Snaps to | Behavior                                    |
+| --------------- | -------- | ------------------------------------------- |
+| `:2`            | `:2`     | Runs `alpha` (exact `it` line).             |
+| `:4`            | `:2`     | Runs `alpha` (cursor inside its body).      |
+| `:5`            | `:2`     | Runs `alpha` (between body close and next). |
+| `:7`            | `:7`     | Runs `beta` only (exact `context` line; descends into the inner group). |
+| `:1`            | `:1`     | Runs every example (exact `describe` line). |
+
+When the snapped line is a `describe` or `context`, every example whose ancestry includes that group runs. This is what makes editor integrations work: bind your "run example at cursor" key to `behave $FILE:$LINENO` and it does the right thing whether the cursor is on the `it` line, inside the body, or inside an enclosing `describe`.
+
+The snap is purely text-based and only looks at the start of each line, so it will not be confused by `it` appearing in a comment or string inside an `it` body. It will not snap into a closing brace; a line that has no preceding keyword in the file (e.g. `:1` when the file starts with `use BDD::Behave;`) is left unchanged and matches nothing.
+
 ### `--bisect-data`
 
 Used by `--bisect` for inter-process communication and exposed for editor/tool integrations that want a parseable listing of executed and failed examples:

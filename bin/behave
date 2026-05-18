@@ -26,9 +26,12 @@ my $cli-config = CLI-CONFIG.new;
 
 sub usage() {
   say qq:to/HERE/;
-  Usage: behave [options...] [specs/spec_file.raku]
+  Usage: behave [options...] [specs/spec_file.raku[:LINE]]
     Runs behave in the local `specs` directory or against a list of spec files
-    provided on the command line.
+    provided on the command line. A positional argument of the form
+    FILE:LINE is shorthand for "load FILE, then run only the example at
+    LINE" (equivalent to passing FILE plus --only-example FILE:LINE);
+    repeatable, so `behave spec.raku:42 spec.raku:88` runs both examples.
 
   Options:
     --help                   Displays how to run behave.
@@ -136,6 +139,35 @@ sub split-eq(Str $arg) {
   $eq.defined ?? ($arg.substr(0, $eq), $arg.substr($eq + 1)) !! ($arg, Str);
 }
 
+my %keyword-line-cache;
+
+sub scan-keyword-lines(IO::Path $file --> List) {
+  my $key = $file.absolute;
+  return %keyword-line-cache{$key}.list if %keyword-line-cache{$key}:exists;
+  my @lines;
+  my $rx = / ^ \h* [
+    'describe' | 'context' | 'fdescribe' | 'fcontext' | 'xdescribe' | 'xcontext'
+    | 'it' | 'fit' | 'xit' | 'pending'
+  ] <[\s'"(]> /;
+  for $file.lines.kv -> $idx, $line {
+    @lines.push: $idx + 1 if $line ~~ $rx;
+  }
+  %keyword-line-cache{$key} = @lines.List;
+  @lines.list;
+}
+
+sub maybe-snap-location(Str $loc --> Str) {
+  return $loc unless $loc ~~ / ^ (.+) ':' (\d+) $ /;
+  my $file-part = ~$0;
+  my $line-part = (~$1).Int;
+  return $loc unless $file-part.IO.e;
+  my @keyword-lines = scan-keyword-lines($file-part.IO);
+  return $loc if @keyword-lines.first(* == $line-part).defined;
+  my @candidates = @keyword-lines.grep(* <= $line-part);
+  return $loc unless @candidates.elems;
+  "$file-part:{@candidates.max}";
+}
+
 my @args = @*ARGS;
 while @args {
   my $arg = @args.shift;
@@ -187,9 +219,9 @@ while @args {
     $cli-config.fail-fast = $value.Int;
   } elsif $arg eq '--only-example' {
     die "--only-example requires a value" unless @args;
-    $cli-config.only-location(@args.shift);
+    $cli-config.only-location(maybe-snap-location(@args.shift));
   } elsif $arg.starts-with('--only-example=') {
-    $cli-config.only-location($arg.substr('--only-example='.chars));
+    $cli-config.only-location(maybe-snap-location($arg.substr('--only-example='.chars)));
   } elsif $arg eq '--bisect' {
     $bisect = True;
   } elsif $arg eq '--bisect-data' {
@@ -322,6 +354,10 @@ while @args {
     $doc-output = @args.shift.IO;
   } elsif $arg.starts-with('--doc-output=') {
     $doc-output = $arg.substr('--doc-output='.chars).IO;
+  } elsif $arg ~~ / ^ (.+) ':' (\d+) $ / && ~$0.IO.e {
+    my $file-part = ~$0;
+    @specs.push: $file-part unless @specs.first(* eq $file-part);
+    $cli-config.only-location(maybe-snap-location($arg));
   } else {
     @specs.push: $arg;
   }

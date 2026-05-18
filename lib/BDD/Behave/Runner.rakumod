@@ -694,11 +694,24 @@ our class Runner {
 
   method location-matches(Example $example --> Bool) {
     return True unless @!only-locations.elems;
-    my $ex-loc = "{$example.file}:{$example.line}";
     for @!only-locations -> $pattern {
-      return True if self.location-matches-pattern($ex-loc, $pattern);
+      return True if self.location-matches-node($example, $pattern);
+      for $example.ancestry -> $node {
+        next unless $node ~~ ExampleGroup;
+        return True if self.location-matches-node($node, $pattern);
+      }
     }
     False;
+  }
+
+  method location-matches-node($node, Str $pattern --> Bool) {
+    return False unless $pattern.contains(':');
+    my $idx = $pattern.rindex(':');
+    my $pattern-path = $pattern.substr(0, $idx);
+    my $pattern-line = $pattern.substr($idx + 1);
+
+    return False unless $node.line.Str eq $pattern-line;
+    self!path-matches($node.file.Str, $pattern-path);
   }
 
   method location-matches-pattern(Str $example-loc, Str $pattern --> Bool) {
@@ -713,11 +726,14 @@ our class Runner {
     my $example-line = $example-loc.substr($ex-idx + 1);
 
     return False unless $example-line eq $pattern-line;
+    self!path-matches($example-path, $pattern-path);
+  }
 
-    return True if $example-path eq $pattern-path;
-    return True if $example-path.IO.absolute eq $pattern-path.IO.absolute;
-    return True if $example-path.ends-with('/' ~ $pattern-path);
-    return True if $example-path.IO.basename eq $pattern-path;
+  method !path-matches(Str $node-path, Str $pattern-path --> Bool) {
+    return True if $node-path eq $pattern-path;
+    return True if $node-path.IO.absolute eq $pattern-path.IO.absolute;
+    return True if $node-path.ends-with('/' ~ $pattern-path);
+    return True if $node-path.IO.basename eq $pattern-path;
     False;
   }
 

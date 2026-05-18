@@ -1,0 +1,75 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 5;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/cli-file-line-shorthand-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args,
+                 :out, :err, :env(|%*ENV, BEHAVE_DISABLE_CONFIG => '1'));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+# FILE:LINE runs only that example
+{
+  my %r = run-behave('--format', 'documentation', "{$fixture.absolute}:4");
+  my $c = strip-ansi(%r<out>);
+  ok %r<exit> == 0
+     && $c.contains('first example')
+     && !$c.contains('second example')
+     && !$c.contains('third example'),
+    'FILE:LINE runs only the targeted example';
+}
+
+# Multiple FILE:LINE args are union
+{
+  my %r = run-behave('--format', 'documentation',
+                    "{$fixture.absolute}:4", "{$fixture.absolute}:6");
+  my $c = strip-ansi(%r<out>);
+  ok %r<exit> == 0
+     && $c.contains('first example')
+     && $c.contains('third example')
+     && !$c.contains('second example'),
+    'multiple FILE:LINE args compose as union';
+}
+
+# Composes with explicit --only-example
+{
+  my %r = run-behave('--format', 'documentation',
+                    "{$fixture.absolute}:4",
+                    '--only-example', "{$fixture.absolute}:5");
+  my $c = strip-ansi(%r<out>);
+  ok %r<exit> == 0
+     && $c.contains('first example')
+     && $c.contains('second example')
+     && !$c.contains('third example'),
+    'shorthand + --only-example compose under the same OR list';
+}
+
+# Non-existent file falls through as a normal (failing) spec arg
+{
+  my %r = run-behave('does/not/exist-spec.raku:42');
+  ok %r<exit> != 0 && %r<err>.contains('does/not/exist-spec.raku'),
+    'FILE:LINE with non-existent FILE is not rewritten';
+}
+
+# Bare FILE without :LINE still runs all examples
+{
+  my %r = run-behave('--format', 'documentation', $fixture.absolute);
+  my $c = strip-ansi(%r<out>);
+  ok %r<exit> == 0
+     && $c.contains('first example')
+     && $c.contains('second example')
+     && $c.contains('third example'),
+    'bare FILE without :LINE runs every example';
+}
+
+done-testing;

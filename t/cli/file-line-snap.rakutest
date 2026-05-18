@@ -1,0 +1,128 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 10;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/cli-line-snap-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args,
+                 :out, :err, :env(|%*ENV, BEHAVE_DISABLE_CONFIG => '1'));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+sub run-docs(*@args) {
+  my %r = run-behave('--format', 'documentation', |@args);
+  my $clean = strip-ansi(%r<out>);
+  %( |%r, :clean($clean) );
+}
+
+# Exact `it` line
+{
+  my %r = run-docs("{$fixture.absolute}:4");
+  ok %r<exit> == 0
+     && %r<clean>.contains('alpha example')
+     && !%r<clean>.contains('beta example'),
+    'exact `it` line runs that example only';
+}
+
+# Exact `describe` line
+{
+  my %r = run-docs("{$fixture.absolute}:3");
+  ok %r<exit> == 0
+     && %r<clean>.contains('alpha example')
+     && %r<clean>.contains('beta example')
+     && %r<clean>.contains('gamma example')
+     && %r<clean>.contains('delta example')
+     && %r<clean>.contains('epsilon example'),
+    '`describe` line runs every example beneath it';
+}
+
+# Exact `context` line
+{
+  my %r = run-docs("{$fixture.absolute}:13");
+  ok %r<exit> == 0
+     && %r<clean>.contains('gamma example')
+     && %r<clean>.contains('delta example')
+     && !%r<clean>.contains('alpha example')
+     && !%r<clean>.contains('beta example')
+     && !%r<clean>.contains('epsilon example'),
+    '`context` line runs only that group\'s examples';
+}
+
+# Snap from inside `it` body to the `it`
+{
+  my %r = run-docs("{$fixture.absolute}:6");
+  ok %r<exit> == 0
+     && %r<clean>.contains('alpha example')
+     && !%r<clean>.contains('beta example'),
+    'line inside an `it` body snaps to that `it`';
+}
+
+# Snap from blank line between examples to previous example
+{
+  my %r = run-docs("{$fixture.absolute}:11");
+  ok %r<exit> == 0
+     && %r<clean>.contains('beta example')
+     && !%r<clean>.contains('alpha example')
+     && !%r<clean>.contains('gamma example'),
+    'blank line between examples snaps to previous example';
+}
+
+# Snap from line inside nested context body
+{
+  my %r = run-docs("{$fixture.absolute}:15");
+  ok %r<exit> == 0
+     && %r<clean>.contains('gamma example')
+     && !%r<clean>.contains('delta example'),
+    'line inside nested context body snaps to inner `it`';
+}
+
+# Snap from outer closing brace area to last example
+{
+  my %r = run-docs("{$fixture.absolute}:27");
+  ok %r<exit> == 0
+     && %r<clean>.contains('epsilon example')
+     && !%r<clean>.contains('alpha example')
+     && !%r<clean>.contains('delta example'),
+    'line after the outer closing brace snaps to the last example';
+}
+
+# Snap applies to --only-example
+{
+  my %r = run-docs($fixture.absolute, '--only-example', "{$fixture.absolute}:6");
+  ok %r<exit> == 0
+     && %r<clean>.contains('alpha example')
+     && !%r<clean>.contains('beta example'),
+    'snap applies to --only-example value';
+}
+
+# Snap applies to --only-example=PATH:LINE
+{
+  my %r = run-docs($fixture.absolute, "--only-example={$fixture.absolute}:15");
+  ok %r<exit> == 0
+     && %r<clean>.contains('gamma example')
+     && !%r<clean>.contains('delta example'),
+    'snap applies to --only-example=PATH:LINE form';
+}
+
+# No keyword to snap to
+{
+  my %r = run-docs("{$fixture.absolute}:1");
+  ok %r<exit> == 0
+     && !%r<clean>.contains('alpha example')
+     && !%r<clean>.contains('beta example')
+     && !%r<clean>.contains('gamma example')
+     && !%r<clean>.contains('delta example')
+     && !%r<clean>.contains('epsilon example'),
+    'line above any keyword leaves location unmatched';
+}
+
+done-testing;
