@@ -1,6 +1,6 @@
 lib/.precomp
 .precomp
-docs/
 docs-src/site/
+/coverage/
 line_counts.raku
 .fezignore

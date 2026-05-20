@@ -60,12 +60,20 @@ our class Configuration {
   has Real     $.benchmark-threshold  is rw;
   has Str      $.benchmark-format     is rw;
   has IO::Path $.benchmark-output     is rw;
+  has Bool     $.coverage             is rw;
+  has Real     $.coverage-minimum     is rw;
+  has Str      $.coverage-format      is rw;
+  has IO::Path $.coverage-output      is rw;
+  has IO::Path $.coverage-baseline    is rw;
+  has Bool     $.coverage-branch      is rw;
 
   has Str @.include-tags;
   has Str @.exclude-tags;
   has Str @.example-patterns;
   has Str @.only-locations;
   has Str @.spec-paths;
+  has Str @.coverage-include;
+  has Str @.coverage-exclude;
 
   has ConfigInclude @.includes;
   has ConfigHook    @.hooks;
@@ -95,6 +103,16 @@ our class Configuration {
 
   method include-spec(*@paths) {
     @!spec-paths.append: @paths.map(*.Str);
+    self;
+  }
+
+  method coverage-include-path(*@paths) {
+    @!coverage-include.append: @paths.map(*.Str);
+    self;
+  }
+
+  method coverage-exclude-path(*@paths) {
+    @!coverage-exclude.append: @paths.map(*.Str);
     self;
   }
 
@@ -163,7 +181,9 @@ our class Configuration {
     for <format order seed fail-fast verbose aggregate-failures
          profile-limit slow-threshold memory-profile-limit memory-threshold
          benchmark-mode benchmark-iterations benchmark-baseline benchmark-save
-         benchmark-threshold benchmark-format benchmark-output> -> $attr {
+         benchmark-threshold benchmark-format benchmark-output
+         coverage coverage-minimum coverage-format coverage-output
+         coverage-baseline coverage-branch> -> $attr {
       my $self-val  = self."$attr"();
       my $other-val = $other."$attr"();
       my $picked = $other-val.defined ?? $other-val !! $self-val;
@@ -175,6 +195,8 @@ our class Configuration {
     $result.example-patterns.append:  |self.example-patterns,  |$other.example-patterns;
     $result.only-locations.append:    |self.only-locations,    |$other.only-locations;
     $result.spec-paths.append:        |self.spec-paths,        |$other.spec-paths;
+    $result.coverage-include.append:  |self.coverage-include,  |$other.coverage-include;
+    $result.coverage-exclude.append:  |self.coverage-exclude,  |$other.coverage-exclude;
     $result.includes.append:          |self.includes,          |$other.includes;
     $result.hooks.append:             |self.hooks,             |$other.hooks;
     $result.match-filters.append:     |self.match-filters,     |$other.match-filters;
@@ -212,6 +234,10 @@ our sub defaults(--> Configuration) {
   $c.benchmark-iterations = 1;
   $c.benchmark-threshold  = 0.10;
   $c.benchmark-format     = 'text';
+  $c.coverage             = False;
+  $c.coverage-minimum     = 0.Real;
+  $c.coverage-format      = 'html';
+  $c.coverage-branch      = False;
   $c;
 }
 

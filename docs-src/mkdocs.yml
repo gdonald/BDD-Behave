@@ -29,6 +29,7 @@ nav:
   - Diff Output: diff/diff.md
   - Formatters: formatter/formatter.md
   - Configuration: configuration/configuration.md
+  - Code Coverage: coverage/coverage.md
   - Doc Extraction: doc-extraction/doc-extraction.md
   - Timing: timing/timing.md
   - Classes in specs: classes/classes.md

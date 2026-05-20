@@ -17,6 +17,7 @@
     "BDD::Behave::Bisect": "lib/BDD/Behave/Bisect.rakumod",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
     "BDD::Behave::Configuration": "lib/BDD/Behave/Configuration.rakumod",
+    "BDD::Behave::Coverage": "lib/BDD/Behave/Coverage.rakumod",
     "BDD::Behave::DSL": "lib/BDD/Behave/DSL.rakumod",
     "BDD::Behave::Diff": "lib/BDD/Behave/Diff.rakumod",
     "BDD::Behave::DocExtractor": "lib/BDD/Behave/DocExtractor.rakumod",

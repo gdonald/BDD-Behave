@@ -9,6 +9,7 @@ use BDD::Behave::Bisect;
 use BDD::Behave::Formatter::Registry;
 use BDD::Behave::Configuration;
 use BDD::Behave::DocExtractor;
+use BDD::Behave::Coverage;
 
 constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
 
@@ -124,6 +125,39 @@ sub usage() {
     --doc-format=FORMAT      Output format for --doc. FORMAT is 'markdown'
                              (default), 'html', or 'json'.
     --doc-output=PATH        Write --doc output to PATH instead of stdout.
+    --coverage               Enable line-level code coverage tracking for the
+                             run. Re-executes specs as a subprocess with
+                             MoarVM coverage logging enabled, then prints
+                             a coverage report at the end. Defaults to
+                             tracking files under lib/.
+    --coverage-minimum=PCT   Fail the run when overall line coverage is
+                             below PCT (a number 0..100). Implies --coverage.
+    --coverage-include=PATH  Restrict coverage to source files whose path
+                             starts with PATH (repeatable; OR semantics).
+                             Defaults to 'lib/' when no includes are given,
+                             which matches user code loaded via -Ilib but
+                             excludes Rakudo/NQP internals that show up as
+                             absolute paths in the coverage log.
+                             Implies --coverage.
+    --coverage-exclude=PATH  Exclude source files whose path contains PATH
+                             from the coverage report (repeatable;
+                             substring match). Implies --coverage.
+    --coverage-format=FORMAT Format for the coverage report.
+                             FORMAT is 'html' (default), 'text', 'json',
+                             'lcov', or 'cobertura'. Implies --coverage.
+    --coverage-output=PATH   Write the coverage report to PATH instead of
+                             stdout. For --coverage-format=html, PATH is a
+                             directory (default: ./coverage/) and Behave
+                             writes index.html, style.css, and one HTML
+                             page per source file inside it.
+                             Implies --coverage.
+    --coverage-baseline=PATH Compare current line coverage against the JSON
+                             baseline at PATH (produced by a previous
+                             --coverage --coverage-format=json run) and
+                             print a per-file diff. Implies --coverage.
+    --coverage-branch        Also track branch coverage (if/unless/given/
+                             when/while/until). Reported alongside line
+                             coverage. Implies --coverage.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -354,6 +388,63 @@ while @args {
     $doc-output = @args.shift.IO;
   } elsif $arg.starts-with('--doc-output=') {
     $doc-output = $arg.substr('--doc-output='.chars).IO;
+  } elsif $arg eq '--coverage' {
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-minimum' {
+    die "--coverage-minimum requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ && $value.Real >= 0 && $value.Real <= 100 {
+      note "Error: --coverage-minimum requires a number between 0 and 100 (got: '$value')";
+      exit 2;
+    }
+    $cli-config.coverage-minimum = $value.Real;
+    $cli-config.coverage = True;
+  } elsif $arg.starts-with('--coverage-minimum=') {
+    my $value = $arg.substr('--coverage-minimum='.chars);
+    unless $value ~~ /^ \d+ [ '.' \d+ ]? $/ && $value.Real >= 0 && $value.Real <= 100 {
+      note "Error: --coverage-minimum requires a number between 0 and 100 (got: '$value')";
+      exit 2;
+    }
+    $cli-config.coverage-minimum = $value.Real;
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-include' {
+    die "--coverage-include requires a value" unless @args;
+    $cli-config.coverage-include-path(@args.shift);
+    $cli-config.coverage = True;
+  } elsif $arg.starts-with('--coverage-include=') {
+    $cli-config.coverage-include-path($arg.substr('--coverage-include='.chars));
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-exclude' {
+    die "--coverage-exclude requires a value" unless @args;
+    $cli-config.coverage-exclude-path(@args.shift);
+    $cli-config.coverage = True;
+  } elsif $arg.starts-with('--coverage-exclude=') {
+    $cli-config.coverage-exclude-path($arg.substr('--coverage-exclude='.chars));
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-format' {
+    die "--coverage-format requires a value" unless @args;
+    $cli-config.coverage-format = @args.shift;
+    $cli-config.coverage = True;
+  } elsif $arg.starts-with('--coverage-format=') {
+    $cli-config.coverage-format = $arg.substr('--coverage-format='.chars);
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-output' {
+    die "--coverage-output requires a value" unless @args;
+    $cli-config.coverage-output = @args.shift.IO;
+    $cli-config.coverage = True;
+  } elsif $arg.starts-with('--coverage-output=') {
+    $cli-config.coverage-output = $arg.substr('--coverage-output='.chars).IO;
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-baseline' {
+    die "--coverage-baseline requires a value" unless @args;
+    $cli-config.coverage-baseline = @args.shift.IO;
+    $cli-config.coverage = True;
+  } elsif $arg.starts-with('--coverage-baseline=') {
+    $cli-config.coverage-baseline = $arg.substr('--coverage-baseline='.chars).IO;
+    $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-branch' {
+    $cli-config.coverage-branch = True;
+    $cli-config.coverage = True;
   } elsif $arg ~~ / ^ (.+) ':' (\d+) $ / && ~$0.IO.e {
     my $file-part = ~$0;
     @specs.push: $file-part unless @specs.first(* eq $file-part);
@@ -412,6 +503,14 @@ my @include-tags         = $final-config.include-tags.list;
 my @exclude-tags         = $final-config.exclude-tags.list;
 my @example-patterns     = $final-config.example-patterns.list;
 my @only-locations       = $final-config.only-locations.list;
+my $coverage-enabled     = ?$final-config.coverage;
+my $coverage-minimum     = $final-config.coverage-minimum // 0.Real;
+my $coverage-format      = $final-config.coverage-format // 'text';
+my $coverage-output      = $final-config.coverage-output;
+my $coverage-baseline    = $final-config.coverage-baseline;
+my $coverage-branch      = ?$final-config.coverage-branch;
+my @coverage-include     = $final-config.coverage-include.list;
+my @coverage-exclude     = $final-config.coverage-exclude.list;
 
 unless BDD::Behave::Formatter::Registry.registered($format) {
   note "Error: unknown --format '$format' (available: "
@@ -434,9 +533,147 @@ unless $benchmark-format eq 'text' | 'json' {
   exit 2;
 }
 
+if $coverage-enabled && !BDD::Behave::Coverage::valid-format($coverage-format) {
+  note "Error: --coverage-format must be 'text', 'html', 'json', 'lcov', or 'cobertura' (got: '$coverage-format')";
+  exit 2;
+}
+
 if $bisect && $bisect-data {
   note "Error: --bisect and --bisect-data are mutually exclusive";
   exit 2;
+}
+
+my $coverage-running = %*ENV<BEHAVE_COVERAGE_LOG>.defined;
+
+if $coverage-enabled && !$coverage-running {
+  my @effective-include = @coverage-include.elems ?? @coverage-include !! ('lib/',);
+  my $root = $*CWD.IO;
+
+  my $stamp = sprintf '%d-%d', $*PID, (now * 1e6).Int;
+  my $raw-path      = $*TMPDIR.add("behave-coverage-$stamp.raw");
+  my $filtered-path = $*TMPDIR.add("behave-coverage-$stamp.filtered");
+  $raw-path.spurt('');
+
+  my %child-env = |%*ENV;
+  %child-env<MVM_COVERAGE_LOG>      = $raw-path.absolute;
+  %child-env<MVM_COVERAGE_CONTROL>  = '2';
+  %child-env<BEHAVE_COVERAGE_LOG>   = $raw-path.absolute;
+
+  my @child-cmd = 'raku', '-Ilib', $*PROGRAM-NAME, |@*ARGS;
+  my $proc = run(|@child-cmd, :env(|%child-env));
+  my $child-exit = $proc.exitcode;
+
+  # Best-effort: kill direct descendants that may still be writing to the
+  # log via inherited MVM_COVERAGE_LOG.
+  if $proc.pid.defined {
+    my $pgrep = run('pgrep', '-P', $proc.pid.Str, :out, :!err);
+    my @descendants = $pgrep.out.slurp(:close).lines.grep(*.chars);
+    for @descendants -> $pid {
+      try { run('kill', $pid, :!out, :!err) }
+    }
+  }
+
+  my sub shq(Str $s) {
+    q{'} ~ $s.subst(q{'}, q{'\''}, :g) ~ q{'};
+  }
+  # Anchor each include pattern against the HIT-line prefix so that
+  # `lib/` matches `HIT  lib/...` but not `HIT  /Users/.../rakudo/.../lib/...`.
+  # Both relative and absolute path forms appear in MVM logs depending on
+  # how a module was resolved.
+  my @grep-prefixes;
+  for @effective-include -> $p {
+    @grep-prefixes.push: 'HIT  ' ~ $p;
+    unless $p.starts-with('/') {
+      @grep-prefixes.push: 'HIT  ' ~ $root.absolute ~ '/' ~ $p;
+    }
+  }
+  # awk-dedupe the grep output. The raw MVM log writes a fresh HIT line
+  # for every line transition, so a single executed line in a hot loop can
+  # show up millions of times. Without dedup, Raku-side parsing of the
+  # filtered log (often >1 GB on the full spec suite) takes hours; with
+  # dedup it becomes tens of thousands of unique lines and parses in
+  # seconds.
+  my $grep-cmd = 'grep -aF '
+               ~ @grep-prefixes.map({ '-e ' ~ shq($_) }).join(' ')
+               ~ ' ' ~ shq($raw-path.absolute)
+               ~ q{ | awk '!seen[$0]++' }
+               ~ '> ' ~ shq($filtered-path.absolute);
+  my $grep-rc = run('sh', '-c', $grep-cmd, :!out, :!err).exitcode;
+  if $grep-rc >= 2 {
+    note "Error: coverage filter (grep) exited $grep-rc";
+    $raw-path.unlink if $raw-path.e;
+    $filtered-path.unlink if $filtered-path.e;
+    exit 2;
+  }
+  $raw-path.unlink if $raw-path.e;
+
+  my @raku-include-paths;
+  for @effective-include -> $p {
+    @raku-include-paths.push: $p;
+    @raku-include-paths.push: $root.absolute ~ '/' ~ $p unless $p.starts-with('/');
+  }
+
+  my %hits = BDD::Behave::Coverage::parse-coverage-log(
+    $filtered-path,
+    :include-paths(@raku-include-paths),
+    :exclude-paths(@coverage-exclude),
+  );
+  $filtered-path.unlink if $filtered-path.e;
+
+  my $opts = BDD::Behave::Coverage::CoverageOptions.new(
+    :enabled,
+    :minimum($coverage-minimum),
+    :format($coverage-format),
+    :output($coverage-output),
+    :baseline($coverage-baseline),
+    :branch($coverage-branch),
+  );
+  $opts.include-path(|@effective-include);
+  $opts.exclude-path(|@coverage-exclude) if @coverage-exclude.elems;
+
+  my $report = BDD::Behave::Coverage::build-report-from-hits(%hits, $opts, $root);
+
+  if $coverage-format eq 'html' {
+    my $out-dir = $coverage-output // $*CWD.IO.add('coverage');
+    if $out-dir.e && $out-dir.d {
+      # Clean stale files from the previous run so renamed or deleted
+      # source files don't leave dangling per-file pages behind.
+      for $out-dir.dir -> $entry {
+        $entry.unlink if $entry.f;
+      }
+    }
+    BDD::Behave::Coverage::write-html-tree($report, $out-dir);
+    say '';
+    say "Coverage html report written to {$out-dir.absolute}/index.html";
+  } else {
+    my $color = !$coverage-output.defined;
+    my $rendered = BDD::Behave::Coverage::render-report(
+      $report, $coverage-format, :$color,
+    );
+
+    if $coverage-output.defined {
+      $coverage-output.spurt($rendered);
+      say '';
+      say "Coverage $coverage-format report written to {$coverage-output.absolute}";
+    } else {
+      say '';
+      print $rendered;
+    }
+  }
+
+  my $coverage-failed = False;
+  if $coverage-minimum > 0 && $report.overall-percentage + 0.001 < $coverage-minimum {
+    note sprintf "Error: coverage %.2f%% is below the required minimum %.2f%%",
+      $report.overall-percentage, $coverage-minimum;
+    $coverage-failed = True;
+  }
+
+  if $coverage-baseline.defined {
+    my $diff = BDD::Behave::Coverage::compute-diff($report, $coverage-baseline);
+    print BDD::Behave::Coverage::render-diff($diff);
+  }
+
+  exit($child-exit || ($coverage-failed ?? 1 !! 0));
 }
 
 if $order eq 'random' && !$seed.defined && !$bisect-data {

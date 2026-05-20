@@ -1,0 +1,321 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Coverage;
+
+plan 78;
+
+constant Coverage        = BDD::Behave::Coverage;
+constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
+constant FileCoverage    = BDD::Behave::Coverage::FileCoverage;
+
+sub tmp-source(Str $body --> IO::Path) {
+  my $dir = $*TMPDIR.add("behave-cov-t-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+  my $p = $dir.add('SampleSource.rakumod');
+  $p.spurt($body);
+  $p;
+}
+
+sub cleanup-tmp-source(IO::Path $p) {
+  $p.unlink if $p.e;
+  $p.parent.rmdir if $p.parent.e && !$p.parent.dir.elems;
+}
+
+# CoverageOptions defaults
+{
+  my $o = CoverageOptions.new;
+  nok $o.enabled,             'CoverageOptions.enabled default falsy';
+  is $o.minimum, 0,           'CoverageOptions.minimum default 0';
+  is $o.format,  'text',      'CoverageOptions.format default text';
+  nok $o.branch,              'CoverageOptions.branch default falsy';
+}
+
+# include-path / exclude-path accumulation
+{
+  my $o = CoverageOptions.new;
+  $o.include-path('lib/A');
+  $o.include-path('lib/B');
+  is $o.include-paths.elems, 2, 'include-path repeatable';
+  $o.exclude-path('lib/vendor');
+  is $o.exclude-paths.elems, 1, 'exclude-path stores entry';
+}
+
+# matches-path-filter
+{
+  ok  Coverage::matches-path-filter('lib/foo.rakumod', (), ()),         'no filters → match';
+  ok  Coverage::matches-path-filter('lib/foo.rakumod', ('lib/',), ()),  'include match';
+  nok Coverage::matches-path-filter('app/foo.raku',    ('lib/',), ()),  'include miss';
+  nok Coverage::matches-path-filter('lib/vendor/x',    (), ('vendor/',)), 'exclude match';
+  nok Coverage::matches-path-filter('lib/vendor/x',    ('lib/',), ('vendor/',)), 'exclude wins';
+  nok Coverage::matches-path-filter('/Users/gd/rakudo/share/nqp/lib/MAST/Ops.nqp',
+    ('lib/',), ()), 'include is a prefix, not a substring';
+}
+
+# identify-executable-lines
+{
+  my $body = join("\n",
+    '# comment',
+    'sub foo() {',
+    '  my $x = 1;',
+    '',
+    '  $x + 1;',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok  $set.elems > 0,    'identify-executable-lines returns non-empty set';
+  nok $set{1},           'line 1 (comment) not executable';
+  ok  $set{2},           'line 2 (sub start) executable';
+  ok  $set{3},           'line 3 (statement) executable';
+  nok $set{4},           'line 4 (blank) not executable';
+  ok  $set{5},           'line 5 (statement) executable';
+  nok $set{6},           'line 6 (closing brace) not executable';
+}
+
+# identify-executable-lines on missing file
+{
+  my $set = Coverage::identify-executable-lines('/no/such.rakumod'.IO);
+  is $set.elems, 0, 'identify-executable-lines empty for missing file';
+}
+
+# identify-executable-lines skips continuation lines inside ( ... )
+{
+  my $body = join("\n",
+    'method ex-record($e) {',
+    '  my %record = (',
+    '    description => $e.desc,',
+    '    file        => $e.file,',
+    '  );',
+    '  %record;',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok  $set{2}, 'expression-start line is executable';
+  nok $set{3}, 'continuation line is not executable';
+  nok $set{4}, 'continuation line is not executable (2)';
+  nok $set{6}, '%record; bare-value line is not executable';
+}
+
+# identify-executable-lines: lambda body inside .map(...) is executable
+{
+  my $body = join("\n",
+    'method foo($items) {',
+    '  $items.map(-> $x {',
+    '    my %r = (',
+    '      a => $x.a,',
+    '      b => $x.b,',
+    '    );',
+    '    %r;',
+    '  });',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok  $set{2}, 'lambda-opening line is executable';
+  ok  $set{3}, 'statement inside lambda body is executable';
+  nok $set{4}, 'hash continuation inside lambda is not executable';
+  nok $set{7}, '%r; bare-value line is not executable';
+}
+
+# identify-executable-lines keeps block-body statements executable
+{
+  my $body = join("\n",
+    'method foo() {',
+    '  if 1 {',
+    '    say "hi";',
+    '  }',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok $set{2}, 'block-opening if line is executable';
+  ok $set{3}, 'block-body statement is executable';
+}
+
+# identify-executable-lines skips closing-continuation and bare-value lines
+{
+  my $body = join("\n",
+    'method foo() {',
+    '  my %rec = compute();',
+    '  %rec;',
+    '}',
+    '',
+    'method bar() {',
+    '  $items.map(-> $x {',
+    '    $x + 1;',
+    '  }).List;',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok  $set{2}, 'assignment line is executable';
+  nok $set{3}, 'bare-value line is not executable';
+  nok $set{4}, 'closing brace line is not executable';
+  ok  $set{8}, 'in-lambda statement is executable';
+  nok $set{9}, 'closing-continuation }).List; is not executable';
+}
+
+# identify-executable-lines skips pure my/our/state declarations
+{
+  my $body = join("\n",
+    'method foo() {',
+    '  my @parts;',
+    '  my $count;',
+    '  my $x = 0;',
+    '  my $y := $x;',
+    '  @parts.push: 1;',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  nok $set{2}, 'pure my @parts; declaration is not executable';
+  nok $set{3}, 'pure my $count; declaration is not executable';
+  ok  $set{4}, 'my $x = 0; is executable';
+  ok  $set{5}, 'my $y := $x; (bind) is executable';
+  ok  $set{6}, 'use of declared var is executable';
+}
+
+# identify-executable-lines skips declarative lines
+{
+  my $body = join("\n",
+    'use Foo;', 'unit class X;', 'has @!a;', 'constant K = 1;',
+    'subset Even of Int;', 'my class Inner { }',
+    'method foo() {', '  @!a.push: 1;', '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  nok $set{1}, 'use line is not executable';
+  nok $set{2}, 'unit class line is not executable';
+  nok $set{3}, 'has line is not executable';
+  nok $set{4}, 'constant line is not executable';
+  nok $set{5}, 'subset line is not executable';
+  nok $set{6}, 'my class line is not executable';
+  ok  $set{7}, 'method body opening line is executable';
+  ok  $set{8}, 'method body statement is executable';
+}
+
+# identify-branch-lines
+{
+  my $body = join("\n",
+    'sub foo($x) {',
+    '  if $x { 1 }',
+    '  unless $x { 2 }',
+    '  given $x {',
+    '    when 1 { 3 }',
+    '  }',
+    '  while $x-- { }',
+    '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-branch-lines($f);
+  cleanup-tmp-source($f);
+  ok $set{2}, 'if line marked branch';
+  ok $set{3}, 'unless line marked branch';
+  ok $set{4}, 'given line marked branch';
+  ok $set{5}, 'when line marked branch';
+  ok $set{7}, 'while line marked branch';
+}
+
+# process-hit-line
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /path/file.rakumod  10',
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  ok %hits</path/file.rakumod>:exists,    'process-hit-line stores file';
+  ok ?%hits</path/file.rakumod>{10},      'process-hit-line stores line number';
+}
+
+# process-hit-line strips trailing (Module) suffix
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /path/file.rakumod (Foo::Bar)  4',
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  ok ?%hits</path/file.rakumod>{4}, 'process-hit-line strips module suffix';
+}
+
+# process-hit-line filtering
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /elsewhere/file.rakumod  3',
+    %hits, :include-paths(('lib/',)), :exclude-paths(()),
+  );
+  is %hits.elems, 0, 'process-hit-line respects include filter';
+}
+
+# FileCoverage percentage
+{
+  my $fc = FileCoverage.new(:path('/p'));
+  is $fc.percentage.Int, 100, 'percentage is 100 when no executable lines';
+
+  $fc.executable{1} = True;
+  $fc.executable{2} = True;
+  $fc.add-hit(1);
+  is $fc.percentage.Int, 50, 'percentage is 50 with one of two covered';
+  is $fc.missing-lines.elems, 1, 'missing-lines reports uncovered';
+  is $fc.missing-lines[0], 2,    'missing-lines value is 2';
+}
+
+# compress-line-ranges
+{
+  is Coverage::compress-line-ranges([1, 2, 3, 5, 7, 8]), '1-3, 5, 7-8',
+     'compress-line-ranges collapses runs';
+  is Coverage::compress-line-ranges([]), '', 'compress-line-ranges on empty list';
+}
+
+# valid-format
+{
+  ok  Coverage::valid-format('text'),      'text is a valid format';
+  ok  Coverage::valid-format('html'),      'html is a valid format';
+  ok  Coverage::valid-format('json'),      'json is a valid format';
+  ok  Coverage::valid-format('lcov'),      'lcov is a valid format';
+  ok  Coverage::valid-format('cobertura'), 'cobertura is a valid format';
+  nok Coverage::valid-format('xml'),       'xml is not a valid format';
+}
+
+# HTML tree output
+{
+  my $src = tmp-source('sub a() { 1; }');
+  my %hits;
+  %hits{$src.Str} = SetHash.new;
+  %hits{$src.Str}{1} = True;
+  my $opts = CoverageOptions.new;
+  $opts.include-path($src.parent.Str);
+  my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+
+  my $index = Coverage::render-html-index($report);
+  ok $index.contains('<!DOCTYPE html>'),         'index includes doctype';
+  ok $index.contains('<table id="coverage-table">'), 'index has the summary table';
+  ok $index.contains('Coverage Report'),         'index has a title';
+
+  my $page = Coverage::render-html-file-page($report.files[0]);
+  ok $page.contains('Back to index'),            'file page links back to index';
+  ok $page.contains('<pre class="source">'),     'file page has highlighted source';
+  nok $page.contains('<thead>'),                 'file page has no summary table';
+
+  my $out-dir = $*TMPDIR.add("behave-cov-tree-t-{$*PID}-{(now * 1e6).Int}");
+  Coverage::write-html-tree($report, $out-dir);
+  ok $out-dir.add('index.html').e, 'write-html-tree writes index.html';
+  ok $out-dir.add('style.css').e,  'write-html-tree writes style.css';
+  my $file-page = Coverage::file-page-name($report.files[0].display-path);
+  ok $out-dir.add($file-page).e,   'write-html-tree writes per-file page';
+
+  for $out-dir.dir -> $f { $f.unlink }
+  $out-dir.rmdir;
+  cleanup-tmp-source($src);
+}
+
+done-testing;
