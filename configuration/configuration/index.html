@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/let/subject/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/configuration/configuration/">
       
       
-        <link rel="prev" href="../let/">
+        <link rel="prev" href="../../formatter/formatter/">
       
       
-        <link rel="next" href="../../hooks/hooks/">
+        <link rel="next" href="../../coverage/coverage/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>subject / subject-bang - BDD::Behave</title>
+        <title>Configuration - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#subject" class="md-skip">
+        <a href="#configuration" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              subject / subject-bang
+              Configuration
             
           </span>
         </div>
@@ -438,20 +438,18 @@
       
   
   
-    
   
   
-  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -472,7 +470,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -490,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../let/" class="md-nav__link">
+      <a href="../../let/let/" class="md-nav__link">
         
   
   
@@ -515,37 +513,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    subject / subject-bang
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../let/subject/" class="md-nav__link">
         
   
   
@@ -561,215 +532,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-a-subject" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining a subject
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reading-the-subject" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reading the subject
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Reading the subject">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-the-subject-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. The subject() reader
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-named-argument-form-in-expect" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Named-argument form in expect
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-through-the-given-name-when-subjectname-is-used" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Through the given name when subject(:name, ...) is used
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#memoization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Memoization
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shadowing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shadowing
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#subject-bang-eager-evaluation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        subject-bang (eager evaluation)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="subject-bang (eager evaluation)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#when-to-use-subject-bang" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to use subject-bang
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#restrictions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restrictions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#is-expected" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        is-expected
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="is-expected">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#restrictions_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restrictions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#one-liner-it-form" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        One-liner it form
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="One-liner it form">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description-filtering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Description filtering
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#comparison-with-let" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Comparison with let
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1251,10 +1013,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../configuration/configuration/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1270,6 +1059,125 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#file-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Precedence
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disabling-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disabling configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Settings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helper-inclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Helper inclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-hooks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Global hooks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metadata-filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metadata filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-run-when-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter-run-when-matching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-complete-behave" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: complete .behave
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1463,10 +1371,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-a-subject" class="md-nav__link">
+  <a href="#file-format" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining a subject
+        File format
       
     </span>
   </a>
@@ -1474,60 +1382,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reading-the-subject" class="md-nav__link">
+  <a href="#precedence" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reading the subject
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Reading the subject">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-the-subject-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. The subject() reader
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-named-argument-form-in-expect" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Named-argument form in expect
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-through-the-given-name-when-subjectname-is-used" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Through the given name when subject(:name, ...) is used
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#memoization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Memoization
+        Precedence
       
     </span>
   </a>
@@ -1535,10 +1393,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shadowing" class="md-nav__link">
+  <a href="#disabling-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shadowing
+        Disabling configuration
       
     </span>
   </a>
@@ -1546,105 +1404,65 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#subject-bang-eager-evaluation" class="md-nav__link">
+  <a href="#settings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        subject-bang (eager evaluation)
+        Settings
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="subject-bang (eager evaluation)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#when-to-use-subject-bang" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to use subject-bang
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#restrictions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restrictions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#is-expected" class="md-nav__link">
+  <a href="#helper-inclusion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        is-expected
+        Helper inclusion
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="is-expected">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#restrictions_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Restrictions
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#one-liner-it-form" class="md-nav__link">
+  <a href="#global-hooks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        One-liner it form
+        Global hooks
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="One-liner it form">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description-filtering" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Description filtering
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#comparison-with-let" class="md-nav__link">
+  <a href="#metadata-filtering" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Comparison with let
+        Metadata filtering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filter-run-when-matching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        filter-run-when-matching
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-complete-behave" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example: complete .behave
       
     </span>
   </a>
@@ -1671,53 +1489,10 @@
   
 
 
-<h1 id="subject">subject<a class="headerlink" href="#subject" title="Permanent link">&para;</a></h1>
-<p><code>subject</code> defines the primary value under test in a <code>describe</code> or <code>context</code> block. It is implemented as a <a href="../let/"><code>let</code></a> under the name <code>:subject</code>, so all of <code>let</code>'s lazy-and-memoized semantics apply.</p>
-<p>Use <code>subject</code> when you want to name "the thing this group is about" once and refer to it across many examples.</p>
-<h2 id="defining-a-subject">Defining a subject<a class="headerlink" href="#defining-a-subject" title="Permanent link">&para;</a></h2>
-<p>Three forms are accepted:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });          <span class="c1"># anonymous, registered as :subject</span>
-<span class="n">subject</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) }); <span class="c1"># named, also aliased as :subject</span>
-<span class="n">subject</span>(<span class="s">&#39;widget&#39;</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) }); <span class="c1"># string-name form, also aliased as :subject</span>
-</code></pre></div></td></tr></table></div>
-<p>When a name is given, the value is reachable through both the given name and <code>:subject</code> — they share a single memoized evaluation per example.</p>
-<h2 id="reading-the-subject">Reading the subject<a class="headerlink" href="#reading-the-subject" title="Permanent link">&para;</a></h2>
-<p>There are three ways to read the subject:</p>
-<h3 id="1-the-subject-reader">1. The <code>subject()</code> reader<a class="headerlink" href="#1-the-subject-reader" title="Permanent link">&para;</a></h3>
-<p>Inside an example, calling <code>subject()</code> with no arguments returns the memoized value:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
-  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
-
-  <span class="n">it</span> <span class="s">&#39;has the right bar&#39;</span>, {
-    <span class="n">expect</span>(<span class="n">subject</span>().<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<p><code>subject()</code> outside an example body raises an error.</p>
-<h3 id="2-named-argument-form-in-expect">2. Named-argument form in <code>expect</code><a class="headerlink" href="#2-named-argument-form-in-expect" title="Permanent link">&para;</a></h3>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
-  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
-
-  <span class="n">it</span> <span class="s">&#39;is a Widget&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h3 id="3-through-the-given-name-when-subjectname-is-used">3. Through the given name when <code>subject(:name, ...)</code> is used<a class="headerlink" href="#3-through-the-given-name-when-subjectname-is-used" title="Permanent link">&para;</a></h3>
+<h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
+<p>Behave loads two Raku-based configuration files at startup and merges them with your CLI flags. This is the standard way to keep team-wide and machine-wide defaults out of every spec invocation.</p>
+<h2 id="file-format">File format<a class="headerlink" href="#file-format" title="Permanent link">&para;</a></h2>
+<p>A <code>.behave</code> file is a Raku script. It calls <code>configure-behave</code> with a block that receives a <code>Configuration</code> object:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1728,20 +1503,181 @@
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
-  <span class="n">subject</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Configuration</span>;
 
-  <span class="n">it</span> <span class="s">&#39;is reachable as :widget&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">widget</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>);
-  }
+<span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="nb">format</span> = <span class="s">&#39;documentation&#39;</span>;
+  <span class="nv">$config</span>.<span class="n">order</span>  = <span class="s">&#39;random&#39;</span>;
+  <span class="nv">$config</span>.<span class="n">seed</span>   = <span class="mi">12345</span>;
 
-  <span class="n">it</span> <span class="s">&#39;and as :subject&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>);
-  }
+  <span class="nv">$config</span>.<span class="n">include-tag</span>(<span class="s">&#39;focus&#39;</span>);
+  <span class="nv">$config</span>.<span class="n">exclude-tag</span>(<span class="s">&#39;slow&#39;</span>);
+
+  <span class="nv">$config</span>.<span class="n">aggregate-failures</span> = <span class="nb">True</span>;
+  <span class="nv">$config</span>.<span class="n">fail-fast</span>          = <span class="mi">1</span>;
 }
 </code></pre></div></td></tr></table></div>
-<h2 id="memoization">Memoization<a class="headerlink" href="#memoization" title="Permanent link">&para;</a></h2>
-<p><code>subject</code> is <strong>lazy</strong>: the block runs the first time it's read in an example, and the value is cached for subsequent reads in the same example. Between examples the cache is reset.</p>
+<p>Because the file is plain Raku, you can pull in helpers (<code>use ...;</code>) and compute values, but each <code>configure-behave</code> block should be self-contained: anything you set inside the block is stored on <code>$config</code> for the run.</p>
+<h2 id="precedence">Precedence<a class="headerlink" href="#precedence" title="Permanent link">&para;</a></h2>
+<p>When more than one source sets the same option, the highest-precedence source wins:</p>
+<ol>
+<li><strong>CLI flags</strong> (highest) — explicit <code>--format</code>, <code>--order</code>, <code>--tag</code>, etc.</li>
+<li><strong>Project config</strong> — <code>.behave</code> in the current working directory.</li>
+<li><strong>User config</strong> — <code>~/.behave</code> in the user's home directory.</li>
+<li><strong>Built-in defaults</strong> (lowest) — what Behave uses when nothing else is set.</li>
+</ol>
+<p>List-style options (<code>include-tag</code>, <code>exclude-tag</code>, <code>example-pattern</code>, <code>only-location</code>, <code>spec-paths</code>, <code>include</code>, hooks) <strong>accumulate</strong> across all four layers: a tag listed in <code>~/.behave</code> and another listed on the CLI both apply. Scalar options like <code>format</code>, <code>order</code>, <code>seed</code>, <code>fail-fast</code>, <code>verbose</code>, and <code>aggregate-failures</code> <strong>override</strong>: the highest-precedence layer that sets them wins.</p>
+<h2 id="disabling-configuration">Disabling configuration<a class="headerlink" href="#disabling-configuration" title="Permanent link">&para;</a></h2>
+<p>Three CLI flags and one environment variable bypass config loading:</p>
+<table>
+<thead>
+<tr>
+<th>Flag / env</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--config PATH</code></td>
+<td>Load <code>PATH</code> as the only config; skip <code>~/.behave</code> and <code>./.behave</code>.</td>
+</tr>
+<tr>
+<td><code>--no-config</code></td>
+<td>Skip both default config files entirely.</td>
+</tr>
+<tr>
+<td><code>--no-user-config</code></td>
+<td>Skip <code>~/.behave</code>; still read <code>./.behave</code>.</td>
+</tr>
+<tr>
+<td><code>--no-project-config</code></td>
+<td>Skip <code>./.behave</code>; still read <code>~/.behave</code>.</td>
+</tr>
+<tr>
+<td><code>BEHAVE_DISABLE_CONFIG=1</code></td>
+<td>Same as <code>--no-config</code>. Useful for CI and subprocess testing.</td>
+</tr>
+</tbody>
+</table>
+<p><code>--config PATH</code> errors with exit code 2 if <code>PATH</code> does not exist.</p>
+<h2 id="settings">Settings<a class="headerlink" href="#settings" title="Permanent link">&para;</a></h2>
+<p>Every scalar attribute corresponds to its CLI counterpart:</p>
+<table>
+<thead>
+<tr>
+<th>Configuration attribute</th>
+<th>CLI flag</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$config.format</code></td>
+<td><code>--format</code></td>
+<td>A registered formatter name (e.g. <code>'progress'</code>).</td>
+</tr>
+<tr>
+<td><code>$config.order</code></td>
+<td><code>--order</code></td>
+<td><code>'random'</code> or <code>'defined'</code>.</td>
+</tr>
+<tr>
+<td><code>$config.seed</code></td>
+<td><code>--seed</code></td>
+<td>Int, only meaningful for <code>'random'</code>.</td>
+</tr>
+<tr>
+<td><code>$config.fail-fast</code></td>
+<td><code>--fail-fast[=N]</code></td>
+<td>0 disables, N &gt;= 1 stops after N failures.</td>
+</tr>
+<tr>
+<td><code>$config.verbose</code></td>
+<td><code>--verbose</code></td>
+<td>Bool.</td>
+</tr>
+<tr>
+<td><code>$config.aggregate-failures</code></td>
+<td><code>--aggregate-failures[=LABEL]</code></td>
+<td>Bool or Str label.</td>
+</tr>
+<tr>
+<td><code>$config.profile-limit</code></td>
+<td><code>--profile[=N]</code></td>
+<td>0 disables, N shows top-N slow examples.</td>
+</tr>
+<tr>
+<td><code>$config.slow-threshold</code></td>
+<td><code>--slow-threshold</code></td>
+<td>Real seconds.</td>
+</tr>
+<tr>
+<td><code>$config.memory-profile-limit</code></td>
+<td><code>--memory-profile[=N]</code></td>
+<td>0 disables.</td>
+</tr>
+<tr>
+<td><code>$config.memory-threshold</code></td>
+<td><code>--memory-threshold</code></td>
+<td>KB.</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-mode</code></td>
+<td><code>--benchmark</code></td>
+<td>Bool.</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-iterations</code></td>
+<td><code>--benchmark-iterations</code></td>
+<td>Positive Int.</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-baseline</code></td>
+<td><code>--benchmark-baseline</code></td>
+<td><code>IO::Path</code>.</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-save</code></td>
+<td><code>--benchmark-save</code></td>
+<td><code>IO::Path</code>.</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-threshold</code></td>
+<td><code>--benchmark-threshold</code></td>
+<td>Real fraction (0.10 = 10%).</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-format</code></td>
+<td><code>--benchmark-format</code></td>
+<td><code>'text'</code> or <code>'json'</code>.</td>
+</tr>
+<tr>
+<td><code>$config.benchmark-output</code></td>
+<td><code>--benchmark-output</code></td>
+<td><code>IO::Path</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The list-style mutators are repeatable:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="n">include-tag</span>(<span class="s">&#39;focus&#39;</span>, <span class="s">&#39;wip&#39;</span>);
+  <span class="nv">$config</span>.<span class="n">exclude-tag</span>(<span class="s">&#39;slow&#39;</span>);
+  <span class="nv">$config</span>.<span class="n">example-pattern</span>(<span class="s">&#39;checkout flow&#39;</span>);
+  <span class="nv">$config</span>.<span class="n">only-location</span>(<span class="s">&#39;specs/users-spec.raku:42&#39;</span>);
+  <span class="nv">$config</span>.<span class="n">include-spec</span>(<span class="s">&#39;specs/&#39;</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p><code>include-spec</code> populates the default list of spec paths used when no paths are passed on the CLI.</p>
+<h2 id="helper-inclusion">Helper inclusion<a class="headerlink" href="#helper-inclusion" title="Permanent link">&para;</a></h2>
+<p><code>$config.include(SomeClass)</code> instantiates <code>SomeClass</code> once for the run and exposes it inside every example via the <code>$*BEHAVE-HELPERS</code> dynamic variable, keyed by the class's short name:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1749,19 +1685,62 @@
 <span class="normal">5</span>
 <span class="normal">6</span>
 <span class="normal">7</span>
-<span class="normal">8</span>
-<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$hits</span> = <span class="mi">0</span>;
-<span class="n">describe</span> <span class="s">&#39;memo&#39;</span>, {
-  <span class="n">subject</span>({ ++<span class="nv">$hits</span> });
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">APIHelpers</span> {
+  <span class="k">method</span> <span class="n">as-user</span>(<span class="nv">$name</span>) { ... }
+  <span class="k">method</span> <span class="n">json-post</span>(...) { ... }
+}
 
-  <span class="n">it</span> <span class="s">&#39;evaluates once&#39;</span>, {
-    <span class="n">subject</span>(); <span class="n">subject</span>(); <span class="n">subject</span>();
-    <span class="n">expect</span>(<span class="nv">$hits</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
-  }
+<span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="n">include</span>(<span class="n">APIHelpers</span>);
 }
 </code></pre></div></td></tr></table></div>
-<h2 id="shadowing">Shadowing<a class="headerlink" href="#shadowing" title="Permanent link">&para;</a></h2>
-<p>Inner <code>subject</code> definitions shadow outer ones for examples in the inner group:</p>
+<p>Inside a spec:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">it</span> <span class="s">&#39;creates a new order&#39;</span>, {
+  <span class="k">my</span> <span class="nv">$resp</span> = <span class="vg">$*BEHAVE-HELPERS&lt;APIHelpers&gt;</span>.<span class="n">as-user</span>(<span class="s">&#39;alice&#39;</span>);
+  <span class="n">expect</span>(<span class="nv">$resp</span>.<span class="nb">status</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">201</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p>Use <code>:as&lt;key&gt;</code> to choose a custom key, which is helpful when class names clash or you want a shorter accessor:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$config</span>.<span class="n">include</span>(<span class="n">APIHelpers</span>, :<span class="n">as</span><span class="s">&lt;api&gt;</span>);
+<span class="c1"># $*BEHAVE-HELPERS&lt;api&gt;.as-user(&#39;alice&#39;)</span>
+</code></pre></div></td></tr></table></div>
+<p>One instance is created per class per run (cached in the runner). State stored on a helper persists across all examples in the suite — use it for fixtures and shared connections, not per-example state.</p>
+<h2 id="global-hooks">Global hooks<a class="headerlink" href="#global-hooks" title="Permanent link">&para;</a></h2>
+<p>Per-run hooks let you set up shared infrastructure without repeating it in every spec. Each phase composes with the per-group hooks declared inside spec files:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Fires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>before-all</code></td>
+<td>Once per suite, before any example runs.</td>
+</tr>
+<tr>
+<td><code>after-all</code></td>
+<td>Once per suite, after every example has run.</td>
+</tr>
+<tr>
+<td><code>before-each</code></td>
+<td>Before every example, before any group <code>before-each</code>.</td>
+</tr>
+<tr>
+<td><code>after-each</code></td>
+<td>After every example, after any group <code>after-each</code>.</td>
+</tr>
+<tr>
+<td><code>around-each</code></td>
+<td>Wraps every example, outside the group <code>around-each</code>.</td>
+</tr>
+</tbody>
+</table>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1772,102 +1751,136 @@
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {
-  <span class="n">subject</span>({ <span class="s">&#39;outer&#39;</span> });
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="o">before-</span><span class="n">all</span>({ <span class="n">DB</span>.<span class="nb">migrate</span> });
+  <span class="nv">$config</span>.<span class="o">after-</span><span class="n">all</span>({ <span class="n">DB</span>.<span class="n">disconnect</span> });
 
-  <span class="n">it</span> <span class="s">&#39;sees outer&#39;</span>, { <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;outer&#39;</span>) }
+  <span class="nv">$config</span>.<span class="o">before-</span><span class="n">each</span>({ <span class="n">DB</span>.<span class="n">start-transaction</span> });
+  <span class="nv">$config</span>.<span class="o">after-</span><span class="n">each</span>({ <span class="n">DB</span>.<span class="n">rollback</span> });
 
-  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
-    <span class="n">subject</span>({ <span class="s">&#39;inner&#39;</span> });
-
-    <span class="n">it</span> <span class="s">&#39;sees inner&#39;</span>, { <span class="n">expect</span>(:<span class="n">subject</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;inner&#39;</span>) }
-  }
+  <span class="nv">$config</span>.<span class="n">around-each</span>(-&gt; <span class="nv">&amp;next</span> {
+    <span class="k">my</span> <span class="nv">$start</span> = <span class="nb">now</span>;
+    <span class="nb">next</span>();
+    <span class="nb">note</span> <span class="s">&quot;example took {now - $start}s&quot;</span>;
+  });
 }
 </code></pre></div></td></tr></table></div>
-<h2 id="subject-bang-eager-evaluation"><code>subject-bang</code> (eager evaluation)<a class="headerlink" href="#subject-bang-eager-evaluation" title="Permanent link">&para;</a></h2>
-<p><code>subject-bang</code> is the Raku-friendly spelling of RSpec's <code>subject!</code>. It defines a subject like <code>subject</code> does, but the block is <strong>forced before every example body</strong> so any side effects in the block run whether or not the example reads the value.</p>
+<p>Per-example phases (<code>before-each</code>, <code>after-each</code>, <code>around-each</code>) accept tag filters via named arguments:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$config</span>.<span class="o">before-</span><span class="n">each</span>({ <span class="n">Browser</span>.<span class="n">launch</span> }, :<span class="n">tag</span><span class="s">&lt;feature&gt;</span>);
+<span class="nv">$config</span>.<span class="o">after-</span><span class="n">each</span>({  <span class="n">Browser</span>.<span class="nb">close</span>  }, :<span class="n">tag</span><span class="s">&lt;feature&gt;</span>);
+</code></pre></div></td></tr></table></div>
+<p>Any unrecognised named argument is treated as a metadata filter — the hook only fires for examples whose effective metadata matches.</p>
+<p>A global hook that throws is caught and reported as a warning so the run can continue.</p>
+<h2 id="metadata-filtering">Metadata filtering<a class="headerlink" href="#metadata-filtering" title="Permanent link">&para;</a></h2>
+<p><code>$config.filter(:key&lt;value&gt;)</code> keeps only the examples whose effective metadata (declared via <code>:key&lt;value&gt;</code> on <code>describe</code>, <code>context</code>, or <code>it</code> and inherited down the tree) matches. Pass a <code>Bool</code> true value (<code>$config.filter(:db)</code>) to require the key to be present and truthy.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;invoices index&#39;</span>, {
-  <span class="n">subject-bang</span>(:<span class="n">invoice</span>, { <span class="n">Invoice</span>.<span class="n">create</span>(:<span class="n">amount</span>(<span class="mi">100</span>)) });
-
-  <span class="n">it</span> <span class="s">&#39;returns invoices&#39;</span>, {
-    <span class="n">expect</span>(<span class="n">Invoice</span>.<span class="nb">all</span>.<span class="nb">elems</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);   <span class="c1"># passes even though we never read :invoice</span>
-  }
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="n">filter</span>(:<span class="n">type</span><span class="s">&lt;unit&gt;</span>);     <span class="c1"># only :type&lt;unit&gt; examples</span>
+  <span class="nv">$config</span>.<span class="n">filter</span>(:<span class="n">db</span>);             <span class="c1"># only examples with :db</span>
+  <span class="nv">$config</span>.<span class="n">exclude-filter</span>(:<span class="n">flaky</span>);  <span class="c1"># skip every :flaky example</span>
 }
 </code></pre></div></td></tr></table></div>
-<p><code>subject-bang</code> accepts the same three forms as <code>subject</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">subject-bang</span>({ <span class="n">User</span>.<span class="n">create</span> });
-<span class="n">subject-bang</span>(:<span class="n">user</span>,  { <span class="n">User</span>.<span class="n">create</span> });
-<span class="n">subject-bang</span>(<span class="s">&#39;user&#39;</span>, { <span class="n">User</span>.<span class="n">create</span> });
-</code></pre></div></td></tr></table></div>
-<p>It registers the let definition(s) and a <code>before-each</code> hook in the current group that forces <code>:subject</code>. Memoization is the same as <code>subject</code> — the block runs at most once per example.</p>
-<h3 id="when-to-use-subject-bang">When to use <code>subject-bang</code><a class="headerlink" href="#when-to-use-subject-bang" title="Permanent link">&para;</a></h3>
-<p>Use <code>subject-bang</code> when the <em>creation</em> of the subject is itself the test setup — typically for inserting database rows or otherwise mutating state that the example depends on existing before it runs. For pure values, plain <code>subject</code> is preferred because it stays cheap when the example doesn't actually read the value.</p>
-<h3 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>subject-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope), only plain <code>subject</code> is supported.</li>
-<li>Inside an <code>it</code> block, use <code>subject()</code> or <code>expect(:subject)</code> to read the value; eager forcing is meaningless once you're already in the example body.</li>
-</ul>
-<h2 id="is-expected"><code>is-expected</code><a class="headerlink" href="#is-expected" title="Permanent link">&para;</a></h2>
-<p><code>is-expected</code> is a helper that builds an <code>expect</code> against the current <code>:subject</code>. It is the Behave equivalent of RSpec's <code>is_expected</code>.</p>
+<p>Multiple <code>filter</code> calls combine with <code>AND</code>: each pair must match. <code>exclude-filter</code> does the opposite — any matching pair drops the example. Config-level filters also AND with <code>--tag</code>/<code>--exclude-tag</code>/<code>--example</code> on the CLI, and with focus mode.</p>
+<h2 id="filter-run-when-matching"><code>filter-run-when-matching</code><a class="headerlink" href="#filter-run-when-matching" title="Permanent link">&para;</a></h2>
+<p>Inspired by RSpec's <code>config.filter_run_when_matching :focus</code>, this is a "soft" filter: it applies when at least one example matches, and is silently dropped otherwise so the rest of the run proceeds normally. Useful for a <code>focus</code> workflow — when you mark an example <code>:focus</code>, only it runs; when you remove the mark, the whole suite runs.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;a Widget&#39;</span>, {
-  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
-
-  <span class="n">it</span> <span class="s">&#39;is a Widget&#39;</span>,     { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>) }
-  <span class="n">it</span> <span class="s">&#39;is not a Gadget&#39;</span>, { <span class="n">is-expected</span>.<span class="nb">not</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Gadget</span>) }
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="n">filter-run-when-matching</span>(:<span class="n">focus</span>);
+  <span class="nv">$config</span>.<span class="n">filter-run-when-matching</span>(:<span class="n">wip</span>);   <span class="c1"># additional filter (AND with focus)</span>
 }
 </code></pre></div></td></tr></table></div>
-<p><code>is-expected</code> reads the memoized subject value via <code>$*LET-RUNTIME</code> and returns an <code>ExpectationBuilder</code>, so the same <code>.to</code> / <code>.not.to</code> chain that you use with <code>expect</code> applies. Multiple calls within the same example share the subject's memoization — the subject block runs at most once per example.</p>
-<h3 id="restrictions_1">Restrictions<a class="headerlink" href="#restrictions_1" title="Permanent link">&para;</a></h3>
-<ul>
-<li><code>is-expected</code> must be called inside an example body.</li>
-<li>A <code>subject</code> (or <code>subject-bang</code>) must be defined in the enclosing <code>describe</code>/<code>context</code> chain. Calling <code>is-expected</code> without one raises a clear error.</li>
-</ul>
-<h2 id="one-liner-it-form">One-liner <code>it</code> form<a class="headerlink" href="#one-liner-it-form" title="Permanent link">&para;</a></h2>
-<p>For terse, single-expectation examples you can omit the description:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;a Widget&#39;</span>, {
-  <span class="n">subject</span>({ <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+<p>You can pass either a string key (treated as "metadata is truthy") or a pair (<code>key =&gt; value</code>). Multiple registrations stack with <code>AND</code> semantics — but each one is independently checked for the no-match short-circuit: a registration that matches nothing is dropped without affecting the others.</p>
+<p><code>filter-run-when-matching</code> interacts with the other filters:</p>
+<table>
+<thead>
+<tr>
+<th>Other filter active</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>None</td>
+<td>The filter applies if any example matches; otherwise the entire suite runs.</td>
+</tr>
+<tr>
+<td><code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code></td>
+<td>The filter is checked against the full spec tree; if it matches, it is added to the AND set with the CLI filters.</td>
+</tr>
+<tr>
+<td><code>$config.filter</code> (hard)</td>
+<td>Hard filter applies first; if <code>filter-run-when-matching</code> matches under that constraint, both apply.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="example-complete-behave">Example: complete <code>.behave</code><a class="headerlink" href="#example-complete-behave" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Configuration</span>;
 
-  <span class="n">it</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Widget</span>) }
-  <span class="n">it</span> { <span class="n">is-expected</span>.<span class="nb">not</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="n">Gadget</span>) }
+<span class="k">class</span> <span class="n">APIHelpers</span> {
+  <span class="k">method</span> <span class="n">as-user</span>(<span class="nv">$name</span>) { ... }
+}
+
+<span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="c1"># Defaults</span>
+  <span class="nv">$config</span>.<span class="nb">format</span>        = <span class="s">&#39;documentation&#39;</span>;
+  <span class="nv">$config</span>.<span class="n">order</span>         = <span class="s">&#39;random&#39;</span>;
+  <span class="nv">$config</span>.<span class="n">fail-fast</span>     = <span class="mi">1</span>;
+  <span class="nv">$config</span>.<span class="n">profile-limit</span> = <span class="mi">10</span>;
+
+  <span class="c1"># Default spec paths (used when none are passed on the CLI)</span>
+  <span class="nv">$config</span>.<span class="n">include-spec</span>(<span class="s">&#39;specs/&#39;</span>);
+
+  <span class="c1"># Helpers</span>
+  <span class="nv">$config</span>.<span class="n">include</span>(<span class="n">APIHelpers</span>);
+
+  <span class="c1"># Global setup / teardown</span>
+  <span class="nv">$config</span>.<span class="o">before-</span><span class="n">all</span>({ <span class="n">DB</span>.<span class="nb">migrate</span> });
+  <span class="nv">$config</span>.<span class="o">after-</span><span class="n">all</span>({  <span class="n">DB</span>.<span class="n">disconnect</span> });
+
+  <span class="c1"># Filters</span>
+  <span class="nv">$config</span>.<span class="n">exclude-filter</span>(:<span class="n">flaky</span>);
+
+  <span class="c1"># Honor a :focus marker when present</span>
+  <span class="nv">$config</span>.<span class="n">filter-run-when-matching</span>(:<span class="n">focus</span>);
 }
 </code></pre></div></td></tr></table></div>
-<p>When <code>it</code> is called with only a block, Behave generates the description from the <strong>first matcher</strong> invoked in the example. The above renders as:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;should be Widget&#39;
-  ⮑  SUCCESS
-⮑  &#39;should not be Gadget&#39;
-  ⮑  SUCCESS
-</code></pre></div></td></tr></table></div>
-<p>Negation (<code>expect(...).not.to.be(...)</code> or <code>is-expected.not.to.be(...)</code>) flips the verb to <code>should not</code>. If the block runs no matchers — for example, <code>it { 1 + 1 }</code> — Behave falls back to a placeholder of the form <code>example at &lt;basename&gt;:&lt;line&gt;</code>.</p>
-<p>The block-only form composes with <code>fit</code> and <code>xit</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">fit</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>) }   <span class="c1"># focused one-liner</span>
-<span class="n">xit</span> { <span class="n">is-expected</span>.<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>) }   <span class="c1"># skipped one-liner</span>
-</code></pre></div></td></tr></table></div>
-<h3 id="description-filtering">Description filtering<a class="headerlink" href="#description-filtering" title="Permanent link">&para;</a></h3>
-<p><code>--example PATTERN</code> matches against the description that was registered with the example, which for block-only <code>it { ... }</code> is the placeholder (e.g. <code>example at foo-spec.raku:42</code>), not the matcher-derived rendering. To filter on the rendered description, use a regular <code>it 'should be X', { ... }</code> form instead.</p>
-<h2 id="comparison-with-let">Comparison with <code>let</code><a class="headerlink" href="#comparison-with-let" title="Permanent link">&para;</a></h2>
-<p><code>subject</code> is sugar around <code>let(:subject, ...)</code>. The two are interchangeable when reading via <code>:subject</code>, but <code>subject</code> makes the intent — "this is what I'm testing" — explicit and adds the dual-name alias when you give it a name. Use <code>subject</code> for the value under test and <code>let</code> for everything else (inputs, fixtures, helpers).</p>
+<p>With this file in your project root, <code>behave</code> (no arguments) loads it, applies your CLI flags on top, and runs <code>specs/</code> in documentation format with full focus / flaky / DB management — no flags required.</p>
 
 
 

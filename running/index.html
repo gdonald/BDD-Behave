@@ -500,6 +500,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="--only-example FILE:LINE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positional-fileline-shorthand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positional FILE:LINE shorthand
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#line-snapping-editor-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Line snapping (editor integration)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1290,6 +1318,87 @@
   
   
     <li class="md-nav__item">
+      <a href="../configuration/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../coverage/coverage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Coverage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../doc-extraction/doc-extraction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Doc Extraction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../timing/timing/" class="md-nav__link">
         
   
@@ -1582,6 +1691,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="--only-example FILE:LINE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positional-fileline-shorthand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Positional FILE:LINE shorthand
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#line-snapping-editor-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Line snapping (editor integration)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -1765,6 +1902,14 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 <td><code>--format NAME</code></td>
 <td>Select the output formatter for the run. <code>NAME</code> is the name of a registered formatter (<code>default</code> is built in). See <a href="../formatter/formatter/">Formatters</a>.</td>
 </tr>
+<tr>
+<td><code>--config PATH</code></td>
+<td>Load Raku-based config from <code>PATH</code>. Skips the default <code>~/.behave</code> and <code>./.behave</code> lookups. See <a href="../configuration/configuration/">Configuration</a>.</td>
+</tr>
+<tr>
+<td><code>--no-config</code> / <code>--no-user-config</code> / <code>--no-project-config</code></td>
+<td>Skip all / user / project config files for this run. <code>BEHAVE_DISABLE_CONFIG=1</code> is equivalent to <code>--no-config</code>. See <a href="../configuration/configuration/">Configuration</a>.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="order-and-seed">Order and seed<a class="headerlink" href="#order-and-seed" title="Permanent link">&para;</a></h2>
@@ -1894,6 +2039,76 @@ Bisect complete: 6 iteration(s)
 $<span class="w"> </span>behave<span class="w"> </span>--only-example<span class="w"> </span>users-spec.raku:42<span class="w"> </span>specs/users-spec.raku<span class="w">  </span><span class="c1"># basename match</span>
 </code></pre></div></td></tr></table></div>
 <p><code>FILE</code> matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, <code>path/to/file.raku</code> suffix match, or basename equality. <code>LINE</code> must equal the line of the <code>it</code> block. Repeating <code>--only-example</code> is OR semantics; the runner runs every example matching any pattern.</p>
+<h4 id="positional-fileline-shorthand">Positional <code>FILE:LINE</code> shorthand<a class="headerlink" href="#positional-fileline-shorthand" title="Permanent link">&para;</a></h4>
+<p>A positional argument of the form <code>FILE:LINE</code> is shorthand for "load <code>FILE</code>, then run only the example at <code>LINE</code>" — equivalent to passing <code>FILE</code> plus <code>--only-example FILE:LINE</code>. The shorthand only triggers when <code>FILE</code> exists on disk; an arg matching the <code>:N</code> pattern but pointing at a non-existent file is left alone (and will surface as a normal "could not load" error).</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<span class="w">                       </span><span class="c1"># single example</span>
+$<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<span class="w"> </span>specs/users-spec.raku:88<span class="w">   </span><span class="c1"># both run</span>
+$<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<span class="w"> </span>--tag<span class="w"> </span>focus<span class="w">           </span><span class="c1"># AND with --tag</span>
+</code></pre></div></td></tr></table></div>
+<p>The shorthand and explicit <code>--only-example</code> compose freely; both append to the same internal list, so all matching examples run.</p>
+<h4 id="line-snapping-editor-integration">Line snapping (editor integration)<a class="headerlink" href="#line-snapping-editor-integration" title="Permanent link">&para;</a></h4>
+<p><code>LINE</code> does not have to land exactly on the <code>it</code> / <code>describe</code> / <code>context</code> keyword. Both the <code>FILE:LINE</code> shorthand and <code>--only-example FILE:LINE</code> apply a <strong>text-based snap</strong>: if <code>LINE</code> does not point at one of those keywords, Behave scans <code>FILE</code> for the nearest preceding line whose first non-whitespace token is <code>describe</code>, <code>context</code>, <code>fdescribe</code>, <code>fcontext</code>, <code>xdescribe</code>, <code>xcontext</code>, <code>it</code>, <code>fit</code>, <code>xit</code>, or <code>pending</code>, and uses that line instead.</p>
+<p>Given this fixture:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;outer&#39;</span>, {            <span class="c1"># line 1</span>
+  <span class="n">it</span> <span class="s">&#39;alpha&#39;</span>, {                <span class="c1"># line 2</span>
+    <span class="k">my</span> <span class="nv">$x</span> = <span class="mi">1</span>;                 <span class="c1"># line 3</span>
+    <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">1</span>);       <span class="c1"># line 4</span>
+  }                            <span class="c1"># line 5</span>
+
+  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {           <span class="c1"># line 7</span>
+    <span class="n">it</span> <span class="s">&#39;beta&#39;</span>, { ... }         <span class="c1"># line 8</span>
+  }
+}
+</code></pre></div></td></tr></table></div>
+<table>
+<thead>
+<tr>
+<th>You pass</th>
+<th>Snaps to</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>:2</code></td>
+<td><code>:2</code></td>
+<td>Runs <code>alpha</code> (exact <code>it</code> line).</td>
+</tr>
+<tr>
+<td><code>:4</code></td>
+<td><code>:2</code></td>
+<td>Runs <code>alpha</code> (cursor inside its body).</td>
+</tr>
+<tr>
+<td><code>:5</code></td>
+<td><code>:2</code></td>
+<td>Runs <code>alpha</code> (between body close and next).</td>
+</tr>
+<tr>
+<td><code>:7</code></td>
+<td><code>:7</code></td>
+<td>Runs <code>beta</code> only (exact <code>context</code> line; descends into the inner group).</td>
+</tr>
+<tr>
+<td><code>:1</code></td>
+<td><code>:1</code></td>
+<td>Runs every example (exact <code>describe</code> line).</td>
+</tr>
+</tbody>
+</table>
+<p>When the snapped line is a <code>describe</code> or <code>context</code>, every example whose ancestry includes that group runs. This is what makes editor integrations work: bind your "run example at cursor" key to <code>behave $FILE:$LINENO</code> and it does the right thing whether the cursor is on the <code>it</code> line, inside the body, or inside an enclosing <code>describe</code>.</p>
+<p>The snap is purely text-based and only looks at the start of each line, so it will not be confused by <code>it</code> appearing in a comment or string inside an <code>it</code> body. It will not snap into a closing brace; a line that has no preceding keyword in the file (e.g. <code>:1</code> when the file starts with <code>use BDD::Behave;</code>) is left unchanged and matches nothing.</p>
 <h3 id="-bisect-data"><code>--bisect-data</code><a class="headerlink" href="#-bisect-data" title="Permanent link">&para;</a></h3>
 <p>Used by <code>--bisect</code> for inter-process communication and exposed for editor/tool integrations that want a parseable listing of executed and failed examples:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>

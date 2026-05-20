@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/variables/variables/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/coverage/coverage/">
       
       
-        <link rel="prev" href="../../classes/classes/">
+        <link rel="prev" href="../../configuration/configuration/">
       
       
-        <link rel="next" href="../../contributing/">
+        <link rel="next" href="../../doc-extraction/doc-extraction/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Variables in specs - BDD::Behave</title>
+        <title>Code Coverage - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#variables-in-specs" class="md-skip">
+        <a href="#code-coverage" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Variables in specs
+              Code Coverage
             
           </span>
         </div>
@@ -1040,10 +1040,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../coverage/coverage/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Coverage
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1059,6 +1086,114 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#output-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output formats
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filtering-tracked-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering tracked files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thresholds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#branch-coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Branch coverage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparing-against-a-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparing against a baseline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1148,37 +1283,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Variables in specs
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../variables/variables/" class="md-nav__link">
         
   
   
@@ -1194,92 +1302,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#top-level-variables" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Top-level variables
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variables-inside-describe-context" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Variables inside describe / context
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#shadowing-in-nested-contexts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Shadowing in nested contexts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variables-inside-it" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Variables inside it
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#when-to-use-let-vs-a-plain-variable" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        When to use let vs a plain variable
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#classes-roles-enums" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Classes, roles, enums
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1338,10 +1360,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#top-level-variables" class="md-nav__link">
+  <a href="#output-formats" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Top-level variables
+        Output formats
       
     </span>
   </a>
@@ -1349,10 +1371,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#variables-inside-describe-context" class="md-nav__link">
+  <a href="#filtering-tracked-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Variables inside describe / context
+        Filtering tracked files
       
     </span>
   </a>
@@ -1360,10 +1382,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#shadowing-in-nested-contexts" class="md-nav__link">
+  <a href="#thresholds" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Shadowing in nested contexts
+        Thresholds
       
     </span>
   </a>
@@ -1371,10 +1393,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#variables-inside-it" class="md-nav__link">
+  <a href="#branch-coverage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Variables inside it
+        Branch coverage
       
     </span>
   </a>
@@ -1382,10 +1404,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#when-to-use-let-vs-a-plain-variable" class="md-nav__link">
+  <a href="#comparing-against-a-baseline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        When to use let vs a plain variable
+        Comparing against a baseline
       
     </span>
   </a>
@@ -1393,10 +1415,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#classes-roles-enums" class="md-nav__link">
+  <a href="#configuration-file" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Classes, roles, enums
+        Configuration file
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
       
     </span>
   </a>
@@ -1423,119 +1467,145 @@
   
 
 
-<h1 id="variables-in-specs">Variables in specs<a class="headerlink" href="#variables-in-specs" title="Permanent link">&para;</a></h1>
-<p>Because Behave specs are plain Raku, <code>my</code> and <code>our</code> variables work exactly as you'd expect. You don't need a special DSL to declare state — though <a href="../../let/let/"><code>let</code></a> is usually the right tool when you want <strong>per-example</strong> memoization with automatic reset.</p>
-<h2 id="top-level-variables">Top-level variables<a class="headerlink" href="#top-level-variables" title="Permanent link">&para;</a></h2>
-<p>Declared at the top of the spec file, visible to every <code>describe</code> and <code>it</code>:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
-
-<span class="k">my</span> <span class="nv">$top</span>      = <span class="s">&#39;top-level&#39;</span>;
-<span class="k">my</span> <span class="nv">@numbers</span>  = (<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>);
-<span class="k">my</span> <span class="nv">%settings</span> = (<span class="n">timeout</span> =&gt; <span class="mi">5</span>);
-
-<span class="n">describe</span> <span class="s">&#39;top-level access&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;reads scalars, arrays, hashes&#39;</span>, {
-    <span class="n">expect</span>(<span class="nv">$top</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;top-level&#39;</span>);
-    <span class="n">expect</span>(<span class="nv">@numbers</span>[<span class="mi">2</span>]).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">3</span>);
-    <span class="n">expect</span>(<span class="nv">%settings&lt;timeout&gt;</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">5</span>);
-  }
-}
+<h1 id="code-coverage">Code Coverage<a class="headerlink" href="#code-coverage" title="Permanent link">&para;</a></h1>
+<p>Behave can track which lines of your application code execute during a spec run
+and report what percentage was covered. Pass <code>--coverage</code> to <code>bin/behave</code>, and
+Behave re-runs your specs as a subprocess with MoarVM's per-line coverage
+logging enabled, parses the resulting log, and prints a report.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>specs/
 </code></pre></div></td></tr></table></div>
-<h2 id="variables-inside-describe-context">Variables inside <code>describe</code> / <code>context</code><a class="headerlink" href="#variables-inside-describe-context" title="Permanent link">&para;</a></h2>
-<p>A <code>my</code> declared inside a <code>describe</code> is shared across that group's examples. Mutations carry over between examples in registration order:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;shared describe-level state&#39;</span>, {
-  <span class="k">my</span> <span class="nv">$counter</span> = <span class="mi">0</span>;
-
-  <span class="n">it</span> <span class="s">&#39;a&#39;</span>, { <span class="n">expect</span>(++<span class="nv">$counter</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>); }
-  <span class="n">it</span> <span class="s">&#39;b&#39;</span>, { <span class="n">expect</span>(++<span class="nv">$counter</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">2</span>); }
-  <span class="n">it</span> <span class="s">&#39;c&#39;</span>, { <span class="n">expect</span>(++<span class="nv">$counter</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">3</span>); }
-}
-</code></pre></div></td></tr></table></div>
-<p>This is the <strong>opposite</strong> of <a href="../../let/let/"><code>let</code></a>, which resets between examples. Reach for <code>let</code> when you want isolation; use a plain <code>my</code> when you intentionally want shared state.</p>
-<h2 id="shadowing-in-nested-contexts">Shadowing in nested contexts<a class="headerlink" href="#shadowing-in-nested-contexts" title="Permanent link">&para;</a></h2>
-<p>Inner <code>my</code> declarations shadow outer ones the same way they would in any Raku block:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;shadowing&#39;</span>, {
-  <span class="k">my</span> <span class="nv">$value</span> = <span class="s">&#39;outer&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;sees outer&#39;</span>, { <span class="n">expect</span>(<span class="nv">$value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;outer&#39;</span>) }
-
-  <span class="n">context</span> <span class="s">&#39;inner&#39;</span>, {
-    <span class="k">my</span> <span class="nv">$value</span> = <span class="s">&#39;inner&#39;</span>;
-    <span class="n">it</span> <span class="s">&#39;sees inner&#39;</span>, { <span class="n">expect</span>(<span class="nv">$value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;inner&#39;</span>) }
-  }
-
-  <span class="n">it</span> <span class="s">&#39;outer unchanged after nested context&#39;</span>, {
-    <span class="n">expect</span>(<span class="nv">$value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;outer&#39;</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="variables-inside-it">Variables inside <code>it</code><a class="headerlink" href="#variables-inside-it" title="Permanent link">&para;</a></h2>
-<p>Variables declared inside an <code>it</code> block are example-local and never leak:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;it-local vars&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;first&#39;</span>,  { <span class="k">my</span> <span class="nv">$x</span> = <span class="s">&#39;first&#39;</span>;  <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;first&#39;</span>) }
-  <span class="n">it</span> <span class="s">&#39;second&#39;</span>, { <span class="k">my</span> <span class="nv">$x</span> = <span class="s">&#39;second&#39;</span>; <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;second&#39;</span>) }
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="when-to-use-let-vs-a-plain-variable">When to use <code>let</code> vs a plain variable<a class="headerlink" href="#when-to-use-let-vs-a-plain-variable" title="Permanent link">&para;</a></h2>
+<p>By default, only files under <code>lib/</code> (relative to the working directory) are
+tracked. Use <code>--coverage-include</code> / <code>--coverage-exclude</code> to change the scope.</p>
+<h2 id="output-formats">Output formats<a class="headerlink" href="#output-formats" title="Permanent link">&para;</a></h2>
+<p><code>--coverage-format=FORMAT</code> selects the report format. Available formats:</p>
 <table>
 <thead>
 <tr>
-<th>Use a plain <code>my</code></th>
-<th>Use <a href="../../let/let/"><code>let</code></a></th>
+<th>Format</th>
+<th>Best for</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Shared mutable state across examples</td>
-<td>Fresh value per example</td>
+<td><code>html</code></td>
+<td>Browsable per-file report with green/red line highlighting (default).</td>
 </tr>
 <tr>
-<td>Cheap constants</td>
-<td>Expensive setup that should run lazily</td>
+<td><code>text</code></td>
+<td>Colored per-file coverage summary printed to the terminal.</td>
 </tr>
 <tr>
-<td>Counters, accumulators</td>
-<td>Test subjects, fixtures</td>
+<td><code>json</code></td>
+<td>Machine-readable; also the baseline format for <code>--coverage-baseline</code>.</td>
+</tr>
+<tr>
+<td><code>lcov</code></td>
+<td><code>genhtml</code>, Codecov, Coveralls.</td>
+</tr>
+<tr>
+<td><code>cobertura</code></td>
+<td>Jenkins, GitLab CI, Azure DevOps.</td>
 </tr>
 </tbody>
 </table>
-<p><code>let</code> plays nicely alongside plain variables — you can mix both in the same describe.</p>
-<h2 id="classes-roles-enums">Classes, roles, enums<a class="headerlink" href="#classes-roles-enums" title="Permanent link">&para;</a></h2>
-<p>Type declarations follow the same scoping rules. See <a href="../../classes/classes/">Classes inside specs</a>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>specs/<span class="w">                            </span><span class="c1"># writes ./coverage/ (html)</span>
+behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-format<span class="o">=</span>text<span class="w"> </span>specs/<span class="w">     </span><span class="c1"># terminal summary</span>
+behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-format<span class="o">=</span>json<span class="w"> </span>--coverage-output<span class="o">=</span>coverage.json<span class="w"> </span>specs/
+behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-format<span class="o">=</span>lcov<span class="w"> </span>--coverage-output<span class="o">=</span>coverage.lcov<span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<p><code>--coverage-output=PATH</code> writes the report to PATH instead of stdout.
+<strong><code>html</code> is special</strong>: PATH is a <em>directory</em> (default <code>./coverage/</code>) that
+Behave fills with <code>index.html</code>, <code>style.css</code>, and one HTML page per source
+file. The index is the entry point — open <code>coverage/index.html</code>.</p>
+<h2 id="filtering-tracked-files">Filtering tracked files<a class="headerlink" href="#filtering-tracked-files" title="Permanent link">&para;</a></h2>
+<p><code>--coverage-include=PATH</code> restricts the report to files whose path <strong>starts
+with</strong> PATH. Repeatable; multiple includes combine with OR. The prefix
+semantics are deliberate — they mean a default of <code>lib/</code> matches the relative
+paths your specs load via <code>-Ilib</code> while excluding Rakudo/NQP internals
+(<code>/Users/.../rakudo/share/nqp/lib/...</code>) that happen to contain <code>lib/</code> in the
+middle of an absolute path.</p>
+<p><code>--coverage-exclude=PATH</code> removes files whose path <strong>contains</strong> PATH
+(substring match). Repeatable; an exclude match wins over an include match.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-include<span class="o">=</span>lib/BDD<span class="w"> </span>--coverage-exclude<span class="o">=</span>lib/BDD/Vendor<span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<p>When no <code>--coverage-include</code> is passed, Behave includes <code>lib/</code> by default.</p>
+<h2 id="thresholds">Thresholds<a class="headerlink" href="#thresholds" title="Permanent link">&para;</a></h2>
+<p><code>--coverage-minimum=PCT</code> fails the run when overall line coverage is below PCT
+(a number between 0 and 100). The behave exit code is non-zero when the
+threshold is not met, even if every spec passed. Useful as a CI gate.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-minimum<span class="o">=</span><span class="m">85</span><span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<h2 id="branch-coverage">Branch coverage<a class="headerlink" href="#branch-coverage" title="Permanent link">&para;</a></h2>
+<p><code>--coverage-branch</code> adds a second line to the summary that reports how many
+branching constructs (<code>if</code>, <code>elsif</code>, <code>unless</code>, <code>with</code>, <code>without</code>, <code>when</code>,
+<code>while</code>, <code>until</code>, <code>given</code>, <code>for</code>) were exercised by the run.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-branch<span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<p>The branch metric is also emitted in JSON, LCOV (<code>BRF</code> / <code>BRH</code> / <code>BRDA</code>), and
+Cobertura output.</p>
+<h2 id="comparing-against-a-baseline">Comparing against a baseline<a class="headerlink" href="#comparing-against-a-baseline" title="Permanent link">&para;</a></h2>
+<p>A previous JSON coverage report can be passed via <code>--coverage-baseline=PATH</code>,
+and Behave will print a per-file diff (newly covered lines, newly uncovered
+lines, regressed files, improved files).</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># Capture a baseline once</span>
+behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-format<span class="o">=</span>json<span class="w"> </span>--coverage-output<span class="o">=</span>baseline.json<span class="w"> </span>specs/
+
+<span class="c1"># Later: compare current state against it</span>
+behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-baseline<span class="o">=</span>baseline.json<span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<p>This pairs naturally with <code>--coverage-minimum</code>: in CI, keep <code>baseline.json</code>
+checked in and surface a regression when coverage drops in a PR.</p>
+<h2 id="configuration-file">Configuration file<a class="headerlink" href="#configuration-file" title="Permanent link">&para;</a></h2>
+<p>Coverage flags can also live in a <code>.behave</code> config file (project or user):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Configuration</span>;
+
+<span class="n">configure-behave</span> -&gt; <span class="nv">$c</span> {
+  <span class="nv">$c</span>.<span class="n">coverage</span>         = <span class="nb">True</span>;
+  <span class="nv">$c</span>.<span class="n">coverage-minimum</span> = <span class="mi">80</span>;
+  <span class="nv">$c</span>.<span class="n">coverage-format</span>  = <span class="s">&#39;text&#39;</span>;
+  <span class="nv">$c</span>.<span class="n">coverage-branch</span>  = <span class="nb">True</span>;
+  <span class="nv">$c</span>.<span class="n">coverage-include-path</span>(<span class="s">&#39;lib/&#39;</span>);
+  <span class="nv">$c</span>.<span class="n">coverage-exclude-path</span>(<span class="s">&#39;lib/vendor&#39;</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p>CLI flags override config-file values; list-style options
+(<code>coverage-include-path</code>, <code>coverage-exclude-path</code>) accumulate across config
+layers and the CLI.</p>
+<h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
+<p><code>--coverage</code> sets <code>MVM_COVERAGE_LOG</code> and <code>MVM_COVERAGE_CONTROL=2</code> in a child
+process that runs the same <code>bin/behave</code> invocation. MoarVM writes one <code>HIT</code>
+line per executed source line to a temp file under <code>$TMPDIR</code>. When the child
+exits, the parent runs <code>grep -F</code> over that file to keep only lines matching
+the include patterns, parses the filtered result, and renders the report.</p>
+<p>Executable line counts are derived from a static read of each source file:
+blank lines, comments, lines that contain only closing punctuation (<code>}</code>,
+<code>)</code>, etc.), and lines inside <code>=begin pod</code> / <code>=end pod</code> blocks are ignored.</p>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<ul>
+<li>macOS and Linux only. Relies on <code>grep</code> in <code>PATH</code>.</li>
+<li>Coverage runs are slower than ordinary runs because MoarVM logs every
+  executed line in user code (including Rakudo's startup path). The raw
+  log can reach several GB under <code>$TMPDIR</code> for a full-suite run; it is
+  unlinked once the report is generated.</li>
+<li>Branch coverage is line-based: a single <code>if</code> line that contains both
+  branches inline counts as one branch.</li>
+</ul>
 
 
 
