@@ -1,0 +1,92 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 4;
+
+my $root      = $*PROGRAM.parent.parent.parent;
+my $bin       = $root.add('bin/behave');
+my $fixture-a = $root.add('t/fixtures/cli-file-line-shorthand-spec.raku');
+my $fixture-b = $root.add('t/fixtures/cli-line-snap-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args,
+                 :out, :err, :env(|%*ENV, BEHAVE_DISABLE_CONFIG => '1'));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+sub strip-ansi(Str $s) { $s.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+sub make-tree(--> IO::Path) {
+  my $dir = $*TMPDIR.add("behave-cli-file-test-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+  $dir.add('alpha-spec.raku').spurt: q:to/END/;
+    use BDD::Behave;
+    describe 'tree alpha group', :order<defined>, {
+      it 'alpha-tree example', { expect(1).to.eq(1) }
+    }
+    END
+  $dir.add('beta-spec.raku').spurt: q:to/END/;
+    use BDD::Behave;
+    describe 'tree beta group', :order<defined>, {
+      it 'beta-tree example', { expect(2).to.eq(2) }
+    }
+    END
+  $dir;
+}
+
+sub rm-tree($p) {
+  for $p.dir -> $entry { $entry.d ?? rm-tree($entry) !! $entry.unlink }
+  $p.rmdir;
+}
+
+# Single positional file
+{
+  my %r = run-behave('--format', 'documentation', $fixture-a.absolute);
+  my $c = strip-ansi(%r<out>);
+
+  ok %r<exit> == 0
+     && $c.contains('first example')
+     && $c.contains('second example')
+     && $c.contains('third example'),
+    'single positional FILE runs every example';
+}
+
+# Multiple positional files (union)
+{
+  my %r = run-behave('--format', 'documentation',
+                    $fixture-a.absolute, $fixture-b.absolute);
+  my $c = strip-ansi(%r<out>);
+
+  ok %r<exit> == 0
+     && $c.contains('first example')
+     && $c.contains('alpha example')
+     && $c.contains('epsilon example'),
+    'multiple positional FILEs run as the union of all examples';
+}
+
+# Positional directory expands to its *-spec.raku files
+{
+  my $tree = make-tree;
+  LEAVE rm-tree($tree);
+
+  my %r = run-behave('--format', 'documentation', $tree.absolute);
+  my $c = strip-ansi(%r<out>);
+
+  ok %r<exit> == 0
+     && $c.contains('alpha-tree example')
+     && $c.contains('beta-tree example'),
+    'positional DIRECTORY expands to its *-spec.raku files';
+}
+
+# Non-existent positional arg warns to stderr
+{
+  my %r = run-behave('--format', 'documentation', 'does/not/exist.raku');
+
+  ok %r<err>.contains('does/not/exist.raku'),
+    'positional arg that is neither file nor directory warns to stderr';
+}
+
+done-testing;
