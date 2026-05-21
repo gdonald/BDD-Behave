@@ -24,7 +24,7 @@ method suite-start($suite, Bool :$multi-file = False) {
 
 method group-start($group) {
   self.print-indent;
-  say "⮑  '{$group.description}'";
+  say light-blue('⮑') ~ "  " ~ yellow("'{$group.description}'");
   $!indent++;
 }
 
@@ -34,61 +34,61 @@ method group-end($group) {
 
 method group-around-skipped($group) {
   self.print-indent;
-  say light-blue("⮑  SKIPPED (around-all did not invoke continuation)");
+  say light-blue('⮑') ~ "  " ~ light-blue('SKIPPED (around-all did not invoke continuation)');
 }
 
 method example-start($example, Bool :$auto = False) {
   return if $auto;
   self.print-indent;
-  say "⮑  '{$example.description}'";
+  say light-blue('⮑') ~ "  " ~ yellow("'{$example.description}'");
 }
 
 method example-auto-description($example, Str :$description) {
   self.print-indent;
-  say "⮑  '{$description}'";
+  say light-blue('⮑') ~ "  " ~ yellow("'{$description}'");
 }
 
 method example-pass($example) {
   self.print-indent;
-  say green("  ⮑  SUCCESS");
+  say "  " ~ light-blue('⮑') ~ "  " ~ green('SUCCESS');
 }
 
 method example-fail($example, :$failure-info) {
   self.print-indent;
-  say red("  ⮑  FAILURE");
+  say "  " ~ light-blue('⮑') ~ "  " ~ red('FAILURE');
 }
 
 method example-pending($example) {
   self.print-indent;
-  say light-blue("⮑  '{$example.description}'");
+  say light-blue('⮑') ~ "  " ~ yellow("'{$example.description}'");
   self.print-indent;
-  say light-blue("  ⮑  PENDING");
+  say "  " ~ light-blue('⮑') ~ "  " ~ light-blue('PENDING');
 }
 
 method example-skipped($example) {
   self.print-indent;
-  say light-blue("⮑  '{$example.description}'");
+  say light-blue('⮑') ~ "  " ~ yellow("'{$example.description}'");
   self.print-indent;
-  say light-blue("  ⮑  SKIPPED");
+  say "  " ~ light-blue('⮑') ~ "  " ~ light-blue('SKIPPED');
 }
 
 method example-around-skipped($example) {
   self.print-indent;
-  say light-blue("⮑  '{$example.description}'");
+  say light-blue('⮑') ~ "  " ~ yellow("'{$example.description}'");
   self.print-indent;
-  say light-blue("  ⮑  SKIPPED (around-each did not invoke continuation)");
+  say "  " ~ light-blue('⮑') ~ "  " ~ light-blue('SKIPPED (around-each did not invoke continuation)');
 }
 
 method example-slow($example, Real :$threshold) {
   self.print-indent;
-  say yellow(sprintf '  ⮑  SLOW (%.3fs, threshold %.3fs)',
-                     $example.duration, $threshold);
+  say "  " ~ light-blue('⮑') ~ "  " ~ yellow(sprintf 'SLOW (%.3fs, threshold %.3fs)',
+                                                     $example.duration, $threshold);
 }
 
 method example-memory-leak($example, Int :$threshold) {
   self.print-indent;
-  say yellow(sprintf '  ⮑  MEMORY (Δ%d KB, threshold %d KB)',
-                     $example.memory-delta, $threshold);
+  say "  " ~ light-blue('⮑') ~ "  " ~ yellow(sprintf 'MEMORY (Δ%d KB, threshold %d KB)',
+                                                     $example.memory-delta, $threshold);
 }
 
 method run-summary(

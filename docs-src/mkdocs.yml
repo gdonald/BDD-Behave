@@ -18,6 +18,7 @@ nav:
   - Tags: tags/tags.md
   - Focus and Skip: focus-skip/focus-skip.md
   - Example Filter: example-filter/example-filter.md
+  - Parallel Execution: parallel/parallel.md
   - Mocks: mocks/mocks.md
   - Expectations:
     - expect: expectations/expect.md

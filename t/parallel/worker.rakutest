@@ -1,0 +1,45 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Worker;
+
+plan 8;
+
+# Defaults
+{
+  my %save := %*ENV;
+  %*ENV<BEHAVE_WORKER_INDEX>:delete;
+  %*ENV<BEHAVE_WORKER_COUNT>:delete;
+  is BDD::Behave::Worker.id,    0, 'id defaults to 0 when env unset';
+  is BDD::Behave::Worker.count, 1, 'count defaults to 1 when env unset';
+}
+
+# Honors env vars
+{
+  %*ENV<BEHAVE_WORKER_INDEX> = '3';
+  %*ENV<BEHAVE_WORKER_COUNT> = '8';
+  is BDD::Behave::Worker.id,    3, 'id reads BEHAVE_WORKER_INDEX';
+  is BDD::Behave::Worker.count, 8, 'count reads BEHAVE_WORKER_COUNT';
+}
+
+# Garbage env values fall back to defaults
+{
+  %*ENV<BEHAVE_WORKER_INDEX> = 'abc';
+  %*ENV<BEHAVE_WORKER_COUNT> = '-2';
+  is BDD::Behave::Worker.id,    0, 'non-numeric index falls back to 0';
+  is BDD::Behave::Worker.count, 1, 'negative count falls back to 1';
+}
+
+# Zero count falls back
+{
+  %*ENV<BEHAVE_WORKER_INDEX> = '0';
+  %*ENV<BEHAVE_WORKER_COUNT> = '0';
+  is BDD::Behave::Worker.id,    0, 'index 0 is honored';
+  is BDD::Behave::Worker.count, 1, 'count 0 falls back to 1';
+}
+
+%*ENV<BEHAVE_WORKER_INDEX>:delete;
+%*ENV<BEHAVE_WORKER_COUNT>:delete;
+
+done-testing;

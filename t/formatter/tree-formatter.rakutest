@@ -52,7 +52,7 @@ my $nested = capture({
   $f.group-end($inner);
   $f.group-end($g);
 });
-my @lines = $nested.lines;
+my @lines = strip-ansi($nested).lines;
 ok @lines[0].starts-with('⮑'),       'outer group starts at zero indent';
 ok @lines[1].starts-with('  ⮑'),     'inner group indents by two spaces';
 

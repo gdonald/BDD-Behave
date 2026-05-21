@@ -1,0 +1,136 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant Bucket       = BDD::Behave::Parallel::Distribution::Bucket;
+
+plan 21;
+
+sub make-example(:$line, :$file = '/abs/spec.raku'.IO, :$serial = False) {
+  my $ex = Example.new(:description("ex-$line"), :$file, :$line, :block(sub { }));
+  $ex.set-metadata(:serial(True)) if $serial;
+  $ex;
+}
+
+sub make-group(@children, :$line, :$file = '/abs/spec.raku'.IO, :$split = False, :$serial = False) {
+  my $g = ExampleGroup.new(:description("g-$line"), :$file, :$line);
+  $g.set-metadata(:parallel-split(True)) if $split;
+  $g.set-metadata(:serial(True)) if $serial;
+  $g.add-child($_) for @children;
+  $g;
+}
+
+sub make-suite(@children) {
+  my $file = '/abs/spec.raku'.IO;
+  my $s = Suite.new(:description('spec.raku'), :$file, :line(1));
+  $s.add-child($_) for @children;
+  $s;
+}
+
+# Bucket basics
+{
+  my $b = Bucket.new(:id<x>, :file</abs/a.raku>);
+  $b.add(make-example(:line(10)));
+  $b.add(make-example(:line(20)));
+  is $b.cost, 2, 'bucket cost equals example count';
+  is $b.locations.elems, 2, 'bucket locations include all examples';
+  ok $b.locations[0].contains(':10'), 'bucket location includes line number';
+}
+
+# collect-buckets: top-level describe stays together
+{
+  my $g = make-group([make-example(:line(10)), make-example(:line(20))], :line(5));
+  my $suite = make-suite([$g]);
+  my @buckets = collect-buckets($suite);
+  is @buckets.elems, 1, 'one top-level group => one bucket';
+  is @buckets[0].examples.elems, 2, 'group bucket contains both examples';
+}
+
+# collect-buckets: top-level example becomes its own bucket
+{
+  my $ex = make-example(:line(99));
+  my $suite = make-suite([$ex]);
+  my @buckets = collect-buckets($suite);
+  is @buckets.elems, 1, 'top-level example yields one bucket';
+  is @buckets[0].examples.elems, 1, 'example bucket has one example';
+}
+
+# :parallel-split opts a top-level group into per-child buckets
+{
+  my $g = make-group(
+    [make-example(:line(10)), make-example(:line(20)), make-example(:line(30))],
+    :line(5), :split,
+  );
+  my $suite = make-suite([$g]);
+  my @buckets = collect-buckets($suite);
+  is @buckets.elems, 3, ':parallel-split splits into per-child buckets';
+}
+
+# Effective serial via inheritance
+{
+  my $ex = make-example(:line(10));
+  my $g = make-group([$ex], :line(5), :serial);
+  my $suite = make-suite([$g]);
+  ok effective-serial($ex), 'example inherits :serial from group';
+}
+
+# split-parallel-and-serial: pure-serial bucket goes to serial side
+{
+  my $g = make-group([make-example(:line(10), :serial)], :line(5));
+  my $suite = make-suite([$g]);
+  my @buckets = collect-buckets($suite);
+  my ($par, $ser) = split-parallel-and-serial(@buckets);
+  is $par.elems, 0, 'all-serial group: no parallel buckets';
+  is $ser.elems, 1, 'all-serial group: one serial bucket';
+}
+
+# split-parallel-and-serial: mixed bucket splits
+{
+  my $ex-fast   = make-example(:line(10));
+  my $ex-serial = make-example(:line(20), :serial);
+  my $g = make-group([$ex-fast, $ex-serial], :line(5));
+  my $suite = make-suite([$g]);
+  my @buckets = collect-buckets($suite);
+  my ($par, $ser) = split-parallel-and-serial(@buckets);
+  is $par.elems,   1, 'mixed group: one parallel bucket';
+  is $par[0].examples.elems, 1, 'mixed group: parallel bucket has only non-serial example';
+  is $ser.elems,   1, 'mixed group: one serial bucket';
+  is $ser[0].examples.elems, 1, 'mixed group: serial bucket has only serial example';
+}
+
+# LPT distribution: empty buckets => all-empty assignments
+{
+  my @asgn = distribute-lpt([], 3);
+  is @asgn.elems, 3, 'distribute-lpt: returns one assignment per worker';
+  is @asgn[0].elems, 0, 'distribute-lpt: empty list yields empty assignments';
+}
+
+# LPT distribution: 4 buckets across 2 workers balances cost
+{
+  my @buckets;
+  for (10, 8, 5, 3) -> $cost {
+    my $b = Bucket.new(:id("b$cost"), :file</abs/a.raku>);
+    $b.add(make-example(:line($_))) for ^$cost;
+    @buckets.push: $b;
+  }
+  my @asgn = distribute-lpt(@buckets, 2);
+  my @loads = @asgn.map(-> @bs { @bs.map(*.cost).sum });
+  is @loads.sum, 26, 'distribute-lpt: total cost preserved';
+  my $max = @loads.max;
+  my $min = @loads.min;
+  ok ($max - $min) <= 2, "LPT balances within 2 (loads: {@loads.join(', ')})";
+}
+
+# distribute-lpt rejects worker-count < 1
+{
+  dies-ok { distribute-lpt([], 0)  }, 'distribute-lpt dies on worker-count = 0';
+  dies-ok { distribute-lpt([], -1) }, 'distribute-lpt dies on negative worker-count';
+}
+
+done-testing;

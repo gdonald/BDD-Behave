@@ -29,6 +29,7 @@
     "BDD::Behave::Formatter::Documentation": "lib/BDD/Behave/Formatter/Documentation.rakumod",
     "BDD::Behave::Formatter::HTML": "lib/BDD/Behave/Formatter/HTML.rakumod",
     "BDD::Behave::Formatter::JSON": "lib/BDD/Behave/Formatter/JSON.rakumod",
+    "BDD::Behave::Formatter::JsonEvents": "lib/BDD/Behave/Formatter/JsonEvents.rakumod",
     "BDD::Behave::Formatter::JUnit": "lib/BDD/Behave/Formatter/JUnit.rakumod",
     "BDD::Behave::Formatter::Progress": "lib/BDD/Behave/Formatter/Progress.rakumod",
     "BDD::Behave::Formatter::Registry": "lib/BDD/Behave/Formatter/Registry.rakumod",
@@ -52,6 +53,11 @@
     "BDD::Behave::Mock::HaveReceived": "lib/BDD/Behave/Mock/HaveReceived.rakumod",
     "BDD::Behave::Mock::Spy": "lib/BDD/Behave/Mock/Spy.rakumod",
     "BDD::Behave::Mock::Stub": "lib/BDD/Behave/Mock/Stub.rakumod",
+    "BDD::Behave::Parallel": "lib/BDD/Behave/Parallel.rakumod",
+    "BDD::Behave::Parallel::Distribution": "lib/BDD/Behave/Parallel/Distribution.rakumod",
+    "BDD::Behave::Parallel::EventStream": "lib/BDD/Behave/Parallel/EventStream.rakumod",
+    "BDD::Behave::Parallel::Manifest": "lib/BDD/Behave/Parallel/Manifest.rakumod",
+    "BDD::Behave::Parallel::WorkerPool": "lib/BDD/Behave/Parallel/WorkerPool.rakumod",
     "BDD::Behave::Runner": "lib/BDD/Behave/Runner.rakumod",
     "BDD::Behave::SharedContexts": "lib/BDD/Behave/SharedContexts.rakumod",
     "BDD::Behave::SharedExamples": "lib/BDD/Behave/SharedExamples.rakumod",
@@ -60,7 +66,8 @@
     "BDD::Behave::SpecTree::Core": "lib/BDD/Behave/SpecTree/Core.rakumod",
     "BDD::Behave::SpecTree::Example": "lib/BDD/Behave/SpecTree/Example.rakumod",
     "BDD::Behave::SpecTree::ExampleGroup": "lib/BDD/Behave/SpecTree/ExampleGroup.rakumod",
-    "BDD::Behave::SpecTree::Suite": "lib/BDD/Behave/SpecTree/Suite.rakumod"
+    "BDD::Behave::SpecTree::Suite": "lib/BDD/Behave/SpecTree/Suite.rakumod",
+    "BDD::Behave::Worker": "lib/BDD/Behave/Worker.rakumod"
   },
   "resources": [],
   "support": {

@@ -23,6 +23,8 @@ my $no-project-config = False;
 my $doc-mode    = False;
 my $doc-format  = 'markdown';
 my $doc-output;
+my $parallel-workers = 0;
+my $worker-manifest-path;
 my $cli-config = CLI-CONFIG.new;
 
 sub usage() {
@@ -158,6 +160,12 @@ sub usage() {
     --coverage-branch        Also track branch coverage (if/unless/given/
                              when/while/until). Reported alongside line
                              coverage. Implies --coverage.
+    --parallel N             Run specs across N worker subprocesses
+                             (group-affinity LPT distribution). N must be
+                             a positive integer. Default (omitted) keeps
+                             single-process serial execution. Mutually
+                             exclusive with --bisect / --bisect-data /
+                             --coverage. Ignored under --doc.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -445,6 +453,26 @@ while @args {
   } elsif $arg eq '--coverage-branch' {
     $cli-config.coverage-branch = True;
     $cli-config.coverage = True;
+  } elsif $arg eq '--parallel' {
+    die "--parallel requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --parallel N requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $parallel-workers = $value.Int;
+  } elsif $arg.starts-with('--parallel=') {
+    my $value = $arg.substr('--parallel='.chars);
+    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
+      note "Error: --parallel N requires a positive integer (got: '$value')";
+      exit 2;
+    }
+    $parallel-workers = $value.Int;
+  } elsif $arg eq '--worker-manifest' {
+    die "--worker-manifest requires a value" unless @args;
+    $worker-manifest-path = @args.shift;
+  } elsif $arg.starts-with('--worker-manifest=') {
+    $worker-manifest-path = $arg.substr('--worker-manifest='.chars);
   } elsif $arg ~~ / ^ (.+) ':' (\d+) $ / && ~$0.IO.e {
     my $file-part = ~$0;
     @specs.push: $file-part unless @specs.first(* eq $file-part);
@@ -540,6 +568,16 @@ if $coverage-enabled && !BDD::Behave::Coverage::valid-format($coverage-format) {
 
 if $bisect && $bisect-data {
   note "Error: --bisect and --bisect-data are mutually exclusive";
+  exit 2;
+}
+
+if $parallel-workers > 0 && ($bisect || $bisect-data) {
+  note "Error: --parallel is mutually exclusive with --bisect / --bisect-data";
+  exit 2;
+}
+
+if $parallel-workers > 0 && $coverage-enabled {
+  note "Error: --parallel is not yet compatible with --coverage in this release";
   exit 2;
 }
 
@@ -680,11 +718,81 @@ if $order eq 'random' && !$seed.defined && !$bisect-data {
   $seed = (1 .. 2_147_483_646).pick;
 }
 
+if $worker-manifest-path.defined {
+  use BDD::Behave::Parallel::Manifest;
+  my $mpath = $worker-manifest-path.IO;
+  unless $mpath.e {
+    note "Error: --worker-manifest path '$worker-manifest-path' does not exist";
+    exit 2;
+  }
+  my @manifest-locations = read-manifest($mpath);
+  exit 0 unless @manifest-locations.elems;
+  for @manifest-locations -> $loc {
+    @only-locations.push: $loc;
+  }
+  $format = 'json-events';
+}
+
 my @config-spec-paths = $final-config.spec-paths.list;
 my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
 
 my $files-obj = Files.new;
 my @files = $files-obj.list(@effective-specs);
+
+if $parallel-workers >= 1 && !$worker-manifest-path.defined {
+  use BDD::Behave::Parallel;
+  use BDD::Behave::Colors;
+
+  my @worker-argv = 'raku', '-Ilib', $*PROGRAM-NAME;
+  if $order eq 'defined' {
+    @worker-argv.push: '--order', 'defined';
+  }
+  @worker-argv.push: '--no-config';
+  @worker-argv.push: '--format', 'json-events';
+
+  my $parent-formatter = BDD::Behave::Formatter::Registry.create($format);
+
+  my %base-env = |%*ENV;
+  %base-env<BEHAVE_DISABLE_CONFIG> = '1';
+
+  my $opts = BDD::Behave::Parallel::ParallelRunOptions.new(
+    :worker-count($parallel-workers),
+    :spec-files(@files.map(*.Str).List),
+    :@worker-argv,
+    :%base-env,
+    :formatter($parent-formatter),
+    :verbose($verbose),
+    :seed($seed),
+    :order($order),
+    :include-tags(@include-tags),
+    :exclude-tags(@exclude-tags),
+    :example-patterns(@example-patterns),
+    :only-locations(@only-locations),
+  );
+
+  my $par-result = run-parallel($opts);
+
+  my $rr = BDD::Behave::Runner::RunResult.new(
+    :total($par-result.total),
+    :passed($par-result.passed),
+    :failed($par-result.failed),
+    :pending($par-result.pending),
+    :skipped($par-result.skipped),
+  );
+
+  say '';
+  if @files.elems > 1 {
+    $parent-formatter.multi-file-overall($rr, :$order, :$seed);
+  } else {
+    $parent-formatter.run-summary($rr, :$order, :$seed);
+  }
+
+  for $par-result.load-errors -> %err {
+    note red("Error: Could not load {%err<file>}: {%err<message>}");
+  }
+
+  exit(($par-result.success && $par-result.failed == 0) ?? 0 !! 1);
+}
 
 if $doc-mode {
   unless $doc-format eq 'markdown' | 'html' | 'json' {

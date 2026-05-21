@@ -1,0 +1,27 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Worker;
+use BDD::Behave::Parallel;
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::Parallel::Manifest;
+use BDD::Behave::Parallel::WorkerPool;
+use BDD::Behave::Formatter::JsonEvents;
+use BDD::Behave::Formatter::Registry;
+
+plan 5;
+
+ok BDD::Behave::Worker.^can('id'),
+   'BDD::Behave::Worker has .id';
+ok BDD::Behave::Worker.^can('count'),
+   'BDD::Behave::Worker has .count';
+ok BDD::Behave::Formatter::JsonEvents.^does(BDD::Behave::Formatter),
+   'JsonEvents formatter composes Formatter role';
+ok BDD::Behave::Formatter::Registry.registered('json-events'),
+   'json-events formatter is registered';
+ok BDD::Behave::Parallel::Distribution::Bucket.^can('cost'),
+   'Distribution::Bucket has .cost';
+
+done-testing;

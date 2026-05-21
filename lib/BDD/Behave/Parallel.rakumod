@@ -1,0 +1,436 @@
+unit module BDD::Behave::Parallel;
+
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::Parallel::WorkerPool;
+use BDD::Behave::Parallel::Manifest;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::Runner;
+use BDD::Behave::Formatter;
+use BDD::Behave::Colors;
+
+need BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant RunResult    = BDD::Behave::Runner::RunResult;
+
+class ParallelRunOptions is export {
+  has Int      $.worker-count is required;
+  has @.spec-files;
+  has @.worker-argv;
+  has %.base-env;
+  has BDD::Behave::Formatter $.formatter is required;
+  has Bool     $.verbose = False;
+  has Int      $.seed;
+  has Str      $.order = 'random';
+  has @.include-tags;
+  has @.exclude-tags;
+  has @.example-patterns;
+  has @.only-locations;
+  has Bool     $.fail-fast-any = False;
+}
+
+sub discover-suites(@spec-files --> List) is export {
+  my $registry = BDD::Behave::SpecRegistry::registry();
+  my @suites;
+  my @load-errors;
+  use MONKEY-SEE-NO-EVAL;
+  for @spec-files -> $file {
+    try {
+      EVALFILE $file;
+      CATCH {
+        default {
+          @load-errors.push: %( :$file, :message(.message) );
+        }
+      }
+    }
+    my $suite = $registry.suite-for-file($file.IO);
+    @suites.push($suite) if $suite.defined;
+  }
+  (@suites.List, @load-errors.List).List;
+}
+
+sub locations-for-buckets(@buckets --> List) is export {
+  my @all;
+  for @buckets -> $b {
+    @all.append: $b.locations.list;
+  }
+  @all.List;
+}
+
+sub build-worker-manifests(@suites, Int $worker-count, :@include-tags, :@exclude-tags, :@example-patterns, :@only-locations --> Hash) is export {
+  my @all-buckets;
+  for @suites -> $suite {
+    @all-buckets.append: collect-buckets($suite).list;
+  }
+
+  my @filtered = @all-buckets.map(-> $b {
+    my @kept = $b.examples.grep({
+      example-passes-filters($_, :@include-tags, :@exclude-tags, :@example-patterns, :@only-locations);
+    });
+    if @kept.elems == $b.examples.elems {
+      $b;
+    } elsif @kept.elems == 0 {
+      Nil;
+    } else {
+      my $new = BDD::Behave::Parallel::Distribution::Bucket.new(
+        :id($b.id),
+        :file($b.file),
+      );
+      $new.add($_) for @kept;
+      $new.serial = $b.serial;
+      $new;
+    }
+  }).grep(*.defined);
+
+  my ($parallel-buckets, $serial-buckets) = split-parallel-and-serial(@filtered);
+
+  my @parallel-assignments = distribute-lpt($parallel-buckets, $worker-count);
+
+  my @parallel-manifests;
+  for ^$worker-count -> $i {
+    my @locs;
+    for @parallel-assignments[$i].list -> $b {
+      @locs.append: $b.locations.list;
+    }
+    @parallel-manifests.push: @locs;
+  }
+
+  my @serial-locations;
+  for $serial-buckets.list -> $b {
+    @serial-locations.append: $b.locations.list;
+  }
+
+  %(
+    parallel-manifests => @parallel-manifests.List,
+    serial-locations   => @serial-locations.List,
+    parallel-count     => $parallel-buckets.list.map(*.cost).sum,
+    serial-count       => $serial-buckets.list.map(*.cost).sum,
+  );
+}
+
+sub example-passes-filters(Example $example, :@include-tags, :@exclude-tags, :@example-patterns, :@only-locations --> Bool) {
+  my @tags = $example.effective-tags;
+  if @exclude-tags.elems && @tags.first({ $_ ∈ @exclude-tags }).defined {
+    return False;
+  }
+  if @include-tags.elems && !@tags.first({ $_ ∈ @include-tags }).defined {
+    return False;
+  }
+  if @example-patterns.elems {
+    my $desc = nested-description($example);
+    my $matched = False;
+    for @example-patterns -> $pat {
+      if pattern-matches($desc, $pat) {
+        $matched = True;
+        last;
+      }
+    }
+    return False unless $matched;
+  }
+  if @only-locations.elems {
+    my $matched = False;
+    my $ex-loc = "{$example.file.absolute}:{$example.line}";
+    for @only-locations -> $loc {
+      if location-matches($ex-loc, $loc) {
+        $matched = True;
+        last;
+      }
+      for $example.ancestry -> $node {
+        next unless $node ~~ ExampleGroup;
+        if location-matches("{$node.file.absolute}:{$node.line}", $loc) {
+          $matched = True;
+          last;
+        }
+      }
+      last if $matched;
+    }
+    return False unless $matched;
+  }
+  True;
+}
+
+sub nested-description(Example $example --> Str) {
+  my @parts = $example.ancestry.grep(ExampleGroup).map(*.description);
+  @parts.push($example.description);
+  @parts.join(' ');
+}
+
+sub pattern-matches(Str $description, Str $pattern --> Bool) {
+  if $pattern.chars > 2 && $pattern.starts-with('/') && $pattern.ends-with('/') {
+    my $body = $pattern.substr(1, $pattern.chars - 2);
+    my $rx = / <{ $body }> /;
+    return so $description.match($rx);
+  }
+  $description.contains($pattern);
+}
+
+sub location-matches(Str $ex-loc, Str $pattern --> Bool) {
+  return False unless $pattern.contains(':');
+  my $idx = $pattern.rindex(':');
+  my $pat-path = $pattern.substr(0, $idx);
+  my $pat-line = $pattern.substr($idx + 1);
+  my $ex-idx = $ex-loc.rindex(':');
+  return False unless $ex-idx.defined;
+  my $ex-path = $ex-loc.substr(0, $ex-idx);
+  my $ex-line = $ex-loc.substr($ex-idx + 1);
+  return False unless $ex-line eq $pat-line;
+  return True if $ex-path eq $pat-path;
+  return True if $ex-path.IO.absolute eq $pat-path.IO.absolute;
+  return True if $ex-path.ends-with('/' ~ $pat-path);
+  return True if $ex-path.IO.basename eq $pat-path;
+  False;
+}
+
+class ParallelRunResult is export {
+  has Int $.total   is rw = 0;
+  has Int $.passed  is rw = 0;
+  has Int $.failed  is rw = 0;
+  has Int $.pending is rw = 0;
+  has Int $.skipped is rw = 0;
+  has @.failures;
+  has @.load-errors;
+  has Int $.exit-code is rw = 0;
+
+  method success(--> Bool) { $!failed == 0 && @!load-errors.elems == 0 && $!exit-code == 0 }
+}
+
+sub run-parallel(
+  ParallelRunOptions $opts,
+  --> ParallelRunResult
+) is export {
+  my $result = ParallelRunResult.new;
+
+  my (@suites, @load-errors) := discover-suites($opts.spec-files);
+  $result.load-errors.append: @load-errors;
+
+  my %plan = build-worker-manifests(
+    @suites,
+    $opts.worker-count,
+    :include-tags($opts.include-tags),
+    :exclude-tags($opts.exclude-tags),
+    :example-patterns($opts.example-patterns),
+    :only-locations($opts.only-locations),
+  );
+
+  my @parallel-manifests = %plan<parallel-manifests>.list;
+  my @serial-locations   = %plan<serial-locations>.list;
+
+  my $manifest-dir = $*TMPDIR.add("behave-parallel-{$*PID}-{(now * 1e6).Int}");
+  $manifest-dir.mkdir;
+
+  LEAVE {
+    if $manifest-dir.e && $manifest-dir.d {
+      for $manifest-dir.dir -> $f { $f.unlink if $f.f }
+      $manifest-dir.rmdir;
+    }
+  }
+
+  if @parallel-manifests.grep({ .elems }).elems {
+    my $pool = WorkerPool.new(
+      :worker-count($opts.worker-count),
+      :worker-argv($opts.worker-argv),
+      :base-env(%(|$opts.base-env)),
+      :manifest-dir($manifest-dir),
+      :on-event(sub ($wi, $event) {
+        handle-event($opts.formatter, $result, $wi, $event, @suites);
+      }),
+    );
+    $pool.launch(@parallel-manifests);
+    $pool.wait-all;
+    for $pool.workers -> $w {
+      if $w.exit-code > 1 {
+        $result.exit-code = 1;
+        note red("Worker {$w.index} exited with code {$w.exit-code}");
+      }
+    }
+  }
+
+  if @serial-locations.elems {
+    my $serial-manifest-path = $manifest-dir.add('serial.manifest');
+    write-manifest($serial-manifest-path, @serial-locations);
+    my @files = files-from-manifest(@serial-locations);
+    my @argv = $opts.worker-argv.Slip;
+    @argv.push: '--worker-manifest', $serial-manifest-path.absolute;
+    @argv.append: @files;
+
+    my %env = |$opts.base-env;
+    %env<BEHAVE_WORKER_INDEX> = '0';
+    %env<BEHAVE_WORKER_COUNT> = '1';
+
+    my $proc = Proc::Async.new(|@argv);
+    my $parser = JsonLineParser.new;
+
+    $proc.stdout.tap(-> $chunk {
+      for $parser.feed($chunk) -> $event {
+        handle-event($opts.formatter, $result, -1, $event, @suites);
+      }
+    });
+    $proc.stderr.tap(-> $chunk {
+      $*ERR.print($chunk);
+    });
+
+    my $start = $proc.start(:ENV(%env));
+    my $proc-result = await $start;
+    for $parser.flush -> $event {
+      handle-event($opts.formatter, $result, -1, $event, @suites);
+    }
+    if $proc-result.exitcode > 1 {
+      $result.exit-code = 1;
+      note red("Serial worker exited with code {$proc-result.exitcode}");
+    }
+    $serial-manifest-path.unlink if $serial-manifest-path.e;
+  }
+
+  $result;
+}
+
+sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @suites) {
+  my $type = %event<type> // 'unknown';
+  given $type {
+    when 'suite-start' {
+      my $suite = lookup-suite(@suites, %event<id>);
+      $formatter.suite-start($suite, :multi-file(@suites.elems > 1)) if $suite.defined;
+    }
+    when 'suite-end' {
+      my $suite = lookup-suite(@suites, %event<id>);
+      $formatter.suite-end($suite) if $suite.defined;
+    }
+    when 'group-start' {
+      my $group = lookup-group(@suites, %event<id>);
+      $formatter.group-start($group) if $group.defined;
+    }
+    when 'group-end' {
+      my $group = lookup-group(@suites, %event<id>);
+      $formatter.group-end($group) if $group.defined;
+    }
+    when 'group-around-skipped' {
+      my $group = lookup-group(@suites, %event<id>);
+      $formatter.group-around-skipped($group) if $group.defined;
+    }
+    when 'example-start' {
+      my $example = lookup-example(@suites, %event<id>);
+      if $example.defined {
+        $example.started-at = now;
+        $formatter.example-start($example, :auto(?%event<auto>));
+      }
+    }
+    when 'example-auto-description' {
+      my $example = lookup-example(@suites, %event<id>);
+      $formatter.example-auto-description($example, :description(%event<description> // ''))
+        if $example.defined;
+    }
+    when 'example-pass' {
+      my $example = lookup-example(@suites, %event<id>);
+      if $example.defined {
+        $example.duration = (%event<duration> // 0).Real;
+        $formatter.example-pass($example);
+      }
+      $result.total++;
+      $result.passed++;
+    }
+    when 'example-fail' {
+      my $example = lookup-example(@suites, %event<id>);
+      my %failure-info = (
+        description => (%event<failure-description> // ($example.defined ?? $example.description !! '')),
+        file        => (%event<failure-file> // ($example.defined ?? $example.file.absolute !! '')),
+        line        => (%event<failure-line> // ($example.defined ?? $example.line !! 0)),
+      );
+      with %event<exception-message> {
+        %failure-info<exception-message> = $_;
+      }
+      with %event<exception-backtrace> {
+        %failure-info<exception-backtrace> = $_;
+      }
+      if $example.defined {
+        $example.duration = (%event<duration> // 0).Real;
+        $formatter.example-fail($example, :%failure-info);
+      }
+      $result.total++;
+      $result.failed++;
+      $result.failures.push: %failure-info;
+    }
+    when 'example-pending' {
+      my $example = lookup-example(@suites, %event<id>);
+      $formatter.example-pending($example) if $example.defined;
+      $result.total++;
+      $result.pending++;
+    }
+    when 'example-skipped' {
+      my $example = lookup-example(@suites, %event<id>);
+      $formatter.example-skipped($example) if $example.defined;
+      $result.total++;
+      $result.skipped++;
+    }
+    when 'example-around-skipped' {
+      my $example = lookup-example(@suites, %event<id>);
+      $formatter.example-around-skipped($example) if $example.defined;
+      $result.total++;
+      $result.skipped++;
+    }
+    when 'load-error' {
+      $result.load-errors.push: %( file => %event<file>, message => %event<message> );
+    }
+    when 'parse-error' {
+      note red("Worker $worker emitted unparseable event: " ~ (%event<raw> // ''));
+    }
+    when 'run-summary' { }
+    default { }
+  }
+}
+
+sub lookup-suite(@suites, Str $id) {
+  return Nil unless $id.defined;
+  for @suites -> $suite {
+    return $suite if "{$suite.file.absolute}:{$suite.line}" eq $id;
+  }
+  Nil;
+}
+
+sub lookup-group(@suites, Str $id) {
+  return Nil unless $id.defined;
+  for @suites -> $suite {
+    my $hit = walk-find-group($suite, $id);
+    return $hit if $hit.defined;
+  }
+  Nil;
+}
+
+sub walk-find-group($container, Str $id) {
+  for $container.children -> $child {
+    given $child {
+      when ExampleGroup {
+        return $child if "{$child.file.absolute}:{$child.line}" eq $id;
+        my $deeper = walk-find-group($child, $id);
+        return $deeper if $deeper.defined;
+      }
+    }
+  }
+  Nil;
+}
+
+sub lookup-example(@suites, Str $id) {
+  return Nil unless $id.defined;
+  for @suites -> $suite {
+    my $hit = walk-find-example($suite, $id);
+    return $hit if $hit.defined;
+  }
+  Nil;
+}
+
+sub walk-find-example($container, Str $id) {
+  for $container.children -> $child {
+    given $child {
+      when Example {
+        return $child if "{$child.file.absolute}:{$child.line}" eq $id;
+      }
+      when ExampleGroup {
+        my $deeper = walk-find-example($child, $id);
+        return $deeper if $deeper.defined;
+      }
+    }
+  }
+  Nil;
+}

@@ -1,0 +1,66 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::EventStream;
+
+plan 16;
+
+# Parse simple object
+{
+  my %ev = parse-json-event('{"type":"example-pass","id":"x:1","duration":0.5}');
+  is %ev<type>,     'example-pass', 'parse: type field';
+  is %ev<id>,       'x:1',          'parse: id field';
+  is %ev<duration>, 0.5,            'parse: number field as Real';
+}
+
+# Parse with booleans and null
+{
+  my %ev = parse-json-event('{"a":true,"b":false,"c":null}');
+  is %ev<a>, True,  'parse: true';
+  is %ev<b>, False, 'parse: false';
+  nok %ev<c>.defined, 'parse: null becomes Nil';
+}
+
+# Parse arrays and nested
+{
+  my %ev = parse-json-event('{"failures":[{"line":42},{"line":7}]}');
+  is %ev<failures>.elems, 2, 'parse: nested array';
+  is %ev<failures>[0]<line>, 42, 'parse: nested object';
+}
+
+# Strings with escapes
+{
+  my %ev = parse-json-event('{"msg":"line1\nline2","tab":"a\tb","quote":"he said \"hi\""}');
+  is %ev<msg>,   "line1\nline2", 'parse: \\n escape';
+  is %ev<tab>,   "a\tb",         'parse: \\t escape';
+  is %ev<quote>, 'he said "hi"', 'parse: \\" escape';
+}
+
+# JsonLineParser feed buffers partial lines
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  my @ev1 = $parser.feed('{"type":"example-pass","id":"a:1"}');
+  is @ev1.elems, 0, 'feed without newline buffers';
+  my @ev2 = $parser.feed("\n");
+  is @ev2.elems, 1, 'feed with newline flushes one event';
+  is @ev2[0]<id>, 'a:1', 'buffered + newline yields full event';
+}
+
+# Multi-event feed
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  my $chunk = '{"type":"example-pass","id":"a:1"}' ~ "\n"
+            ~ '{"type":"example-pass","id":"a:2"}' ~ "\n";
+  my @ev = $parser.feed($chunk);
+  is @ev.elems, 2, 'multi-line feed yields multiple events';
+}
+
+# Parse-error event for malformed JSON
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  my @ev = $parser.feed("this is not json\n");
+  is @ev[0]<type>, 'parse-error', 'malformed input emits parse-error';
+}
+
+done-testing;

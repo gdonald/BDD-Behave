@@ -24,7 +24,7 @@ nok BDD::Behave::Formatter::Registry.registered('default'),
   'old "default" name is no longer registered';
 
 BDD::Behave::Formatter::Registry.register('custom-test', CustomTestFormatter);
-is BDD::Behave::Formatter::Registry.names, <custom-test documentation html json junit progress tap tree>.List,
+is BDD::Behave::Formatter::Registry.names, <custom-test documentation html json json-events junit progress tap tree>.List,
   'names returns registered names in sorted order';
 
 is BDD::Behave::Formatter::Registry.lookup('tree'),
@@ -50,7 +50,7 @@ dies-ok {
 }, 'classes that do not compose Formatter are rejected';
 
 BDD::Behave::Formatter::Registry.reset;
-is BDD::Behave::Formatter::Registry.names, <documentation html json junit progress tap tree>.List,
+is BDD::Behave::Formatter::Registry.names, <documentation html json json-events junit progress tap tree>.List,
   'reset restores only the built-in formatters';
 nok BDD::Behave::Formatter::Registry.registered('custom-test'),
   'reset removes user-added formatters';

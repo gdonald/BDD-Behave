@@ -32,7 +32,7 @@ describe 'BDD::Behave::Formatter::Registry', {
 
   it 'exposes registered names in sorted order', {
     BDD::Behave::Formatter::Registry.register('custom-test', CustomTestFormatter);
-    expect(BDD::Behave::Formatter::Registry.names).to.eq(<custom-test documentation html json junit progress tap tree>.List);
+    expect(BDD::Behave::Formatter::Registry.names).to.eq(<custom-test documentation html json json-events junit progress tap tree>.List);
   }
 
   it 'looks up a registered formatter class by name', {
@@ -76,7 +76,7 @@ describe 'BDD::Behave::Formatter::Registry', {
   it 'reset restores only the built-in formatters', {
     BDD::Behave::Formatter::Registry.register('custom-test', CustomTestFormatter);
     BDD::Behave::Formatter::Registry.reset;
-    expect(BDD::Behave::Formatter::Registry.names).to.eq(<documentation html json junit progress tap tree>.List);
+    expect(BDD::Behave::Formatter::Registry.names).to.eq(<documentation html json json-events junit progress tap tree>.List);
     expect(BDD::Behave::Formatter::Registry.registered('custom-test')).to.be-falsy;
   }
 }

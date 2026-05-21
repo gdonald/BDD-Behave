@@ -1,0 +1,54 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::Manifest;
+
+plan 9;
+
+my $tmp = $*TMPDIR.add("behave-manifest-test-{$*PID}.txt");
+
+# Round-trip
+{
+  my @locs = </abs/specs/foo-spec.raku:12 /abs/specs/foo-spec.raku:45 /abs/specs/bar-spec.raku:7>;
+  write-manifest($tmp, @locs);
+  my @read = read-manifest($tmp);
+  is @read.elems, 3, 'round-trip: count preserved';
+  is @read[0], '/abs/specs/foo-spec.raku:12', 'round-trip: first entry preserved';
+  is @read[2], '/abs/specs/bar-spec.raku:7',  'round-trip: last entry preserved';
+}
+
+# Missing file -> empty list, no crash
+{
+  my $missing = $*TMPDIR.add("behave-missing-{$*PID}.txt");
+  $missing.unlink if $missing.e;
+  my @read = read-manifest($missing);
+  is @read.elems, 0, 'missing file yields empty list';
+}
+
+# Blank lines / whitespace are ignored
+{
+  $tmp.spurt(qq:to/HERE/);
+  /a/spec.raku:1
+
+  /a/spec.raku:2
+
+  /b/spec.raku:3
+  HERE
+  my @read = read-manifest($tmp);
+  is @read.elems, 3, 'blank/whitespace-only lines stripped';
+}
+
+# files-from-manifest dedupes preserving first-seen order
+{
+  my @locs = </abs/a.raku:1 /abs/b.raku:2 /abs/a.raku:5 /abs/c.raku:3 /abs/b.raku:10>;
+  my @files = files-from-manifest(@locs);
+  is @files.elems, 3, 'files-from-manifest dedupes';
+  is @files[0], '/abs/a.raku', 'first-seen order: a';
+  is @files[1], '/abs/b.raku', 'first-seen order: b';
+  is @files[2], '/abs/c.raku', 'first-seen order: c';
+}
+
+$tmp.unlink if $tmp.e;
+
+done-testing;

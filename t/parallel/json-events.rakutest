@@ -1,0 +1,93 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Formatter::JsonEvents;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+plan 13;
+
+# Setup
+my $fmt   = BDD::Behave::Formatter::JsonEvents.new;
+my $file  = '/abs/spec.raku'.IO;
+my $suite = Suite.new(:description('spec.raku'), :$file, :line(1));
+my $group = ExampleGroup.new(:description('outer'), :$file, :line(5));
+$suite.add-child($group);
+my $ex    = Example.new(:description('pass example'), :$file, :line(7), :block(sub { }));
+$group.add-child($ex);
+$ex.duration = 0.125;
+
+# Each formatter call emits exactly one valid JSON-line event
+{
+  my $out = stdout-from { $fmt.suite-start($suite) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>, 'suite-start',      'suite-start emits suite-start event';
+  is %ev<id>,   "{$file.absolute}:1", 'suite-start emits node id';
+}
+
+{
+  my $out = stdout-from { $fmt.group-start($group) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>,        'group-start',  'group-start event';
+  is %ev<description>, 'outer',         'group-start carries description';
+}
+
+{
+  my $out = stdout-from { $fmt.example-start($ex) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>, 'example-start', 'example-start event';
+  is %ev<id>,   "{$file.absolute}:7", 'example-start id';
+}
+
+{
+  my $out = stdout-from { $fmt.example-pass($ex) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>,     'example-pass', 'example-pass event';
+  is %ev<duration>, 0.125,          'duration preserved';
+}
+
+{
+  my $out = stdout-from { $fmt.example-pending($ex) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>, 'example-pending', 'example-pending event';
+}
+
+{
+  my $out = stdout-from { $fmt.example-skipped($ex) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>, 'example-skipped', 'example-skipped event';
+}
+
+{
+  my $exc;
+  try { die 'boom'; CATCH { default { $exc = $_ } } }
+  my $out = stdout-from { $fmt.example-fail($ex, :failure-info(%(
+    description => 'desc',
+    file        => $file.absolute,
+    line        => 7,
+    exception   => $exc,
+  ))) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<type>, 'example-fail', 'example-fail event';
+  is %ev<exception-message>, 'boom', 'exception message captured';
+}
+
+# Strings with newlines and quotes round-trip safely
+{
+  my $tricky = Example.new(
+    :description("hello \"world\"\nnext line"),
+    :$file, :line(99), :block(sub { }),
+  );
+  $tricky.duration = 0.0;
+  my $out = stdout-from { $fmt.example-start($tricky) };
+  my %ev = parse-json-event($out.lines[0]);
+  is %ev<description>, "hello \"world\"\nnext line", 'tricky string round-trips';
+}
+
+done-testing;

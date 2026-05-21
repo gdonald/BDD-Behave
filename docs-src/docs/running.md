@@ -52,6 +52,7 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--format NAME`      | Select the output formatter for the run. `NAME` is the name of a registered formatter (`default` is built in). See [Formatters](formatter/formatter.md). |
 | `--config PATH`      | Load Raku-based config from `PATH`. Skips the default `~/.behave` and `./.behave` lookups. See [Configuration](configuration/configuration.md). |
 | `--no-config` / `--no-user-config` / `--no-project-config` | Skip all / user / project config files for this run. `BEHAVE_DISABLE_CONFIG=1` is equivalent to `--no-config`. See [Configuration](configuration/configuration.md). |
+| `--parallel N`       | Run specs across `N` worker subprocesses with group-affinity LPT distribution. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage`. Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md). |
 
 ## Order and seed
 

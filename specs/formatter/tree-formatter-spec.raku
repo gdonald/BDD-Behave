@@ -59,7 +59,7 @@ describe 'BDD::Behave::Formatter::Tree', {
         $f.group-start($outer);
         $f.group-start($inner);
       });
-      my @lines = $out.lines;
+      my @lines = strip-ansi($out).lines;
       expect(@lines[0].starts-with('⮑')).to.be-truthy;
       expect(@lines[1].starts-with('  ⮑')).to.be-truthy;
     }
@@ -75,7 +75,7 @@ describe 'BDD::Behave::Formatter::Tree', {
         $f.group-end($outer);
         $f.group-start(make-group('next'));
       });
-      my @lines = $out.lines;
+      my @lines = strip-ansi($out).lines;
       expect(@lines[*-1].starts-with('⮑')).to.be-truthy;
     }
   }
