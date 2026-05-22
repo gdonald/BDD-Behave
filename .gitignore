@@ -4,3 +4,4 @@ docs-src/site/
 /coverage/
 line_counts.raku
 .fezignore
+/.behave-failures

@@ -1,0 +1,79 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 14;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $passing = $root.add('specs/expectations/be-between-spec.raku');
+my $flaky   = $root.add('t/fixtures/retry-pass-on-third-fixture-spec.raku');
+my $mixed   = $root.add('t/fixtures/retry-mixed-fixture-spec.raku');
+
+sub run-behave(@args, Str :$attempts-file) {
+  my %env = |%*ENV;
+  %env<BEHAVE_RETRY_ATTEMPTS_FILE> = $attempts-file if $attempts-file.defined;
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err, :env(%env));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+# --retry without a value errors out.
+{
+  my $proc = run('raku', '-Ilib', $bin.absolute, '--retry', :out, :err);
+  my $err = $proc.err.slurp(:close);
+  $proc.out.slurp(:close);
+  isnt $proc.exitcode, 0, '--retry with no value exits non-zero';
+  ok $err.contains('--retry requires a value'),
+    '--retry with no value prints a clear error';
+}
+
+# --retry=abc errors out.
+{
+  my %r = run-behave(['--retry=abc', $passing.absolute]);
+  isnt %r<exit>, 0, '--retry=abc exits non-zero';
+  ok %r<err>.contains('--retry=N requires a non-negative integer'),
+    '--retry=abc emits the expected error';
+}
+
+# --retry 2 with a fixture that passes on the third attempt succeeds.
+{
+  my $tmp = $*TMPDIR.add("behave-retry-test-{$*PID}-three.txt");
+  $tmp.unlink if $tmp.e;
+  my %r = run-behave(['--retry', '2', '--order', 'defined', $flaky.absolute],
+                     :attempts-file($tmp.absolute));
+  is %r<exit>, 0, '--retry 2 succeeds when the fixture passes on the third attempt';
+  is $tmp.slurp.trim.Int, 3, 'the fixture ran exactly 3 times';
+  ok %r<out>.contains('Retried 1 example:'),
+    'retry-summary banner prints exactly one example';
+  ok %r<out>.contains('3/3 attempts'),
+    'retry-summary shows the attempt count';
+  $tmp.unlink if $tmp.e;
+}
+
+# --retry 1 still fails when 3 attempts would be needed.
+{
+  my $tmp = $*TMPDIR.add("behave-retry-test-{$*PID}-one.txt");
+  $tmp.unlink if $tmp.e;
+  my %r = run-behave(['--retry=1', '--order', 'defined', $flaky.absolute],
+                     :attempts-file($tmp.absolute));
+  isnt %r<exit>, 0, '--retry=1 fails when the fixture passes on attempt 3';
+  is $tmp.slurp.trim.Int, 2, '--retry=1 runs the fixture exactly twice';
+  $tmp.unlink if $tmp.e;
+}
+
+# Per-example :retry(N) metadata works without --retry.
+{
+  my $tmp = $*TMPDIR.add("behave-retry-test-{$*PID}-mixed.txt");
+  $tmp.unlink if $tmp.e;
+  my %r = run-behave(['--order', 'defined', $mixed.absolute],
+                     :attempts-file($tmp.absolute));
+  ok %r<out>.contains('1 failed'),  ':retry metadata still allows failures';
+  ok %r<out>.contains('2 passed'),  ':retry metadata can recover a flaky example';
+  ok %r<out>.contains('2/3 attempts'),
+    ':retry(2) example shows 2/3 attempts in summary';
+  ok %r<out>.contains('2/2 attempts'),
+    ':retry(1) failing example shows 2/2 attempts in summary';
+  $tmp.unlink if $tmp.e;
+}

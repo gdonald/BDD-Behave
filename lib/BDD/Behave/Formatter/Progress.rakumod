@@ -44,6 +44,10 @@ method example-around-skipped($example) {
   print light-blue('S');
 }
 
+method example-retry($example, Int :$attempt, Int :$max-attempts) {
+  print yellow('R');
+}
+
 method example-slow($example, Real :$threshold) { }
 method example-memory-leak($example, Int :$threshold) { }
 

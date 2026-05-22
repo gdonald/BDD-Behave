@@ -1,0 +1,88 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::FailureStore;
+
+plan 12;
+
+sub fresh-file(--> IO::Path) {
+  my $path = $*TMPDIR.add("behave-failure-store-test-{$*PID}-{(now * 1e6).Int.base(36)}.txt");
+  $path.unlink if $path.e;
+  $path;
+}
+
+# read-failures on a missing file returns empty.
+{
+  my $path = fresh-file();
+  is BDD::Behave::FailureStore::read-failures($path).elems, 0,
+    'read-failures returns empty when file is missing';
+}
+
+# read-failures reads each line.
+{
+  my $path = fresh-file();
+  $path.spurt: "specs/a-spec.raku:10\nspecs/b-spec.raku:20\n";
+  my @out = BDD::Behave::FailureStore::read-failures($path);
+  is @out.elems, 2,         'read-failures returns one entry per line';
+  is @out[0], 'specs/a-spec.raku:10', 'first entry parsed correctly';
+  is @out[1], 'specs/b-spec.raku:20', 'second entry parsed correctly';
+  $path.unlink;
+}
+
+# read-failures ignores comments and blank lines.
+{
+  my $path = fresh-file();
+  $path.spurt: "# Banner\n\nspecs/x-spec.raku:1\n# inline comment\nspecs/y-spec.raku:2\n";
+  my @out = BDD::Behave::FailureStore::read-failures($path);
+  is @out.elems, 2, 'read-failures skips blank lines and # comments';
+  $path.unlink;
+}
+
+# merge-failures removes ran-and-passed entries.
+{
+  my @result = BDD::Behave::FailureStore::merge-failures(
+    ('specs/a:1', 'specs/b:2'),
+    ('specs/a:1', 'specs/b:2'),
+    ('specs/a:1',),
+  );
+  is @result.elems, 1,           'merge prunes passing entries';
+  is @result[0], 'specs/a:1',    'remaining entry is the still-failing one';
+}
+
+# merge-failures preserves entries that did not run.
+{
+  my @result = BDD::Behave::FailureStore::merge-failures(
+    ('specs/a:1', 'specs/other:99'),
+    ('specs/a:1',),
+    ('specs/a:1',),
+  );
+  is @result.elems, 2, 'merge keeps untouched entries';
+}
+
+# merge-failures dedupes when failures appear multiple times.
+{
+  my @result = BDD::Behave::FailureStore::merge-failures(
+    (),
+    ('specs/x:7',),
+    ('specs/x:7', 'specs/x:7'),
+  );
+  is @result.elems, 1, 'merge dedupes duplicate failure entries';
+}
+
+# write-failures writes line-per-entry with trailing newline.
+{
+  my $path = fresh-file();
+  BDD::Behave::FailureStore::write-failures($path, (), ('specs/x:1', 'specs/y:2'));
+  is $path.slurp, "specs/x:1\nspecs/y:2\n", 'write-failures emits LF-separated lines';
+  $path.unlink;
+}
+
+# write-failures writes an empty file when there are no entries.
+{
+  my $path = fresh-file();
+  BDD::Behave::FailureStore::write-failures($path, ('specs/x:1',), ());
+  ok $path.e,             'write-failures creates the file even when empty';
+  is $path.slurp, '',     'empty failures yields empty file contents';
+  $path.unlink;
+}

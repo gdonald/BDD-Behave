@@ -22,6 +22,25 @@ constant BenchmarkResult = BDD::Behave::Benchmark::BenchmarkResult;
 constant BaselineEntry   = BDD::Behave::Benchmark::Baseline::BaselineEntry;
 constant Configuration   = BDD::Behave::Configuration::Configuration;
 
+our class AttemptResult {
+  has Str  $.outcome              is rw;
+  has %.failure-info              is rw;
+  has Int  $.new-failures         is rw = 0;
+  has @.captured-matchers         is rw;
+  has Bool $.auto                 is rw = False;
+  has Str  $.description          is rw;
+  has Real $.duration             is rw;
+  has Bool $.continuation-called  is rw = False;
+}
+
+our class RetryRecord {
+  has Str $.description is required;
+  has Str $.location    is required;
+  has Int $.attempts    is required;
+  has Int $.max-attempts is required;
+  has Str $.outcome     is required;
+}
+
 our class RunResult {
   has Int $.total   is rw = 0;
   has Int $.passed  is rw = 0;
@@ -29,6 +48,7 @@ our class RunResult {
   has Int $.pending is rw = 0;
   has Int $.skipped is rw = 0;
   has @.errors      is rw;
+  has @.retry-records is rw;
 
   method add-pass {
     $!total++;
@@ -49,6 +69,10 @@ our class RunResult {
   method add-skipped {
     $!total++;
     $!skipped++;
+  }
+
+  method add-retry(RetryRecord $record) {
+    @!retry-records.push($record);
   }
 
   method success {
@@ -72,6 +96,7 @@ our class Runner {
   has Int $.seed;
   has Int $!rng-state;
   has Int $.fail-fast = 0;
+  has Int $.retry     = 0;
   has Bool $.aborted = False;
   has Real $.slow-threshold = 0;
   has Int $.profile-limit = 0;
@@ -101,6 +126,9 @@ our class Runner {
 
     die "fail-fast must be 0 or a positive integer (got: $!fail-fast)"
       if $!fail-fast < 0;
+
+    die "retry must be 0 or a positive integer (got: $!retry)"
+      if $!retry < 0;
 
     die "slow-threshold must be 0 or positive (got: $!slow-threshold)"
       if $!slow-threshold < 0;
@@ -508,6 +536,52 @@ our class Runner {
       return;
     }
 
+    my Bool $measure-memory = self.memory-measurement-enabled && !$example.pending;
+    if $measure-memory {
+      $example.memory-before = self.measure-memory-rss;
+    }
+
+    my $max-attempts  = self.resolve-max-attempts($example);
+    my Int $attempt-num = 0;
+    my AttemptResult $result;
+
+    loop {
+      $attempt-num++;
+      my Int $failure-snapshot = Failures.list.elems;
+      $result = self.attempt-example($example, :first-attempt($attempt-num == 1));
+
+      last if $result.outcome ne 'fail';
+      last if $attempt-num >= $max-attempts;
+
+      Failures.list.splice($failure-snapshot, Failures.list.elems - $failure-snapshot);
+      $!formatter.example-retry($example, :attempt($attempt-num), :max-attempts($max-attempts));
+    }
+
+    self.commit-attempt-result($example, $result, :attempts($attempt-num), :$max-attempts);
+
+    if $measure-memory && $result.continuation-called && !$example.pending {
+      $example.memory-after = self.measure-memory-rss;
+      if $example.memory-before.defined && $example.memory-after.defined {
+        $example.memory-delta = $example.memory-after - $example.memory-before;
+        @!memory-records.push: %(
+          example     => $example,
+          description => self.full-description($example),
+          delta       => $example.memory-delta,
+          before      => $example.memory-before,
+          after       => $example.memory-after,
+        );
+        self.maybe-print-memory-leak($example);
+      }
+    }
+  }
+
+  method resolve-max-attempts(Example $example --> Int) {
+    my $meta-retry = $example.effective-metadata-value('retry');
+    my $configured = $meta-retry.defined ?? max($meta-retry.Int, 0) !! $!retry;
+    1 + $configured;
+  }
+
+  method attempt-example(Example $example, Bool :$first-attempt = True --> AttemptResult) {
     my @lets = $example.get-metadata('lets', :default([])).flat.List;
     my $*LET-RUNTIME = LetRuntime.new(:definitions(@lets));
 
@@ -518,17 +592,12 @@ our class Runner {
       }
     }
 
-    my Bool $measure-memory = self.memory-measurement-enabled && !$example.pending;
-    if $measure-memory {
-      $example.memory-before = self.measure-memory-rss;
-    }
-
+    my $result = AttemptResult.new;
     my @around-hooks = self.matching-around-each-hooks($example);
 
-    my $continuation-called = False;
     my &core = sub {
-      $continuation-called = True;
-      self.run-each-and-example($example);
+      $result.continuation-called = True;
+      self.run-each-and-example-attempt($example, $result, :$first-attempt);
     };
 
     my $reached-end = False;
@@ -547,52 +616,40 @@ our class Runner {
         $reached-end = True;
         CATCH {
           default {
-            if $continuation-called {
+            if $result.continuation-called {
               warn "around-each hook raised after example: {.message}";
               $reached-end = True;
             } else {
-              $!formatter.example-start($example);
-              my %failure-info = (
+              $result.outcome = 'fail';
+              $result.failure-info = %(
                 description => self.full-description($example),
                 file        => $example.file,
                 line        => $example.line,
                 exception   => $_,
               );
-              $!result.add-fail(%failure-info);
-              $!formatter.example-fail($example, :failure-info(%failure-info));
             }
           }
         }
       }
     }
 
-    if !$continuation-called && $reached-end {
-      self.print-around-skipped($example);
+    if !$result.continuation-called && $reached-end && !$result.outcome.defined {
+      $result.outcome = 'around-skipped';
     }
 
-    if $measure-memory && $continuation-called && !$example.pending {
-      $example.memory-after = self.measure-memory-rss;
-      if $example.memory-before.defined && $example.memory-after.defined {
-        $example.memory-delta = $example.memory-after - $example.memory-before;
-        @!memory-records.push: %(
-          example     => $example,
-          description => self.full-description($example),
-          delta       => $example.memory-delta,
-          before      => $example.memory-before,
-          after       => $example.memory-after,
-        );
-        self.maybe-print-memory-leak($example);
-      }
-    }
+    $result;
   }
 
-  method run-each-and-example(Example $example) {
+  method run-each-and-example-attempt(Example $example, $result, Bool :$first-attempt) {
     self.run-config-hooks('before-each', $example);
     for self.ancestor-groups($example) -> $ancestor {
       self.run-each-hooks($ancestor, 'before-each', $example);
     }
 
-    self.run-config-around-each($example, { self.run-example($example) });
+    self.run-config-around-each(
+      $example,
+      { self.run-example-attempt($example, $result, :$first-attempt) },
+    );
 
     for self.ancestor-groups($example).reverse -> $ancestor {
       self.run-each-hooks($ancestor, 'after-each', $example);
@@ -792,23 +849,22 @@ our class Runner {
     (True, Str).List;
   }
 
-  method run-example(Example $example) {
+  method run-example-attempt(Example $example, $result, Bool :$first-attempt) {
     my Bool $auto = ?$example.get-metadata('auto-description', :default(False));
-    my $description = $example.description;
+    $result.auto = $auto;
+    $result.description = $example.description;
 
     if $example.pending {
-      $!formatter.example-pending($example);
-      $!result.add-pending;
+      $result.outcome = 'pending';
       return;
     }
 
-    @!execution-order.push("{$example.file}:{$example.line}");
+    @!execution-order.push("{$example.file}:{$example.line}") if $first-attempt;
 
     my ($auto-agg-on, $auto-agg-label) = self.resolve-auto-aggregation($example);
-
     my $initial-failure-count = Failures.list.elems;
 
-    $!formatter.example-start($example, :$auto) unless $auto;
+    $!formatter.example-start($example, :$auto) if $first-attempt && !$auto;
 
     my @captured-matchers;
     my $error;
@@ -839,48 +895,100 @@ our class Runner {
     my $finished = now;
     $example.finished-at = $finished;
     $example.duration = ($finished - $started).Real;
-
-    @!timed-examples.push: %(
-      example     => $example,
-      description => self.full-description($example),
-      duration    => $example.duration,
-    );
+    $result.duration = $example.duration;
+    $result.captured-matchers = @captured-matchers if $auto;
 
     if $auto {
       my $derived = self.derive-auto-description(@captured-matchers);
-      $description = $derived if $derived.defined;
-      $!formatter.example-auto-description($example, :$description);
+      $result.description = $derived if $derived.defined;
     }
 
     if $error.defined {
-      my %failure-info = (
+      $result.outcome = 'fail';
+      $result.failure-info = %(
         description => self.full-description($example),
         file        => $example.file,
         line        => $example.line,
         exception   => $error,
       );
-      $!result.add-fail(%failure-info);
-      $!formatter.example-fail($example, :failure-info(%failure-info));
-      self.maybe-print-slow($example);
       return;
     }
 
-    my $new-failures = Failures.list.elems - $initial-failure-count;
+    $result.new-failures = Failures.list.elems - $initial-failure-count;
 
-    if $new-failures > 0 {
-      my %failure-info = (
+    if $result.new-failures > 0 {
+      $result.outcome = 'fail';
+      $result.failure-info = %(
         description => self.full-description($example),
         file        => $example.file,
         line        => $example.line,
       );
-      $!result.add-fail(%failure-info);
-      $!formatter.example-fail($example, :failure-info(%failure-info));
     } else {
-      $!result.add-pass;
-      $!formatter.example-pass($example);
+      $result.outcome = 'pass';
     }
+  }
 
-    self.maybe-print-slow($example);
+  method commit-attempt-result(
+    Example $example,
+    AttemptResult $result,
+    Int :$attempts = 1,
+    Int :$max-attempts = 1,
+  ) {
+    given $result.outcome {
+      when 'pending' {
+        $!formatter.example-pending($example);
+        $!result.add-pending;
+      }
+      when 'around-skipped' {
+        self.print-around-skipped($example);
+      }
+      when 'pass' {
+        @!timed-examples.push: %(
+          example     => $example,
+          description => self.full-description($example),
+          duration    => $example.duration,
+        );
+        if $result.auto {
+          $!formatter.example-auto-description(
+            $example, :description($result.description),
+          );
+        }
+        $!result.add-pass;
+        $!formatter.example-pass($example);
+        self.record-retry($example, $result, :$attempts, :$max-attempts) if $attempts > 1;
+        self.maybe-print-slow($example);
+      }
+      when 'fail' {
+        @!timed-examples.push: %(
+          example     => $example,
+          description => self.full-description($example),
+          duration    => $example.duration,
+        );
+        if $result.auto {
+          $!formatter.example-auto-description(
+            $example, :description($result.description),
+          );
+        }
+        $!result.add-fail($result.failure-info);
+        $!formatter.example-fail($example, :failure-info($result.failure-info));
+        self.record-retry($example, $result, :$attempts, :$max-attempts) if $attempts > 1;
+        self.maybe-print-slow($example);
+      }
+    }
+  }
+
+  method record-retry(
+    Example $example, AttemptResult $result,
+    Int :$attempts!, Int :$max-attempts!,
+  ) {
+    my $record = RetryRecord.new(
+      :description(self.full-description($example)),
+      :location("{$example.file}:{$example.line}"),
+      :$attempts,
+      :$max-attempts,
+      :outcome($result.outcome),
+    );
+    $!result.add-retry($record);
   }
 
   method maybe-print-slow(Example $example) {
@@ -977,6 +1085,9 @@ our class Runner {
       $!result,
       :$!aborted, :$!fail-fast, :$!order, :$!seed,
     );
+
+    $!formatter.retry-summary($!result.retry-records)
+      if $!result.retry-records.elems;
 
     $!formatter.profile-summary(@!timed-examples, :limit($!profile-limit))
       if $!profile-limit > 0;

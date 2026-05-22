@@ -1,0 +1,164 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+use BDD::Behave::Formatter;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Failures;
+
+plan 20;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example     = BDD::Behave::SpecTree::Example;
+
+my role Silent does BDD::Behave::Formatter {
+  method name(--> Str) { 'silent' }
+}
+
+sub silent-formatter { (class :: does Silent { }).new }
+
+sub build-suite($file = 'fixture.raku') {
+  Suite.new(:description($file), :file($file.IO), :line(1));
+}
+
+sub make-example($description, $line, &block) {
+  Example.new(:$description, :file('fixture.raku'.IO), :$line, :&block);
+}
+
+# retry=0 runs exactly once
+{
+  my $count = 0;
+  my $suite = build-suite();
+  $suite.add-example(make-example('always fails', 2, {
+    $count++;
+    Failures.list.push(BDD::Behave::Failure.new(:file('fixture.raku'), :line(2), :given(1), :expected(2), :negated(False)));
+  }));
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(0));
+  $runner.run($suite);
+  is $count, 1, 'retry=0 runs failing example exactly once';
+  is $runner.result.failed, 1, 'retry=0 records 1 failure';
+  is $runner.result.retry-records.elems, 0, 'retry=0 records no retry-records';
+}
+
+# retry=2 retries up to 3 attempts
+{
+  Failures.list = ();
+  my $count = 0;
+  my $suite = build-suite();
+  $suite.add-example(make-example('always fails', 2, {
+    $count++;
+    Failures.list.push(BDD::Behave::Failure.new(:file('fixture.raku'), :line(2), :given(1), :expected(2), :negated(False)));
+  }));
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(2));
+  $runner.run($suite);
+  is $count, 3,                            'retry=2 runs 3 total attempts';
+  is $runner.result.failed, 1,             'retry=2 still records 1 final failure';
+  is $runner.result.retry-records.elems, 1, 'retry=2 produces one retry-record';
+  is $runner.result.retry-records[0].outcome, 'fail',
+    'final attempt outcome is fail';
+  is $runner.result.retry-records[0].attempts, 3,
+    'retry-record attempt count is 3';
+}
+
+# retry stops when an attempt passes
+{
+  Failures.list = ();
+  my $count = 0;
+  my $suite = build-suite();
+  $suite.add-example(make-example('passes on second', 2, {
+    $count++;
+    if $count < 2 {
+      Failures.list.push(BDD::Behave::Failure.new(:file('fixture.raku'), :line(2), :given(1), :expected(2), :negated(False)));
+    }
+  }));
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(5));
+  $runner.run($suite);
+  is $count, 2, 'retry halts as soon as an attempt passes';
+  is $runner.result.passed, 1, 'recovering example counts as pass';
+  is $runner.result.retry-records[0].outcome, 'pass',
+    'recovered example outcome is pass';
+}
+
+# per-example metadata overrides runner default
+{
+  Failures.list = ();
+  my $count = 0;
+  my $suite = build-suite();
+  my $ex = make-example('flaky with :retry(4)', 2, {
+    $count++;
+    if $count < 4 {
+      Failures.list.push(BDD::Behave::Failure.new(:file('fixture.raku'), :line(2), :given(1), :expected(2), :negated(False)));
+    }
+  });
+  $ex.set-metadata(:retry(4));
+  $suite.add-example($ex);
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(1));
+  $runner.run($suite);
+  is $count, 4, 'per-example :retry(4) overrides runner :retry(1)';
+  is $runner.result.passed, 1, 'per-example metadata recovers the example';
+}
+
+# group-level :retry metadata inherits
+{
+  Failures.list = ();
+  my $count = 0;
+  my $suite = build-suite();
+  my $group = ExampleGroup.new(:description('flaky group'), :file('fixture.raku'.IO), :line(1));
+  $group.set-metadata(:retry(3));
+  $group.add-example(make-example('inherits retry', 2, {
+    $count++;
+    if $count < 3 {
+      Failures.list.push(BDD::Behave::Failure.new(:file('fixture.raku'), :line(2), :given(1), :expected(2), :negated(False)));
+    }
+  }));
+  $suite.add-group($group);
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(0));
+  $runner.run($suite);
+  is $count, 3, 'group-level :retry inherits to descendant examples';
+  is $runner.result.passed, 1, 'inherited retry recovers the example';
+}
+
+# intermediate failures are spliced from Failures.list when a retry passes
+{
+  Failures.list = ();
+  my $count = 0;
+  my $suite = build-suite();
+  $suite.add-example(make-example('flaky', 2, {
+    $count++;
+    if $count < 2 {
+      Failures.list.push(BDD::Behave::Failure.new(:file('fixture.raku'), :line(2), :given(1), :expected(2), :negated(False)));
+    }
+  }));
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(3));
+  $runner.run($suite);
+  is Failures.list.elems, 0,
+    'intermediate Failures.list entries are spliced out on retry pass';
+}
+
+# pending examples are not retried
+{
+  Failures.list = ();
+  my $suite = build-suite();
+  my $ex = make-example('pending one', 2, sub {});
+  $ex.pending = True;
+  $suite.add-example($ex);
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(5));
+  $runner.run($suite);
+  is $runner.result.pending, 1, 'pending example counted once';
+  is $runner.result.retry-records.elems, 0, 'pending examples do not produce retry-records';
+}
+
+# skipped examples are not retried
+{
+  Failures.list = ();
+  my $suite = build-suite();
+  my $ex = make-example('skipped one', 2, sub {});
+  $ex.set-metadata(:skipped(True));
+  $suite.add-example($ex);
+  my $runner = BDD::Behave::Runner::Runner.new(:formatter(silent-formatter()), :order<defined>, :retry(5));
+  $runner.run($suite);
+  is $runner.result.skipped, 1, 'skipped example counted once';
+  is $runner.result.retry-records.elems, 0, 'skipped examples do not produce retry-records';
+}

@@ -17,6 +17,7 @@ method example-fail($example, :$failure-info)                    { }
 method example-pending($example)                                 { }
 method example-skipped($example)                                 { }
 method example-around-skipped($example)                          { }
+method example-retry($example, Int :$attempt, Int :$max-attempts) { }
 method example-slow($example, Real :$threshold)                  { }
 method example-memory-leak($example, Int :$threshold)            { }
 
@@ -30,6 +31,7 @@ method run-summary(
 
 method profile-summary(@records, Int :$limit)                    { }
 method memory-profile-summary(@records, Int :$limit)             { }
+method retry-summary(@records)                                   { }
 
 method benchmark-summary-section(
   @summaries, @regressions,

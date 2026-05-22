@@ -164,6 +164,15 @@ method example-around-skipped($example) {
   );
 }
 
+method example-retry($example, Int :$attempt, Int :$max-attempts) {
+  emit %(
+    :type<example-retry>,
+    :id(self.node-id($example)),
+    :attempt($attempt.Int),
+    :max-attempts($max-attempts.Int),
+  );
+}
+
 method example-slow($example, Real :$threshold) {
   emit %(
     :type<example-slow>,
@@ -180,6 +189,19 @@ method example-memory-leak($example, Int :$threshold) {
     :threshold($threshold.Int),
     :delta($example.memory-delta.defined ?? $example.memory-delta.Int !! 0),
   );
+}
+
+method retry-summary(@records) {
+  for @records -> $rec {
+    emit %(
+      :type<retry-record>,
+      :description($rec.description.Str),
+      :location($rec.location.Str),
+      :attempts($rec.attempts.Int),
+      :max-attempts($rec.max-attempts.Int),
+      :outcome($rec.outcome.Str),
+    );
+  }
 }
 
 method run-summary(

@@ -47,6 +47,9 @@ our class Configuration {
   has Str      $.order                is rw;
   has Int      $.seed                 is rw;
   has Int      $.fail-fast            is rw;
+  has Int      $.retry                is rw;
+  has Bool     $.only-failures        is rw;
+  has IO::Path $.failures-path        is rw;
   has Bool     $.verbose              is rw;
   has          $.aggregate-failures   is rw;
   has Int      $.profile-limit        is rw;
@@ -178,7 +181,7 @@ our class Configuration {
 
   method merge(Configuration $other --> Configuration) {
     my $result = Configuration.new;
-    for <format order seed fail-fast verbose aggregate-failures
+    for <format order seed fail-fast retry only-failures failures-path verbose aggregate-failures
          profile-limit slow-threshold memory-profile-limit memory-threshold
          benchmark-mode benchmark-iterations benchmark-baseline benchmark-save
          benchmark-threshold benchmark-format benchmark-output
@@ -224,6 +227,8 @@ our sub defaults(--> Configuration) {
   $c.format               = 'progress';
   $c.order                = 'random';
   $c.fail-fast            = 0;
+  $c.retry                = 0;
+  $c.only-failures        = False;
   $c.verbose              = False;
   $c.aggregate-failures   = False;
   $c.profile-limit        = 0;

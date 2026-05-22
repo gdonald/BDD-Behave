@@ -10,6 +10,7 @@ use BDD::Behave::Formatter::Registry;
 use BDD::Behave::Configuration;
 use BDD::Behave::DocExtractor;
 use BDD::Behave::Coverage;
+use BDD::Behave::FailureStore;
 
 constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
 
@@ -60,6 +61,18 @@ sub usage() {
                              end of the run for reproduction.
     --fail-fast              Stop after the first failed example.
     --fail-fast=N            Stop after N failed examples (N must be >= 1).
+    --retry N                Retry failing examples up to N additional times
+                             (total of N+1 attempts). N must be a non-negative
+                             integer. Per-example `:retry(M)` metadata
+                             overrides this default.
+    --only-failures          Run only examples that failed in the previous run.
+                             Reads FILE:LINE list from .behave-failures (or
+                             --failures-path PATH). Combines with other filters
+                             via AND. If the file is missing or empty, all
+                             examples run.
+    --failures-path=PATH     Path used to persist (and read, with
+                             --only-failures) the list of failed examples.
+                             Defaults to './.behave-failures'.
     --only-example LOC       Run only the example whose file:line matches LOC
                              (repeatable; OR semantics). LOC is FILE:LINE
                              (FILE may be absolute, relative, or basename).
@@ -259,6 +272,28 @@ while @args {
       exit 2;
     }
     $cli-config.fail-fast = $value.Int;
+  } elsif $arg eq '--retry' {
+    die "--retry requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ $/ {
+      note "Error: --retry requires a non-negative integer (got: '$value')";
+      exit 2;
+    }
+    $cli-config.retry = $value.Int;
+  } elsif $arg.starts-with('--retry=') {
+    my $value = $arg.substr('--retry='.chars);
+    unless $value ~~ /^ \d+ $/ {
+      note "Error: --retry=N requires a non-negative integer (got: '$value')";
+      exit 2;
+    }
+    $cli-config.retry = $value.Int;
+  } elsif $arg eq '--only-failures' {
+    $cli-config.only-failures = True;
+  } elsif $arg eq '--failures-path' {
+    die "--failures-path requires a value" unless @args;
+    $cli-config.failures-path = @args.shift.IO;
+  } elsif $arg.starts-with('--failures-path=') {
+    $cli-config.failures-path = $arg.substr('--failures-path='.chars).IO;
   } elsif $arg eq '--only-example' {
     die "--only-example requires a value" unless @args;
     $cli-config.only-location(maybe-snap-location(@args.shift));
@@ -514,6 +549,9 @@ my $format               = $final-config.format;
 my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
 my $fail-fast            = $final-config.fail-fast;
+my $retry-default        = $final-config.retry // 0;
+my $only-failures        = ?$final-config.only-failures;
+my $failures-path        = $final-config.failures-path // $*CWD.IO.add('.behave-failures');
 my $verbose              = ?$final-config.verbose;
 my $aggregate-failures   = $final-config.aggregate-failures;
 my $profile-limit        = $final-config.profile-limit;
@@ -531,6 +569,21 @@ my @include-tags         = $final-config.include-tags.list;
 my @exclude-tags         = $final-config.exclude-tags.list;
 my @example-patterns     = $final-config.example-patterns.list;
 my @only-locations       = $final-config.only-locations.list;
+
+if $only-failures {
+  if $failures-path.defined && $failures-path.e {
+    my @entries = $failures-path.slurp.lines.grep({ .chars && !.starts-with('#') });
+    if @entries.elems {
+      for @entries -> $loc {
+        @only-locations.push: maybe-snap-location($loc);
+      }
+    } else {
+      note "--only-failures: no entries in '{$failures-path}'; running all examples";
+    }
+  } else {
+    note "--only-failures: '{$failures-path}' not found; running all examples";
+  }
+}
 my $coverage-enabled     = ?$final-config.coverage;
 my $coverage-minimum     = $final-config.coverage-minimum // 0.Real;
 my $coverage-format      = $final-config.coverage-format // 'text';
@@ -749,6 +802,9 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
   }
   @worker-argv.push: '--no-config';
   @worker-argv.push: '--format', 'json-events';
+  if $retry-default > 0 {
+    @worker-argv.push: '--retry', $retry-default.Str;
+  }
 
   my $parent-formatter = BDD::Behave::Formatter::Registry.create($format);
 
@@ -787,9 +843,18 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     $parent-formatter.run-summary($rr, :$order, :$seed);
   }
 
+  $parent-formatter.retry-summary($par-result.retry-records)
+    if $par-result.retry-records.elems;
+
   for $par-result.load-errors -> %err {
     note red("Error: Could not load {%err<file>}: {%err<message>}");
   }
+
+  BDD::Behave::FailureStore::write-failures(
+    $failures-path,
+    $par-result.executed-locations.list,
+    $par-result.failed-locations.list,
+  );
 
   exit(($par-result.success && $par-result.failed == 0) ?? 0 !! 1);
 }
@@ -872,6 +937,7 @@ my $suites-run = 0;
 my @load-errors;
 my @all-execution-order;
 my @all-failures;
+my @all-retry-records;
 my @all-timings;
 my @all-memory-records;
 my @all-benchmark-summaries;
@@ -921,6 +987,7 @@ for @files -> $file {
     :$order,
     :$seed,
     :fail-fast($remaining-fail-fast),
+    :retry($retry-default),
     :profile-limit($runner-profile-limit),
     :memory-profile-limit($runner-memory-profile-limit),
     :$memory-threshold,
@@ -947,11 +1014,12 @@ for @files -> $file {
   }
   $suites-run++;
 
-  if $bisect-data {
-    @all-execution-order.append: $runner.execution-order;
-    for $runner.result.errors -> $err {
-      @all-failures.push("{$err<file>}:{$err<line>}");
-    }
+  @all-execution-order.append: $runner.execution-order;
+  for $runner.result.errors -> $err {
+    @all-failures.push("{$err<file>}:{$err<line>}");
+  }
+  for $runner.result.retry-records.list -> $rec {
+    @all-retry-records.push($rec);
   }
 
   @all-timings.append: $runner.timed-examples;
@@ -987,6 +1055,8 @@ if $bisect-data {
 if $multi {
   $formatter.multi-file-overall($total-result, :$order, :$seed);
 
+  $formatter.retry-summary(@all-retry-records) if @all-retry-records.elems;
+
   if $profile-limit > 0 && $last-runner.defined && !$bisect-data {
     $formatter.multi-file-profile($last-runner, @all-timings, :limit($profile-limit));
   }
@@ -1016,6 +1086,14 @@ if $multi {
 }
 
 $formatter.load-errors(@load-errors);
+
+unless $bisect || $bisect-data {
+  BDD::Behave::FailureStore::write-failures(
+    $failures-path,
+    @all-execution-order,
+    @all-failures,
+  );
+}
 
 # Exit non-zero if any examples failed or any spec file failed to load
 exit(($total-result.success && @load-errors.elems == 0) ?? 0 !! 1);

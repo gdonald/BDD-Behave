@@ -192,6 +192,9 @@ class ParallelRunResult is export {
   has Int $.skipped is rw = 0;
   has @.failures;
   has @.load-errors;
+  has @.retry-records;
+  has @.executed-locations;
+  has @.failed-locations;
   has Int $.exit-code is rw = 0;
 
   method success(--> Bool) { $!failed == 0 && @!load-errors.elems == 0 && $!exit-code == 0 }
@@ -327,6 +330,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       if $example.defined {
         $example.duration = (%event<duration> // 0).Real;
         $formatter.example-pass($example);
+        $result.executed-locations.push("{$example.file.absolute}:{$example.line}");
       }
       $result.total++;
       $result.passed++;
@@ -347,10 +351,25 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       if $example.defined {
         $example.duration = (%event<duration> // 0).Real;
         $formatter.example-fail($example, :%failure-info);
+        my $loc = "{$example.file.absolute}:{$example.line}";
+        $result.executed-locations.push($loc);
+        $result.failed-locations.push($loc);
+      } else {
+        my $f = %failure-info<file>.Str;
+        my $l = %failure-info<line>.Int;
+        $result.failed-locations.push("$f:$l") if $f.chars && $l;
       }
       $result.total++;
       $result.failed++;
       $result.failures.push: %failure-info;
+    }
+    when 'example-retry' {
+      my $example = lookup-example(@suites, %event<id>);
+      $formatter.example-retry(
+        $example,
+        :attempt((%event<attempt> // 1).Int),
+        :max-attempts((%event<max-attempts> // 1).Int),
+      ) if $example.defined;
     }
     when 'example-pending' {
       my $example = lookup-example(@suites, %event<id>);
@@ -369,6 +388,16 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $formatter.example-around-skipped($example) if $example.defined;
       $result.total++;
       $result.skipped++;
+    }
+    when 'retry-record' {
+      my $rec = BDD::Behave::Runner::RetryRecord.new(
+        :description((%event<description> // '').Str),
+        :location((%event<location> // '').Str),
+        :attempts((%event<attempts> // 1).Int),
+        :max-attempts((%event<max-attempts> // 1).Int),
+        :outcome((%event<outcome> // 'pass').Str),
+      );
+      $result.retry-records.push($rec);
     }
     when 'load-error' {
       $result.load-errors.push: %( file => %event<file>, message => %event<message> );

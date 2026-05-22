@@ -1,0 +1,118 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 15;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $lib     = $root.add('lib');
+my $bin     = $root.add('bin/behave');
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
+my $passing = $root.add('specs/expectations/be-between-spec.raku');
+
+sub fresh-workdir(--> IO::Path) {
+  my $dir = $*TMPDIR.add("behave-only-failures-test-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $dir.mkdir;
+  $dir;
+}
+
+sub rm-rf($node) {
+  if $node.d {
+    rm-rf($_) for $node.dir;
+    $node.rmdir if $node.e;
+  } else {
+    $node.unlink if $node.e;
+  }
+}
+
+sub cleanup($dir) {
+  rm-rf($dir);
+}
+
+sub run-behave-in($dir, *@args) {
+  my %env = |%*ENV;
+  my $proc = run('raku', "-I{$lib.absolute}", $bin.absolute, |@args,
+                 :cwd($dir.absolute), :out, :err, :env(%env));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+# After a failing run, .behave-failures contains one location per failure.
+{
+  my $dir = fresh-workdir();
+  run-behave-in($dir, '--order', 'defined', $failing.absolute);
+  my $path = $dir.add('.behave-failures');
+  ok $path.e, '.behave-failures created after a failing run';
+  my @lines = $path.slurp.lines.grep(*.chars);
+  is @lines.elems, 3, '.behave-failures lists every failing example';
+  for @lines -> $line {
+    ok $line.contains($failing.basename),
+      'each entry references the failing fixture';
+  }
+  cleanup($dir);
+}
+
+# After a fully passing run, .behave-failures is empty.
+{
+  my $dir = fresh-workdir();
+  run-behave-in($dir, '--order', 'defined', $passing.absolute);
+  my $path = $dir.add('.behave-failures');
+  ok $path.e, '.behave-failures created (empty) after a passing run';
+  is $path.slurp, '', '.behave-failures is empty when nothing failed';
+  cleanup($dir);
+}
+
+# --only-failures replays exactly the failed examples.
+{
+  my $dir = fresh-workdir();
+  run-behave-in($dir, '--order', 'defined', $failing.absolute);
+  my %second = run-behave-in($dir, '--only-failures', '--order', 'defined', $failing.absolute);
+  ok %second<out>.contains('3 examples'),
+    '--only-failures runs only the previously-failed examples';
+  cleanup($dir);
+}
+
+# --only-failures without an existing file warns and runs all.
+{
+  my $dir = fresh-workdir();
+  my %r = run-behave-in($dir, '--only-failures', '--order', 'defined', $passing.absolute);
+  is %r<exit>, 0, '--only-failures without a file still exits 0 on a passing suite';
+  ok %r<err>.contains('not found'),
+    '--only-failures without a file warns about missing list';
+  cleanup($dir);
+}
+
+# An example that ran and passed is removed from .behave-failures.
+{
+  my $dir  = fresh-workdir();
+  my $path = $dir.add('.behave-failures');
+  $path.spurt: "{$passing.absolute}:5\n";
+  run-behave-in($dir, '--order', 'defined', $passing.absolute);
+  is $path.slurp, '', 'previously-failing entries are pruned when they pass';
+  cleanup($dir);
+}
+
+# An entry that did NOT run is preserved.
+{
+  my $dir  = fresh-workdir();
+  my $path = $dir.add('.behave-failures');
+  $path.spurt: "/some/other/specs-spec.raku:42\n";
+  run-behave-in($dir, '--order', 'defined', $passing.absolute);
+  my @after = $path.slurp.lines.grep(*.chars);
+  is @after.elems, 1,    'entries for examples that did not run are preserved';
+  is @after[0], '/some/other/specs-spec.raku:42', 'preserved entry is unchanged';
+  cleanup($dir);
+}
+
+# --failures-path PATH redirects writes to a custom file.
+{
+  my $dir    = fresh-workdir();
+  my $custom = $dir.add('custom-failures.txt');
+  run-behave-in($dir, '--failures-path', $custom.absolute,
+                '--order', 'defined', $failing.absolute);
+  ok $custom.e, '--failures-path writes to the custom location';
+  ok !$dir.add('.behave-failures').e,
+    '--failures-path skips the default .behave-failures path';
+  cleanup($dir);
+}

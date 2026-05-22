@@ -42,6 +42,9 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--seed N`           | Seed the random-order RNG for reproducible runs. Ignored when `--order=defined`. Auto-generated when omitted and `--order=random`. See [Order and seed](#order-and-seed). |
 | `--fail-fast`        | Stop after the first failed example. Equivalent to `--fail-fast=1`. See [Fail-fast](#fail-fast). |
 | `--fail-fast=N`      | Stop after `N` failed examples (`N` must be a positive integer). See [Fail-fast](#fail-fast). |
+| `--retry N`          | Retry failing examples up to `N` additional times (a total of `N+1` attempts). Per-example `:retry(M)` metadata overrides this default. See [Retry and Only-Failures](retry/retry.md). |
+| `--only-failures`    | Run only examples that failed in the previous run (read from `.behave-failures`). See [Retry and Only-Failures](retry/retry.md). |
+| `--failures-path=PATH` | Override the path used to persist (and read, with `--only-failures`) the list of failing examples. Defaults to `./.behave-failures`. See [Retry and Only-Failures](retry/retry.md). |
 | `--only-example LOC` | Run only examples whose `file:line` matches `LOC` (repeatable; OR semantics). `LOC` is `FILE:LINE` — `FILE` may be absolute, relative, or a basename. See [Bisect](#bisect). |
 | `--bisect`           | Find the minimal set of examples that, run in declared order before each failing example, reproduce the failure. See [Bisect](#bisect). |
 | `--bisect-data`      | Machine-readable output for use by `--bisect`. Suppresses normal output and emits `behave-executed:` / `behave-failed:` lines. See [Bisect](#bisect). |
@@ -150,6 +153,10 @@ say 'aborted early' if $runner.aborted;
 ```
 
 `Runner.new(:fail-fast(-1))` (or any negative integer) dies at construction time.
+
+## Retry and only-failures
+
+Flaky examples can be retried automatically via `--retry N` (or per-example `:retry(N)` metadata). After every non-bisect run, the list of failing examples is persisted to `./.behave-failures` so the next run can be scoped to just those failures with `--only-failures`. See [Retry and Only-Failures](retry/retry.md) for the full reference.
 
 ## Bisect
 

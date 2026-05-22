@@ -24,6 +24,7 @@
     "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.rakumod",
     "BDD::Behave::Failure": "lib/BDD/Behave/Failure.rakumod",
     "BDD::Behave::Failures": "lib/BDD/Behave/Failures.rakumod",
+    "BDD::Behave::FailureStore": "lib/BDD/Behave/FailureStore.rakumod",
     "BDD::Behave::Files": "lib/BDD/Behave/Files.rakumod",
     "BDD::Behave::Formatter": "lib/BDD/Behave/Formatter.rakumod",
     "BDD::Behave::Formatter::Documentation": "lib/BDD/Behave/Formatter/Documentation.rakumod",

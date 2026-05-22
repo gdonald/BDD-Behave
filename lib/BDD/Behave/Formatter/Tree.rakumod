@@ -79,6 +79,11 @@ method example-around-skipped($example) {
   say "  " ~ light-blue('⮑') ~ "  " ~ light-blue('SKIPPED (around-each did not invoke continuation)');
 }
 
+method example-retry($example, Int :$attempt, Int :$max-attempts) {
+  self.print-indent;
+  say "  " ~ light-blue('⮑') ~ "  " ~ yellow("RETRY (attempt $attempt of $max-attempts)");
+}
+
 method example-slow($example, Real :$threshold) {
   self.print-indent;
   say "  " ~ light-blue('⮑') ~ "  " ~ yellow(sprintf 'SLOW (%.3fs, threshold %.3fs)',
@@ -140,6 +145,21 @@ method profile-summary(@records, Int :$limit) {
     my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
     say sprintf '  %.3fs  %s', $rec<duration>, $rec<description>;
     say "          $loc" if $loc.chars;
+  }
+}
+
+method retry-summary(@records) {
+  return unless @records.elems;
+  say '';
+  my $word = @records.elems == 1 ?? 'example' !! 'examples';
+  say yellow("Retried " ~ @records.elems ~ " $word:");
+  for @records -> $rec {
+    my $color = $rec.outcome eq 'pass' ?? &green !! &red;
+    my $tag = $rec.outcome eq 'pass' ?? 'PASS' !! 'FAIL';
+    my $word2 = $rec.attempts == 1 ?? 'attempt' !! 'attempts';
+    say '  ' ~ $color("[$tag]") ~ ' ' ~ $rec.description
+      ~ ' ' ~ yellow("({$rec.attempts}/{$rec.max-attempts} $word2)");
+    say '         ' ~ $rec.location;
   }
 }
 

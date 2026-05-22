@@ -19,6 +19,7 @@ nav:
   - Focus and Skip: focus-skip/focus-skip.md
   - Example Filter: example-filter/example-filter.md
   - Parallel Execution: parallel/parallel.md
+  - Retry and Only-Failures: retry/retry.md
   - Mocks: mocks/mocks.md
   - Expectations:
     - expect: expectations/expect.md

@@ -1,0 +1,114 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Runner;
+use BDD::Behave::Formatter::Progress;
+use BDD::Behave::Formatter::Tree;
+use BDD::Behave::SpecTree;
+use BDD::Behave::Failures;
+
+plan 8;
+
+constant Suite   = BDD::Behave::SpecTree::Suite;
+constant Example = BDD::Behave::SpecTree::Example;
+
+sub build-flaky-suite($passes-on) {
+  my $suite = Suite.new(:description('fixture.raku'), :file('fixture.raku'.IO), :line(1));
+  my $count = 0;
+  $suite.add-example(Example.new(
+    :description('flaky'),
+    :file('fixture.raku'.IO), :line(2),
+    :block(sub {
+      $count++;
+      if $count < $passes-on {
+        Failures.list.push(BDD::Behave::Failure.new(
+          :file('fixture.raku'), :line(2), :given(0), :expected(1), :negated(False)
+        ));
+      }
+    }),
+  ));
+  $suite;
+}
+
+{
+  Failures.list = ();
+  my $suite = build-flaky-suite(3);
+  my $out = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new(
+      :formatter(BDD::Behave::Formatter::Progress.new),
+      :retry(2),
+      :order<defined>,
+    );
+    $runner.run($suite);
+  };
+  ok $out.contains('R'),                 'progress formatter prints R between attempts';
+  ok $out.contains('Retried 1 example'), 'retry-summary banner is rendered';
+  ok $out.contains('3/3 attempts'),      'retry-summary shows N/M attempts';
+}
+
+{
+  Failures.list = ();
+  my $suite = build-flaky-suite(2);
+  my $out = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new(
+      :formatter(BDD::Behave::Formatter::Tree.new),
+      :retry(2),
+      :order<defined>,
+    );
+    $runner.run($suite);
+  };
+  ok $out.contains('RETRY (attempt 1 of 3)'),
+    'tree formatter prints RETRY (attempt N of M) between attempts';
+  ok $out.contains('2/3 attempts'),
+    'tree retry-summary shows N/M attempts';
+}
+
+{
+  Failures.list = ();
+  my $suite = build-flaky-suite(99);
+  my $out = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new(
+      :formatter(BDD::Behave::Formatter::Progress.new),
+      :retry(2),
+      :order<defined>,
+    );
+    $runner.run($suite);
+  };
+  ok $out.contains('[FAIL]'), 'failed retried example renders [FAIL] in summary';
+}
+
+{
+  Failures.list = ();
+  my $suite = build-flaky-suite(2);
+  my $out = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new(
+      :formatter(BDD::Behave::Formatter::Progress.new),
+      :retry(2),
+      :order<defined>,
+    );
+    $runner.run($suite);
+  };
+  ok $out.contains('[PASS]'), 'recovered retried example renders [PASS] in summary';
+}
+
+{
+  Failures.list = ();
+  my $suite = Suite.new(:description('fixture.raku'), :file('fixture.raku'.IO), :line(1));
+  $suite.add-example(Example.new(
+    :description('passes immediately'),
+    :file('fixture.raku'.IO), :line(2),
+    :block(sub { }),
+  ));
+  my $out = stdout-from {
+    my $runner = BDD::Behave::Runner::Runner.new(
+      :formatter(BDD::Behave::Formatter::Progress.new),
+      :retry(3),
+      :order<defined>,
+    );
+    $runner.run($suite);
+  };
+  ok !$out.contains('Retried'),
+    'retry-summary section is omitted when no retries occurred';
+}
