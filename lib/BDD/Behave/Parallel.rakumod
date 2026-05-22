@@ -7,6 +7,8 @@ use BDD::Behave::Parallel::EventStream;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::Runner;
 use BDD::Behave::Formatter;
+use BDD::Behave::Failures;
+use BDD::Behave::Failure;
 use BDD::Behave::Colors;
 
 need BDD::Behave::SpecTree;
@@ -362,6 +364,40 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $result.total++;
       $result.failed++;
       $result.failures.push: %failure-info;
+
+      my $desc = %failure-info<description>;
+      my @event-failures = (%event<failures> // ()).list;
+      for @event-failures -> %f {
+        my $msg = (%f<message> // '').Str;
+        if !$msg.chars {
+          my $given    = (%f<given>    // '').Str;
+          my $expected = (%f<expected> // '').Str;
+          if $given.chars || $expected.chars {
+            my $op = (%f<negated> // False) ?? 'not to be' !! 'to be';
+            $msg = "Expected: $given\n$op: $expected";
+          }
+        }
+        Failures.list.push: Failure.new(
+          :file((%f<file> // '').Str),
+          :line((%f<line> // 0).Int),
+          :message($msg.chars ?? $msg !! Str),
+          :aggregation-label(
+            ((%f<aggregation-label> // '').Str.chars
+              ?? %f<aggregation-label>.Str !! Str)),
+          :description($desc),
+        );
+      }
+      unless @event-failures.elems {
+        with %event<exception-message> -> $msg {
+          Failures.list.push: Failure.new(
+            :file(%failure-info<file>.Str),
+            :line(%failure-info<line>.Int),
+            :message($msg.Str),
+            :description($desc),
+            :from-runner-exception,
+          );
+        }
+      }
     }
     when 'example-retry' {
       my $example = lookup-example(@suites, %event<id>);

@@ -1,0 +1,42 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 5;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $lib     = $root.add('lib');
+my $bin     = $root.add('bin/behave');
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+# --parallel surfaces per-failure file:line entries in the Failures section.
+{
+  my %r = run-behave('--parallel', '2', '--order', 'defined', $failing.absolute);
+  ok %r<exit> != 0, 'failing run exits non-zero under --parallel';
+  ok %r<out>.contains('Failures:'),
+    '--parallel run prints the Failures: header';
+  ok %r<out>.contains($failing.basename),
+    'Failures: section references the failing fixture';
+  ok %r<out>.contains('Expected:'),
+    'Failures: section shows the structured Expected/to-be rendering';
+
+  # Three failures expected from the fixture (three failing examples).
+  my $count = +%r<out>.match(/'✗'/, :g).elems;
+  is $count, 3, "Failures: section lists exactly three failure rows";
+}

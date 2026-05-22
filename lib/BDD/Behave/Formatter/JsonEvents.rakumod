@@ -3,6 +3,8 @@ use BDD::Behave::Failures;
 
 unit class BDD::Behave::Formatter::JsonEvents does BDD::Behave::Formatter;
 
+has Int $!failure-watermark = 0;
+
 method name(--> Str) { 'json-events' }
 
 sub emit(%event --> Nil) {
@@ -132,13 +134,19 @@ method example-fail($example, :$failure-info) {
       %payload<exception-backtrace> = .backtrace.full.Str;
     }
   }
-  %payload<failures> = Failures.list.grep(!*.from-runner-exception).map({ %(
+  my $total = Failures.list.elems;
+  my @new   = $total > $!failure-watermark
+    ?? Failures.list[$!failure-watermark ..^ $total].grep(!*.from-runner-exception).List
+    !! ().List;
+  $!failure-watermark = $total;
+  %payload<failures> = @new.map({ %(
     :file($_.file // ''),
     :line($_.line // 0),
     :given(($_.given // '').gist),
     :expected(($_.expected // '').gist),
     :message(($_.?message // Str).defined ?? $_.message !! ''),
     :aggregation-label(($_.?aggregation-label // Str).defined ?? $_.aggregation-label !! ''),
+    :negated(?$_.negated),
   ) }).List;
   emit %payload;
 }
