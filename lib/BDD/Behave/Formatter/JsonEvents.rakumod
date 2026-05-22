@@ -115,6 +115,9 @@ method example-pass($example) {
   emit %(
     :type<example-pass>,
     :id(self.node-id($example)),
+    :description($example.description),
+    :file($example.file.absolute),
+    :line($example.line),
     :duration($example.duration.defined ?? $example.duration.Real !! 0.0),
   );
 }
@@ -123,6 +126,9 @@ method example-fail($example, :$failure-info) {
   my %payload = (
     :type<example-fail>,
     :id(self.node-id($example)),
+    :description($example.description),
+    :file($example.file.absolute),
+    :line($example.line),
     :duration($example.duration.defined ?? $example.duration.Real !! 0.0),
   );
   with $failure-info {
@@ -155,6 +161,9 @@ method example-pending($example) {
   emit %(
     :type<example-pending>,
     :id(self.node-id($example)),
+    :description($example.description),
+    :file($example.file.absolute),
+    :line($example.line),
   );
 }
 
@@ -162,6 +171,9 @@ method example-skipped($example) {
   emit %(
     :type<example-skipped>,
     :id(self.node-id($example)),
+    :description($example.description),
+    :file($example.file.absolute),
+    :line($example.line),
   );
 }
 
@@ -169,6 +181,9 @@ method example-around-skipped($example) {
   emit %(
     :type<example-around-skipped>,
     :id(self.node-id($example)),
+    :description($example.description),
+    :file($example.file.absolute),
+    :line($example.line),
   );
 }
 
@@ -176,6 +191,9 @@ method example-retry($example, Int :$attempt, Int :$max-attempts) {
   emit %(
     :type<example-retry>,
     :id(self.node-id($example)),
+    :description($example.description),
+    :file($example.file.absolute),
+    :line($example.line),
     :attempt($attempt.Int),
     :max-attempts($max-attempts.Int),
   );

@@ -316,19 +316,19 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $formatter.group-around-skipped($group) if $group.defined;
     }
     when 'example-start' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       if $example.defined {
         $example.started-at = now;
         $formatter.example-start($example, :auto(?%event<auto>));
       }
     }
     when 'example-auto-description' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       $formatter.example-auto-description($example, :description(%event<description> // ''))
         if $example.defined;
     }
     when 'example-pass' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       if $example.defined {
         $example.duration = (%event<duration> // 0).Real;
         $formatter.example-pass($example);
@@ -338,7 +338,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $result.passed++;
     }
     when 'example-fail' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       my %failure-info = (
         description => (%event<failure-description> // ($example.defined ?? $example.description !! '')),
         file        => (%event<failure-file> // ($example.defined ?? $example.file.absolute !! '')),
@@ -400,7 +400,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       }
     }
     when 'example-retry' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       $formatter.example-retry(
         $example,
         :attempt((%event<attempt> // 1).Int),
@@ -408,19 +408,19 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       ) if $example.defined;
     }
     when 'example-pending' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       $formatter.example-pending($example) if $example.defined;
       $result.total++;
       $result.pending++;
     }
     when 'example-skipped' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       $formatter.example-skipped($example) if $example.defined;
       $result.total++;
       $result.skipped++;
     }
     when 'example-around-skipped' {
-      my $example = lookup-example(@suites, %event<id>);
+      my $example = resolve-example(@suites, %event);
       $formatter.example-around-skipped($example) if $example.defined;
       $result.total++;
       $result.skipped++;
@@ -483,6 +483,21 @@ sub lookup-example(@suites, Str $id) {
     return $hit if $hit.defined;
   }
   Nil;
+}
+
+sub resolve-example(@suites, %event) {
+  my $hit = lookup-example(@suites, %event<id>);
+  return $hit if $hit.defined;
+  my $desc = (%event<description> // %event<failure-description> // '').Str;
+  my $file = (%event<file>        // %event<failure-file>        // '').Str;
+  my $line = (%event<line>        // %event<failure-line>        // 0).Int;
+  return Nil unless $desc.chars || $file.chars;
+  Example.new(
+    :description($desc),
+    :file($file.IO),
+    :line($line),
+    :block({ }),
+  );
 }
 
 sub walk-find-example($container, Str $id) {

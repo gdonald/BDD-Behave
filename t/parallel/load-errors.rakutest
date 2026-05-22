@@ -1,0 +1,50 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 6;
+
+my $root  = $*PROGRAM.parent.parent.parent;
+my $lib   = $root.add('lib');
+my $bin   = $root.add('bin/behave');
+my $clean = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
+my $bad   = $root.add('t/fixtures/parallel-bad-spec.raku');
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+# Even when every running example passes, a parent-side load failure for one
+# of the spec files must surface in the summary and force a non-zero exit.
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    $clean.absolute, $bad.absolute,
+  );
+
+  is %r<exit>, 1, 'load error forces exit code 1 even with no failures';
+  ok %r<out>.contains('1 spec file failed to load'),
+    'summary mentions the failed spec count';
+  ok %r<out>.contains('Load errors (1)'),
+    'summary prints the structured Load errors block';
+  ok %r<out>.contains($bad.basename),
+    'block names the offending file';
+  ok %r<out>.contains('this-sub-does-not-exist-and-cannot-be-called'),
+    'block includes the original Rakudo error text';
+
+  # The clean fixture's two examples must still run.
+  ok %r<out>.contains('Overall: 2 examples'),
+    'examples in spec files that DID load still run and are counted';
+}

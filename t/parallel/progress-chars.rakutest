@@ -1,0 +1,56 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 5;
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $lib  = $root.add('lib');
+my $bin  = $root.add('bin/behave');
+my $mixed = $root.add('t/fixtures/parallel-mixed-fixture-spec.raku');
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
+}
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+# A mixed fixture (passes, failures, pending, skipped) under --parallel should
+# emit exactly one progress char per executed example: '.' for pass, 'F' for
+# fail, '*' for pending, 'S' for skipped. Before the fix, only events whose
+# example survived `lookup-example` would print a char, so anything the parent
+# couldn't find was silently dropped from the progress stream.
+{
+  my %r = run-behave('--parallel', '2', '--order', 'defined', $mixed.absolute);
+  my $clean-out = strip-ansi(%r<out>);
+
+  my $progress-line = $clean-out.lines.first;
+  $progress-line //= '';
+
+  my $dots  = +$progress-line.comb(/'.'/).elems;
+  my $fails = +$progress-line.comb(/'F'/).elems;
+  my $pend  = +$progress-line.comb(/'*'/).elems;
+  my $skip  = +$progress-line.comb(/'S'/).elems;
+
+  is $dots,  5, "five passing examples produce five '.' chars";
+  is $fails, 2, "two failing examples produce two 'F' chars";
+  is $pend,  1, "one pending example produces one '*' char";
+  is $skip,  1, "one xit-skipped example produces one 'S' char";
+
+  ok %r<out>.contains('9 examples'),
+    'summary reports the full nine examples';
+}

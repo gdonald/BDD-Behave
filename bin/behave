@@ -927,8 +927,16 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     $parent-formatter.run-summary($rr, :$order, :$seed);
   }
 
+  if $par-result.load-errors.elems {
+    my $n = $par-result.load-errors.elems;
+    my $word = $n == 1 ?? 'spec file' !! 'spec files';
+    say red("  $n $word failed to load (their examples did not run)");
+  }
+
   $parent-formatter.retry-summary($par-result.retry-records)
     if $par-result.retry-records.elems;
+
+  $parent-formatter.load-errors($par-result.load-errors.list);
 
   for $par-result.load-errors -> %err {
     note red("Error: Could not load {%err<file>}: {%err<message>}");
