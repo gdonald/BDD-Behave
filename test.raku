@@ -8,11 +8,13 @@ $*OUT.out-buffer = False;
 
 chdir $*PROGRAM.parent;
 
-my $jobs = $*KERNEL.cpu-cores // 2;
+my $cpus            = $*KERNEL.cpu-cores // 2;
+my $jobs            = $cpus;
+my $behave-parallel = max(2, $cpus - 2);
 
 my @stages = (
   { :name<prove6>, :cmd['prove6', "-j$jobs", '-Ilib', 't']  },
-  { :name<behave>, :cmd['raku',   '-Ilib',   'bin/behave']  },
+  { :name<behave>, :cmd['raku',   '-Ilib',   'bin/behave', '--parallel', $behave-parallel.Str]  },
 );
 
 my %durations;

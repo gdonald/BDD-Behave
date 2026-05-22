@@ -1,0 +1,105 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Watch::Watcher;
+
+plan 12;
+
+sub fresh-dir(--> IO::Path) {
+  my $d = $*TMPDIR.add("behave-watcher-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $d.mkdir;
+  $d;
+}
+
+sub rm-rf($node) {
+  if $node.d {
+    rm-rf($_) for $node.dir;
+    $node.rmdir if $node.e;
+  } else {
+    $node.unlink if $node.e;
+  }
+}
+
+# Watcher detects newly-added matching files.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $w = BDD::Behave::Watch::Watcher::Watcher.new;
+  $w.add-path($dir);
+  $w.initialize;
+
+  is $w.tracked-count, 0, 'no files tracked in an empty directory';
+
+  $dir.add('foo.rakumod').spurt('say 1');
+  my @changes = $w.poll.list;
+  is @changes.elems, 1, 'one change reported when a new file appears';
+  is @changes[0].kind, 'added', 'new file reports kind=added';
+  is @changes[0].path.basename, 'foo.rakumod', 'change.path reports the file';
+}
+
+# Watcher detects modifications by mtime/size changes.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $file = $dir.add('a.rakumod');
+  $file.spurt('one');
+  my $w = BDD::Behave::Watch::Watcher::Watcher.new;
+  $w.add-path($dir);
+  $w.initialize;
+
+  is $w.poll.elems, 0, 'no change reported when nothing moved';
+
+  # Force a different mtime: write a longer contents and bump mtime by hand.
+  sleep 0.05;
+  $file.spurt('two-long');
+  my @changes = $w.poll.list;
+  is @changes.elems, 1, 'one change after modifying the file';
+  is @changes[0].kind, 'modified', 'modification reports kind=modified';
+}
+
+# Watcher detects removal.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $file = $dir.add('b.rakumod');
+  $file.spurt('hi');
+  my $w = BDD::Behave::Watch::Watcher::Watcher.new;
+  $w.add-path($dir);
+  $w.initialize;
+  $file.unlink;
+
+  my @changes = $w.poll.list;
+  is @changes.elems, 1, 'one change reported when a file is removed';
+  is @changes[0].kind, 'removed', 'removed file reports kind=removed';
+}
+
+# Files matching the file pattern are tracked; non-matching are ignored.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  $dir.add('keep.rakumod').spurt('k');
+  $dir.add('ignore.txt').spurt('skip');
+  my $w = BDD::Behave::Watch::Watcher::Watcher.new;
+  $w.add-path($dir);
+  $w.initialize;
+
+  is $w.tracked-count, 1, 'only matching files are tracked';
+}
+
+# Subdirectories are walked recursively.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $sub = $dir.add('sub');
+  $sub.mkdir;
+  $sub.add('nested.rakumod').spurt('n');
+
+  my $w = BDD::Behave::Watch::Watcher::Watcher.new;
+  $w.add-path($dir);
+  $w.initialize;
+
+  is $w.tracked-count, 1, 'walked into subdirectory';
+  $sub.add('another.rakumod').spurt('a');
+  my @changes = $w.poll.list;
+  is @changes.elems, 1, 'detected change in subdirectory';
+}

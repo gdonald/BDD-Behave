@@ -68,6 +68,11 @@
     "BDD::Behave::SpecTree::Example": "lib/BDD/Behave/SpecTree/Example.rakumod",
     "BDD::Behave::SpecTree::ExampleGroup": "lib/BDD/Behave/SpecTree/ExampleGroup.rakumod",
     "BDD::Behave::SpecTree::Suite": "lib/BDD/Behave/SpecTree/Suite.rakumod",
+    "BDD::Behave::Watch": "lib/BDD/Behave/Watch.rakumod",
+    "BDD::Behave::Watch::Session": "lib/BDD/Behave/Watch/Session.rakumod",
+    "BDD::Behave::Watch::SmartSelector": "lib/BDD/Behave/Watch/SmartSelector.rakumod",
+    "BDD::Behave::Watch::UI": "lib/BDD/Behave/Watch/UI.rakumod",
+    "BDD::Behave::Watch::Watcher": "lib/BDD/Behave/Watch/Watcher.rakumod",
     "BDD::Behave::Worker": "lib/BDD/Behave/Worker.rakumod"
   },
   "resources": [],

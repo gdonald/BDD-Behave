@@ -1,0 +1,202 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Watch::Watcher;
+use BDD::Behave::Watch::SmartSelector;
+
+plan 14;
+
+sub fresh-dir(--> IO::Path) {
+  my $d = $*TMPDIR.add("behave-selector-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $d.mkdir;
+  $d;
+}
+
+sub rm-rf($node) {
+  if $node.d {
+    rm-rf($_) for $node.dir;
+    $node.rmdir if $node.e;
+  } else {
+    $node.unlink if $node.e;
+  }
+}
+
+sub change(IO::Path $p, Str $kind = 'modified') {
+  BDD::Behave::Watch::Watcher::Change.new(:path($p), :$kind);
+}
+
+# A spec file change selects that spec only.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $foo-spec = $specs.add('foo-spec.raku');
+  $foo-spec.spurt('it "x", {}');
+  my $bar-spec = $specs.add('bar-spec.raku');
+  $bar-spec.spurt('it "y", {}');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs(
+    [change($foo-spec)],
+    [$foo-spec, $bar-spec],
+  ).list;
+
+  is @selected.elems, 1, 'a spec change selects only that spec';
+  is @selected[0], $foo-spec.absolute, 'selected spec is the changed one';
+}
+
+# A spec file change to an unlisted spec is ignored.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $orphan = $dir.add('orphan-spec.raku');
+  $orphan.spurt('');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs([change($orphan)], []).list;
+  is @selected.elems, 0, 'orphan spec changes select nothing';
+}
+
+# A lib/X.rakumod change selects specs that mention X by basename.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $bdd = $lib.add('BDD');
+  $bdd.mkdir;
+  my $behave = $bdd.add('Behave');
+  $behave.mkdir;
+  my $foo-mod = $behave.add('Foo.rakumod');
+  $foo-mod.spurt('unit module BDD::Behave::Foo;');
+
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $foo-spec = $specs.add('foo-spec.raku');
+  $foo-spec.spurt('use BDD::Behave::Foo; it "x", {}');
+  my $bar-spec = $specs.add('bar-spec.raku');
+  $bar-spec.spurt('it "y", {}');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs(
+    [change($foo-mod)],
+    [$foo-spec, $bar-spec],
+  ).list;
+
+  is @selected.elems, 1, 'one spec selected for a lib change';
+  is @selected[0], $foo-spec.absolute, 'spec that uses the module is selected';
+}
+
+# When the source's module path matches by basename only.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $widget = $lib.add('Widget.rakumod');
+  $widget.spurt('class Widget {}');
+
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a = $specs.add('a-spec.raku');
+  $a.spurt('Widget.new');
+  my $b = $specs.add('b-spec.raku');
+  $b.spurt('Other.new');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs([change($widget)], [$a, $b]).list;
+
+  is @selected.elems, 1, 'lib match by basename picks one spec';
+  is @selected[0], $a.absolute, 'matching spec mentions the basename';
+}
+
+# A lib change that no spec references falls back to all-specs.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $mystery = $lib.add('Mystery.rakumod');
+  $mystery.spurt('class Mystery {}');
+
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a = $specs.add('a-spec.raku');
+  $a.spurt('say 1');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs([change($mystery)], [$a]).list;
+
+  is @selected.elems, 1, 'falls back to all-specs when nothing mentions the lib';
+  is @selected[0], $a.absolute, 'fallback runs the whole suite';
+}
+
+# Removed files do not trigger selection.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $widget = $lib.add('Widget.rakumod');
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a = $specs.add('a-spec.raku');
+  $a.spurt('Widget.new');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs([change($widget, 'removed')], [$a]).list;
+  is @selected.elems, 0, 'removed files are skipped';
+}
+
+# Multiple changes union together (and dedupe).
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $foo = $lib.add('Foo.rakumod');
+  $foo.spurt('class Foo {}');
+  my $bar = $lib.add('Bar.rakumod');
+  $bar.spurt('class Bar {}');
+
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $foo-spec = $specs.add('foo-spec.raku');
+  $foo-spec.spurt('Foo.new');
+  my $bar-spec = $specs.add('bar-spec.raku');
+  $bar-spec.spurt('Bar.new');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @selected = $sel.select-specs(
+    [change($foo), change($bar)],
+    [$foo-spec, $bar-spec],
+  ).list;
+
+  is @selected.elems, 2, 'union picks every affected spec';
+}
+
+# derive-terms surfaces the basename and module-path forms.
+{
+  my $dir = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $lib = $dir.add('lib');
+  $lib.mkdir;
+  my $foo = $lib.add('BDD');
+  $foo.mkdir;
+  my $bar = $foo.add('Behave');
+  $bar.mkdir;
+  my $f = $bar.add('Foo.rakumod');
+  $f.spurt('');
+
+  my $sel = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+  my @terms = $sel.derive-terms($f).list;
+
+  ok @terms.first(* eq 'Foo').defined, 'basename term derived';
+  ok @terms.first(* eq 'BDD::Behave::Foo').defined, 'fully-qualified term derived';
+  ok @terms.first(* eq 'Behave::Foo').defined, 'partial-qualified term derived';
+}

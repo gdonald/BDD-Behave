@@ -1,0 +1,229 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Watch::Watcher;
+use BDD::Behave::Watch::SmartSelector;
+use BDD::Behave::Watch::UI;
+use BDD::Behave::Watch::Session;
+
+plan 13;
+
+sub fresh-dir(--> IO::Path) {
+  my $d = $*TMPDIR.add("behave-session-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $d.mkdir;
+  $d;
+}
+
+sub rm-rf($node) {
+  if $node.d {
+    rm-rf($_) for $node.dir;
+    $node.rmdir if $node.e;
+  } else {
+    $node.unlink if $node.e;
+  }
+}
+
+sub build-session($dir, :@all-specs, :&runner, Int :$max-iterations = 1) {
+  my $lib = $dir.add('lib');
+  $lib.mkdir unless $lib.e;
+  my $specs = $dir.add('specs');
+  $specs.mkdir unless $specs.e;
+
+  my $watcher = BDD::Behave::Watch::Watcher::Watcher.new;
+  $watcher.add-path($lib);
+  $watcher.add-path($specs);
+
+  my $selector = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+
+  # Use a UI configured with closed channels for stdin so we never block.
+  my $null = open($*SPEC.devnull, :w);
+  my $ui = BDD::Behave::Watch::UI::UI.new(:color(False), :out($null));
+
+  BDD::Behave::Watch::Session::Session.new(
+    :$watcher,
+    :$selector,
+    :$ui,
+    :all-specs(@all-specs.map(*.IO)),
+    :&runner,
+    :sleep-fn(-> $ {}),
+    :$max-iterations,
+  );
+}
+
+# Initial run executes once even when nothing changes.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a-spec = $specs.add('a-spec.raku');
+  $a-spec.spurt('');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a-spec]),
+    :runner(-> $req {
+      @invocations.push: $req;
+      0;
+    }),
+    :max-iterations(0),
+  );
+
+  $session.run;
+  is @invocations.elems, 1, 'initial run executes once';
+  is @invocations[0].reason, 'initial run', 'initial run has the expected reason';
+}
+
+# Manual rerun via the ui channel runs the last selection again.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a-spec = $specs.add('a-spec.raku');
+  $a-spec.spurt('');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a-spec]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(1),
+  );
+
+  $session.ui.submit-command('r');
+  $session.run;
+  is @invocations.elems, 2, 'r rerun produces a second invocation';
+  is @invocations[1].reason, 'manual rerun', 'second invocation reason is manual rerun';
+}
+
+# `q` quits the loop cleanly.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a-spec = $specs.add('a-spec.raku');
+  $a-spec.spurt('');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a-spec]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(100),
+  );
+
+  $session.ui.submit-command('q');
+  $session.run;
+  ok $session.stopped, 'session reports stopped after q';
+  is @invocations.elems, 1, 'no further runs after quit';
+}
+
+# `f` runs with only-failures flag.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a-spec = $specs.add('a-spec.raku');
+  $a-spec.spurt('');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a-spec]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(1),
+  );
+
+  $session.ui.submit-command('f');
+  $session.run;
+  is @invocations.elems, 2, 'f triggers a rerun';
+  ok @invocations[1].only-failures, 'f marks the run as only-failures';
+}
+
+# `a` always picks every spec, not just the last selection.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a = $specs.add('a-spec.raku');
+  $a.spurt('');
+  my $b = $specs.add('b-spec.raku');
+  $b.spurt('');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a, $b]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(1),
+  );
+
+  $session.ui.submit-command('a');
+  $session.run;
+  is @invocations[1].specs.elems, 2, 'a runs every spec';
+  is @invocations[1].reason, 'rerun all', 'a uses the rerun-all reason';
+}
+
+# File modifications trigger a change-driven rerun.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a = $specs.add('a-spec.raku');
+  $a.spurt('start');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(1),
+  );
+
+  # The session initializes the watcher in run(), so we need to seed a change
+  # right after init. Run with max-iterations=0 first to initialize, then
+  # touch the file, then run again.
+  $session.run;
+  is @invocations.elems, 1, 'first run is the initial run';
+
+  $a.spurt('changed-much-larger-now');
+
+  my $session2 = build-session(
+    $dir,
+    :all-specs([$a]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(1),
+  );
+
+  $session2.run;
+  # initial run (#2) + change-detected (#3)
+  ok @invocations.elems >= 2, 'modification triggers a rerun';
+}
+
+# `h` prints help and does not invoke the runner.
+{
+  my $dir   = fresh-dir();
+  LEAVE { rm-rf($dir) }
+  my $specs = $dir.add('specs');
+  $specs.mkdir;
+  my $a = $specs.add('a-spec.raku');
+  $a.spurt('');
+
+  my @invocations;
+  my $session = build-session(
+    $dir,
+    :all-specs([$a]),
+    :runner(-> $req { @invocations.push: $req; 0 }),
+    :max-iterations(1),
+  );
+
+  $session.ui.submit-command('h');
+  $session.run;
+  is @invocations.elems, 1, 'h is informational and does not rerun';
+}

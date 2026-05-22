@@ -26,6 +26,8 @@ my $doc-format  = 'markdown';
 my $doc-output;
 my $parallel-workers = 0;
 my $worker-manifest-path;
+my $watch-mode  = False;
+my @watch-paths;
 my $cli-config = CLI-CONFIG.new;
 
 sub usage() {
@@ -179,6 +181,18 @@ sub usage() {
                              single-process serial execution. Mutually
                              exclusive with --bisect / --bisect-data /
                              --coverage. Ignored under --doc.
+    --watch                  Watch source and spec files; re-run affected
+                             specs whenever a file changes. Reads
+                             interactive commands from stdin:
+                               r/<Enter>  rerun last selection
+                               a          rerun all specs
+                               f          rerun only previously-failed
+                                          examples (uses .behave-failures)
+                               q          quit
+                             Mutually exclusive with --bisect /
+                             --bisect-data / --coverage / --doc / --parallel.
+    --watch-path PATH        Add PATH to the watched roots (repeatable).
+                             Defaults to ./lib and ./specs when omitted.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -508,6 +522,13 @@ while @args {
     $worker-manifest-path = @args.shift;
   } elsif $arg.starts-with('--worker-manifest=') {
     $worker-manifest-path = $arg.substr('--worker-manifest='.chars);
+  } elsif $arg eq '--watch' {
+    $watch-mode = True;
+  } elsif $arg eq '--watch-path' {
+    die "--watch-path requires a value" unless @args;
+    @watch-paths.push: @args.shift;
+  } elsif $arg.starts-with('--watch-path=') {
+    @watch-paths.push: $arg.substr('--watch-path='.chars);
   } elsif $arg ~~ / ^ (.+) ':' (\d+) $ / && ~$0.IO.e {
     my $file-part = ~$0;
     @specs.push: $file-part unless @specs.first(* eq $file-part);
@@ -626,6 +647,12 @@ if $bisect && $bisect-data {
 
 if $parallel-workers > 0 && ($bisect || $bisect-data) {
   note "Error: --parallel is mutually exclusive with --bisect / --bisect-data";
+  exit 2;
+}
+
+if $watch-mode && ($bisect || $bisect-data || $coverage-enabled
+                || $doc-mode || $parallel-workers > 0) {
+  note "Error: --watch is mutually exclusive with --bisect / --bisect-data / --coverage / --doc / --parallel";
   exit 2;
 }
 
@@ -791,6 +818,63 @@ my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
 
 my $files-obj = Files.new;
 my @files = $files-obj.list(@effective-specs);
+
+if $watch-mode {
+  use BDD::Behave::Watch;
+  use BDD::Behave::Watch::Watcher;
+  use BDD::Behave::Watch::SmartSelector;
+  use BDD::Behave::Watch::UI;
+  use BDD::Behave::Watch::Session;
+
+  my @roots;
+  if @watch-paths.elems {
+    for @watch-paths -> $p {
+      my $io = $p.IO;
+      unless $io.e {
+        note "Error: --watch-path '$p' does not exist";
+        exit 2;
+      }
+      @roots.push: $io;
+    }
+  } else {
+    @roots = BDD::Behave::Watch::default-paths(:base($*CWD.IO));
+  }
+
+  my $watcher  = BDD::Behave::Watch::default-watcher(@roots);
+  my $lib-root = $*CWD.IO.add('lib');
+  my $selector = BDD::Behave::Watch::default-selector(:$lib-root);
+  my $ui       = BDD::Behave::Watch::UI::UI.new;
+
+  my @forward-args;
+  @forward-args.push: '--no-config';
+  @forward-args.push: '--format', $format if $format ne 'progress';
+  @forward-args.push: '--order', $order   if $order ne 'random';
+  @forward-args.push: '--seed',  $seed.Str if $seed.defined && $order eq 'random';
+  @forward-args.push: '--verbose' if $verbose;
+  @forward-args.push: '--retry', $retry-default.Str if $retry-default > 0;
+  for @include-tags     -> $t { @forward-args.append: '--tag', $t }
+  for @exclude-tags     -> $t { @forward-args.append: '--exclude-tag', $t }
+  for @example-patterns -> $p { @forward-args.append: '--example', $p }
+
+  my @base-argv = 'raku', "-I{$*CWD.IO.add('lib').absolute}",
+                  $*PROGRAM-NAME, |@forward-args;
+
+  my &runner = BDD::Behave::Watch::make-subprocess-runner(
+    :@base-argv,
+    :failures-path($failures-path),
+  );
+
+  my $session = BDD::Behave::Watch::Session::Session.new(
+    :$watcher,
+    :$selector,
+    :$ui,
+    :all-specs(@files.map(*.IO)),
+    :&runner,
+  );
+
+  $session.run;
+  exit 0;
+}
 
 if $parallel-workers >= 1 && !$worker-manifest-path.defined {
   use BDD::Behave::Parallel;

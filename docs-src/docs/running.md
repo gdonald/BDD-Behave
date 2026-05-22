@@ -56,6 +56,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--config PATH`      | Load Raku-based config from `PATH`. Skips the default `~/.behave` and `./.behave` lookups. See [Configuration](configuration/configuration.md). |
 | `--no-config` / `--no-user-config` / `--no-project-config` | Skip all / user / project config files for this run. `BEHAVE_DISABLE_CONFIG=1` is equivalent to `--no-config`. See [Configuration](configuration/configuration.md). |
 | `--parallel N`       | Run specs across `N` worker subprocesses with group-affinity LPT distribution. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage`. Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md). |
+| `--watch`            | Watch source and spec files; re-run affected specs whenever a file changes. Reads `r`/`a`/`f`/`q` commands from stdin. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage` / `--doc` / `--parallel`. See [Watch Mode](watch/watch.md). |
+| `--watch-path PATH`  | Add `PATH` to the watched roots (repeatable). Defaults to `./lib` and `./specs` when omitted. See [Watch Mode](watch/watch.md). |
 
 ## Order and seed
 
