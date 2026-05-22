@@ -1,4 +1,5 @@
 use Test;
+use BDD::Behave::Failures;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::SpecTree;
@@ -34,8 +35,11 @@ $group.add-example($passing-example);
 $group.add-example($failing-example);
 $suite.add-group($group);
 
-# Run the suite
+# Run the suite. Set $*BEHAVE-TOP-LEVEL-RUN to mirror the marker that bin/behave
+# sets so the Runner records exception failures in the global Failures.list
+# (otherwise nested-runner suppression kicks in and the assertions below break).
 my $runner = BDD::Behave::Runner::Runner.new;
+my $*BEHAVE-TOP-LEVEL-RUN = True;
 my $result = $runner.run($suite);
 
 # Test the results
@@ -44,5 +48,13 @@ ok $result.passed == 1, 'passed count is correct';
 ok $result.failed == 1, 'failed count is correct';
 ok $result.pending == 0, 'pending count is correct';
 nok $result.success, 'overall result is failure';
+
+# Exception-based failures must also be recorded in Failures.list so the
+# end-of-run summary can render their file:line entries (regression: a `die`
+# in an example was showing F in progress but vanishing from the Failures: dump).
+my $failure = Failures.list.first({ .message.defined && .message ~~ /'intentional failure'/ });
+ok $failure.defined,                                       'Failures.list has an entry for the dying example';
+ok $failure.defined && $failure.file eq $*PROGRAM.IO.Str,  'Failure entry carries the source file';
+ok $failure.defined && $failure.line == 15,               'Failure entry carries the example line';
 
 done-testing;

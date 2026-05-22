@@ -17,6 +17,9 @@ class Failures is export {
         $location ~= " (aggregate: {$failure.aggregation-label})";
       }
       say '  [' ~ red(" ✗ ") ~ '] ' ~ $location;
+      if $failure.description.defined && !$failure.from-runner-exception {
+        say '      ' ~ yellow($failure.description);
+      }
       if $failure.message.defined {
         for $failure.message.lines -> $line {
           say "      $line";

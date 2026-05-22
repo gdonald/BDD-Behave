@@ -948,6 +948,13 @@ my $null-handle = $bisect-data ?? open('/dev/null', :w) !! Nil;
 
 my $formatter = BDD::Behave::Formatter::Registry.create($format);
 
+# Signals Runner.run() that this is the user-facing top-level run, so
+# exception-based example failures should be recorded in the global
+# Failures.list (and therefore rendered in the end-of-run "Failures:" section).
+# Nested runners spun up inside spec bodies as fixtures see this as undefined
+# and stay out of the global list to avoid polluting outer accounting.
+my $*BEHAVE-TOP-LEVEL-RUN = True;
+
 for @files -> $file {
   $formatter.suite-loading(:$file) if $verbose && !$bisect-data;
   my $load-failed = False;

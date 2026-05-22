@@ -1,4 +1,5 @@
 use BDD::Behave;
+use BDD::Behave::Failures;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::SpecTree;
@@ -112,6 +113,31 @@ describe 'RunResult counters', {
     expect($result.skipped).to.be(1);
     expect($result.passed).to.be(1);
     expect($result.failed).to.be(0);
+  }
+}
+
+describe 'end-of-run failures section for exception-based failures', {
+  it 'prints a Failures: entry for an example that dies (not just an F in progress)', {
+    my $tmp = $*TMPDIR.add("behave-die-{$*PID}-{(now*1e6).Int}-spec.raku");
+
+    $tmp.spurt(q:to/RAKU/);
+      use BDD::Behave;
+
+      describe 'die path', {
+        it 'blows up with a uniquely-tagged message', {
+          die 'BEHAVE_TEST_DIE_MARKER_xyz';
+        }
+      }
+      RAKU
+
+    my $proc = run('raku', '-Ilib', 'bin/behave', $tmp.absolute, :out, :err, :merge);
+    my $stdout = $proc.out.slurp(:close);
+
+    $tmp.unlink;
+
+    expect($stdout).to.include('Failures:');
+    expect($stdout).to.include('BEHAVE_TEST_DIE_MARKER_xyz');
+    expect($stdout).to.include($tmp.basename);
   }
 }
 

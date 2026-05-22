@@ -84,19 +84,21 @@ method example-fail($example, :$failure-info) {
   }
   my $count = Failures.list.elems;
   if $count > $!failure-watermark {
-    my @new = Failures.list[$!failure-watermark .. $count - 1];
-    %fail<expectations> = @new.map(-> $fl {
-      my %rec = (
-        file     => $fl.file,
-        line     => $fl.line,
-        negated  => $fl.negated,
-        given    => ($fl.given.defined    ?? $fl.given.gist    !! Str),
-        expected => ($fl.expected.defined ?? $fl.expected.gist !! Str),
-      );
-      %rec<message>           = $fl.message           if $fl.message.defined;
-      %rec<aggregation_label> = $fl.aggregation-label if $fl.aggregation-label.defined;
-      %rec;
-    }).List;
+    my @new = Failures.list[$!failure-watermark .. $count - 1].grep(!*.from-runner-exception);
+    if @new.elems {
+      %fail<expectations> = @new.map(-> $fl {
+        my %rec = (
+          file     => $fl.file,
+          line     => $fl.line,
+          negated  => $fl.negated,
+          given    => ($fl.given.defined    ?? $fl.given.gist    !! Str),
+          expected => ($fl.expected.defined ?? $fl.expected.gist !! Str),
+        );
+        %rec<message>           = $fl.message           if $fl.message.defined;
+        %rec<aggregation_label> = $fl.aggregation-label if $fl.aggregation-label.defined;
+        %rec;
+      }).List;
+    }
   }
   @!examples.push: self!ex-record($example, 'failed', %( failure => %fail ));
   $!pending-auto-description = Str;

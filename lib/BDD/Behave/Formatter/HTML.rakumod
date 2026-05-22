@@ -102,6 +102,7 @@ method example-fail($example, :$failure-info) {
   my $count = Failures.list.elems;
   if $count > $!failure-watermark {
     for Failures.list[$!failure-watermark .. $count - 1] -> $f {
+      next if $f.from-runner-exception;
       @lines.push: "{$f.file}:{$f.line}";
       if $f.message.defined {
         @lines.push: "  $_" for $f.message.lines;

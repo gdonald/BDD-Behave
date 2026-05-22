@@ -92,6 +92,7 @@ our class Runner {
   has @.timed-examples;
   has $.aggregate-failures = False;
   has Bool $!focus-mode = False;
+  has Bool $!top-level  = False;
   has Str $.order = 'defined';
   has Int $.seed;
   has Int $!rng-state;
@@ -205,6 +206,9 @@ our class Runner {
   }
 
   method run(Suite $suite) {
+    $!top-level  = (CALLERS::<$*BEHAVE-TOP-LEVEL-RUN> // False).so;
+    my $*BEHAVE-TOP-LEVEL-RUN = False;
+
     $!focus-mode = self.has-focus($suite);
     self.compute-match-filters($suite);
     self.run-config-hooks('before-all');
@@ -873,6 +877,7 @@ our class Runner {
     {
       my $*BEHAVE-AUTO-MATCHERS = $auto ?? @captured-matchers !! Array;
       my $*BEHAVE-AGGREGATION-LABEL = $auto-agg-on ?? ($auto-agg-label // Str) !! Str;
+      my $*BEHAVE-CURRENT-DESCRIPTION = self.full-description($example);
       try {
         $example.execute;
         CATCH {
@@ -911,6 +916,21 @@ our class Runner {
         line        => $example.line,
         exception   => $error,
       );
+
+      # Only the top-level Runner (bin/behave sets $*BEHAVE-TOP-LEVEL-RUN
+      # before entering the Runner) records exception failures in the global
+      # Failures.list so the end-of-run summary can render them. Nested runs —
+      # synthetic suites built inside spec bodies — would otherwise pollute
+      # the outer runner's failure delta accounting.
+      if $!top-level {
+        Failures.list.push(Failure.new(
+          :file($example.file.Str),
+          :line($example.line),
+          :message("exception in {self.full-description($example)}: " ~ $error.message),
+          :from-runner-exception,
+        ));
+      }
+
       return;
     }
 

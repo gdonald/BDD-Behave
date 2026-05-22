@@ -559,8 +559,12 @@ our sub is-expected() is export {
 }
 
 our sub expect(|c) is export {
-  my $caller-file = callframe(1).file.Str;
-  my $caller-line = callframe(1).line.Int;
+  # Walk up callframes to the first one outside the BDD::Behave codebase so
+  # the failure location points at the user's expect(...) call site, not at
+  # the internal proxy in lib/BDD/Behave.rakumod that re-dispatches to here.
+  my $frame = caller-outside-behave();
+  my $caller-file = ($frame.defined ?? $frame.file.Str !! 'unknown');
+  my $caller-line = ($frame.defined ?? $frame.line.Int !! 0);
 
   my @pos = c.list;
   my %named = c.hash;

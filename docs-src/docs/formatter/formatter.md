@@ -210,16 +210,20 @@ Group descriptions, `it` descriptions, and inline slow/memory markers are suppre
 
 ```text
 $ behave --format progress specs/
-.....F*.S....
+.....FF*.S....
 
 Failures:
 
   [ ✗ ] specs/calc-spec.raku:24
       Expected: 1
       to be: 2
+  [ ✗ ] specs/db-spec.raku:11
+      exception in Database connect refuses without credentials: connection refused
 
-13 examples, 1 failed, 1 pending, 1 skipped, 10 passed
+14 examples, 2 failed, 1 pending, 1 skipped, 10 passed
 ```
+
+Both expectation mismatches and exception-based failures (an example body that `die`s or throws) appear in the `Failures:` block with their source `file:line`, so a `progress` run is enough to diagnose what to fix without re-running under `tree`.
 
 ## The `BDD::Behave::Formatter` role
 

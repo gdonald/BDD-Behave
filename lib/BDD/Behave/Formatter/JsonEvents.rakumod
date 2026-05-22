@@ -132,7 +132,7 @@ method example-fail($example, :$failure-info) {
       %payload<exception-backtrace> = .backtrace.full.Str;
     }
   }
-  %payload<failures> = Failures.list.map({ %(
+  %payload<failures> = Failures.list.grep(!*.from-runner-exception).map({ %(
     :file($_.file // ''),
     :line($_.line // 0),
     :given(($_.given // '').gist),
