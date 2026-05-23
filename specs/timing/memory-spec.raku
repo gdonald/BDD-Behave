@@ -1,6 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
+use BDD::Behave::Failures;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -10,14 +11,37 @@ sub strip-ansi(Str $s --> Str) {
   $s.subst(/\e '[' \d+ 'm'/, '', :g);
 }
 
-sub capture-run($suite, *%args) {
+class StubMemoryRunner is BDD::Behave::Runner::Runner {
+  has @.rss-readings;
+  has Int $!rss-index = 0;
+
+  method measure-memory-rss(--> Int) {
+    if $!rss-index < @!rss-readings.elems {
+      my $val = @!rss-readings[$!rss-index].Int;
+      $!rss-index++;
+      return $val;
+    }
+    callsame;
+  }
+}
+
+sub capture-run($suite, :$runner-class = BDD::Behave::Runner::Runner, *%args) {
   my $tmp = $*TMPDIR.add("behave-memory-spec-{$*PID}-{(now * 1e6).Int}.out");
+
+  my @saved-failures = Failures.list;
+  Failures.list.splice(0);
+
+  LEAVE {
+    Failures.list.splice(0);
+    Failures.list.append(@saved-failures);
+  }
+
   my $runner;
   my $result;
   {
     my $fh = $tmp.open(:w);
     my $*OUT = $fh;
-    $runner = BDD::Behave::Runner::Runner.new(|%args);
+    $runner = $runner-class.new(|%args);
     $result = $runner.run($suite);
     $fh.close;
   }
@@ -223,9 +247,12 @@ describe '--memory-threshold', {
     my $ex = Example.new(
       :description('big'),
       :file('f'.IO), :line(41),
-      :block({ my @data = (1 .. 100_000).map(*.Str); @data.elems }),
+      :block({ True }),
     );
-    my %r = capture-run(build-suite([$ex]), :memory-threshold(1));
+    my %r = capture-run(build-suite([$ex]),
+                        :runner-class(StubMemoryRunner),
+                        :memory-threshold(1),
+                        :rss-readings([1000, 1500]));
 
     expect(%r<out>.contains('MEMORY')).to.be-truthy;
     expect(%r<out>.contains('threshold 1 KB')).to.be-truthy;
@@ -234,7 +261,10 @@ describe '--memory-threshold', {
   it 'does not print MEMORY when threshold is well above any delta', {
     my $ex = Example.new(:description('small'), :file('f'.IO), :line(42),
                          :block({ True }));
-    my %r = capture-run(build-suite([$ex]), :memory-threshold(10_000_000));
+    my %r = capture-run(build-suite([$ex]),
+                        :runner-class(StubMemoryRunner),
+                        :memory-threshold(10_000_000),
+                        :rss-readings([1000, 1500]));
     expect(%r<out>.contains('MEMORY')).to.be-falsy;
   }
 
