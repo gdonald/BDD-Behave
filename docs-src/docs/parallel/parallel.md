@@ -75,6 +75,21 @@ Caveats:
 
 `xor` mode is the default for unsurprising single-machine behavior: the LPT distributor balances by `example-count`, and each worker shuffles its slice using `parent-seed XOR worker-index`. Two runs with the same `--seed N --parallel K` are reproducible only when `K` matches.
 
+## Live progress totals (`--progress-total`)
+
+By default the `progress` formatter streams one character per example (`.` / `F` / `*` / `S`) with no running count. Pass `--progress-total` to append a `(N/TOTAL)` counter after each char, where `TOTAL` is the example count discovered by the parent after applying tag / `--example` / location filters:
+
+```shell
+$ behave --parallel 4 --progress-total
+. (1/247)
+. (2/247)
+F (3/247)
+…
+. (247/247)
+```
+
+Each event prints on its own line so the output is grep-friendly and works in non-TTY contexts (CI logs, captured stdout). Without `--parallel`, `--progress-total` is a no-op — totals are computed by the parallel parent at discovery time.
+
 ## Database-per-worker pattern
 
 This is the canonical pattern for testing against a real database under `--parallel`:
@@ -142,7 +157,7 @@ it 'tests the parallel runner itself', :serial, { ... }
 ## Known limitations (v1)
 
 - **Reproducibility across worker counts.** Default (`--seed-mode=xor`) reproduces only when `--parallel N` matches. Use `--seed-mode=stable` for a K-invariant execution order.
-- **No live progress totals.** The `progress` formatter still emits one character per example as events arrive, but there's no "423 / 5000" running total.
+- ~~**No live progress totals.**~~ Use `--progress-total` (see above) to print `(N/TOTAL)` after each example char.
 - **Profile / memory / benchmark sections.** `--profile`, `--memory-profile`, and `--benchmark` are not yet aggregated across workers in parallel mode. Run a serial pass for those.
 - **`--coverage` integration.** Pending; combine `--parallel` with `--coverage` and Behave will error out for now.
 - **Worker crashes are fatal.** If a worker exits with code > 1 (signal, uncaught exception in the runner itself), the parent prints the partial transcript and exits 1. There is no per-shard retry — that's a 9.3 concern, not parallel-execution scope.

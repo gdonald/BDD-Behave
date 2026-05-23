@@ -185,6 +185,12 @@ sub usage() {
                              single-process serial execution. Mutually
                              exclusive with --bisect / --bisect-data /
                              --coverage. Ignored under --doc.
+    --progress-total         Append a running ` (N/TOTAL)` counter after
+                             each example char emitted by the `progress`
+                             formatter under --parallel. TOTAL is the
+                             example count discovered after applying tag /
+                             example / location filters. No-op without
+                             --parallel.
     --seed-mode MODE         How --seed combines with --parallel N.
                              'xor' (default): each worker uses
                              (parent-seed XOR worker-index); LPT bucket
@@ -314,6 +320,10 @@ while @args {
     $cli-config.seed-mode = @args.shift;
   } elsif $arg.starts-with('--seed-mode=') {
     $cli-config.seed-mode = $arg.substr('--seed-mode='.chars);
+  } elsif $arg eq '--progress-total' {
+    $cli-config.progress-total = True;
+  } elsif $arg eq '--no-progress-total' {
+    $cli-config.progress-total = False;
   } elsif $arg eq '--fail-fast' {
     $cli-config.fail-fast = 1;
   } elsif $arg.starts-with('--fail-fast=') {
@@ -616,6 +626,7 @@ my $format               = $final-config.format;
 my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
 my $seed-mode            = $final-config.seed-mode // 'xor';
+my $progress-total       = ?$final-config.progress-total;
 my $fail-fast            = $final-config.fail-fast;
 my $retry-default        = $final-config.retry // 0;
 my $only-failures        = ?$final-config.only-failures;
@@ -1026,6 +1037,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     :seed($seed),
     :order($order),
     :seed-mode($seed-mode),
+    :progress-total($progress-total),
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
     :example-patterns(@example-patterns),

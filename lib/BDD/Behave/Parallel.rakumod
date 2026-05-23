@@ -29,6 +29,7 @@ class ParallelRunOptions is export {
   has Int      $.seed;
   has Str      $.order = 'random';
   has Str      $.seed-mode = 'xor';
+  has Bool     $.progress-total = False;
   has @.include-tags;
   has @.exclude-tags;
   has @.example-patterns;
@@ -237,6 +238,11 @@ sub run-parallel(
 
   my @parallel-manifests = %plan<parallel-manifests>.list;
   my @serial-locations   = %plan<serial-locations>.list;
+
+  if $opts.progress-total {
+    my $total = (%plan<parallel-count> // 0).Int + (%plan<serial-count> // 0).Int;
+    $opts.formatter.set-total($total);
+  }
 
   my $manifest-dir = $*TMPDIR.add("behave-parallel-{$*PID}-{(now * 1e6).Int}");
   $manifest-dir.mkdir;
