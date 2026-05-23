@@ -1,0 +1,92 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 9;
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $lib  = $root.add('lib');
+my $bin  = $root.add('bin/behave');
+my $fix  = $root.add('t/fixtures/benchmark-fixture-spec.raku');
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
+}
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined', '--benchmark',
+    $fix.absolute,
+  );
+  my $clean = strip-ansi(%r<out>);
+
+  ok $clean.contains('Benchmarks ('),
+    'benchmark section header is printed under --parallel';
+  ok $clean.contains('label:sum'),
+    'sum measurement appears under --parallel';
+  ok $clean.contains('label:a') && $clean.contains('label:b'),
+    'two-labeled-calls measurements appear under --parallel';
+  ok $clean.contains('Benchmarks (3 measurements)'),
+    'aggregated measurement count is correct';
+}
+
+{
+  my $baseline = $*TMPDIR.add("behave-bench-save-{$*PID}-{(now * 1e6).Int}.tsv");
+  LEAVE { $baseline.unlink if $baseline.e }
+
+  run-behave(
+    '--parallel', '2', '--order', 'defined',
+    '--benchmark-save=' ~ $baseline.absolute,
+    $fix.absolute,
+  );
+
+  ok $baseline.e, '--benchmark-save creates the baseline file under --parallel';
+  my $body = $baseline.slurp;
+  ok $body.contains('measures a sum'), 'baseline contains aggregated description';
+  ok $body.contains('label:sum')
+       && $body.contains('label:a')
+       && $body.contains('label:b'),
+    'baseline records every measurement key';
+}
+
+{
+  my $baseline = $*TMPDIR.add("behave-bench-base-{$*PID}-{(now * 1e6).Int}.tsv");
+  LEAVE { $baseline.unlink if $baseline.e }
+  $baseline.spurt: qq:to/EOF/;
+  # behave-benchmark-baseline v1
+  description\tkey\titerations\tmin\tmax\tmean\tmedian\ttotal
+  benchmark-fixture measures a sum\tlabel:sum\t3\t1e-09\t1e-09\t1e-09\t1e-09\t3e-09
+  EOF
+
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    '--benchmark',
+    '--benchmark-baseline=' ~ $baseline.absolute,
+    '--benchmark-threshold=0.01',
+    $fix.absolute,
+  );
+  my $clean = strip-ansi(%r<out>);
+
+  ok $clean.contains('Benchmark regressions'),
+    '--benchmark-baseline triggers regression comparison under --parallel';
+  ok $clean.contains('REGRESSION'),
+    'regression rows render against aggregated medians';
+}
+
+done-testing;

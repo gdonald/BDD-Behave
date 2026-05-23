@@ -158,9 +158,35 @@ it 'tests the parallel runner itself', :serial, { ... }
 
 - **Reproducibility across worker counts.** Default (`--seed-mode=xor`) reproduces only when `--parallel N` matches. Use `--seed-mode=stable` for a K-invariant execution order.
 - ~~**No live progress totals.**~~ Use `--progress-total` (see above) to print `(N/TOTAL)` after each example char.
-- **Profile / memory / benchmark sections.** `--profile`, `--memory-profile`, and `--benchmark` are not yet aggregated across workers in parallel mode. Run a serial pass for those.
+- ~~**Profile / memory / benchmark sections.**~~ `--profile`, `--memory-profile`, and `--benchmark` are now aggregated across workers (see [below](#profile-memory-benchmark)).
 - **`--coverage` integration.** Pending; combine `--parallel` with `--coverage` and Behave will error out for now.
 - **Worker crashes are fatal.** If a worker exits with code > 1 (signal, uncaught exception in the runner itself), the parent prints the partial transcript and exits 1. There is no per-shard retry — that's a 9.3 concern, not parallel-execution scope.
+
+## Profile, memory, benchmark {#profile-memory-benchmark}
+
+`--profile`, `--memory-profile`, and `--benchmark` work under `--parallel`. Each worker measures its own slice; the parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.
+
+```bash
+behave --parallel 4 --profile=10 specs/
+behave --parallel 4 --memory-profile=10 specs/
+behave --parallel 4 --benchmark specs/
+```
+
+`--benchmark-baseline` and `--benchmark-save` apply to the aggregated measurements:
+
+```bash
+# Save a baseline computed from a 4-worker parallel run
+behave --parallel 4 --benchmark-save=bench.tsv specs/
+
+# Compare a later parallel run against it
+behave --parallel 4 --benchmark --benchmark-baseline=bench.tsv specs/
+```
+
+Notes:
+
+- Each example runs on exactly one worker, so `--profile` and `--memory-profile` rows are not deduplicated — the parent sees one record per execution.
+- `--benchmark-iterations=N` and `--benchmark-threshold=PCT` are forwarded to every worker; per-example timings collected across iterations are merged in the parent before medians are computed.
+- `--benchmark-baseline` / `--benchmark-save` are not forwarded to workers; only the parent reads / writes baseline files, against the aggregated summary list.
 
 ## See also
 

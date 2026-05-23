@@ -230,6 +230,68 @@ method retry-summary(@records) {
   }
 }
 
+method profile-summary(@records, Int :$limit) {
+  return unless $limit > 0;
+  for @records -> $rec {
+    my $ex = $rec<example>;
+    emit %(
+      :type<profile-record>,
+      :id($ex.defined ?? self.node-id($ex) !! ''),
+      :description(($rec<description> // '').Str),
+      :duration(($rec<duration> // 0).Real),
+      :file($ex.defined ?? $ex.file.absolute !! ''),
+      :line($ex.defined ?? $ex.line.Int !! 0),
+    );
+  }
+}
+
+method memory-profile-summary(@records, Int :$limit) {
+  return unless $limit > 0;
+  for @records -> $rec {
+    my $ex = $rec<example>;
+    emit %(
+      :type<memory-record>,
+      :id($ex.defined ?? self.node-id($ex) !! ''),
+      :description(($rec<description> // '').Str),
+      :delta(($rec<delta> // 0).Int),
+      :before(($rec<before> // 0).Int),
+      :after(($rec<after>  // 0).Int),
+      :file($ex.defined ?? $ex.file.absolute !! ''),
+      :line($ex.defined ?? $ex.line.Int !! 0),
+    );
+  }
+}
+
+method benchmark-summary-section(
+  @summaries, @regressions,
+  Real     :$threshold,
+  Str      :$format,
+  IO::Path :$output,
+  :$runner,
+) {
+  for @summaries -> %s {
+    my $ex = %s<example>;
+    emit %(
+      :type<benchmark-record>,
+      :id($ex.defined ?? self.node-id($ex) !! ''),
+      :description((%s<description> // '').Str),
+      :key((%s<key> // '').Str),
+      :label(%s<label>.defined ?? %s<label>.Str !! ''),
+      :position((%s<position> // 0).Int),
+      :runs((%s<runs> // 0).Int),
+      :iterations((%s<iterations> // 0).Int),
+      :timings(%s<timings>.list.map(*.Real).List),
+      :min((%s<min> // 0).Real),
+      :max((%s<max> // 0).Real),
+      :mean((%s<mean> // 0).Real),
+      :median((%s<median> // 0).Real),
+      :total((%s<total> // 0).Real),
+      :file($ex.defined ?? $ex.file.absolute !! ''),
+      :line($ex.defined ?? $ex.line.Int !! 0),
+    );
+  }
+}
+
 method run-summary(
   $result,
   Bool :$aborted   = False,

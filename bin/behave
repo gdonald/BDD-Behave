@@ -1022,6 +1022,25 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     @worker-argv.push: '--retry', $retry-default.Str;
   }
 
+  if $profile-limit > 0 {
+    @worker-argv.push: '--profile=' ~ $profile-limit.Str;
+  }
+  if $memory-profile-limit > 0 {
+    @worker-argv.push: '--memory-profile=' ~ $memory-profile-limit.Str;
+  }
+  if $memory-threshold > 0 {
+    @worker-argv.push: '--memory-threshold=' ~ $memory-threshold.Str;
+  }
+  if $benchmark-mode {
+    @worker-argv.push: '--benchmark';
+    if $benchmark-iterations > 1 {
+      @worker-argv.push: '--benchmark-iterations=' ~ $benchmark-iterations.Str;
+    }
+    if $benchmark-threshold.defined {
+      @worker-argv.push: '--benchmark-threshold=' ~ $benchmark-threshold.Str;
+    }
+  }
+
   my $parent-formatter = BDD::Behave::Formatter::Registry.create($format);
 
   my %base-env = |%*ENV;
@@ -1069,6 +1088,40 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
 
   $parent-formatter.retry-summary($par-result.retry-records)
     if $par-result.retry-records.elems;
+
+  if $profile-limit > 0 && $par-result.timed-examples.elems {
+    $parent-formatter.multi-file-profile(
+      Nil, $par-result.timed-examples.list, :limit($profile-limit));
+  }
+
+  if $memory-profile-limit > 0 && $par-result.memory-records.elems {
+    $parent-formatter.multi-file-memory-profile(
+      Nil, $par-result.memory-records.list, :limit($memory-profile-limit));
+  }
+
+  if $benchmark-mode && $par-result.benchmark-summaries.elems {
+    my $agg-runner = BDD::Behave::Runner::Runner.new(
+      :formatter($parent-formatter),
+      :benchmark-mode(True),
+      :benchmark-threshold($benchmark-threshold),
+      :benchmark-format($benchmark-format),
+    );
+    my @summaries = $par-result.benchmark-summaries.list;
+    my @regressions;
+    if $benchmark-baseline.defined {
+      @regressions = $agg-runner.compare-with-baseline(@summaries, $benchmark-baseline);
+    }
+    if $benchmark-save.defined {
+      $agg-runner.save-benchmark-baseline(@summaries, $benchmark-save);
+    }
+    $parent-formatter.multi-file-benchmark(
+      $agg-runner,
+      @summaries, @regressions,
+      :threshold($benchmark-threshold),
+      :format($benchmark-format),
+      :output($benchmark-output),
+    );
+  }
 
   $parent-formatter.load-errors($par-result.load-errors.list);
 

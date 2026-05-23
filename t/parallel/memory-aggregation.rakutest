@@ -1,0 +1,77 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 4;
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $lib  = $root.add('lib');
+my $bin  = $root.add('bin/behave');
+my $fix  = $root.add('t/fixtures/memory-fixture-spec.raku');
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
+}
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined', '--memory-profile=3',
+    $fix.absolute,
+  );
+  my $clean = strip-ansi(%r<out>);
+
+  ok $clean.contains('memory-heaviest example'),
+    'memory-profile section header is printed under --parallel';
+}
+
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined', '--memory-profile=3',
+    $fix.absolute,
+  );
+  my $clean = strip-ansi(%r<out>);
+
+  ok $clean.contains('a allocates a chunk')
+       && $clean.contains('b allocates a bigger chunk'),
+    'memory section lists examples from across workers';
+}
+
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined', '--memory-profile=2',
+    $fix.absolute,
+  );
+  my $clean = strip-ansi(%r<out>);
+
+  ok $clean.contains($fix.absolute),
+    'memory section attaches the source file:line to each row';
+}
+
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    $fix.absolute,
+  );
+  my $clean = strip-ansi(%r<out>);
+
+  nok $clean.contains('memory-heaviest example'),
+    'no memory section without --memory-profile';
+}
+
+done-testing;

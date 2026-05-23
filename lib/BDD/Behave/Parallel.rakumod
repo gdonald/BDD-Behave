@@ -211,6 +211,9 @@ class ParallelRunResult is export {
   has @.retry-records;
   has @.executed-locations;
   has @.failed-locations;
+  has @.timed-examples;
+  has @.memory-records;
+  has @.benchmark-summaries;
   has Int $.exit-code is rw = 0;
 
   method success(--> Bool) { $!failed == 0 && @!load-errors.elems == 0 && $!exit-code == 0 }
@@ -445,6 +448,44 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $formatter.example-around-skipped($example) if $example.defined;
       $result.total++;
       $result.skipped++;
+    }
+    when 'profile-record' {
+      my $example = resolve-example(@suites, %event);
+      $result.timed-examples.push: %(
+        example     => $example,
+        description => (%event<description> // '').Str,
+        duration    => (%event<duration> // 0).Real,
+      );
+    }
+    when 'memory-record' {
+      my $example = resolve-example(@suites, %event);
+      $result.memory-records.push: %(
+        example     => $example,
+        description => (%event<description> // '').Str,
+        delta       => (%event<delta>  // 0).Int,
+        before      => (%event<before> // 0).Int,
+        after       => (%event<after>  // 0).Int,
+      );
+    }
+    when 'benchmark-record' {
+      my $example = resolve-example(@suites, %event);
+      my @timings = (%event<timings> // ()).list.map(*.Real).List;
+      $result.benchmark-summaries.push: %(
+        example     => $example,
+        description => (%event<description> // '').Str,
+        key         => (%event<key>         // '').Str,
+        label       => (%event<label>.defined && (%event<label>).Str.chars
+                          ?? %event<label>.Str !! Str),
+        position    => (%event<position>    // 0).Int,
+        runs        => (%event<runs>        // 0).Int,
+        iterations  => (%event<iterations>  // 0).Int,
+        timings     => @timings,
+        min         => (%event<min>    // 0).Real,
+        max         => (%event<max>    // 0).Real,
+        mean        => (%event<mean>   // 0).Real,
+        median      => (%event<median> // 0).Real,
+        total       => (%event<total>  // 0).Real,
+      );
     }
     when 'retry-record' {
       my $rec = BDD::Behave::Runner::RetryRecord.new(
