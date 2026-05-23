@@ -1,12 +1,12 @@
 use BDD::Behave;
 
-class SubjectWidget {
+class Widget {
   has $.bar;
   method greet { "hello $!bar" }
 }
 
 describe 'anonymous subject', {
-  subject({ SubjectWidget.new(:bar(99)) });
+  subject({ Widget.new(:bar(99)) });
 
   it 'is readable via :subject', {
     my $w = subject();
@@ -22,7 +22,7 @@ describe 'anonymous subject', {
 }
 
 describe 'named subject', {
-  subject(:widget, { SubjectWidget.new(:bar(7)) });
+  subject(:widget, { Widget.new(:bar(7)) });
 
   it 'is accessible by its given name', {
     my $w = subject();

@@ -5,6 +5,7 @@ use BDD::Behave::Parallel::WorkerPool;
 use BDD::Behave::Parallel::Manifest;
 use BDD::Behave::Parallel::EventStream;
 use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecLoader;
 use BDD::Behave::Runner;
 use BDD::Behave::Formatter;
 use BDD::Behave::Failures;
@@ -38,10 +39,9 @@ sub discover-suites(@spec-files --> List) is export {
   my $registry = BDD::Behave::SpecRegistry::registry();
   my @suites;
   my @load-errors;
-  use MONKEY-SEE-NO-EVAL;
   for @spec-files -> $file {
     try {
-      EVALFILE $file;
+      BDD::Behave::SpecLoader::load-spec-file($file);
       CATCH {
         default {
           @load-errors.push: %( :$file, :message(.message) );

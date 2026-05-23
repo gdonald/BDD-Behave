@@ -63,6 +63,7 @@
     "BDD::Behave::Runner": "lib/BDD/Behave/Runner.rakumod",
     "BDD::Behave::SharedContexts": "lib/BDD/Behave/SharedContexts.rakumod",
     "BDD::Behave::SharedExamples": "lib/BDD/Behave/SharedExamples.rakumod",
+    "BDD::Behave::SpecLoader": "lib/BDD/Behave/SpecLoader.rakumod",
     "BDD::Behave::SpecRegistry": "lib/BDD/Behave/SpecRegistry.rakumod",
     "BDD::Behave::SpecTree": "lib/BDD/Behave/SpecTree.rakumod",
     "BDD::Behave::SpecTree::Core": "lib/BDD/Behave/SpecTree/Core.rakumod",

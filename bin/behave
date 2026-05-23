@@ -11,6 +11,7 @@ use BDD::Behave::Configuration;
 use BDD::Behave::DocExtractor;
 use BDD::Behave::Coverage;
 use BDD::Behave::FailureStore;
+use BDD::Behave::SpecLoader;
 
 constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
 
@@ -855,7 +856,6 @@ if $dry-run-mode || $list-examples {
     exit 2;
   }
 
-  use MONKEY-SEE-NO-EVAL;
   use BDD::Behave::DryRun;
 
   my $registry = BDD::Behave::SpecRegistry::registry();
@@ -865,7 +865,7 @@ if $dry-run-mode || $list-examples {
   for @files -> $file {
     my $load-failed = False;
     try {
-      EVALFILE $file;
+      BDD::Behave::SpecLoader::load-spec-file($file);
       CATCH {
         default {
           @load-errors.push: %( :$file, :message(.message) );
@@ -1042,14 +1042,13 @@ if $doc-mode {
     exit 2;
   }
 
-  use MONKEY-SEE-NO-EVAL;
   my $registry = BDD::Behave::SpecRegistry::registry();
   my @doc-load-errors;
   my @doc-suites;
   for @files -> $file {
     my $load-failed = False;
     try {
-      EVALFILE $file;
+      BDD::Behave::SpecLoader::load-spec-file($file);
       CATCH {
         default {
           @doc-load-errors.push: %( :$file, :message(.message) );
@@ -1104,7 +1103,6 @@ if $bisect {
 }
 
 # Load and eval spec files
-use MONKEY-SEE-NO-EVAL;
 use BDD::Behave::Colors;
 
 my $registry = BDD::Behave::SpecRegistry::registry();
@@ -1136,7 +1134,7 @@ for @files -> $file {
   $formatter.suite-loading(:$file) if $verbose && !$bisect-data;
   my $load-failed = False;
   try {
-    EVALFILE $file;
+    BDD::Behave::SpecLoader::load-spec-file($file);
     CATCH {
       default {
         @load-errors.push: %( :$file, :message(.message) );

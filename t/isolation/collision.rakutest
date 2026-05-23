@@ -1,0 +1,56 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MONKEY-SEE-NO-EVAL;
+use BDD::Behave::SpecLoader;
+
+plan 7;
+
+# Load both spec files that declare class IsolationCollider and
+# class X::Isolation::SharedFamily at top level.
+my $root = $?FILE.IO.parent.parent.parent;
+my $file-a = $root.add('specs/isolation/collision-a-spec.raku');
+my $file-b = $root.add('specs/isolation/collision-b-spec.raku');
+
+ok $file-a.e, 'collision-a-spec.raku exists';
+ok $file-b.e, 'collision-b-spec.raku exists';
+
+# Both files should load cleanly — no Redeclaration error.
+my Bool $a-loaded = False;
+my Bool $b-loaded = False;
+try {
+  BDD::Behave::SpecLoader::load-spec-file($file-a);
+  $a-loaded = True;
+  CATCH { default { diag "loading A failed: {.message}" } }
+}
+try {
+  BDD::Behave::SpecLoader::load-spec-file($file-b);
+  $b-loaded = True;
+  CATCH { default { diag "loading B failed: {.message}" } }
+}
+ok $a-loaded, 'loading file A succeeded';
+ok $b-loaded, 'loading file B succeeded';
+
+# Each file's IsolationCollider lives in its own anonymous wrapper module.
+# Walk the SpecLoader stash to find both wrappers, then look up each one's
+# IsolationCollider class via its WHO stash.
+my $loader-stash := ::('BDD::Behave::SpecLoader').WHO;
+my @iso-keys = $loader-stash.keys.grep(*.starts-with('BehaveSpecIso')).sort;
+
+# Should have at least two wrappers
+ok @iso-keys.elems >= 2, "found at least two iso wrappers (got {@iso-keys.elems})";
+
+# Both wrappers must contain their own IsolationCollider
+my @collider-classes;
+for @iso-keys -> $key {
+  my $wrapper := $loader-stash{$key};
+  my $stash := $wrapper.WHO;
+  if $stash{'IsolationCollider'}:exists {
+    @collider-classes.push: $stash{'IsolationCollider'};
+  }
+}
+
+# Distinct types with the same short name
+is @collider-classes.elems, 2, 'both wrappers carry an IsolationCollider class';
+ok @collider-classes[0].WHICH ne @collider-classes[1].WHICH,
+   'the two IsolationCollider classes are distinct types';
