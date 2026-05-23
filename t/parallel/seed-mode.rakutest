@@ -1,0 +1,129 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::SpecTree;
+
+constant Example = BDD::Behave::SpecTree::Example;
+constant Bucket  = BDD::Behave::Parallel::Distribution::Bucket;
+
+plan 14;
+
+sub bucket(Str $id) {
+  my $b = Bucket.new(:id($id), :file<x>);
+  $b.add(Example.new(:description($id), :file('/x'.IO), :line(1), :block(sub { })));
+  $b;
+}
+
+sub many-buckets(Int $n) {
+  (^$n).map(-> $i { bucket("/abs/spec.raku#g0:{100 + $i}") }).List;
+}
+
+sub global-rank(Bucket $needle, @assignments, Int $worker-count) {
+  for ^$worker-count -> $w {
+    my $pos = @assignments[$w].first(* === $needle, :k);
+    return $pos * $worker-count + $w if $pos.defined;
+  }
+  -1;
+}
+
+# bucket-stable-key determinism
+{
+  my $b = bucket('/abs/spec.raku#g0:10');
+  is bucket-stable-key($b, 42), bucket-stable-key($b, 42),
+    'bucket-stable-key is deterministic';
+  ok bucket-stable-key($b, 1) != bucket-stable-key($b, 2),
+    'different seeds yield different hashes';
+}
+
+# 32-bit unsigned range
+{
+  my $b = bucket('/abs/spec.raku#g0:10');
+  my $h = bucket-stable-key($b, 42);
+  ok $h >= 0,           'bucket-stable-key returns a non-negative integer';
+  ok $h <= 0xFFFFFFFF, 'bucket-stable-key returns a 32-bit-bounded integer';
+}
+
+# Different bucket ids -> different hashes (high probability)
+{
+  my $a = bucket('/abs/spec.raku#g0:10');
+  my $b = bucket('/abs/spec.raku#g0:11');
+  ok bucket-stable-key($a, 42) != bucket-stable-key($b, 42),
+    'different ids hash to different values';
+}
+
+# distribute-stable rejects worker-count < 1
+{
+  dies-ok { distribute-stable([], 0, 0)  }, 'distribute-stable dies on worker-count = 0';
+  dies-ok { distribute-stable([], -2, 0) }, 'distribute-stable dies on negative worker-count';
+}
+
+# distribute-stable: shape and coverage
+{
+  my @bs   = many-buckets(13);
+  my @asgn = distribute-stable(@bs, 4, 42);
+  is @asgn.elems, 4, 'distribute-stable returns one assignment per worker';
+  is @asgn.map(*.elems).sum, 13, 'every bucket is assigned exactly once';
+}
+
+# Determinism: same call -> same per-worker assignments
+{
+  my @bs = many-buckets(7);
+  my @a1 = distribute-stable(@bs, 3, 42);
+  my @a2 = distribute-stable(@bs, 3, 42);
+  my $same = True;
+  for ^3 -> $w {
+    $same = False unless @a1[$w].map(*.id).join('|') eq @a2[$w].map(*.id).join('|');
+  }
+  ok $same, 'distribute-stable is deterministic for the same input';
+}
+
+# K-invariant global ordering: K=2 vs K=3
+{
+  my @bs = many-buckets(12);
+  my @a2 = distribute-stable(@bs, 2, 42);
+  my @a3 = distribute-stable(@bs, 3, 42);
+  my $invariant = True;
+  for @bs -> $b {
+    $invariant = False unless global-rank($b, @a2, 2) == global-rank($b, @a3, 3);
+  }
+  ok $invariant, 'global rank is preserved when K changes from 2 to 3';
+}
+
+# K-invariant global ordering: K=1 vs K=5
+{
+  my @bs = many-buckets(20);
+  my @a1 = distribute-stable(@bs, 1, 7);
+  my @a5 = distribute-stable(@bs, 5, 7);
+  my $invariant = True;
+  for @bs -> $b {
+    $invariant = False unless global-rank($b, @a1, 1) == global-rank($b, @a5, 5);
+  }
+  ok $invariant, 'global rank is preserved when K changes from 1 to 5';
+}
+
+# Different seeds yield different orderings (high probability)
+{
+  my @bs = many-buckets(8);
+  my @a1 = distribute-stable(@bs, 2, 1);
+  my @a2 = distribute-stable(@bs, 2, 9999);
+  my @r1 = @bs.map({ global-rank($_, @a1, 2) });
+  my @r2 = @bs.map({ global-rank($_, @a2, 2) });
+  isnt @r1.join(','), @r2.join(','),
+    'different seeds produce different global orderings';
+}
+
+# Within each worker, buckets appear in increasing stable-key order
+{
+  my @bs   = many-buckets(10);
+  my @asgn = distribute-stable(@bs, 3, 42);
+  my $sorted-everywhere = True;
+  for ^3 -> $w {
+    my @keys = @asgn[$w].map({ bucket-stable-key($_, 42) });
+    $sorted-everywhere = False unless @keys.join(',') eq @keys.sort.join(',');
+  }
+  ok $sorted-everywhere, 'each worker stream is sorted by stable key';
+}
+
+done-testing;

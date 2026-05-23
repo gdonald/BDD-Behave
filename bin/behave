@@ -185,6 +185,16 @@ sub usage() {
                              single-process serial execution. Mutually
                              exclusive with --bisect / --bisect-data /
                              --coverage. Ignored under --doc.
+    --seed-mode MODE         How --seed combines with --parallel N.
+                             'xor' (default): each worker uses
+                             (parent-seed XOR worker-index); LPT bucket
+                             assignment depends on N, so the same seed
+                             reproduces only when N matches.
+                             'stable': bucket → worker assignment is a
+                             deterministic hash of (file, group-path,
+                             seed) mod N, and the global hash-sorted
+                             order is identical regardless of N. Forces
+                             --order=defined per worker.
     --watch                  Watch source and spec files; re-run affected
                              specs whenever a file changes. Reads
                              interactive commands from stdin:
@@ -299,6 +309,11 @@ while @args {
     $cli-config.seed = @args.shift.Int;
   } elsif $arg.starts-with('--seed=') {
     $cli-config.seed = $arg.substr('--seed='.chars).Int;
+  } elsif $arg eq '--seed-mode' {
+    die "--seed-mode requires a value" unless @args;
+    $cli-config.seed-mode = @args.shift;
+  } elsif $arg.starts-with('--seed-mode=') {
+    $cli-config.seed-mode = $arg.substr('--seed-mode='.chars);
   } elsif $arg eq '--fail-fast' {
     $cli-config.fail-fast = 1;
   } elsif $arg.starts-with('--fail-fast=') {
@@ -600,6 +615,7 @@ my $final-config = BDD::Behave::Configuration::defaults()
 my $format               = $final-config.format;
 my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
+my $seed-mode            = $final-config.seed-mode // 'xor';
 my $fail-fast            = $final-config.fail-fast;
 my $retry-default        = $final-config.retry // 0;
 my $only-failures        = ?$final-config.only-failures;
@@ -653,6 +669,11 @@ unless BDD::Behave::Formatter::Registry.registered($format) {
 
 unless $order eq 'random' | 'defined' {
   note "Error: --order must be 'random' or 'defined' (got: '$order')";
+  exit 2;
+}
+
+unless $seed-mode eq 'xor' | 'stable' {
+  note "Error: --seed-mode must be 'xor' or 'stable' (got: '$seed-mode')";
   exit 2;
 }
 
@@ -825,12 +846,14 @@ if $coverage-enabled && !$coverage-running {
   exit($child-exit || ($coverage-failed ?? 1 !! 0));
 }
 
-if $order eq 'random' && !$seed.defined && !$bisect-data {
+if !$seed.defined && !$bisect-data
+   && ($order eq 'random' || $seed-mode eq 'stable') {
   $seed = (1 .. 2_147_483_646).pick;
 }
 
 if $worker-manifest-path.defined {
   use BDD::Behave::Parallel::Manifest;
+  use BDD::Behave::Worker;
   my $mpath = $worker-manifest-path.IO;
   unless $mpath.e {
     note "Error: --worker-manifest path '$worker-manifest-path' does not exist";
@@ -842,6 +865,10 @@ if $worker-manifest-path.defined {
     @only-locations.push: $loc;
   }
   $format = 'json-events';
+
+  if $seed.defined && $seed-mode eq 'xor' {
+    $seed = $seed +^ BDD::Behave::Worker.id;
+  }
 }
 
 my @config-spec-paths = $final-config.spec-paths.list;
@@ -966,9 +993,18 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
   use BDD::Behave::Colors;
 
   my @worker-argv = 'raku', '-Ilib', $*PROGRAM-NAME;
-  if $order eq 'defined' {
+
+  my $worker-order = $seed-mode eq 'stable' ?? 'defined' !! $order;
+  if $worker-order eq 'defined' {
     @worker-argv.push: '--order', 'defined';
   }
+
+  @worker-argv.push: '--seed-mode', $seed-mode;
+
+  if $seed.defined {
+    @worker-argv.push: '--seed', $seed.Str;
+  }
+
   @worker-argv.push: '--no-config';
   @worker-argv.push: '--format', 'json-events';
   if $retry-default > 0 {
@@ -989,6 +1025,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     :verbose($verbose),
     :seed($seed),
     :order($order),
+    :seed-mode($seed-mode),
     :include-tags(@include-tags),
     :exclude-tags(@exclude-tags),
     :example-patterns(@example-patterns),

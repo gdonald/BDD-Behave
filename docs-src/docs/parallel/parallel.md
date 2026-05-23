@@ -46,6 +46,35 @@ use BDD::Behave::Worker;
 my $db-name = "myapp_test_{BDD::Behave::Worker.id}";
 ```
 
+## Seed mode (`--seed-mode`)
+
+`--seed-mode` controls how `--seed N` combines with `--parallel K`:
+
+| Mode      | Bucket → worker assignment                | Within-worker shuffle seed         | K-invariant? |
+| --------- | ----------------------------------------- | ---------------------------------- | ------------ |
+| `xor` (default) | Longest-processing-time-first (LPT) | `parent-seed XOR worker-index`     | No: changing `K` reshuffles assignment and per-worker seeds. |
+| `stable`        | Deterministic hash mod `K`          | Parent seed (same for every worker); workers run `--order=defined` | Yes: the global hash-sorted bucket order is identical regardless of `K`. |
+
+### `stable`
+
+```shell
+$ behave --parallel 4 --seed 12345 --seed-mode stable
+```
+
+In `stable` mode, every bucket (top-level `describe` / `context`, or top-level `it`) gets a deterministic 32-bit hash derived from its file path, group-path / line, and the run seed. Buckets are sorted globally by that hash, then assigned to `K` workers round-robin: bucket at sorted-position `i` goes to worker `i mod K`. Within each worker, buckets execute in sorted order; within a bucket, examples execute in declared order.
+
+The result: rerunning the same suite with the same seed but different `K` always processes examples in the same global hash-sorted order — only the partition across workers changes. Use this when you need reproducibility across machines whose available parallelism differs.
+
+Caveats:
+
+- Stable mode forces `--order=defined` per worker (the global hash-sort handles ordering).
+- LPT load-balancing is replaced by hash-mod-`K`, so workers can be slightly less balanced than `xor` mode on suites with uneven groups.
+- Auto-generated seeds (when you omit `--seed`) are still printed at the end of the run, so `behave --parallel 3 --seed-mode stable` is reproducible by copying the printed seed back into the next run.
+
+### `xor` (default)
+
+`xor` mode is the default for unsurprising single-machine behavior: the LPT distributor balances by `example-count`, and each worker shuffles its slice using `parent-seed XOR worker-index`. Two runs with the same `--seed N --parallel K` are reproducible only when `K` matches.
+
 ## Database-per-worker pattern
 
 This is the canonical pattern for testing against a real database under `--parallel`:
@@ -106,12 +135,13 @@ it 'tests the parallel runner itself', :serial, { ... }
 | `--coverage`           | Not yet supported with `--parallel` in this release; the parent errors.                 |
 | `--doc`                | Ignores `--parallel` — doc mode does not execute, so parallelism is moot.               |
 | `--tag` / `--exclude-tag` / `--example` / `--only-example` | Applied during discovery; each worker sees exactly its filtered slice. |
-| `--seed`               | Each worker gets a derived seed (`seed XOR worker-index`); the root seed is printed at end of run. |
+| `--seed`               | See `--seed-mode` below — `xor` (default) derives a per-worker seed (`seed XOR worker-index`); `stable` keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way. |
+| `--seed-mode`          | `xor` (default) or `stable`. `stable` makes the global execution order K-invariant for a given `--seed`. See [Seed mode](#seed-mode-seed-mode). |
 | `--fail-fast`          | Aggregated across workers. Surviving workers are SIGTERMed at threshold (best-effort). |
 
 ## Known limitations (v1)
 
-- **Reproducibility across worker counts.** A `--seed` value only reproduces a run when `--parallel N` matches. Changing `N` changes the per-worker seed derivation and the bucket assignment.
+- **Reproducibility across worker counts.** Default (`--seed-mode=xor`) reproduces only when `--parallel N` matches. Use `--seed-mode=stable` for a K-invariant execution order.
 - **No live progress totals.** The `progress` formatter still emits one character per example as events arrive, but there's no "423 / 5000" running total.
 - **Profile / memory / benchmark sections.** `--profile`, `--memory-profile`, and `--benchmark` are not yet aggregated across workers in parallel mode. Run a serial pass for those.
 - **`--coverage` integration.** Pending; combine `--parallel` with `--coverage` and Behave will error out for now.

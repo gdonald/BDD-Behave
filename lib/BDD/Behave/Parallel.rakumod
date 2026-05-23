@@ -28,6 +28,7 @@ class ParallelRunOptions is export {
   has Bool     $.verbose = False;
   has Int      $.seed;
   has Str      $.order = 'random';
+  has Str      $.seed-mode = 'xor';
   has @.include-tags;
   has @.exclude-tags;
   has @.example-patterns;
@@ -62,7 +63,17 @@ sub locations-for-buckets(@buckets --> List) is export {
   @all.List;
 }
 
-sub build-worker-manifests(@suites, Int $worker-count, :@include-tags, :@exclude-tags, :@example-patterns, :@only-locations --> Hash) is export {
+sub build-worker-manifests(
+  @suites,
+  Int $worker-count,
+  :@include-tags,
+  :@exclude-tags,
+  :@example-patterns,
+  :@only-locations,
+  Str :$seed-mode = 'xor',
+  Int :$seed,
+  --> Hash
+) is export {
   my @all-buckets;
   for @suites -> $suite {
     @all-buckets.append: collect-buckets($suite).list;
@@ -89,7 +100,9 @@ sub build-worker-manifests(@suites, Int $worker-count, :@include-tags, :@exclude
 
   my ($parallel-buckets, $serial-buckets) = split-parallel-and-serial(@filtered);
 
-  my @parallel-assignments = distribute-lpt($parallel-buckets, $worker-count);
+  my @parallel-assignments = $seed-mode eq 'stable'
+    ?? distribute-stable($parallel-buckets, $worker-count, $seed // 0)
+    !! distribute-lpt($parallel-buckets, $worker-count);
 
   my @parallel-manifests;
   for ^$worker-count -> $i {
@@ -218,6 +231,8 @@ sub run-parallel(
     :exclude-tags($opts.exclude-tags),
     :example-patterns($opts.example-patterns),
     :only-locations($opts.only-locations),
+    :seed-mode($opts.seed-mode),
+    :seed($opts.seed),
   );
 
   my @parallel-manifests = %plan<parallel-manifests>.list;

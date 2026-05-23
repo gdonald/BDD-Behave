@@ -141,3 +141,43 @@ sub distribute-lpt(@buckets, Int $worker-count --> List) is export {
 
   @assignments.map(*.List).List;
 }
+
+sub fnv1a-hash(Str $s --> Int) {
+  my $h = 0x811c9dc5;
+  for $s.encode('utf-8').list -> $byte {
+    $h = (($h +^ $byte) * 0x01000193) +& 0xFFFFFFFF;
+  }
+  $h;
+}
+
+sub bucket-stable-key(Bucket $b, Int $seed --> Int) is export {
+  my $h = fnv1a-hash($b.id);
+
+  my $s = $seed.abs +& 0xFFFFFFFF;
+
+  for ^4 -> $i {
+    my $byte = ($s +> (8 * $i)) +& 0xFF;
+    $h = (($h +^ $byte) * 0x01000193) +& 0xFFFFFFFF;
+  }
+
+  $h;
+}
+
+sub distribute-stable(@buckets, Int $worker-count, Int $seed --> List) is export {
+  die "worker-count must be a positive integer (got: $worker-count)"
+    if $worker-count < 1;
+
+  my @sorted = @buckets.sort({
+       bucket-stable-key($^a, $seed) <=> bucket-stable-key($^b, $seed)
+    || $^a.id leg $^b.id
+  });
+
+  my @assignments;
+  @assignments.push([]) for ^$worker-count;
+
+  for @sorted.kv -> $idx, $b {
+    @assignments[$idx % $worker-count].push($b);
+  }
+
+  @assignments.map(*.List).List;
+}
