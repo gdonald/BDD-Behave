@@ -140,39 +140,38 @@ class Shape does Coloured {
 
 # expect integration: pass
 {
-  Failures.list = ();
-  ok expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(1), :y(2)),
-     'expect.to.have-attributes passes';
-  is Failures.list.elems, 0, 'no failure on pass';
-  Failures.list = ();
+  my @captured = capture-failures {
+    ok expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(1), :y(2)),
+       'expect.to.have-attributes passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 }
 
 # expect integration: fail
 {
-  Failures.list = ();
-  nok expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(99)),
-      'expect.to.have-attributes fails when mismatched';
-  is Failures.list.elems, 1, 'one failure recorded';
-  ok Failures.list[0].message.contains('to have attributes'),
+  my @captured = capture-failures {
+    nok expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(99)),
+        'expect.to.have-attributes fails when mismatched';
+  };
+  is @captured.elems, 1, 'one failure recorded';
+  ok @captured[0].message.contains('to have attributes'),
      'failure message present';
-  Failures.list = ();
 }
 
 # Negation integration
 {
-  Failures.list = ();
   ok expect(Point.new(:x(1), :y(2))).to.not.have-attributes(:x(99)),
      '.not.have-attributes passes when value differs';
   is Failures.list.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(Point.new(:x(1), :y(2))).to.not.have-attributes(:x(1)),
-      '.not.have-attributes fails when value matches';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  ok Failures.list[0].message.contains('not to have attributes'),
+  my @captured2 = capture-failures {
+    nok expect(Point.new(:x(1), :y(2))).to.not.have-attributes(:x(1)),
+        '.not.have-attributes fails when value matches';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  ok @captured2[0].negated, 'failure marked negated';
+  ok @captured2[0].message.contains('not to have attributes'),
      'negated message';
-  Failures.list = ();
 }
 
 # Empty arg list dies
@@ -189,10 +188,10 @@ class Shape does Coloured {
 
 # Failure metadata preserves given/expected
 {
-  Failures.list = ();
-  expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(99));
-  ok Failures.list[0].given ~~ Point, 'Failure.given preserved';
-  my %exp = Failures.list[0].expected;
+  my @captured3 = capture-failures {
+    expect(Point.new(:x(1), :y(2))).to.have-attributes(:x(99));
+  };
+  ok @captured3[0].given ~~ Point, 'Failure.given preserved';
+  my %exp = @captured3[0].expected;
   is %exp<x>, 99, 'Failure.expected preserves attribute hash';
-  Failures.list = ();
 }

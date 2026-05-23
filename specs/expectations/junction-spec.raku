@@ -1,13 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
 
-sub induce(&block --> List) {
-  my $start = Failures.list.elems;
-  block();
-  my @new = Failures.list[$start..^Failures.list.elems];
-  Failures.list = Failures.list[^$start];
-  @new.List;
-}
+sub induce(&block --> List) { capture-failures(&block) }
 
 multi sub is-junction(Junction:D --> Bool) { True }
 multi sub is-junction($                --> Bool) { False }

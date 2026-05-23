@@ -2,15 +2,10 @@ use BDD::Behave;
 use BDD::Behave::Failures;
 
 # These specs deliberately trigger failing expectations to verify how
-# `expect` records them. After each induced failure we splice the new entries
-# off Failures.list so the example itself passes.
-sub induce(&block --> List) {
-  my $start = Failures.list.elems;
-  block();
-  my @new = Failures.list[$start..^Failures.list.elems];
-  Failures.list = Failures.list[^$start];
-  @new.List;
-}
+# `expect` records them. capture-failures runs the block with the
+# throw-on-failure suppressed, returns the recorded failures, and removes
+# them from the global list so the example itself passes.
+sub induce(&block --> List) { capture-failures(&block) }
 
 describe 'expect basics', {
   it 'returns True for a passing positive expectation', {

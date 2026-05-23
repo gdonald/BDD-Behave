@@ -5,6 +5,8 @@ use Test;
 use BDD::Behave::DSL;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 # expect's caller-line capture, exercised directly against BDD::Behave::DSL
 # (the BDD::Behave.rakumod wrapper hides the user's frame, which is a known
 # pre-existing limitation; using DSL directly tests the underlying mechanism).
@@ -15,21 +17,19 @@ sub raw-expect(|c) {
 
 # Failing expectation records the file and line where expect was called
 {
-  Failures.list = ();
-  my $expected-line = $?LINE + 1;
-  BDD::Behave::DSL::expect(42).to.be(41);
-
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].line, $expected-line,
+  my $expected-line = $?LINE + 2;
+  my @captured = capture-failures {
+    BDD::Behave::DSL::expect(42).to.be(41);
+  };
+  is @captured.elems, 1, 'one failure recorded';
+  is @captured[0].line, $expected-line,
     'failure line matches the line of the expect call';
-  ok Failures.list[0].file.contains('line-numbers.rakutest'),
+  ok @captured[0].file.contains('line-numbers.rakutest'),
     'failure file matches the calling test file';
-  Failures.list = ();
 }
 
 # Multiple failures on different lines record their own lines
 {
-  Failures.list = ();
   my $line-a = $?LINE + 1;
   BDD::Behave::DSL::expect(1).to.be(2);
   my $line-b = $?LINE + 1;
@@ -45,7 +45,6 @@ sub raw-expect(|c) {
 
 # Negated failure also captures the right line
 {
-  Failures.list = ();
   my $expected-line = $?LINE + 1;
   BDD::Behave::DSL::expect(42).to.not.be(42);
 
@@ -58,7 +57,6 @@ sub raw-expect(|c) {
 
 # Passing expectations do not record any line
 {
-  Failures.list = ();
   BDD::Behave::DSL::expect(42).to.be(42);
   BDD::Behave::DSL::expect('hi').to.be('hi');
 

@@ -209,80 +209,82 @@ plan 59;
 
 # Integration: expect(...).to.emit on matching supply records no failure.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1, 2, 3)).to.emit(1, 2, 3);
-  is Failures.list.elems, 0,                  'emit passes on matching supply';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Supply.from-list(1, 2, 3)).to.emit(1, 2, 3);
+  };
+  is @captured.elems, 0,                  'emit passes on matching supply';
 }
 
 # Integration: expect(...).to.emit on mismatch records one failure.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1, 2)).to.emit(1, 2, 3, :within(0.1));
-  is Failures.list.elems, 1,                  'emit fails on mismatch';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Supply.from-list(1, 2)).to.emit(1, 2, 3, :within(0.1));
+  };
+  is @captured.elems, 1,                  'emit fails on mismatch';
 }
 
 # Integration: expect(...).to.emit-at-least passes when threshold met.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1, 2, 3)).to.emit-at-least(2);
-  is Failures.list.elems, 0,                  'emit-at-least passes';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Supply.from-list(1, 2, 3)).to.emit-at-least(2);
+  };
+  is @captured.elems, 0,                  'emit-at-least passes';
 }
 
 # Integration: expect(...).to.emit-at-least fails when threshold not met.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1)).to.emit-at-least(3, :within(0.1));
-  is Failures.list.elems, 1,                  'emit-at-least fails';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Supply.from-list(1)).to.emit-at-least(3, :within(0.1));
+  };
+  is @captured.elems, 1,                  'emit-at-least fails';
 }
 
 # Integration: expect(...).to.complete passes on completed supply.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1, 2)).to.complete;
-  is Failures.list.elems, 0,                  'complete passes';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Supply.from-list(1, 2)).to.complete;
+  };
+  is @captured.elems, 0,                  'complete passes';
 }
 
 # Integration: expect(...).to.complete fails on pending supply.
 {
-  Failures.list = ();
-  my $supplier = Supplier.new;
-  expect($supplier.Supply).to.complete(:within(0.1));
-  is Failures.list.elems, 1,                  'complete fails on pending';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $supplier = Supplier.new;
+    expect($supplier.Supply).to.complete(:within(0.1));
+  };
+  is @captured.elems, 1,                  'complete fails on pending';
 }
 
 # Integration: negation works for each matcher.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1, 2, 4)).to.not.emit(1, 2, 3);
-  expect(Supply.from-list(1)).to.not.emit-at-least(3, :within(0.1));
-  my $supplier = Supplier.new;
-  expect($supplier.Supply).to.not.complete(:within(0.1));
-  is Failures.list.elems, 0,                  'negation passes for expected cases';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Supply.from-list(1, 2, 4)).to.not.emit(1, 2, 3);
+    expect(Supply.from-list(1)).to.not.emit-at-least(3, :within(0.1));
+    my $supplier = Supplier.new;
+    expect($supplier.Supply).to.not.complete(:within(0.1));
+  };
+  is @captured.elems, 0,                  'negation passes for expected cases';
 }
 
 # Failure.expected carries data for each matcher.
 {
-  Failures.list = ();
-  expect(Supply.from-list(1)).to.emit(1, 2);
-  is-deeply Failures.list[0].expected.List, (1, 2),
+  my @captured = capture-failures {
+    expect(Supply.from-list(1)).to.emit(1, 2);
+  };
+  is-deeply @captured[0].expected.List, (1, 2),
                                              'emit Failure.expected is the values list';
-  Failures.list = ();
+  my @captured2 = capture-failures {
 
-  expect(Supply.from-list()).to.emit-at-least(3, :within(0.1));
-  is Failures.list[0].expected, 3,           'emit-at-least Failure.expected is minimum';
-  Failures.list = ();
+    expect(Supply.from-list()).to.emit-at-least(3, :within(0.1));
+  };
+  is @captured2[0].expected, 3,           'emit-at-least Failure.expected is minimum';
 
   my $supplier = Supplier.new;
-  expect($supplier.Supply).to.complete(:within(0.1));
-  is Failures.list[0].expected, 0.1,         'complete Failure.expected is window';
-  Failures.list = ();
+  my @captured3 = capture-failures {
+    expect($supplier.Supply).to.complete(:within(0.1));
+  };
+  is @captured3[0].expected, 0.1,         'complete Failure.expected is window';
 }
 
 done-testing;

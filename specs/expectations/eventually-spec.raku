@@ -18,35 +18,35 @@ describe 'eventually matcher', {
   }
 
   it 'fails when the block never matches within the timeout', {
-    Failures.list = ();
-    expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
-    my $count = Failures.list.elems;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+    };
+    my $count = @captured.elems;
     expect($count).to.be(1);
   }
 
   it 'reports timing details in the failure message', {
-    Failures.list = ();
-    expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+    };
+    my $message = @captured[0].message;
     expect($message).to.start-with('eventually:');
     expect($message).to.include('iteration');
   }
 
   it 'fails when given a non-Callable actual', {
-    Failures.list = ();
-    expect(42).to.eventually.be(42);
-    my $count = Failures.list.elems;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.eventually.be(42);
+    };
+    my $count = @captured.elems;
     expect($count).to.be(1);
   }
 
   it 'records a Callable-shape message for non-Callable actuals', {
-    Failures.list = ();
-    expect(42).to.eventually.be(42);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.eventually.be(42);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected a Callable for eventually, but got 42');
   }
 }
@@ -104,18 +104,18 @@ describe 'eventually negation', {
   }
 
   it 'fails when the block matches at any point in the window', {
-    Failures.list = ();
-    expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
-    my $count = Failures.list.elems;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
+    };
+    my $count = @captured.elems;
     expect($count).to.be(1);
   }
 
   it 'reports the iteration count in the negated failure message', {
-    Failures.list = ();
-    expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('matched');
     expect($message).to.include('iteration');
   }
@@ -133,10 +133,10 @@ describe 'eventually with throwing blocks', {
   }
 
   it 'reports the exception in the failure message when never recovers', {
-    Failures.list = ();
-    expect({ die "always fails" }).to.eventually(:timeout(0.05), :interval(0.01)).be(1);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ die "always fails" }).to.eventually(:timeout(0.05), :interval(0.01)).be(1);
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('block threw');
     expect($message).to.include('always fails');
   }
@@ -144,27 +144,27 @@ describe 'eventually with throwing blocks', {
 
 describe 'eventually Failure metadata', {
   it 'preserves the Callable in Failure.given', {
-    Failures.list = ();
-    my $block = { 0 };
-    expect($block).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
-    my $given = Failures.list[0].given;
-    Failures.list = ();
+    my @captured = capture-failures {
+      my $block = { 0 };
+      expect($block).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+    };
+    my $given = @captured[0].given;
     expect($given).to.be-a(Callable);
   }
 
   it 'carries the inner matcher expected value in Failure.expected', {
-    Failures.list = ();
-    expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
-    my $expected = Failures.list[0].expected;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ 0 }).to.eventually(:timeout(0.05), :interval(0.01)).be(99);
+    };
+    my $expected = @captured[0].expected;
     expect($expected).to.be(99);
   }
 
   it 'sets negated on the recorded Failure under .not', {
-    Failures.list = ();
-    expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ 5 }).to.not.eventually(:timeout(0.05), :interval(0.01)).be(5);
+    };
+    my $negated = @captured[0].negated;
     expect($negated).to.be-truthy;
   }
 }

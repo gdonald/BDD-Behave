@@ -6,6 +6,9 @@ use BDD::Behave::Runner;
 use BDD::Behave::Formatter;
 use BDD::Behave::SpecTree;
 use BDD::Behave::Failures;
+use BDD::Behave::DSL;
+
+my $*BEHAVE-AGGREGATING = True;
 
 plan 20;
 
@@ -152,7 +155,6 @@ sub make-example($description, $line, &block) {
 
 # skipped examples are not retried
 {
-  Failures.list = ();
   my $suite = build-suite();
   my $ex = make-example('skipped one', 2, sub {});
   $ex.set-metadata(:skipped(True));

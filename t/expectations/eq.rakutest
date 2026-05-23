@@ -78,29 +78,31 @@ plan 73;
 
 # expect(...).to.eq(...) integration.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.eq([1, 2, 3]), 'expect.to.eq passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.eq([1, 2, 3]), 'expect.to.eq passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.eq([3, 2, 1]), 'expect.to.eq fails on order diff';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
-  is-deeply Failures.list[0].expected.Array, [3, 2, 1], 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.eq([3, 2, 1]), 'expect.to.eq fails on order diff';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is-deeply @captured2[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply @captured2[0].expected.Array, [3, 2, 1], 'failure expected preserved';
 }
 
 # expect(...).to.not.eq(...) negation.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.not.eq([3, 2, 1]), '.not passes when values differ';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.not.eq([3, 2, 1]), '.not passes when values differ';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.not.eq([1, 2, 3]), '.not fails when values equal';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.not.eq([1, 2, 3]), '.not fails when values equal';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # ContainExactlyMatcher does the Matcher role.
@@ -171,38 +173,37 @@ plan 73;
 
 # expect(...).to.contain-exactly(...) integration.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.contain-exactly(3, 1, 2), 'expect.to.contain-exactly passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.contain-exactly(3, 1, 2), 'expect.to.contain-exactly passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.contain-exactly(1, 2), 'expect.to.contain-exactly fails on count diff';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message,
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.contain-exactly(1, 2), 'expect.to.contain-exactly fails on count diff';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message,
      'expected $[1, 2, 3] to contain exactly 1, 2',
      'failure message preserved';
-  Failures.list = ();
 }
 
 # expect(...).to.not.contain-exactly(...) negation.
 {
-  Failures.list = ();
   ok expect([1, 2, 3]).to.not.contain-exactly(1, 2), '.not passes when elements differ';
   is Failures.list.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.not.contain-exactly(3, 2, 1), '.not fails when elements match';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message,
+  my @captured3 = capture-failures {
+    nok expect([1, 2, 3]).to.not.contain-exactly(3, 2, 1), '.not fails when elements match';
+  };
+  is @captured3.elems, 1, 'one failure on negated miss';
+  is @captured3[0].message,
      'expected $[1, 2, 3] not to contain exactly 3, 2, 1',
      'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  ok @captured3[0].negated, 'failure marked negated';
 }
 
 # expect(...).to.contain-exactly() with empty list passes for empty actual.
 {
-  Failures.list = ();
   ok expect([]).to.contain-exactly(), 'empty contain-exactly matches empty array';
   is Failures.list.elems, 0, 'no failure on empty match';
   Failures.list = ();
@@ -210,17 +211,16 @@ plan 73;
 
 # match-array integration.
 {
-  Failures.list = ();
   ok expect([1, 2, 3]).to.match-array([3, 2, 1]), 'match-array passes for permutation';
   is Failures.list.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.match-array([1, 2]), 'match-array fails on length diff';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message,
+  my @captured4 = capture-failures {
+    nok expect([1, 2, 3]).to.match-array([1, 2]), 'match-array fails on length diff';
+  };
+  is @captured4.elems, 1, 'one failure recorded';
+  is @captured4[0].message,
      'expected $[1, 2, 3] to contain exactly 1, 2',
      'match-array shares failure format with contain-exactly';
-  Failures.list = ();
 }
 
 # match-array requires an array argument.

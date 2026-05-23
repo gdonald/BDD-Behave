@@ -57,48 +57,51 @@ plan 35;
 
 # expect(...).to.be-nil integration.
 {
-  Failures.list = ();
-  expect(Nil).to.be-nil;
-  is Failures.list.elems, 0, 'be-nil passes for Nil';
+  my @captured = capture-failures {
+    expect(Nil).to.be-nil;
+  };
+  is @captured.elems, 0, 'be-nil passes for Nil';
 
-  Failures.list = ();
-  expect(Int).to.be-nil;
-  is Failures.list.elems, 0, 'be-nil passes for undefined type object';
+  my @captured2 = capture-failures {
+    expect(Int).to.be-nil;
+  };
+  is @captured2.elems, 0, 'be-nil passes for undefined type object';
 
-  Failures.list = ();
-  expect(42).to.be-nil;
-  is Failures.list.elems, 1, 'be-nil fails for defined value';
-  is Failures.list[0].given, 42, 'Failure.given preserved';
-  is Failures.list[0].message, 'expected 42 to be nil',
+  my @captured3 = capture-failures {
+    expect(42).to.be-nil;
+  };
+  is @captured3.elems, 1, 'be-nil fails for defined value';
+  is @captured3[0].given, 42, 'Failure.given preserved';
+  is @captured3[0].message, 'expected 42 to be nil',
      'Failure.message recorded';
-  Failures.list = ();
 
-  Failures.list = ();
-  expect(0).to.be-nil;
-  is Failures.list.elems, 1, 'be-nil fails for 0';
-  Failures.list = ();
+  my @captured4 = capture-failures {
+    expect(0).to.be-nil;
+  };
+  is @captured4.elems, 1, 'be-nil fails for 0';
 }
 
 # expect(...).to.not.be-nil negation.
 {
-  Failures.list = ();
-  expect(42).to.not.be-nil;
-  is Failures.list.elems, 0, '.not.be-nil passes for defined value';
+  my @captured = capture-failures {
+    expect(42).to.not.be-nil;
+  };
+  is @captured.elems, 0, '.not.be-nil passes for defined value';
 
-  Failures.list = ();
-  expect(Nil).to.not.be-nil;
-  is Failures.list.elems, 1, '.not.be-nil fails for Nil';
-  ok Failures.list[0].negated, 'failure marked negated';
-  is Failures.list[0].message, 'expected Any not to be nil',
+  my @captured2 = capture-failures {
+    expect(Nil).to.not.be-nil;
+  };
+  is @captured2.elems, 1, '.not.be-nil fails for Nil';
+  ok @captured2[0].negated, 'failure marked negated';
+  is @captured2[0].message, 'expected Any not to be nil',
      'negated message recorded (Nil reverts to Any in scalar)';
-  Failures.list = ();
 
-  Failures.list = ();
-  expect(Int).to.not.be-nil;
-  is Failures.list.elems, 1, '.not.be-nil fails for undefined type object';
-  is Failures.list[0].message, 'expected Int not to be nil',
+  my @captured3 = capture-failures {
+    expect(Int).to.not.be-nil;
+  };
+  is @captured3.elems, 1, '.not.be-nil fails for undefined type object';
+  is @captured3[0].message, 'expected Int not to be nil',
      'negated message records type-object name';
-  Failures.list = ();
 }
 
 # Type object vs instance distinction.
@@ -109,13 +112,13 @@ plan 35;
   ok  $m.matches(Widget),       'undefined user class is nil';
   nok $m.matches(Widget.new),   'defined user instance is not nil';
 
-  Failures.list = ();
-  expect(Widget).to.be-nil;
-  is Failures.list.elems, 0, 'be-nil passes for user class type object';
-  Failures.list = ();
+  my @captured4 = capture-failures {
+    expect(Widget).to.be-nil;
+  };
+  is @captured4.elems, 0, 'be-nil passes for user class type object';
 
-  Failures.list = ();
-  expect(Widget.new).to.be-nil;
-  is Failures.list.elems, 1, 'be-nil fails for user instance';
-  Failures.list = ();
+  my @captured5 = capture-failures {
+    expect(Widget.new).to.be-nil;
+  };
+  is @captured5.elems, 1, 'be-nil fails for user instance';
 }

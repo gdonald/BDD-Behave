@@ -5,6 +5,9 @@ use Test;
 use BDD::Behave::Diff;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
+use BDD::Behave::DSL;
+
+my $*BEHAVE-AGGREGATING = True;
 
 sub strip-ansi(Str $s --> Str) {
   $s.subst(/\e '[' \d+ 'm'/, '', :g);
@@ -153,7 +156,6 @@ is-deeply junction-eigenstates(none('a', 'b')).list, ('a', 'b'),
     :expected(1 | 2 | 3),
   ));
   my $out = capture-stdout({ Failures.say });
-  Failures.list = ();
   ok $out.contains('Diff:'),
     'Failures.say emits Diff: section for junction expected';
   ok strip-ansi($out).contains('Alternatives'),
@@ -165,7 +167,6 @@ is-deeply junction-eigenstates(none('a', 'b')).list, ('a', 'b'),
 # Failures.say integration: junction failure renders a Diff: section under negation
 
 {
-  Failures.list = ();
   Failures.list.push(Failure.new(
     :file('foo.raku'),
     :line(10),
@@ -184,7 +185,6 @@ is-deeply junction-eigenstates(none('a', 'b')).list, ('a', 'b'),
 # Failures.say still omits Diff: for plain scalar negation
 
 {
-  Failures.list = ();
   Failures.list.push(Failure.new(
     :file('foo.raku'),
     :line(10),

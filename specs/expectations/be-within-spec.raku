@@ -19,17 +19,17 @@ describe 'be-within matcher', {
   }
 
   it 'fails when actual differs from expected by more than delta', {
-    Failures.list = ();
-    expect(5.2).to.be-within(0.1).of(5.0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.2).to.be-within(0.1).of(5.0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when actual is below expected by more than delta', {
-    Failures.list = ();
-    expect(4.8).to.be-within(0.1).of(5.0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(4.8).to.be-within(0.1).of(5.0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'works with Int actual and Int expected', {
@@ -57,40 +57,40 @@ describe 'be-within matcher', {
   }
 
   it 'fails with zero delta when values differ', {
-    Failures.list = ();
-    expect(5.0001).to.be-within(0).of(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.0001).to.be-within(0).of(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
 describe 'be-within with undefined / non-Real values', {
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Int).to.be-within(0.1).of(5.0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Int).to.be-within(0.1).of(5.0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-Real actual', {
-    Failures.list = ();
-    expect('abc').to.be-within(0.1).of(5.0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('abc').to.be-within(0.1).of(5.0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on undefined expected', {
-    Failures.list = ();
-    expect(5.0).to.be-within(0.1).of(Int);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.0).to.be-within(0.1).of(Int);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-Real expected', {
-    Failures.list = ();
-    expect(5.0).to.be-within(0.1).of('abc');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.0).to.be-within(0.1).of('abc');
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -100,43 +100,43 @@ describe 'be-within negation', {
   }
 
   it 'fails when actual is within the delta range', {
-    Failures.list = ();
-    expect(5.05).to.not.be-within(0.1).of(5.0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.05).to.not.be-within(0.1).of(5.0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when actual equals expected exactly', {
-    Failures.list = ();
-    expect(5.0).to.not.be-within(0.1).of(5.0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.0).to.not.be-within(0.1).of(5.0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records a negated failure message', {
-    Failures.list = ();
-    expect(5.05).to.not.be-within(0.1).of(5.0);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.05).to.not.be-within(0.1).of(5.0);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be(
       'expected 5.05 not to be within 0.1 of 5.0'
     );
   }
 
   it 'marks the failure as negated', {
-    Failures.list = ();
-    expect(5.05).to.not.be-within(0.1).of(5.0);
-    expect(Failures.list[0].negated).to.be-truthy;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.05).to.not.be-within(0.1).of(5.0);
+    };
+    expect(@captured[0].negated).to.be-truthy;
   }
 }
 
 describe 'be-within failure messages', {
   it 'failure message names delta and expected', {
-    Failures.list = ();
-    expect(5.2).to.be-within(0.1).of(5.0);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.2).to.be-within(0.1).of(5.0);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be(
       'expected 5.2 to be within 0.1 of 5.0'
     );
@@ -145,16 +145,16 @@ describe 'be-within failure messages', {
 
 describe 'be-within preserves Failure tooling fields', {
   it 'preserves Failure.given', {
-    Failures.list = ();
-    expect(5.2).to.be-within(0.1).of(5.0);
-    expect(Failures.list[0].given).to.be(5.2);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.2).to.be-within(0.1).of(5.0);
+    };
+    expect(@captured[0].given).to.be(5.2);
   }
 
   it 'preserves Failure.expected as the expected target value', {
-    Failures.list = ();
-    expect(5.2).to.be-within(0.1).of(5.0);
-    expect(Failures.list[0].expected).to.be(5.0);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5.2).to.be-within(0.1).of(5.0);
+    };
+    expect(@captured[0].expected).to.be(5.0);
   }
 }

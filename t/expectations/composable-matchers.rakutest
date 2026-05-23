@@ -10,6 +10,8 @@ use BDD::Behave::Matcher::Collection;
 use BDD::Behave::Matcher::String;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 plan 78;
 
 # Matcher.and returns an AndMatcher
@@ -195,27 +197,27 @@ plan 78;
 
 # Integration: AND through expect(...).to.be(...)
 {
-  Failures.list = ();
-  ok expect(50).to.be(
-    BeGreaterThanMatcher.new(:expected(0))
-      .and(BeLessThanMatcher.new(:expected(100)))
-  ), 'AND composite passes when both inner match';
-  is Failures.list.elems, 0, 'no failure recorded on AND pass';
+  my @captured = capture-failures {
+    ok expect(50).to.be(
+      BeGreaterThanMatcher.new(:expected(0))
+        .and(BeLessThanMatcher.new(:expected(100)))
+    ), 'AND composite passes when both inner match';
+  };
+  is @captured.elems, 0, 'no failure recorded on AND pass';
 
-  Failures.list = ();
-  nok expect(200).to.be(
-    BeGreaterThanMatcher.new(:expected(0))
-      .and(BeLessThanMatcher.new(:expected(100)))
-  ), 'AND composite fails when right fails';
-  is Failures.list.elems, 1, 'one failure recorded on AND fail';
-  ok Failures.list[0].message.contains('be less than 100'),
+  my @captured2 = capture-failures {
+    nok expect(200).to.be(
+      BeGreaterThanMatcher.new(:expected(0))
+        .and(BeLessThanMatcher.new(:expected(100)))
+    ), 'AND composite fails when right fails';
+  };
+  is @captured2.elems, 1, 'one failure recorded on AND fail';
+  ok @captured2[0].message.contains('be less than 100'),
     'failure message names failing inner';
-  Failures.list = ();
 }
 
 # Integration: OR through expect(...).to.be(...)
 {
-  Failures.list = ();
   ok expect(5).to.be(
     BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
   ), 'OR composite passes when left matches';
@@ -226,7 +228,6 @@ plan 78;
     BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
   ), 'OR composite passes when right matches';
 
-  Failures.list = ();
   nok expect(7).to.be(
     BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
   ), 'OR composite fails when neither matches';
@@ -238,37 +239,35 @@ plan 78;
 
 # Negation: .not flips composite results
 {
-  Failures.list = ();
   ok expect(200).to.not.be(
     BeGreaterThanMatcher.new(:expected(0))
       .and(BeLessThanMatcher.new(:expected(100)))
   ), 'not(AND composite) passes when AND fails';
   is Failures.list.elems, 0, 'no failure on negated AND pass';
 
-  Failures.list = ();
-  nok expect(50).to.not.be(
-    BeGreaterThanMatcher.new(:expected(0))
-      .and(BeLessThanMatcher.new(:expected(100)))
-  ), 'not(AND composite) fails when AND passes';
-  is Failures.list.elems, 1, 'failure on negated AND miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  ok Failures.list[0].message.contains('not to'),
+  my @captured3 = capture-failures {
+    nok expect(50).to.not.be(
+      BeGreaterThanMatcher.new(:expected(0))
+        .and(BeLessThanMatcher.new(:expected(100)))
+    ), 'not(AND composite) fails when AND passes';
+  };
+  is @captured3.elems, 1, 'failure on negated AND miss';
+  ok @captured3[0].negated, 'failure marked negated';
+  ok @captured3[0].message.contains('not to'),
     'negated message uses "not to"';
-  Failures.list = ();
 
-  Failures.list = ();
   ok expect(7).to.not.be(
     BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
   ), 'not(OR composite) passes when none match';
 
-  Failures.list = ();
-  nok expect(5).to.not.be(
-    BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
-  ), 'not(OR composite) fails when one matches';
-  is Failures.list.elems, 1, 'failure on negated OR miss';
-  ok Failures.list[0].message.contains('matched'),
+  my @captured4 = capture-failures {
+    nok expect(5).to.not.be(
+      BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+    ), 'not(OR composite) fails when one matches';
+  };
+  is @captured4.elems, 1, 'failure on negated OR miss';
+  ok @captured4[0].message.contains('matched'),
     'negated OR message names matched inner';
-  Failures.list = ();
 }
 
 # Composition with define-matcher custom matchers

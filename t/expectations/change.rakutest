@@ -106,61 +106,62 @@ plan 35;
 
 # expect({ ... }).to.change({ ... }) integration: passes.
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter++ }).to.change({ $counter });
-  is Failures.list.elems, 0, 'passes when block changes value';
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter++ }).to.change({ $counter });
+  };
+  is @captured.elems, 0, 'passes when block changes value';
 
-  Failures.list = ();
 }
 
 # expect({ ... }).to.change({ ... }) integration: fails.
 {
-  Failures.list = ();
   my $counter = 7;
-  expect({ 1 + 1 }).to.change({ $counter });
-  is Failures.list.elems, 1, 'fails when block does not change value';
-  is Failures.list[0].message,
+  my @captured2 = capture-failures {
+    expect({ 1 + 1 }).to.change({ $counter });
+  };
+  is @captured2.elems, 1, 'fails when block does not change value';
+  is @captured2[0].message,
   'expected block to change observable, but it remained 7',
   'failure-message recorded';
-  Failures.list = ();
 }
 
 # expect(...).to.not.change negation.
 {
-  Failures.list = ();
   my $counter = 5;
-  expect({ 1 + 1 }).to.not.change({ $counter });
-  is Failures.list.elems, 0, '.not passes when value unchanged';
+  my @captured3 = capture-failures {
+    expect({ 1 + 1 }).to.not.change({ $counter });
+  };
+  is @captured3.elems, 0, '.not passes when value unchanged';
 
-  Failures.list = ();
-  expect({ $counter = 9 }).to.not.change({ $counter });
-  is Failures.list.elems, 1, '.not fails when value changed';
-  ok Failures.list[0].negated, 'failure marked negated';
-  is Failures.list[0].message,
+  my @captured4 = capture-failures {
+    expect({ $counter = 9 }).to.not.change({ $counter });
+  };
+  is @captured4.elems, 1, '.not fails when value changed';
+  ok @captured4[0].negated, 'failure marked negated';
+  is @captured4[0].message,
   'expected block not to change observable, but it changed from 5 to 9',
   'negated failure-message recorded';
-  Failures.list = ();
 }
 
 # expect(non-Callable).to.change records a Callable-shape failure.
 {
-  Failures.list = ();
   my $observable = 0;
-  expect(42).to.change({ $observable });
-  is Failures.list.elems, 1, 'records failure for non-Callable actual';
-  is Failures.list[0].message,
+  my @captured5 = capture-failures {
+    expect(42).to.change({ $observable });
+  };
+  is @captured5.elems, 1, 'records failure for non-Callable actual';
+  is @captured5[0].message,
   'expected a Callable for change, but got 42',
   'Callable-shape failure message';
-  Failures.list = ();
 }
 
 # Failure.given preserved as the action.
 {
-  Failures.list = ();
   my $counter = 0;
   my &action = { 1 + 1 };
-  expect(&action).to.change({ $counter });
-  ok Failures.list[0].given ~~ Callable, 'Failure.given is the Callable action';
-  Failures.list = ();
+  my @captured6 = capture-failures {
+    expect(&action).to.change({ $counter });
+  };
+  ok @captured6[0].given ~~ Callable, 'Failure.given is the Callable action';
 }

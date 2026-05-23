@@ -43,24 +43,24 @@ describe 'have-attributes matcher passes', {
 
 describe 'have-attributes matcher fails', {
   it 'fails when a single attribute differs', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99));
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99));
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when any one of multiple attributes differs', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(1), :y(99));
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(1), :y(99));
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when the attribute does not exist on the object', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:nonexistent(1));
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:nonexistent(1));
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -71,11 +71,11 @@ describe 'have-attributes matcher composes with other matchers', {
   }
 
   it 'fails when the composed inner matcher rejects the value', {
-    Failures.list = ();
-    expect(HAPoint.new(:x('hello'), :y(0)))
-      .to.have-attributes(:x(BeAMatcher.new(:type(Int))));
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x('hello'), :y(0)))
+        .to.have-attributes(:x(BeAMatcher.new(:type(Int))));
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -85,39 +85,39 @@ describe 'have-attributes negation', {
   }
 
   it 'fails negation when all values match', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.not.have-attributes(:x(1));
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.not.have-attributes(:x(1));
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('not to have attributes');
   }
 }
 
 describe 'have-attributes failure messages', {
   it 'lists missing accessors when the object does not respond', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:foo(1));
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:foo(1));
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('missing:');
     expect($message).to.include('"foo"');
   }
 
   it 'shows actual and expected values for mismatched attributes', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99));
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99));
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('mismatched:');
     expect($message).to.include('got 1');
     expect($message).to.include('wanted 99');
   }
 
   it 'reports both missing and mismatched in the same failure', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99), :foo(1));
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99), :foo(1));
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('missing:');
     expect($message).to.include('mismatched:');
   }
@@ -138,11 +138,11 @@ describe 'have-attributes arity', {
 
 describe 'have-attributes failure metadata', {
   it 'sets Failure.given and Failure.expected', {
-    Failures.list = ();
-    expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99));
-    my $given    = Failures.list[0].given;
-    my $expected = Failures.list[0].expected;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(HAPoint.new(:x(1), :y(2))).to.have-attributes(:x(99));
+    };
+    my $given    = @captured[0].given;
+    my $expected = @captured[0].expected;
     expect($given).to.be-a(HAPoint);
     expect($expected<x>).to.be(99);
   }

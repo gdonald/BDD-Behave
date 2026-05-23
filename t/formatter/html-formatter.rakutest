@@ -7,6 +7,9 @@ use BDD::Behave::Failures;
 use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::HTML;
 use BDD::Behave::SpecTree;
+use BDD::Behave::DSL;
+
+my $*BEHAVE-AGGREGATING = True;
 
 plan 28;
 

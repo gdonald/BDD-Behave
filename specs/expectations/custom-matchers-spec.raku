@@ -178,12 +178,12 @@ describe 'integration with expect(...).to.be(...)', {
       match => -> $actual { ?($actual %% 2) },
       failure-message => -> $actual { "expected $actual to be even" };
 
-    Failures.list = ();
-    expect(5).to.be(be-even());
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message).to.be('expected 5 to be even');
-    expect(Failures.list[0].given).to.be(5);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5).to.be(be-even());
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message).to.be('expected 5 to be even');
+    expect(@captured[0].given).to.be(5);
   }
 
   it 'routes negation through failure-message-negated', {
@@ -191,12 +191,12 @@ describe 'integration with expect(...).to.be(...)', {
       match => -> $actual { ?($actual %% 2) },
       failure-message-negated => -> $actual { "expected $actual not to be even" };
 
-    Failures.list = ();
-    expect(4).to.not.be(be-even());
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message).to.be('expected 4 not to be even');
-    expect(Failures.list[0].negated).to.be-truthy;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(4).to.not.be(be-even());
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message).to.be('expected 4 not to be even');
+    expect(@captured[0].negated).to.be-truthy;
   }
 }
 
@@ -215,11 +215,11 @@ describe 'FALLBACK dispatch on ExpectationBuilder', {
       failure-message => -> $actual, $n { "expected $actual to be a multiple of $n" };
 
     expect(9).to.cm-spec-be-mult-of(3);
-    Failures.list = ();
-    expect(10).to.cm-spec-be-mult-of(3);
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message).to.be('expected 10 to be a multiple of 3');
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(10).to.cm-spec-be-mult-of(3);
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message).to.be('expected 10 to be a multiple of 3');
   }
 
   it 'composes with .not', {
@@ -229,12 +229,12 @@ describe 'FALLBACK dispatch on ExpectationBuilder', {
 
     expect(-1).to.not.cm-spec-be-pos-neg;
 
-    Failures.list = ();
-    expect(1).to.not.cm-spec-be-pos-neg;
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message).to.be('expected 1 not to be positive');
-    expect(Failures.list[0].negated).to.be-truthy;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(1).to.not.cm-spec-be-pos-neg;
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message).to.be('expected 1 not to be positive');
+    expect(@captured[0].negated).to.be-truthy;
   }
 
   it 'still dies for an unknown method', {

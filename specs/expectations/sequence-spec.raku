@@ -27,31 +27,31 @@ describe 'start-with matcher on arrays', {
   }
 
   it 'fails when first element differs', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.start-with(2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.start-with(2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when prefix items appear out of order', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.start-with(2, 1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.start-with(2, 1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when expected prefix is longer than actual', {
-    Failures.list = ();
-    expect([1]).to.start-with(1, 2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1]).to.start-with(1, 2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.start-with(2);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.start-with(2);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected $[1, 2, 3] to start with 2');
   }
 
@@ -60,12 +60,12 @@ describe 'start-with matcher on arrays', {
   }
 
   it 'negation fails when prefix matches', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.not.start-with(1);
-    my $count = Failures.list.elems;
-    my $message = Failures.list[0].message;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.not.start-with(1);
+    };
+    my $count = @captured.elems;
+    my $message = @captured[0].message;
+    my $negated = @captured[0].negated;
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to start with 1');
     expect($negated).to.be-truthy;
@@ -86,17 +86,17 @@ describe 'start-with matcher on strings', {
   }
 
   it 'fails when prefix is missing', {
-    Failures.list = ();
-    expect('hello world').to.start-with('world');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello world').to.start-with('world');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when one of multiple prefixes is missing', {
-    Failures.list = ();
-    expect('hello world').to.start-with('hello', 'world');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello world').to.start-with('hello', 'world');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when prefix is absent', {
@@ -106,17 +106,17 @@ describe 'start-with matcher on strings', {
 
 describe 'start-with matcher edge cases', {
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Any).to.start-with(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Any).to.start-with(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-iterable, non-string actual', {
-    Failures.list = ();
-    expect(42).to.start-with(4);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.start-with(4);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'requires at least one item', {
@@ -129,11 +129,11 @@ describe 'start-with matcher edge cases', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.start-with(99);
-    expect(Failures.list[0].given).to.be([1, 2, 3]);
-    expect(Failures.list[0].expected).to.be([99]);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.start-with(99);
+    };
+    expect(@captured[0].given).to.be([1, 2, 3]);
+    expect(@captured[0].expected).to.be([99]);
   }
 }
 
@@ -163,31 +163,31 @@ describe 'end-with matcher on arrays', {
   }
 
   it 'fails when last element differs', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.end-with(2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.end-with(2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when suffix items appear out of order', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.end-with(3, 2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.end-with(3, 2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when expected suffix is longer than actual', {
-    Failures.list = ();
-    expect([1]).to.end-with(1, 2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1]).to.end-with(1, 2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.end-with(2);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.end-with(2);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected $[1, 2, 3] to end with 2');
   }
 
@@ -196,12 +196,12 @@ describe 'end-with matcher on arrays', {
   }
 
   it 'negation fails when suffix matches', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.not.end-with(3);
-    my $count = Failures.list.elems;
-    my $message = Failures.list[0].message;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.not.end-with(3);
+    };
+    my $count = @captured.elems;
+    my $message = @captured[0].message;
+    my $negated = @captured[0].negated;
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to end with 3');
     expect($negated).to.be-truthy;
@@ -222,17 +222,17 @@ describe 'end-with matcher on strings', {
   }
 
   it 'fails when suffix is missing', {
-    Failures.list = ();
-    expect('hello world').to.end-with('hello');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello world').to.end-with('hello');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when one of multiple suffixes is missing', {
-    Failures.list = ();
-    expect('hello world').to.end-with('world', 'hello');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello world').to.end-with('world', 'hello');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when suffix is absent', {
@@ -242,17 +242,17 @@ describe 'end-with matcher on strings', {
 
 describe 'end-with matcher edge cases', {
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Any).to.end-with(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Any).to.end-with(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-iterable, non-string actual', {
-    Failures.list = ();
-    expect(42).to.end-with(2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.end-with(2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'requires at least one item', {
@@ -265,10 +265,10 @@ describe 'end-with matcher edge cases', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.end-with(99);
-    expect(Failures.list[0].given).to.be([1, 2, 3]);
-    expect(Failures.list[0].expected).to.be([99]);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.end-with(99);
+    };
+    expect(@captured[0].given).to.be([1, 2, 3]);
+    expect(@captured[0].expected).to.be([99]);
   }
 }

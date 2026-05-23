@@ -15,10 +15,10 @@ describe 'include matcher with string varieties', {
     }
 
     it 'fails to find a non-empty substring inside the empty string', {
-      Failures.list = ();
-      expect('').to.include('a');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('').to.include('a');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -40,10 +40,10 @@ describe 'include matcher with string varieties', {
     }
 
     it 'distinguishes leading whitespace', {
-      Failures.list = ();
-      expect('hello').to.include(' hello');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('hello').to.include(' hello');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -87,17 +87,17 @@ describe 'include matcher with string varieties', {
 
   describe 'case sensitivity', {
     it 'is case sensitive: lowercase needle in mixed case', {
-      Failures.list = ();
-      expect('Hello World').to.include('hello');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('Hello World').to.include('hello');
+      };
+      expect(@captured.elems).to.be(1);
     }
 
     it 'is case sensitive: uppercase needle in lowercase haystack', {
-      Failures.list = ();
-      expect('hello world').to.include('WORLD');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured2 = capture-failures {
+        expect('hello world').to.include('WORLD');
+      };
+      expect(@captured2.elems).to.be(1);
     }
 
     it 'matches when case matches exactly', {
@@ -115,10 +115,10 @@ describe 'include matcher with string varieties', {
     }
 
     it 'fails when the coerced numeric form is absent', {
-      Failures.list = ();
-      expect('order #42 confirmed').to.include(99);
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('order #42 confirmed').to.include(99);
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -146,10 +146,10 @@ describe 'start-with matcher with string varieties', {
     }
 
     it 'fails to find a non-empty prefix on the empty string', {
-      Failures.list = ();
-      expect('').to.start-with('a');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('').to.start-with('a');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -171,10 +171,10 @@ describe 'start-with matcher with string varieties', {
     }
 
     it 'distinguishes leading whitespace', {
-      Failures.list = ();
-      expect('hello').to.start-with(' hello');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('hello').to.start-with(' hello');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -190,10 +190,10 @@ describe 'start-with matcher with string varieties', {
     }
 
     it 'fails when the prefix lives on the second line', {
-      Failures.list = ();
-      expect($text).to.start-with('second');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect($text).to.start-with('second');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -217,10 +217,10 @@ describe 'start-with matcher with string varieties', {
 
   describe 'case sensitivity', {
     it 'is case sensitive', {
-      Failures.list = ();
-      expect('Hello world').to.start-with('hello');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('Hello world').to.start-with('hello');
+      };
+      expect(@captured.elems).to.be(1);
     }
 
     it 'matches when case matches exactly', {
@@ -262,10 +262,10 @@ describe 'end-with matcher with string varieties', {
     }
 
     it 'fails to find a non-empty suffix on the empty string', {
-      Failures.list = ();
-      expect('').to.end-with('a');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('').to.end-with('a');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -287,10 +287,10 @@ describe 'end-with matcher with string varieties', {
     }
 
     it 'distinguishes trailing whitespace', {
-      Failures.list = ();
-      expect('hello').to.end-with('hello ');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('hello').to.end-with('hello ');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -306,10 +306,10 @@ describe 'end-with matcher with string varieties', {
     }
 
     it 'fails when the suffix lives on an earlier line', {
-      Failures.list = ();
-      expect($text).to.end-with('first');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect($text).to.end-with('first');
+      };
+      expect(@captured.elems).to.be(1);
     }
   }
 
@@ -329,10 +329,10 @@ describe 'end-with matcher with string varieties', {
 
   describe 'case sensitivity', {
     it 'is case sensitive', {
-      Failures.list = ();
-      expect('Hello World').to.end-with('world');
-      expect(Failures.list.elems).to.be(1);
-      Failures.list = ();
+      my @captured = capture-failures {
+        expect('Hello World').to.end-with('world');
+      };
+      expect(@captured.elems).to.be(1);
     }
 
     it 'matches when case matches exactly', {

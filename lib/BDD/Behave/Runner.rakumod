@@ -877,10 +877,15 @@ our class Runner {
     {
       my $*BEHAVE-AUTO-MATCHERS = $auto ?? @captured-matchers !! Array;
       my $*BEHAVE-AGGREGATION-LABEL = $auto-agg-on ?? ($auto-agg-label // Str) !! Str;
+      my $*BEHAVE-AGGREGATING = ?$auto-agg-on;
       my $*BEHAVE-CURRENT-DESCRIPTION = self.full-description($example);
       try {
         $example.execute;
         CATCH {
+          when X::BDD::Behave::ExpectationFailed {
+            # Failure already pushed onto Failures.list by the expect()
+            # that threw; nothing else to record here.
+          }
           default {
             if $auto-agg-on {
               my $msg = "exception in {self.full-description($example)}: " ~ .message;

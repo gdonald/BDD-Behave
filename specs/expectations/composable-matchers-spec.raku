@@ -151,109 +151,109 @@ describe 'composition with custom matchers', {
 
 describe 'integration with expect(...).to.be(...)', {
   it 'passes when AND composite matches', {
-    Failures.list = ();
-    expect(50).to.be(
-      BeGreaterThanMatcher.new(:expected(0))
-        .and(BeLessThanMatcher.new(:expected(100)))
-    );
-    expect(Failures.list.elems).to.be(0);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(50).to.be(
+        BeGreaterThanMatcher.new(:expected(0))
+          .and(BeLessThanMatcher.new(:expected(100)))
+      );
+    };
+    expect(@captured.elems).to.be(0);
   }
 
   it 'records one failure when AND composite fails', {
-    Failures.list = ();
-    expect(200).to.be(
-      BeGreaterThanMatcher.new(:expected(0))
-        .and(BeLessThanMatcher.new(:expected(100)))
-    );
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(200).to.be(
+        BeGreaterThanMatcher.new(:expected(0))
+          .and(BeLessThanMatcher.new(:expected(100)))
+      );
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'passes when OR composite matches any side', {
-    Failures.list = ();
-    expect(5).to.be(
-      BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
-    );
-    expect(Failures.list.elems).to.be(0);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5).to.be(
+        BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+      );
+    };
+    expect(@captured.elems).to.be(0);
   }
 
   it 'records one failure when OR composite fails all sides', {
-    Failures.list = ();
-    expect(7).to.be(
-      BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
-    );
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be(
+        BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+      );
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
 describe 'failure messages from composites', {
   it 'AND failure message names the failing inner matcher', {
-    Failures.list = ();
-    expect(200).to.be(
-      BeGreaterThanMatcher.new(:expected(0))
-        .and(BeLessThanMatcher.new(:expected(100)))
-    );
-    expect(Failures.list[0].message).to.include('be greater than 0');
-    expect(Failures.list[0].message).to.include('be less than 100');
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(200).to.be(
+        BeGreaterThanMatcher.new(:expected(0))
+          .and(BeLessThanMatcher.new(:expected(100)))
+      );
+    };
+    expect(@captured[0].message).to.include('be greater than 0');
+    expect(@captured[0].message).to.include('be less than 100');
   }
 
   it 'OR failure message names both inner matchers', {
-    Failures.list = ();
-    expect(7).to.be(
-      BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
-    );
-    expect(Failures.list[0].message).to.include('be 5');
-    expect(Failures.list[0].message).to.include('be 10');
-    expect(Failures.list[0].message).to.include('none matched');
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be(
+        BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+      );
+    };
+    expect(@captured[0].message).to.include('be 5');
+    expect(@captured[0].message).to.include('be 10');
+    expect(@captured[0].message).to.include('none matched');
   }
 }
 
 describe 'negation', {
   it 'AND composite under .not passes when the AND fails', {
-    Failures.list = ();
-    expect(200).to.not.be(
-      BeGreaterThanMatcher.new(:expected(0))
-        .and(BeLessThanMatcher.new(:expected(100)))
-    );
-    expect(Failures.list.elems).to.be(0);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(200).to.not.be(
+        BeGreaterThanMatcher.new(:expected(0))
+          .and(BeLessThanMatcher.new(:expected(100)))
+      );
+    };
+    expect(@captured.elems).to.be(0);
   }
 
   it 'AND composite under .not records the negated message when the AND passes', {
-    Failures.list = ();
-    expect(50).to.not.be(
-      BeGreaterThanMatcher.new(:expected(0))
-        .and(BeLessThanMatcher.new(:expected(100)))
-    );
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].negated).to.be-truthy;
-    expect(Failures.list[0].message).to.include('not to');
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(50).to.not.be(
+        BeGreaterThanMatcher.new(:expected(0))
+          .and(BeLessThanMatcher.new(:expected(100)))
+      );
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].negated).to.be-truthy;
+    expect(@captured[0].message).to.include('not to');
   }
 
   it 'OR composite under .not passes when no inner matcher matches', {
-    Failures.list = ();
-    expect(7).to.not.be(
-      BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
-    );
-    expect(Failures.list.elems).to.be(0);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.not.be(
+        BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+      );
+    };
+    expect(@captured.elems).to.be(0);
   }
 
   it 'OR composite under .not records which matcher matched on a miss', {
-    Failures.list = ();
-    expect(5).to.not.be(
-      BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
-    );
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].negated).to.be-truthy;
-    expect(Failures.list[0].message).to.include('matched');
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5).to.not.be(
+        BeMatcher.new(:expected(5)).or(BeMatcher.new(:expected(10)))
+      );
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].negated).to.be-truthy;
+    expect(@captured[0].message).to.include('matched');
   }
 }
 

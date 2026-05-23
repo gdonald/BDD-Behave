@@ -7,14 +7,15 @@ use BDD::Behave;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
 
-plan 32;
+my $*BEHAVE-AGGREGATING = True;
+
+plan 31;
 
 # Failure.aggregation-label is undefined when constructed outside any aggregate block.
 {
   Failures.list = ();
   my $f = Failure.new(:file('a.raku'), :line(1), :given(0), :expected(1));
   is $f.aggregation-label, Str, 'aggregation-label unset by default';
-  Failures.list = ();
 }
 
 # Failure.aggregation-label auto-discovers from the dynamic.
@@ -23,7 +24,6 @@ plan 32;
   my $*BEHAVE-AGGREGATION-LABEL = 'hello';
   my $f = Failure.new(:file('a.raku'), :line(1), :given(0), :expected(1));
   is $f.aggregation-label, 'hello', 'aggregation-label picked up from dynamic';
-  Failures.list = ();
 }
 
 # Failure.aggregation-label explicit arg wins over dynamic.
@@ -35,85 +35,80 @@ plan 32;
     :aggregation-label('explicit'),
   );
   is $f.aggregation-label, 'explicit', 'explicit arg wins over dynamic';
-  Failures.list = ();
 }
 
 # aggregate-failures with no label runs the block.
 {
-  Failures.list = ();
-  my $ran = False;
-  aggregate-failures { $ran = True; }
-  ok $ran, 'block was invoked';
-  is Failures.list.elems, 0, 'no failures recorded';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $ran = False;
+    aggregate-failures { $ran = True; }
+    ok $ran, 'block was invoked';
+  };
+  is @captured.elems, 0, 'no failures recorded';
 }
 
-# aggregate-failures with no label leaves failures unlabeled.
+# aggregate-failures with a label rolls up to a single failure tagged with the label.
 {
-  Failures.list = ();
-  aggregate-failures {
-    expect(1).to.be(2);
-  }
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].aggregation-label, Str, 'unlabeled when no label given';
-  Failures.list = ();
-}
-
-# aggregate-failures with a label tags each failure inside.
-{
-  Failures.list = ();
-  aggregate-failures 'group-a', {
-    expect(1).to.be(2);
-    expect(3).to.be(4);
-  }
-  is Failures.list.elems, 2, 'two failures recorded';
-  is Failures.list[0].aggregation-label, 'group-a', 'first tagged';
-  is Failures.list[1].aggregation-label, 'group-a', 'second tagged';
-  Failures.list = ();
+  my @captured = capture-failures {
+    aggregate-failures 'group-a', {
+      expect(1).to.be(2);
+      expect(3).to.be(4);
+    }
+  };
+  is @captured.elems, 1, 'rollup produces a single failure row';
+  is @captured[0].aggregation-label, 'group-a', 'rollup carries the label';
+  ok @captured[0].message.contains('2 expectations failed inside aggregate-failures'),
+    'rollup header reports the inner count';
+  ok @captured[0].message.contains('Expected: 1'),
+    'rollup body includes first inner failure';
+  ok @captured[0].message.contains('Expected: 3'),
+    'rollup body includes second inner failure';
 }
 
 # aggregate-failures continues past failed expectations.
 {
-  Failures.list = ();
   my $count = 0;
-  aggregate-failures {
-    expect(1).to.be(2);
-    $count++;
-    expect(3).to.be(4);
-    $count++;
-  }
+  my @captured = capture-failures {
+    aggregate-failures {
+      expect(1).to.be(2);
+      $count++;
+      expect(3).to.be(4);
+      $count++;
+    }
+  };
   is $count, 2, 'execution continued past first failure';
-  is Failures.list.elems, 2, 'both failures collected';
-  Failures.list = ();
+  is @captured.elems, 1, 'still rolls up to one failure';
 }
 
 # aggregate-failures traps exceptions and converts them to failures.
 {
-  Failures.list = ();
-  aggregate-failures 'with-error', { die 'boom'; }
-  is Failures.list.elems, 1, 'exception became a failure';
-  ok Failures.list[0].message.contains('boom'),
-    'failure message includes original message';
-  is Failures.list[0].aggregation-label, 'with-error',
+  my @captured = capture-failures {
+    aggregate-failures 'with-error', { die 'boom'; }
+  };
+  is @captured.elems, 1, 'exception became a rollup failure';
+  ok @captured[0].message.contains('boom'),
+    'rollup includes original exception message';
+  is @captured[0].aggregation-label, 'with-error',
     'exception-derived failure carries the label';
-  Failures.list = ();
 }
 
-# Failures collected before an exception remain in the list.
+# Failures collected before an exception remain in the rollup.
 {
-  Failures.list = ();
-  aggregate-failures 'mixed', {
-    expect(1).to.be(2);
-    die 'mid';
-  }
-  is Failures.list.elems, 2, 'pre-exception failure plus exception failure';
-  ok Failures.list[1].message.contains('mid'), 'last failure is the exception';
-  Failures.list = ();
+  my @captured = capture-failures {
+    aggregate-failures 'mixed', {
+      expect(1).to.be(2);
+      die 'mid';
+    }
+  };
+  is @captured.elems, 1, 'rollup is a single row';
+  ok @captured[0].message.contains('Expected: 1'),
+    'rollup includes the pre-exception failure';
+  ok @captured[0].message.contains('mid'),
+    'rollup includes the exception';
 }
 
 # aggregate-failures does not propagate the exception.
 {
-  Failures.list = ();
   my $caught;
   try {
     aggregate-failures { die 'no escape'; }
@@ -123,60 +118,36 @@ plan 32;
   Failures.list = ();
 }
 
-# Failures outside the block are unaffected.
+# Failures outside the aggregate block are unaffected by rollup.
 {
-  Failures.list = ();
-  expect(0).to.be(1);
-  aggregate-failures 'inside', { expect(2).to.be(3); }
-  expect(4).to.be(5);
-  is Failures.list.elems, 3, 'three failures total';
-  is Failures.list[0].aggregation-label, Str, 'pre-block failure untagged';
-  is Failures.list[1].aggregation-label, 'inside', 'in-block failure tagged';
-  is Failures.list[2].aggregation-label, Str, 'post-block failure untagged';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(0).to.be(1);
+    aggregate-failures 'inside', { expect(2).to.be(3); }
+    expect(4).to.be(5);
+  };
+  is @captured.elems, 3, 'three rows total (rollup contributes one)';
+  is @captured[0].aggregation-label, Str, 'pre-block failure untagged';
+  is @captured[1].aggregation-label, 'inside', 'rollup row tagged with label';
+  is @captured[2].aggregation-label, Str, 'post-block failure untagged';
 }
 
-# Nested labeled blocks: inner label wins.
+# Nested labeled blocks: inner rollup ends up labeled with inner label.
 {
-  Failures.list = ();
-  aggregate-failures 'outer', {
-    aggregate-failures 'inner', {
-      expect(1).to.be(2);
+  my @captured = capture-failures {
+    aggregate-failures 'outer', {
+      aggregate-failures 'inner', {
+        expect(1).to.be(2);
+      }
     }
-  }
-  is Failures.list[0].aggregation-label, 'inner', 'inner label wins';
-  Failures.list = ();
-}
-
-# Nested unlabeled block inherits the outer label.
-{
-  Failures.list = ();
-  aggregate-failures 'outer', {
-    aggregate-failures {
-      expect(1).to.be(2);
-    }
-  }
-  is Failures.list[0].aggregation-label, 'outer',
-    'unlabeled inner inherits outer label';
-  Failures.list = ();
-}
-
-# Outer-labeled, inner-labeled, then outer expectation after inner finishes.
-{
-  Failures.list = ();
-  aggregate-failures 'outer', {
-    aggregate-failures 'inner', { expect(1).to.be(2); }
-    expect(3).to.be(4);
-  }
-  is Failures.list[0].aggregation-label, 'inner', 'inner failure tagged inner';
-  is Failures.list[1].aggregation-label, 'outer',
-    'outer-block failure after inner block tagged outer';
-  Failures.list = ();
+  };
+  is @captured[0].aggregation-label, 'outer',
+    'outer-block rollup carries the outer label';
+  ok @captured[0].message.contains('1 expectation'),
+    'outer rollup body shows the nested rollup as a single inner failure';
 }
 
 # Failures.say renders the aggregate label in the location line.
 {
-  Failures.list = ();
   my $output = stdout-from({
     aggregate-failures 'tag-x', { expect(1).to.be(2); }
     Failures.say;
@@ -188,7 +159,6 @@ plan 32;
 
 # Failures.say omits the label segment when no label is set.
 {
-  Failures.list = ();
   my $output = stdout-from({
     expect(1).to.be(2);
     Failures.say;
@@ -205,7 +175,6 @@ plan 32;
 
 # aggregate-failures accepts a Str:D positional label.
 {
-  Failures.list = ();
   lives-ok {
     aggregate-failures 'a-label', { expect(1).to.be(1); }
   }, 'labeled form runs cleanly with no failures';
@@ -215,7 +184,6 @@ plan 32;
 
 # Block runs exactly once.
 {
-  Failures.list = ();
   my $count = 0;
   aggregate-failures { $count++; }
   is $count, 1, 'block runs exactly once';

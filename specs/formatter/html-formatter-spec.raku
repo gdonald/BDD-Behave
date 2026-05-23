@@ -173,21 +173,22 @@ describe 'BDD::Behave::Formatter::HTML', {
     }
 
     it 'renders failing examples with the fail class and a failure-detail block', {
-      Failures.list = ();
       my $f = BDD::Behave::Formatter::HTML.new;
       my $g = make-group('g');
       my $ex = make-example('broken');
-      my $out = capture-formatter-output({
-        $f.group-start($g);
-        $f.example-start($ex);
-        Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
-        $f.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
-        $f.run-summary(fake-result(%( total => 1, failed => 1 )));
-      });
+      my $out;
+      capture-failures {
+        $out = capture-formatter-output({
+          $f.group-start($g);
+          $f.example-start($ex);
+          Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
+          $f.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+          $f.run-summary(fake-result(%( total => 1, failed => 1 )));
+        });
+      };
       expect($out).to.include('class="example fail"');
       expect($out).to.include('class="failure-detail"');
       expect($out).to.include('✗');
-      Failures.list = ();
     }
 
     it 'renders pending examples with the pending class and ⏸ marker', {

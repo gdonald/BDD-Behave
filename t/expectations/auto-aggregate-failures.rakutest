@@ -39,7 +39,6 @@ sub silent-run($runner, $suite) {
 
 # resolve: runner default True -> on, no label.
 {
-  Failures.list = ();
   my $ex = BDD::Behave::SpecTree::Example.new(
     :description('rdt'), :file($*PROGRAM.IO), :line(1), :block({ True }),
   );
@@ -63,7 +62,6 @@ sub silent-run($runner, $suite) {
 
 # resolve: example metadata True overrides absent default.
 {
-  Failures.list = ();
   my $ex = BDD::Behave::SpecTree::Example.new(
     :description('mt'), :file($*PROGRAM.IO), :line(1), :block({ True }),
   );
@@ -89,7 +87,6 @@ sub silent-run($runner, $suite) {
 
 # resolve: example metadata False overrides runner default True.
 {
-  Failures.list = ();
   my $ex = BDD::Behave::SpecTree::Example.new(
     :description('off'), :file($*PROGRAM.IO), :line(1), :block({ True }),
   );
@@ -118,7 +115,6 @@ sub silent-run($runner, $suite) {
 
 # resolve: leaf metadata overrides group metadata.
 {
-  Failures.list = ();
   my $group = BDD::Behave::SpecTree::ExampleGroup.new(
     :description('g2'), :file($*PROGRAM.IO), :line(1),
   );
@@ -135,7 +131,6 @@ sub silent-run($runner, $suite) {
 
 # Integration: example metadata True converts exception into a failure with no label.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $g = BDD::Behave::SpecTree::ExampleGroup.new(
       :description('boom-group'), :file($*PROGRAM.IO), :line(2),
@@ -149,20 +144,18 @@ sub silent-run($runner, $suite) {
     $s.add-group($g);
   });
   my $runner = BDD::Behave::Runner::Runner.new;
-  silent-run($runner, $suite);
-  is Failures.list.elems, 1, 'one labeled failure recorded for exception';
-  is Failures.list[0].aggregation-label, Str, 'no label when metadata is True';
-  ok Failures.list[0].message.contains('pop'),
+  my @captured = capture-failures { silent-run($runner, $suite) };
+  is @captured.elems, 1, 'one labeled failure recorded for exception';
+  is @captured[0].aggregation-label, Str, 'no label when metadata is True';
+  ok @captured[0].message.contains('pop'),
     'failure message includes the exception message';
   is $runner.result.failed, 1, 'runner.result.failed is 1';
   ok !$runner.result.errors[0]<exception>.defined,
     'auto-agg path records the failure without an exception record';
-  Failures.list = ();
 }
 
 # Integration: example metadata Str labels the exception failure.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $ex = BDD::Behave::SpecTree::Example.new(
       :description('boom2'), :file($*PROGRAM.IO), :line(4),
@@ -181,7 +174,6 @@ sub silent-run($runner, $suite) {
 
 # Integration: runner default True applies to all examples.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $ex1 = BDD::Behave::SpecTree::Example.new(
       :description('dies1'), :file($*PROGRAM.IO), :line(5),
@@ -205,7 +197,6 @@ sub silent-run($runner, $suite) {
 
 # Integration: runner default Str labels all failures inside.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $ex = BDD::Behave::SpecTree::Example.new(
       :description('multi'), :file($*PROGRAM.IO), :line(7),
@@ -228,7 +219,6 @@ sub silent-run($runner, $suite) {
 
 # Integration: False metadata disables auto-agg even when runner default is on.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $ex = BDD::Behave::SpecTree::Example.new(
       :description('opt-out'), :file($*PROGRAM.IO), :line(8),
@@ -248,7 +238,6 @@ sub silent-run($runner, $suite) {
 
 # Integration: inner explicit aggregate-failures with its own label still wins.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $ex = BDD::Behave::SpecTree::Example.new(
       :description('nested'), :file($*PROGRAM.IO), :line(9),
@@ -271,7 +260,6 @@ sub silent-run($runner, $suite) {
 
 # Integration: rendered output contains the label segment.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $ex = BDD::Behave::SpecTree::Example.new(
       :description('render'), :file($*PROGRAM.IO), :line(10),
@@ -290,7 +278,6 @@ sub silent-run($runner, $suite) {
 # Integration: exception message starts with the canonical prefix and includes
 # the full nested description.
 {
-  Failures.list = ();
   my $suite = build-suite(-> $s {
     my $g = BDD::Behave::SpecTree::ExampleGroup.new(
       :description('outer'), :file($*PROGRAM.IO), :line(11),
@@ -317,7 +304,6 @@ sub silent-run($runner, $suite) {
 
 # resolve: empty-string Str metadata is treated as off (no chars => no label).
 {
-  Failures.list = ();
   my $ex = BDD::Behave::SpecTree::Example.new(
     :description('empty'), :file($*PROGRAM.IO), :line(1), :block({ True }),
   );

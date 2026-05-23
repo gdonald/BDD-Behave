@@ -27,17 +27,17 @@ describe 'include matcher on arrays', {
   }
 
   it 'fails when an item is missing (multi-item)', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.include(2, 99);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.include(2, 99);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.include(99);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.include(99);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected $[1, 2, 3] to include 99');
   }
 
@@ -46,12 +46,12 @@ describe 'include matcher on arrays', {
   }
 
   it 'negation fails when item is present', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.not.include(2);
-    my $count = Failures.list.elems;
-    my $message = Failures.list[0].message;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.not.include(2);
+    };
+    my $count = @captured.elems;
+    my $message = @captured[0].message;
+    my $negated = @captured[0].negated;
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to include 2');
     expect($negated).to.be-truthy;
@@ -76,17 +76,17 @@ describe 'include matcher on hashes', {
   }
 
   it 'fails when key is missing', {
-    Failures.list = ();
-    expect({ a => 1 }).to.include('b');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ a => 1 }).to.include('b');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when key exists but value differs', {
-    Failures.list = ();
-    expect({ a => 1 }).to.include(a => 2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({ a => 1 }).to.include(a => 2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when key is absent', {
@@ -104,10 +104,10 @@ describe 'include matcher on strings', {
   }
 
   it 'fails when substring is absent', {
-    Failures.list = ();
-    expect('hello world').to.include('xyz');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello world').to.include('xyz');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when substring is absent', {
@@ -125,10 +125,10 @@ describe 'include matcher on Set/Bag', {
   }
 
   it 'fails when Set element is missing', {
-    Failures.list = ();
-    expect(set('a', 'b')).to.include('z');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(set('a', 'b')).to.include('z');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'matches when Bag contains element', {
@@ -138,10 +138,10 @@ describe 'include matcher on Set/Bag', {
 
 describe 'include matcher edge cases', {
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Any).to.include(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Any).to.include(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'requires at least one item', {
@@ -154,10 +154,10 @@ describe 'include matcher edge cases', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.include(99, 100);
-    expect(Failures.list[0].given).to.be([1, 2, 3]);
-    expect(Failures.list[0].expected).to.be([99, 100]);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.include(99, 100);
+    };
+    expect(@captured[0].given).to.be([1, 2, 3]);
+    expect(@captured[0].expected).to.be([99, 100]);
   }
 }

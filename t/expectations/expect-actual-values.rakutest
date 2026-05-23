@@ -49,7 +49,6 @@ Failures.list = ();
 
 # Test 6: Integer vs String - smartmatch allows this
 {
-  Failures.list = ();
   my $actual = 42;
   my $expected = "42";
   # Note: Raku's smartmatch is permissive, 42 ~~ "42" returns True
@@ -92,13 +91,14 @@ Failures.list = ();
 
 # Test 11: Failure stores actual values (not string representations)
 {
-  Failures.list = ();
-  my $actual = [1, 2, 3];
-  my $expected = [4, 5, 6];
-  expect($actual).to.be($expected);
+  my @captured = capture-failures {
+    my $actual = [1, 2, 3];
+    my $expected = [4, 5, 6];
+    expect($actual).to.be($expected);
 
-  is Failures.list.elems, 1, 'array mismatch creates failure';
+  };
+  is @captured.elems, 1, 'array mismatch creates failure';
   # The failure should store the actual array values
-  ok Failures.list[0].given ~~ Array, 'failure.given is an Array';
-  ok Failures.list[0].expected ~~ Array, 'failure.expected is an Array';
+  ok @captured[0].given ~~ Array, 'failure.given is an Array';
+  ok @captured[0].expected ~~ Array, 'failure.expected is an Array';
 }

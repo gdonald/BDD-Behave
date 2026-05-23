@@ -54,17 +54,19 @@ plan 30;
     method expected-value(--> Mu) { 'an even number' }
   }
 
-  Failures.list = ();
+  my @captured = capture-failures {
 
-  ok expect(4).to.be(EvenMatcher.new), 'custom matcher passes for matching value';
-  is Failures.list.elems, 0, 'no failure recorded on success';
+    ok expect(4).to.be(EvenMatcher.new), 'custom matcher passes for matching value';
+  };
+  is @captured.elems, 0, 'no failure recorded on success';
 
-  Failures.list = ();
-  nok expect(5).to.be(EvenMatcher.new), 'custom matcher fails for non-matching value';
-  is Failures.list.elems, 1, 'one failure recorded on miss';
-  is Failures.list[0].message, 'expected 5 to be even', 'failure carries matcher message';
-  is Failures.list[0].given, 5, 'failure preserves actual value';
-  is Failures.list[0].expected, 'an even number', 'failure expected mirrors matcher.expected-value';
+  my @captured2 = capture-failures {
+    nok expect(5).to.be(EvenMatcher.new), 'custom matcher fails for non-matching value';
+  };
+  is @captured2.elems, 1, 'one failure recorded on miss';
+  is @captured2[0].message, 'expected 5 to be even', 'failure carries matcher message';
+  is @captured2[0].given, 5, 'failure preserves actual value';
+  is @captured2[0].expected, 'an even number', 'failure expected mirrors matcher.expected-value';
 }
 
 # 5. Negation routes through failure-message-negated.
@@ -75,24 +77,27 @@ plan 30;
     method failure-message-negated($actual --> Str) { "expected falsy, got " ~ $actual.raku }
   }
 
-  Failures.list = ();
-  ok expect(0).to.not.be(TruthyMatcher.new), '.not flips matcher result';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect(0).to.not.be(TruthyMatcher.new), '.not flips matcher result';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(1).to.not.be(TruthyMatcher.new), '.not failure path';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message, 'expected falsy, got 1', 'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
+  my @captured2 = capture-failures {
+    nok expect(1).to.not.be(TruthyMatcher.new), '.not failure path';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  is @captured2[0].message, 'expected falsy, got 1', 'negated message used';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # 6. BeMatcher path leaves the structured given/expected rendering untouched
 #    (no message set so Failures.say falls back to Expected:/to be: lines).
 {
-  Failures.list = ();
-  expect(42).to.be(41);
-  is Failures.list.elems, 1, 'BeMatcher records a failure';
-  nok Failures.list[0].message.defined, 'BeMatcher leaves message undefined for legacy rendering';
-  is Failures.list[0].given, 42, 'given preserved';
-  is Failures.list[0].expected, 41, 'expected preserved';
+  my @captured = capture-failures {
+    expect(42).to.be(41);
+  };
+  is @captured.elems, 1, 'BeMatcher records a failure';
+  nok @captured[0].message.defined, 'BeMatcher leaves message undefined for legacy rendering';
+  is @captured[0].given, 42, 'given preserved';
+  is @captured[0].expected, 41, 'expected preserved';
 }

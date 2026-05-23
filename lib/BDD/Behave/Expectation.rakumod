@@ -2,6 +2,13 @@ unit module BDD::Behave::Expectation;
 
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
+
+sub throw-unless-aggregating(Str $file, Int $line --> Nil) {
+  my $aggregating = False;
+  try { $aggregating = ?$*BEHAVE-AGGREGATING }
+  return if $aggregating;
+  die X::BDD::Behave::ExpectationFailed.new(:$file, :$line);
+}
 use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Core;
 use BDD::Behave::Matcher::Collection;
@@ -117,6 +124,7 @@ class WithinExpectation is export {
       :message($message),
     );
     Failures.list.push($f);
+    throw-unless-aggregating($!file, $!line);
   }
 }
 
@@ -437,6 +445,7 @@ class EventuallyExpectation is export {
         :message($message),
       );
       Failures.list.push($failure);
+      throw-unless-aggregating($!file, $!line);
     }
 
     $passed;
@@ -583,6 +592,7 @@ class ExpectationBuilder is export {
         :message($message),
       );
       Failures.list.push($failure);
+      throw-unless-aggregating($!file, $!line);
     }
 
     $passed;

@@ -7,6 +7,8 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Custom;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 plan 67;
 
 # DefinedMatcher does Matcher
@@ -165,18 +167,19 @@ plan 67;
   failure-message => -> $actual { "expected $actual to be even" },
   failure-message-negated => -> $actual { "expected $actual not to be even" };
 
-  Failures.list = ();
-  ok expect(4).to.be(be-even()), 'passes when actual matches';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect(4).to.be(be-even()), 'passes when actual matches';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect(5).to.be(be-even()), 'fails when actual does not match';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected 5 to be even',
+  my @captured2 = capture-failures {
+    nok expect(5).to.be(be-even()), 'fails when actual does not match';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message, 'expected 5 to be even',
   'failure message from custom matcher';
-  is Failures.list[0].given , 5, 'failure given preserved';
+  is @captured2[0].given , 5, 'failure given preserved';
 
-  Failures.list = ();
 }
 
 # Integration with .not
@@ -186,18 +189,17 @@ plan 67;
   failure-message => -> $actual { "expected $actual to be even" },
   failure-message-negated => -> $actual { "expected $actual not to be even" };
 
-  Failures.list = ();
   ok expect(5).to.not.be(be-even()), '.not passes when actual mismatches';
   is Failures.list.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(4).to.not.be(be-even()), '.not fails when actual matches';
-  is Failures.list.elems, 1, 'failure recorded on negated miss';
-  is Failures.list[0].message, 'expected 4 not to be even',
+  my @captured3 = capture-failures {
+    nok expect(4).to.not.be(be-even()), '.not fails when actual matches';
+  };
+  is @captured3.elems, 1, 'failure recorded on negated miss';
+  is @captured3[0].message, 'expected 4 not to be even',
   'negated message rendered';
-  ok Failures.list[0].negated, 'failure marked negated';
+  ok @captured3[0].negated, 'failure marked negated';
 
-  Failures.list = ();
 }
 
 # FALLBACK dispatch on ExpectationBuilder
@@ -207,16 +209,15 @@ plan 67;
   failure-message => -> $actual { "expected $actual to be positive" },
   failure-message-negated => -> $actual { "expected $actual not to be positive" };
 
-  Failures.list = ();
   ok expect(5).to.be-positive, 'FALLBACK dispatches no-arg matcher';
   is Failures.list.elems, 0, 'no failure on FALLBACK pass';
 
-  Failures.list = ();
-  nok expect(-1).to.be-positive, 'FALLBACK records failure on miss';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected -1 to be positive', 'FALLBACK uses custom message';
+  my @captured4 = capture-failures {
+    nok expect(-1).to.be-positive, 'FALLBACK records failure on miss';
+  };
+  is @captured4.elems, 1, 'one failure recorded';
+  is @captured4[0].message, 'expected -1 to be positive', 'FALLBACK uses custom message';
 
-  Failures.list = ();
 }
 
 # FALLBACK with args
@@ -225,7 +226,6 @@ plan 67;
   match => -> $actual, $n { ?($actual %% $n) },
   failure-message => -> $actual, $n { "expected $actual to be a multiple of $n" };
 
-  Failures.list = ();
   ok expect(9).to.be-mult-of(3), 'FALLBACK with args passes';
   nok expect(10).to.be-mult-of(3), 'FALLBACK with args fails';
   is Failures.list.elems, 1, 'one failure recorded';
@@ -239,14 +239,13 @@ plan 67;
   match => -> $actual { $actual > 0 },
   failure-message-negated => -> $actual { "expected $actual not to be positive" };
 
-  Failures.list = ();
   ok expect(-1).to.not.be-pos-not, 'FALLBACK + .not passes';
-  Failures.list = ();
-  nok expect(1).to.not.be-pos-not, 'FALLBACK + .not fails when matched';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected 1 not to be positive', 'negated message';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured5 = capture-failures {
+    nok expect(1).to.not.be-pos-not, 'FALLBACK + .not fails when matched';
+  };
+  is @captured5.elems, 1, 'one failure recorded';
+  is @captured5[0].message, 'expected 1 not to be positive', 'negated message';
+  ok @captured5[0].negated, 'failure marked negated';
 }
 
 # Unknown method still throws X::Method::NotFound

@@ -7,6 +7,8 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Collection;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 plan 83;
 
 # Empty strings (include)
@@ -238,24 +240,26 @@ plan 83;
 
 # Failure messages use matcher-supplied text and surface .raku of actual + expected.
 {
-  Failures.list = ();
-  expect("café au lait").to.include('xyz');
-  is Failures.list[0].message,
+  my @captured = capture-failures {
+    expect("café au lait").to.include('xyz');
+  };
+  is @captured[0].message,
      'expected "café au lait" to include "xyz"',
      'include failure message uses .raku of actual';
-  Failures.list = ();
+  my @captured2 = capture-failures {
 
-  expect("hello\nworld").to.start-with('world');
-  is Failures.list[0].message,
+    expect("hello\nworld").to.start-with('world');
+  };
+  is @captured2[0].message,
      "expected \"hello\\nworld\" to start with \"world\"",
      'start-with failure message uses .raku and escapes newlines';
-  Failures.list = ();
+  my @captured3 = capture-failures {
 
-  expect("hello").to.end-with(' ');
-  is Failures.list[0].message,
+    expect("hello").to.end-with(' ');
+  };
+  is @captured3[0].message,
      'expected "hello" to end with " "',
      'end-with failure message preserves whitespace in .raku';
-  Failures.list = ();
 }
 
 # Negation across all three string matchers.
@@ -264,24 +268,24 @@ plan 83;
   ok expect('hello world').to.not.start-with('xyz'), 'start-with negation passes';
   ok expect('hello world').to.not.end-with('xyz'),   'end-with negation passes';
 
-  Failures.list = ();
-  expect('hello world').to.not.include('hello');
-  is Failures.list.elems, 1,
+  my @captured4 = capture-failures {
+    expect('hello world').to.not.include('hello');
+  };
+  is @captured4.elems, 1,
                                           'include negation records a failure on match';
-  ok Failures.list[0].negated,            'failure is flagged negated';
-  Failures.list = ();
+  ok @captured4[0].negated,            'failure is flagged negated';
 
-  Failures.list = ();
-  expect('hello world').to.not.start-with('hello');
-  is Failures.list.elems, 1,
+  my @captured5 = capture-failures {
+    expect('hello world').to.not.start-with('hello');
+  };
+  is @captured5.elems, 1,
                                           'start-with negation records a failure on match';
-  ok Failures.list[0].negated,            'failure is flagged negated';
-  Failures.list = ();
+  ok @captured5[0].negated,            'failure is flagged negated';
 
-  Failures.list = ();
-  expect('hello world').to.not.end-with('world');
-  is Failures.list.elems, 1,
+  my @captured6 = capture-failures {
+    expect('hello world').to.not.end-with('world');
+  };
+  is @captured6.elems, 1,
                                           'end-with negation records a failure on match';
-  ok Failures.list[0].negated,            'failure is flagged negated';
-  Failures.list = ();
+  ok @captured6[0].negated,            'failure is flagged negated';
 }

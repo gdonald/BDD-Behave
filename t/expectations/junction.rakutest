@@ -7,6 +7,8 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Core;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 plan 34;
 
 multi sub is-junction(Junction:D --> Bool) { True }
@@ -48,44 +50,46 @@ multi sub is-junction($                --> Bool) { False }
 
 # Integration through expect(...).to.be(...) — pass path
 {
-  Failures.list = ();
-  ok expect(2).to.be(1 | 2 | 3), 'expect.to.be(any) passes';
-  is Failures.list.elems, 0, 'no failures recorded for passing any-junction';
+  my @captured = capture-failures {
+    ok expect(2).to.be(1 | 2 | 3), 'expect.to.be(any) passes';
+  };
+  is @captured.elems, 0, 'no failures recorded for passing any-junction';
 }
 
 # Integration through expect(...).to.be(...) — fail path
 {
-  Failures.list = ();
-  nok expect(5).to.be(1 | 2 | 3), 'expect.to.be(any) fails for non-member';
-  is Failures.list.elems, 1, 'failure recorded for failing any-junction';
-  ok is-junction(Failures.list[0].expected), 'Failure.expected carries the Junction';
-  is Failures.list[0].given, 5, 'Failure.given carries the actual value';
-  Failures.list = ();
+  my @captured = capture-failures {
+    nok expect(5).to.be(1 | 2 | 3), 'expect.to.be(any) fails for non-member';
+  };
+  is @captured.elems, 1, 'failure recorded for failing any-junction';
+  ok is-junction(@captured[0].expected), 'Failure.expected carries the Junction';
+  is @captured[0].given, 5, 'Failure.given carries the actual value';
 }
 
 # Negation: passes when value is outside the any-junction
 {
-  Failures.list = ();
-  ok expect(5).to.not.be(1 | 2 | 3), '.not.be(any) passes for non-member';
-  is Failures.list.elems, 0, 'no failure recorded for passing negation';
+  my @captured = capture-failures {
+    ok expect(5).to.not.be(1 | 2 | 3), '.not.be(any) passes for non-member';
+  };
+  is @captured.elems, 0, 'no failure recorded for passing negation';
 }
 
 # Negation: fails when value is inside the any-junction
 {
-  Failures.list = ();
-  nok expect(2).to.not.be(1 | 2 | 3), '.not.be(any) fails when value is in the junction';
-  is Failures.list.elems, 1, 'failure recorded for failing negation';
-  ok Failures.list[0].negated, 'failure marked as negated';
-  Failures.list = ();
+  my @captured = capture-failures {
+    nok expect(2).to.not.be(1 | 2 | 3), '.not.be(any) fails when value is in the junction';
+  };
+  is @captured.elems, 1, 'failure recorded for failing negation';
+  ok @captured[0].negated, 'failure marked as negated';
 }
 
 # All-junction integration
 {
-  Failures.list = ();
-  ok expect(5).to.be(Int & Numeric), 'expect.to.be(all) passes when all constituents match';
-  nok expect('hi').to.be(Int & Str), 'expect.to.be(all) fails when one constituent fails';
-  is Failures.list.elems, 1, 'failure recorded for failing all-junction';
-  Failures.list = ();
+  my @captured = capture-failures {
+    ok expect(5).to.be(Int & Numeric), 'expect.to.be(all) passes when all constituents match';
+    nok expect('hi').to.be(Int & Str), 'expect.to.be(all) fails when one constituent fails';
+  };
+  is @captured.elems, 1, 'failure recorded for failing all-junction';
 }
 
 # One-junction integration
@@ -93,7 +97,6 @@ multi sub is-junction($                --> Bool) { False }
   Failures.list = ();
   ok expect(2).to.be(1 ^ 2 ^ 3), 'expect.to.be(one) passes when exactly one matches';
   nok expect(0).to.be(1 ^ 2 ^ 3), 'expect.to.be(one) fails when none match';
-  Failures.list = ();
 }
 
 # None-junction integration
@@ -101,7 +104,6 @@ multi sub is-junction($                --> Bool) { False }
   Failures.list = ();
   ok expect(99).to.be(none(1, 2, 3)), 'expect.to.be(none) passes outside set';
   nok expect(2).to.be(none(1, 2, 3)), 'expect.to.be(none) fails for set member';
-  Failures.list = ();
 }
 
 # Subset-type alternatives
@@ -110,5 +112,4 @@ multi sub is-junction($                --> Bool) { False }
   Failures.list = ();
   ok expect(5).to.be(Int & Positive), 'subset types compose in all-junction';
   nok expect(-1).to.be(Int & Positive), 'subset types fail when predicate fails';
-  Failures.list = ();
 }

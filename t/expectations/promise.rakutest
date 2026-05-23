@@ -231,84 +231,84 @@ plan 76;
 
 # Integration: expect(...).to.be-kept on a kept promise records no failure.
 {
-  Failures.list = ();
-  expect(Promise.kept('done')).to.be-kept;
-  is Failures.list.elems, 0,                 'be-kept passes on kept promise';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.kept('done')).to.be-kept;
+  };
+  is @captured.elems, 0,                 'be-kept passes on kept promise';
 }
 
 # Integration: expect(...).to.be-kept on a broken promise records one failure.
 {
-  Failures.list = ();
-  expect(Promise.broken('boom')).to.be-kept;
-  is Failures.list.elems, 1,                 'be-kept fails on broken promise';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.broken('boom')).to.be-kept;
+  };
+  is @captured.elems, 1,                 'be-kept fails on broken promise';
 }
 
 # Integration: expect(...).to.be-kept(timeout) on a pending promise records one failure.
 {
-  Failures.list = ();
-  expect(Promise.new).to.be-kept(0.05);
-  is Failures.list.elems, 1,                 'be-kept fails on pending promise';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.new).to.be-kept(0.05);
+  };
+  is @captured.elems, 1,                 'be-kept fails on pending promise';
 }
 
 # Integration: expect(...).to.be-broken on a broken promise records no failure.
 {
-  Failures.list = ();
-  expect(Promise.broken('boom')).to.be-broken;
-  is Failures.list.elems, 0,                 'be-broken passes on broken promise';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.broken('boom')).to.be-broken;
+  };
+  is @captured.elems, 0,                 'be-broken passes on broken promise';
 }
 
 # Integration: expect(...).to.be-broken on a kept promise records one failure.
 {
-  Failures.list = ();
-  expect(Promise.kept('happy')).to.be-broken;
-  is Failures.list.elems, 1,                 'be-broken fails on kept promise';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.kept('happy')).to.be-broken;
+  };
+  is @captured.elems, 1,                 'be-broken fails on kept promise';
 }
 
 # Integration: expect(...).to.complete-within on a kept promise records no failure.
 {
-  Failures.list = ();
-  expect(Promise.kept('done')).to.complete-within(1);
-  is Failures.list.elems, 0,                 'complete-within passes on kept';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.kept('done')).to.complete-within(1);
+  };
+  is @captured.elems, 0,                 'complete-within passes on kept';
 }
 
 # Integration: expect(...).to.complete-within on a broken promise records no failure.
 {
-  Failures.list = ();
-  expect(Promise.broken('boom')).to.complete-within(1);
-  is Failures.list.elems, 0,                 'complete-within passes on broken';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.broken('boom')).to.complete-within(1);
+  };
+  is @captured.elems, 0,                 'complete-within passes on broken';
 }
 
 # Integration: expect(...).to.complete-within on a pending promise records one failure.
 {
-  Failures.list = ();
-  expect(Promise.new).to.complete-within(0.05);
-  is Failures.list.elems, 1,                 'complete-within fails on pending';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.new).to.complete-within(0.05);
+  };
+  is @captured.elems, 1,                 'complete-within fails on pending';
 }
 
 # Integration: negation works for each matcher.
 {
-  Failures.list = ();
-  expect(Promise.broken('boom')).to.not.be-kept;
-  expect(Promise.kept('done')).to.not.be-broken;
-  expect(Promise.new).to.not.complete-within(0.05);
-  is Failures.list.elems, 0,                 'negation passes for the expected cases';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.broken('boom')).to.not.be-kept;
+    expect(Promise.kept('done')).to.not.be-broken;
+    expect(Promise.new).to.not.complete-within(0.05);
+  };
+  is @captured.elems, 0,                 'negation passes for the expected cases';
 }
 
 # Failure.expected carries the duration for complete-within.
 {
-  Failures.list = ();
-  expect(Promise.new).to.complete-within(0.05);
-  is Failures.list[0].expected, 0.05,        'Failure.expected is the duration';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect(Promise.new).to.complete-within(0.05);
+  };
+  is @captured[0].expected, 0.05,        'Failure.expected is the duration';
 }
 
 done-testing;

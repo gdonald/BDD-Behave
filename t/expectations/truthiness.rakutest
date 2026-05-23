@@ -83,60 +83,64 @@ plan 53;
 
 # expect(...).to.be-truthy integration.
 {
-  Failures.list = ();
-  expect(True).to.be-truthy;
-  is Failures.list.elems, 0, 'be-truthy passes for True';
+  my @captured = capture-failures {
+    expect(True).to.be-truthy;
+  };
+  is @captured.elems, 0, 'be-truthy passes for True';
 
-  Failures.list = ();
-  expect(0).to.be-truthy;
-  is Failures.list.elems, 1, 'be-truthy fails for 0';
-  is Failures.list[0].given, 0, 'Failure.given preserved';
-  is Failures.list[0].message, 'expected 0 to be truthy',
+  my @captured2 = capture-failures {
+    expect(0).to.be-truthy;
+  };
+  is @captured2.elems, 1, 'be-truthy fails for 0';
+  is @captured2[0].given, 0, 'Failure.given preserved';
+  is @captured2[0].message, 'expected 0 to be truthy',
      'Failure.message recorded';
-  Failures.list = ();
 }
 
 # expect(...).to.be-falsy integration.
 {
-  Failures.list = ();
-  expect(False).to.be-falsy;
-  is Failures.list.elems, 0, 'be-falsy passes for False';
+  my @captured3 = capture-failures {
+    expect(False).to.be-falsy;
+  };
+  is @captured3.elems, 0, 'be-falsy passes for False';
 
-  Failures.list = ();
-  expect(42).to.be-falsy;
-  is Failures.list.elems, 1, 'be-falsy fails for 42';
-  is Failures.list[0].given, 42, 'Failure.given preserved';
-  is Failures.list[0].message, 'expected 42 to be falsy',
+  my @captured4 = capture-failures {
+    expect(42).to.be-falsy;
+  };
+  is @captured4.elems, 1, 'be-falsy fails for 42';
+  is @captured4[0].given, 42, 'Failure.given preserved';
+  is @captured4[0].message, 'expected 42 to be falsy',
      'Failure.message recorded';
-  Failures.list = ();
 }
 
 # expect(...).to.not.be-truthy negation.
 {
-  Failures.list = ();
-  expect(False).to.not.be-truthy;
-  is Failures.list.elems, 0, '.not.be-truthy passes for False';
+  my @captured5 = capture-failures {
+    expect(False).to.not.be-truthy;
+  };
+  is @captured5.elems, 0, '.not.be-truthy passes for False';
 
-  Failures.list = ();
-  expect(True).to.not.be-truthy;
-  is Failures.list.elems, 1, '.not.be-truthy fails for True';
-  ok Failures.list[0].negated, 'failure marked negated';
-  is Failures.list[0].message, 'expected Bool::True not to be truthy',
+  my @captured6 = capture-failures {
+    expect(True).to.not.be-truthy;
+  };
+  is @captured6.elems, 1, '.not.be-truthy fails for True';
+  ok @captured6[0].negated, 'failure marked negated';
+  is @captured6[0].message, 'expected Bool::True not to be truthy',
      'negated message recorded';
-  Failures.list = ();
 }
 
 # expect(...).to.not.be-falsy negation.
 {
-  Failures.list = ();
-  expect(True).to.not.be-falsy;
-  is Failures.list.elems, 0, '.not.be-falsy passes for True';
+  my @captured7 = capture-failures {
+    expect(True).to.not.be-falsy;
+  };
+  is @captured7.elems, 0, '.not.be-falsy passes for True';
 
-  Failures.list = ();
-  expect(False).to.not.be-falsy;
-  is Failures.list.elems, 1, '.not.be-falsy fails for False';
-  ok Failures.list[0].negated, 'failure marked negated';
-  is Failures.list[0].message, 'expected Bool::False not to be falsy',
+  my @captured8 = capture-failures {
+    expect(False).to.not.be-falsy;
+  };
+  is @captured8.elems, 1, '.not.be-falsy fails for False';
+  ok @captured8[0].negated, 'failure marked negated';
+  is @captured8[0].message, 'expected Bool::False not to be falsy',
      'negated message recorded';
-  Failures.list = ();
 }

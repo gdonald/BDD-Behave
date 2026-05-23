@@ -141,25 +141,26 @@ describe 'BDD::Behave::Formatter::JUnit', {
     }
 
     it 'renders a failing example with a <failure> child', {
-      Failures.list = ();
       my $f = BDD::Behave::Formatter::JUnit.new;
       my $s = make-suite('S', '/tmp/s-spec.raku');
       my $g = make-group('g');
       my $ex = make-example('broken');
-      my $out = capture-formatter-output({
-        $f.suite-start($s);
-        $f.group-start($g);
-        $f.example-start($ex);
-        Failures.list.push: Failure.new(
-          :file('spec.raku'), :line(11), :given('a'), :expected('b'),
-        );
-        $f.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
-        $f.run-summary(fake-result(%( total => 1, failed => 1 )));
-      });
+      my $out;
+      capture-failures {
+        $out = capture-formatter-output({
+          $f.suite-start($s);
+          $f.group-start($g);
+          $f.example-start($ex);
+          Failures.list.push: Failure.new(
+            :file('spec.raku'), :line(11), :given('a'), :expected('b'),
+          );
+          $f.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+          $f.run-summary(fake-result(%( total => 1, failed => 1 )));
+        });
+      };
       expect($out).to.include('<failure');
       expect($out).to.include('type="Expectation"');
       expect($out).to.include('<![CDATA[');
-      Failures.list = ();
     }
 
     it 'renders an exception failure as an <error> child', {

@@ -1,8 +1,14 @@
 # aggregate-failures
 
-`aggregate-failures` groups one or more expectations into a labeled block. All expectations run to completion — a failure earlier in the block does not skip the rest — and failures recorded inside the block are tagged with the block's label in the failure summary.
+By default in BDD::Behave, the **first failing expectation inside an `it` body throws and aborts the rest of that example** — matching RSpec semantics. Ideally each `it` block contains exactly one `expect`. When you genuinely need multiple expectations in one `it` body, wrap them in `aggregate-failures { ... }`:
 
-In BDD::Behave, expectations already accumulate rather than stop at the first miss, so the main thing `aggregate-failures` adds is **labeling** and **exception trapping**: an exception thrown inside the block is captured and reported as a single labeled failure rather than aborting the example.
+- All expectations inside the block run to completion (a failure earlier in the block does not skip the rest).
+- The N inner failures are **rolled up into a single `Failure` row** at the line where the `aggregate-failures` block opens.
+- That single row carries the block's label (when one is given) and renders the inner failures as a bulleted summary under its header.
+
+This means the progress stream's `F` count and the number of rows in the `Failures:` section stay aligned — one failed `it` produces one `F` and one row, regardless of how many `expect`s misfired inside.
+
+Exceptions thrown inside the block are also captured into the same rollup rather than propagating.
 
 ## Basic form
 
@@ -14,12 +20,21 @@ aggregate-failures 'validating response', {
 }
 ```
 
-Each of the three expectations runs even if the first one fails. The failure summary marks each tagged failure with the label:
+All three expectations run even if the first one fails. The failure summary shows one rollup row at the `aggregate-failures` line, with each inner failure as an indented bullet:
 
 ```
   [ ✗ ] specs/api-spec.raku:5 (aggregate: validating response)
-        Expected: 500
-        to be:    200
+      api validates response
+      3 expectations failed inside aggregate-failures
+        - specs/api-spec.raku:6:
+            Expected: 500
+            to be: 200
+        - specs/api-spec.raku:7:
+            Expected: 'oops'
+            to be: 'ok'
+        - specs/api-spec.raku:8:
+            Expected: 'application/json'
+            to be: 'text/plain'
 ```
 
 ## Forms
@@ -67,6 +82,24 @@ aggregate-failures 'outer', {
 ## Failure metadata
 
 `Failure.aggregation-label` carries the label string (or `Str` when no label applies). The label is set at `Failure` construction time from the dynamic variable `$*BEHAVE-AGGREGATION-LABEL`, so user-defined matchers that build their own `Failure` instances pick it up automatically.
+
+## `capture-failures` for meta-tests
+
+`capture-failures { ... }` is a sibling DSL function for tests that need to **inspect** the recorded `Failure` records without polluting the surrounding example:
+
+```raku
+my @captured = capture-failures {
+  expect(0).to.be-between(1, 10);
+};
+expect(@captured.elems).to.be(1);
+expect(@captured[0].message).to.include('between');
+```
+
+It runs the block with throw-on-failure suppressed (so multiple failing expectations all execute), returns the new `Failure` records as a `List`, and **splices them off** the global `Failures.list` so the surrounding example reports cleanly.
+
+Unlike `aggregate-failures`, `capture-failures` does **not** roll up. Each inner failure is returned as its own `Failure` object so the meta-test can assert on individual entries.
+
+Use it when writing a spec for a matcher's failure behavior. Use `aggregate-failures` when writing application code where you genuinely want multiple expectations to run in a single example body.
 
 ## Automatic aggregation
 

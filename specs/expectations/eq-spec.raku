@@ -11,10 +11,10 @@ describe 'eq matcher (order-dependent structural equality)', {
   }
 
   it 'distinguishes Array from List (eqv is type-strict)', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.eq((1, 2, 3));
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.eq((1, 2, 3));
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'matches nested arrays', {
@@ -31,38 +31,38 @@ describe 'eq matcher (order-dependent structural equality)', {
   }
 
   it 'fails when arrays differ in order', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.eq([3, 2, 1]);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.eq([3, 2, 1]);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when arrays have different elements', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.eq([1, 2, 4]);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.eq([1, 2, 4]);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when arrays have different lengths', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.eq([1, 2]);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.eq([1, 2]);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when nested arrays differ', {
-    Failures.list = ();
-    expect([[1, 2], [3, 4]]).to.eq([[1, 2], [3, 5]]);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([[1, 2], [3, 4]]).to.eq([[1, 2], [3, 5]]);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'distinguishes Range from List with same elements', {
-    Failures.list = ();
-    expect((1, 2, 3)).to.eq(1..3);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect((1, 2, 3)).to.eq(1..3);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when values differ', {
@@ -70,21 +70,21 @@ describe 'eq matcher (order-dependent structural equality)', {
   }
 
   it 'negation fails when values are equal', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.not.eq([1, 2, 3]);
-    my $count = Failures.list.elems;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.not.eq([1, 2, 3]);
+    };
+    my $count = @captured.elems;
+    my $negated = @captured[0].negated;
     expect($count).to.be(1);
     expect($negated).to.be-truthy;
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.eq([1, 2, 4]);
-    expect(Failures.list[0].given).to.be([1, 2, 3]);
-    expect(Failures.list[0].expected).to.be([1, 2, 4]);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.eq([1, 2, 4]);
+    };
+    expect(@captured[0].given).to.be([1, 2, 3]);
+    expect(@captured[0].expected).to.be([1, 2, 4]);
   }
 }
 
@@ -118,52 +118,52 @@ describe 'contain-exactly matcher (order-independent multiset equality)', {
   }
 
   it 'fails when element counts differ', {
-    Failures.list = ();
-    expect([1, 1, 2]).to.contain-exactly(1, 2);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 1, 2]).to.contain-exactly(1, 2);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when actual has extra elements', {
-    Failures.list = ();
-    expect([1, 2, 3, 4]).to.contain-exactly(1, 2, 3);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3, 4]).to.contain-exactly(1, 2, 3);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when expected has extra elements', {
-    Failures.list = ();
-    expect([1, 2]).to.contain-exactly(1, 2, 3);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2]).to.contain-exactly(1, 2, 3);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when an element is missing', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.contain-exactly(1, 2, 99);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.contain-exactly(1, 2, 99);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Any).to.contain-exactly(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Any).to.contain-exactly(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-iterable actual', {
-    Failures.list = ();
-    expect(42).to.contain-exactly(42);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.contain-exactly(42);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.contain-exactly(1, 2);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.contain-exactly(1, 2);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected $[1, 2, 3] to contain exactly 1, 2');
   }
 
@@ -172,23 +172,23 @@ describe 'contain-exactly matcher (order-independent multiset equality)', {
   }
 
   it 'negation fails when elements match (any order)', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.not.contain-exactly(3, 2, 1);
-    my $count = Failures.list.elems;
-    my $message = Failures.list[0].message;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.not.contain-exactly(3, 2, 1);
+    };
+    my $count = @captured.elems;
+    my $message = @captured[0].message;
+    my $negated = @captured[0].negated;
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 2, 3] not to contain exactly 3, 2, 1');
     expect($negated).to.be-truthy;
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.contain-exactly(1, 2);
-    expect(Failures.list[0].given).to.be([1, 2, 3]);
-    expect(Failures.list[0].expected.elems).to.be(2);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.contain-exactly(1, 2);
+    };
+    expect(@captured[0].given).to.be([1, 2, 3]);
+    expect(@captured[0].expected.elems).to.be(2);
   }
 }
 
@@ -206,24 +206,24 @@ describe 'match-array matcher (alias for contain-exactly)', {
   }
 
   it 'fails when element counts differ', {
-    Failures.list = ();
-    expect([1, 1, 2]).to.match-array([1, 2]);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 1, 2]).to.match-array([1, 2]);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when an element is missing', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.match-array([1, 2, 99]);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.match-array([1, 2, 99]);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records the same failure-message format as contain-exactly', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.match-array([1, 2]);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.match-array([1, 2]);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected $[1, 2, 3] to contain exactly 1, 2');
   }
 

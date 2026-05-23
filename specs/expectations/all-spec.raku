@@ -37,17 +37,17 @@ describe 'all matcher with plain values (smartmatch)', {
   }
 
   it 'fails when one element does not match', {
-    Failures.list = ();
-    expect([1, 2, 1]).to.all(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 1]).to.all(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when no element matches', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.all(99);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.all(99);
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -57,25 +57,25 @@ describe 'all matcher with custom matcher instances', {
   }
 
   it 'fails when one element fails the inner matcher', {
-    Failures.list = ();
-    expect([1, -2, 3]).to.all(PositiveMatcher.new);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, -2, 3]).to.all(PositiveMatcher.new);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'composes with the BeMatcher description', {
-    Failures.list = ();
-    expect([1, 2, 1]).to.all(1);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 1]).to.all(1);
+    };
+    my $message = @captured[0].message;
     expect($message.contains('to all be 1')).to.be-truthy;
   }
 
   it 'reports which element failed in the failure message', {
-    Failures.list = ();
-    expect([1, 2, 1]).to.all(1);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 1]).to.all(1);
+    };
+    my $message = @captured[0].message;
     expect($message.contains('element at index 1')).to.be-truthy;
     expect($message.contains('did not match')).to.be-truthy;
   }
@@ -91,10 +91,10 @@ describe 'all matcher with built-in matchers', {
   }
 
   it 'fails when one element fails the composed matcher', {
-    Failures.list = ();
-    expect([[1, 2], [2, 3], [1, 4]]).to.all(StartWithMatcher.new(:expected([1])));
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([[1, 2], [2, 3], [1, 4]]).to.all(StartWithMatcher.new(:expected([1])));
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -118,24 +118,24 @@ describe 'all matcher edge cases', {
   }
 
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Any).to.all(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Any).to.all(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-iterable actual', {
-    Failures.list = ();
-    expect(42).to.all(1);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.all(1);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'records a collection-shape failure message on non-collection actual', {
-    Failures.list = ();
-    expect(42).to.all(1);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.all(1);
+    };
+    my $message = @captured[0].message;
     expect($message.contains('to be a collection')).to.be-truthy;
   }
 }
@@ -146,12 +146,12 @@ describe 'all matcher negation', {
   }
 
   it 'negation fails when every element matches', {
-    Failures.list = ();
-    expect([1, 1, 1]).to.not.all(1);
-    my $count = Failures.list.elems;
-    my $message = Failures.list[0].message;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 1, 1]).to.not.all(1);
+    };
+    my $count = @captured.elems;
+    my $message = @captured[0].message;
+    my $negated = @captured[0].negated;
     expect($count).to.be(1);
     expect($message).to.be('expected $[1, 1, 1] not to all be 1');
     expect($negated).to.be-truthy;
@@ -160,16 +160,16 @@ describe 'all matcher negation', {
 
 describe 'all matcher preserves Failure metadata', {
   it 'sets Failure.given to the actual collection', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.all(0);
-    expect(Failures.list[0].given).to.be([1, 2, 3]);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.all(0);
+    };
+    expect(@captured[0].given).to.be([1, 2, 3]);
   }
 
   it 'sets Failure.expected to the inner matcher', {
-    Failures.list = ();
-    expect([1, 2, 3]).to.all(0);
-    expect(Failures.list[0].expected ~~ Matcher).to.be-truthy;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1, 2, 3]).to.all(0);
+    };
+    expect(@captured[0].expected ~~ Matcher).to.be-truthy;
   }
 }

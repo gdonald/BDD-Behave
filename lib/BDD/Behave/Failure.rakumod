@@ -1,4 +1,10 @@
 
+class X::BDD::Behave::ExpectationFailed is Exception is export {
+  has Str $.file;
+  has Int $.line;
+  method message(--> Str) { "expectation failed at {$!file}:{$!line}" }
+}
+
 class Failure is export {
   has Str $.file;
   has Int $.line;

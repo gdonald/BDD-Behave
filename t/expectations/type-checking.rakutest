@@ -157,77 +157,80 @@ subset Positive of Int where * > 0;
 
 # expect(...).to.be-a integration.
 {
-  Failures.list = ();
-  ok expect(42).to.be-a(Int), 'expect.to.be-a passes for matching type';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect(42).to.be-a(Int), 'expect.to.be-a passes for matching type';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect('hi').to.be-a(Int), 'expect.to.be-a fails for mismatched type';
-  is Failures.list.elems, 1, 'one failure recorded';
-  ok Failures.list[0].message.contains('to be a Int'), 'failure message present';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect('hi').to.be-a(Int), 'expect.to.be-a fails for mismatched type';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  ok @captured2[0].message.contains('to be a Int'), 'failure message present';
 }
 
 # expect(...).to.be-an (alias) integration.
 {
-  Failures.list = ();
-  ok expect(42).to.be-an(Int), 'be-an alias works';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect(42).to.be-an(Int), 'be-an alias works';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect('hi').to.be-an(Int), 'be-an fails for mismatched type';
-  is Failures.list.elems, 1, 'one failure recorded via be-an';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect('hi').to.be-an(Int), 'be-an fails for mismatched type';
+  };
+  is @captured2.elems, 1, 'one failure recorded via be-an';
 }
 
 # expect(...).to.be-an-instance-of integration.
 {
-  Failures.list = ();
-  ok expect(Dog.new).to.be-an-instance-of(Dog), 'exact class match passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect(Dog.new).to.be-an-instance-of(Dog), 'exact class match passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect(Dog.new).to.be-an-instance-of(Animal),
-      'subclass instance does not match parent strictly';
-  is Failures.list.elems, 1, 'one failure recorded';
-  ok Failures.list[0].message.contains('to be an instance of Animal'),
+  my @captured2 = capture-failures {
+    nok expect(Dog.new).to.be-an-instance-of(Animal),
+        'subclass instance does not match parent strictly';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  ok @captured2[0].message.contains('to be an instance of Animal'),
      'failure message reports expected type';
-  Failures.list = ();
 }
 
 # Negation: be-a.
 {
-  Failures.list = ();
   ok expect('hi').to.not.be-a(Int),   '.not.be-a passes for mismatched type';
   is Failures.list.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(42).to.not.be-a(Int),    '.not.be-a fails when type matches';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  ok Failures.list[0].message.contains('not to be a Int'), 'negated message';
-  Failures.list = ();
+  my @captured3 = capture-failures {
+    nok expect(42).to.not.be-a(Int),    '.not.be-a fails when type matches';
+  };
+  is @captured3.elems, 1, 'one failure on negated miss';
+  ok @captured3[0].negated, 'failure marked negated';
+  ok @captured3[0].message.contains('not to be a Int'), 'negated message';
 }
 
 # Negation: be-an-instance-of.
 {
-  Failures.list = ();
-  ok expect(Dog.new).to.not.be-an-instance-of(Animal),
-     '.not.be-an-instance-of passes when strict type differs';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect(Dog.new).to.not.be-an-instance-of(Animal),
+       '.not.be-an-instance-of passes when strict type differs';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(Dog.new).to.not.be-an-instance-of(Dog),
-      '.not.be-an-instance-of fails when exact type matches';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(Dog.new).to.not.be-an-instance-of(Dog),
+        '.not.be-an-instance-of fails when exact type matches';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
 }
 
 # Failure metadata: given and expected.
 {
-  Failures.list = ();
-  expect('hi').to.be-a(Int);
-  is Failures.list[0].given, 'hi', 'Failure.given preserved';
-  ok Failures.list[0].expected === Int, 'Failure.expected is the type';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect('hi').to.be-a(Int);
+  };
+  is @captured[0].given, 'hi', 'Failure.given preserved';
+  ok @captured[0].expected === Int, 'Failure.expected is the type';
 }

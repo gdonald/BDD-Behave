@@ -7,6 +7,8 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Numeric;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 plan 91;
 
 # BeGreaterThanMatcher does the Matcher role.
@@ -60,29 +62,31 @@ plan 91;
 
 # expect(...).to.be-greater-than(...) integration.
 {
-  Failures.list = ();
-  ok expect(6).to.be-greater-than(5), 'integration: passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect(6).to.be-greater-than(5), 'integration: passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect(2).to.be-greater-than(5), 'integration: fails';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].given, 2, 'failure given preserved';
-  is Failures.list[0].expected, 5, 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(2).to.be-greater-than(5), 'integration: fails';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].given, 2, 'failure given preserved';
+  is @captured2[0].expected, 5, 'failure expected preserved';
 }
 
 # expect(...).to.not.be-greater-than(...) negation.
 {
-  Failures.list = ();
-  ok expect(3).to.not.be-greater-than(5), '.not passes when actual is not greater';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect(3).to.not.be-greater-than(5), '.not passes when actual is not greater';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(7).to.not.be-greater-than(5), '.not fails when actual is greater';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(7).to.not.be-greater-than(5), '.not fails when actual is greater';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # be-gt is an alias.
@@ -90,7 +94,6 @@ plan 91;
   Failures.list = ();
   ok expect(5).to.be-gt(3), 'be-gt alias passes';
   nok expect(3).to.be-gt(5), 'be-gt alias fails';
-  Failures.list = ();
 }
 
 # BeGreaterThanOrEqualMatcher does the Matcher role.
@@ -128,17 +131,18 @@ plan 91;
 
 # expect(...).to.be-greater-than-or-equal-to(...) integration.
 {
-  Failures.list = ();
-  ok expect(5).to.be-greater-than-or-equal-to(5), 'passes on equal';
-  ok expect(6).to.be-greater-than-or-equal-to(5), 'passes on greater';
-  is Failures.list.elems, 0, 'no failures on pass';
+  my @captured = capture-failures {
+    ok expect(5).to.be-greater-than-or-equal-to(5), 'passes on equal';
+    ok expect(6).to.be-greater-than-or-equal-to(5), 'passes on greater';
+  };
+  is @captured.elems, 0, 'no failures on pass';
 
-  Failures.list = ();
-  nok expect(4).to.be-greater-than-or-equal-to(5), 'fails when less';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].given, 4, 'failure given preserved';
-  is Failures.list[0].expected, 5, 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(4).to.be-greater-than-or-equal-to(5), 'fails when less';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].given, 4, 'failure given preserved';
+  is @captured2[0].expected, 5, 'failure expected preserved';
 }
 
 # be-gte alias.
@@ -146,7 +150,6 @@ plan 91;
   Failures.list = ();
   ok expect(5).to.be-gte(5), 'be-gte alias passes';
   nok expect(3).to.be-gte(5), 'be-gte alias fails';
-  Failures.list = ();
 }
 
 # BeLessThanMatcher does the Matcher role.
@@ -192,29 +195,31 @@ plan 91;
 
 # expect(...).to.be-less-than(...) integration.
 {
-  Failures.list = ();
-  ok expect(3).to.be-less-than(5), 'integration: passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect(3).to.be-less-than(5), 'integration: passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect(7).to.be-less-than(5), 'integration: fails';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].given, 7, 'failure given preserved';
-  is Failures.list[0].expected, 5, 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(7).to.be-less-than(5), 'integration: fails';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].given, 7, 'failure given preserved';
+  is @captured2[0].expected, 5, 'failure expected preserved';
 }
 
 # expect(...).to.not.be-less-than(...) negation.
 {
-  Failures.list = ();
-  ok expect(7).to.not.be-less-than(5), '.not passes when actual is not less';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect(7).to.not.be-less-than(5), '.not passes when actual is not less';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(3).to.not.be-less-than(5), '.not fails when actual is less';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(3).to.not.be-less-than(5), '.not fails when actual is less';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # be-lt alias.
@@ -222,7 +227,6 @@ plan 91;
   Failures.list = ();
   ok expect(3).to.be-lt(5), 'be-lt alias passes';
   nok expect(7).to.be-lt(5), 'be-lt alias fails';
-  Failures.list = ();
 }
 
 # BeLessThanOrEqualMatcher does the Matcher role.
@@ -260,17 +264,18 @@ plan 91;
 
 # expect(...).to.be-less-than-or-equal-to(...) integration.
 {
-  Failures.list = ();
-  ok expect(5).to.be-less-than-or-equal-to(5), 'passes on equal';
-  ok expect(3).to.be-less-than-or-equal-to(5), 'passes on less';
-  is Failures.list.elems, 0, 'no failures on pass';
+  my @captured = capture-failures {
+    ok expect(5).to.be-less-than-or-equal-to(5), 'passes on equal';
+    ok expect(3).to.be-less-than-or-equal-to(5), 'passes on less';
+  };
+  is @captured.elems, 0, 'no failures on pass';
 
-  Failures.list = ();
-  nok expect(7).to.be-less-than-or-equal-to(5), 'fails when greater';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].given, 7, 'failure given preserved';
-  is Failures.list[0].expected, 5, 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(7).to.be-less-than-or-equal-to(5), 'fails when greater';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].given, 7, 'failure given preserved';
+  is @captured2[0].expected, 5, 'failure expected preserved';
 }
 
 # be-lte alias.
@@ -278,5 +283,4 @@ plan 91;
   Failures.list = ();
   ok expect(5).to.be-lte(5), 'be-lte alias passes';
   nok expect(7).to.be-lte(5), 'be-lte alias fails';
-  Failures.list = ();
 }

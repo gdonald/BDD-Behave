@@ -106,31 +106,33 @@ plan 43;
 
 # expect(...).to.include(...) integration.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.include(2), 'expect.to.include passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.include(2), 'expect.to.include passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.include(99), 'expect.to.include fails for missing';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected $[1, 2, 3] to include 99', 'failure message preserved';
-  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
-  is-deeply Failures.list[0].expected.Array, [99], 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.include(99), 'expect.to.include fails for missing';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message, 'expected $[1, 2, 3] to include 99', 'failure message preserved';
+  is-deeply @captured2[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply @captured2[0].expected.Array, [99], 'failure expected preserved';
 }
 
 # Negation flow.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.not.include(99), '.not passes when item absent';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.not.include(99), '.not passes when item absent';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.not.include(2), '.not fails when item present';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message, 'expected $[1, 2, 3] not to include 2', 'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.not.include(2), '.not fails when item present';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  is @captured2[0].message, 'expected $[1, 2, 3] not to include 2', 'negated message used';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # Empty arg list dies.
@@ -145,8 +147,8 @@ plan 43;
 
 # Hash form via named pair argument.
 {
-  Failures.list = ();
-  ok expect({ a => 1, b => 2 }).to.include(:a(1)), 'named-pair form passes';
-  is Failures.list.elems, 0, 'no failure on pass';
-  Failures.list = ();
+  my @captured = capture-failures {
+    ok expect({ a => 1, b => 2 }).to.include(:a(1)), 'named-pair form passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 }

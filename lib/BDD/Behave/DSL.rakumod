@@ -492,42 +492,104 @@ our multi sub pending(Str $reason, *%meta) is export {
 }
 
 
+sub format-inner-failure($f --> Str) {
+  my $location = "{$f.file // ''}:{$f.line // 0}";
+  if $f.message.defined {
+    my @lines = $f.message.lines;
+    my $head  = "  - $location: " ~ (@lines.head // '');
+    my @tail  = @lines.skip(1).map({ "      $_" });
+    ($head, |@tail).join("\n");
+  } elsif $f.given.defined || $f.expected.defined {
+    my $op = $f.negated ?? 'not to be' !! 'to be';
+    "  - $location:\n      Expected: {$f.given.raku}\n      $op: {$f.expected.raku}";
+  } else {
+    "  - $location";
+  }
+}
+
 sub run-aggregate-failures(Str $label, &block, Str $file, Int $line --> Nil) {
+  my $watermark = Failures.list.elems;
   my $exception;
   {
     my $*BEHAVE-AGGREGATION-LABEL = $label;
+    my $*BEHAVE-AGGREGATING = True;
     try {
       block();
       CATCH {
+        when X::BDD::Behave::ExpectationFailed { }
         default { $exception = $_; }
       }
     }
   }
 
+  my @inner = Failures.list[$watermark .. *].list;
+
   if $exception.defined {
-    my $message = "exception in aggregate-failures: " ~ $exception.message;
-    Failures.list.push(Failure.new(
-      :$file,
-      :$line,
-      :$message,
+    @inner.push: Failure.new(
+      :$file, :$line,
+      :message('exception in aggregate-failures: ' ~ $exception.message),
       :aggregation-label($label),
-    ));
+    );
   }
+
+  return unless @inner.elems;
+
+  Failures.list.splice($watermark, *);
+
+  my $n = @inner.elems;
+  my $header = "$n expectation" ~ ($n == 1 ?? '' !! 's')
+             ~ ' failed inside aggregate-failures';
+  my @body = @inner.map(&format-inner-failure);
+  my $message = ($header, |@body).join("\n");
+
+  Failures.list.push(Failure.new(
+    :$file, :$line, :$message,
+    :aggregation-label($label),
+  ));
+}
+
+our sub capture-failures(&block --> List) is export {
+  my $watermark = Failures.list.elems;
+  {
+    my $*BEHAVE-AGGREGATING = True;
+    try {
+      block();
+      CATCH {
+        when X::BDD::Behave::ExpectationFailed { }
+      }
+    }
+  }
+  my @captured = Failures.list[$watermark .. *].list;
+  Failures.list.splice($watermark, *);
+  @captured.List;
+}
+
+sub user-callsite(--> List) {
+  my $depth = 1;
+  loop {
+    my $frame = callframe($depth);
+    last unless $frame.defined;
+    my $file = ($frame.file // '').Str;
+    if !$file.contains('lib/BDD/Behave') {
+      return ($file, $frame.line.Int).List;
+    }
+    $depth++;
+    last if $depth > 30;
+  }
+  ('', 0).List;
 }
 
 our proto sub aggregate-failures(|) is export {*}
 
 our multi sub aggregate-failures(&block) is export {
-  my $caller-file = callframe(1).file.Str;
-  my $caller-line = callframe(1).line.Int;
+  my ($caller-file, $caller-line) := user-callsite();
   my $inherited;
   try { $inherited = $*BEHAVE-AGGREGATION-LABEL if $*BEHAVE-AGGREGATION-LABEL.defined; }
   run-aggregate-failures($inherited // Str, &block, $caller-file, $caller-line);
 }
 
 our multi sub aggregate-failures(Str:D $label, &block) is export {
-  my $caller-file = callframe(1).file.Str;
-  my $caller-line = callframe(1).line.Int;
+  my ($caller-file, $caller-line) := user-callsite();
   run-aggregate-failures($label, &block, $caller-file, $caller-line);
 }
 

@@ -40,17 +40,17 @@ describe 'respond-to matcher with user classes', {
   }
 
   it 'fails when method is missing', {
-    Failures.list = ();
-    expect(RespondToCalculator.new).to.respond-to('multiply');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(RespondToCalculator.new).to.respond-to('multiply');
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when any one of multiple methods is missing', {
-    Failures.list = ();
-    expect(RespondToDog.new).to.respond-to('bark', 'meow');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(RespondToDog.new).to.respond-to('bark', 'meow');
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -68,10 +68,10 @@ describe 'respond-to matcher with built-in types', {
   }
 
   it 'fails for a method built-ins do not have', {
-    Failures.list = ();
-    expect('hello').to.respond-to('totally-not-a-method');
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello').to.respond-to('totally-not-a-method');
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -81,30 +81,30 @@ describe 'respond-to matcher negation', {
   }
 
   it 'fails negation when method exists', {
-    Failures.list = ();
-    expect(RespondToDog.new).to.not.respond-to('bark');
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(RespondToDog.new).to.not.respond-to('bark');
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('not to respond to');
   }
 }
 
 describe 'respond-to failure messages', {
   it 'lists missing methods in the failure message', {
-    Failures.list = ();
-    expect(RespondToDog.new).to.respond-to('bark', 'meow', 'sit');
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(RespondToDog.new).to.respond-to('bark', 'meow', 'sit');
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('missing:');
     expect($message).to.include('"meow"');
     expect($message).to.include('"sit"');
   }
 
   it 'mentions the expected method names', {
-    Failures.list = ();
-    expect(RespondToDog.new).to.respond-to('purr');
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(RespondToDog.new).to.respond-to('purr');
+    };
+    my $message = @captured[0].message;
     expect($message).to.include('to respond to');
     expect($message).to.include('"purr"');
   }
@@ -125,11 +125,11 @@ describe 'respond-to matcher arity', {
 
 describe 'respond-to failure metadata', {
   it 'sets Failure.given and Failure.expected', {
-    Failures.list = ();
-    expect(RespondToDog.new).to.respond-to('meow');
-    my $given    = Failures.list[0].given;
-    my $expected = Failures.list[0].expected;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(RespondToDog.new).to.respond-to('meow');
+    };
+    my $given    = @captured[0].given;
+    my $expected = @captured[0].expected;
     expect($given).to.be-a(RespondToDog);
     expect($expected).to.include('meow');
   }

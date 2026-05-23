@@ -52,13 +52,13 @@ describe 'custom Matcher plugged into expect.to.be', {
   }
 
   it 'fails with matcher-supplied message when matches returns False', {
-    Failures.list = ();
-    expect(5).to.be(EvenMatcher.new);
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message).to.be('expected 5 to be even');
-    expect(Failures.list[0].given).to.be(5);
-    expect(Failures.list[0].expected).to.be('an even number');
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5).to.be(EvenMatcher.new);
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message).to.be('expected 5 to be even');
+    expect(@captured[0].given).to.be(5);
+    expect(@captured[0].expected).to.be('an even number');
   }
 
   it 'flips through .not and uses failure-message-negated', {
@@ -66,23 +66,23 @@ describe 'custom Matcher plugged into expect.to.be', {
   }
 
   it 'records the negated message when .not fails', {
-    Failures.list = ();
-    expect(1).to.not.be(TruthyMatcher.new);
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message).to.be('expected falsy, got 1');
-    expect(Failures.list[0].negated).to.be-truthy;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(1).to.not.be(TruthyMatcher.new);
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message).to.be('expected falsy, got 1');
+    expect(@captured[0].negated).to.be-truthy;
   }
 }
 
 describe 'BeMatcher path keeps structured given/expected rendering', {
   it 'leaves Failure.message undefined so Failures.say falls back to Expected:/to be:', {
-    Failures.list = ();
-    expect(42).to.be(41);
-    expect(Failures.list.elems).to.be(1);
-    expect(Failures.list[0].message.defined).to.be-falsy;
-    expect(Failures.list[0].given).to.be(42);
-    expect(Failures.list[0].expected).to.be(41);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.be(41);
+    };
+    expect(@captured.elems).to.be(1);
+    expect(@captured[0].message.defined).to.be-falsy;
+    expect(@captured[0].given).to.be(42);
+    expect(@captured[0].expected).to.be(41);
   }
 }

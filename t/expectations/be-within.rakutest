@@ -87,58 +87,61 @@ plan 37;
 
 # expect(...).to.be-within(d).of(e) integration: passes.
 {
-  Failures.list = ();
-  expect(5.0).to.be-within(0.1).of(5.0);
-  is Failures.list.elems, 0, 'passes when actual equals expected';
+  my @captured = capture-failures {
+    expect(5.0).to.be-within(0.1).of(5.0);
+  };
+  is @captured.elems, 0, 'passes when actual equals expected';
 
-  Failures.list = ();
-  expect(5.05).to.be-within(0.1).of(5.0);
-  is Failures.list.elems, 0, 'passes within tolerance';
+  my @captured2 = capture-failures {
+    expect(5.05).to.be-within(0.1).of(5.0);
+  };
+  is @captured2.elems, 0, 'passes within tolerance';
 
-  Failures.list = ();
-  expect(5.1).to.be-within(0.1).of(5.0);
-  is Failures.list.elems, 0, 'passes at upper boundary';
+  my @captured3 = capture-failures {
+    expect(5.1).to.be-within(0.1).of(5.0);
+  };
+  is @captured3.elems, 0, 'passes at upper boundary';
 }
 
 # expect(...).to.be-within(d).of(e) integration: fails.
 {
-  Failures.list = ();
-  expect(5.2).to.be-within(0.1).of(5.0);
-  is Failures.list.elems, 1, 'fails outside tolerance';
-  is Failures.list[0].given, 5.2, 'failure given preserved';
-  is Failures.list[0].expected, 5.0, 'failure expected preserved';
-  is Failures.list[0].message,
+  my @captured = capture-failures {
+    expect(5.2).to.be-within(0.1).of(5.0);
+  };
+  is @captured.elems, 1, 'fails outside tolerance';
+  is @captured[0].given, 5.2, 'failure given preserved';
+  is @captured[0].expected, 5.0, 'failure expected preserved';
+  is @captured[0].message,
      'expected 5.2 to be within 0.1 of 5.0',
      'failure-message recorded';
-  Failures.list = ();
 }
 
 # expect(...).to.not.be-within(d).of(e) negation.
 {
-  Failures.list = ();
-  expect(5.2).to.not.be-within(0.1).of(5.0);
-  is Failures.list.elems, 0, '.not passes when outside tolerance';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    expect(5.2).to.not.be-within(0.1).of(5.0);
+  };
+  is @captured2.elems, 0, '.not passes when outside tolerance';
 
-  Failures.list = ();
-  expect(5.05).to.not.be-within(0.1).of(5.0);
-  is Failures.list.elems, 1, '.not fails when inside tolerance';
-  ok Failures.list[0].negated, 'failure marked negated';
-  is Failures.list[0].message,
+  my @captured3 = capture-failures {
+    expect(5.05).to.not.be-within(0.1).of(5.0);
+  };
+  is @captured3.elems, 1, '.not fails when inside tolerance';
+  ok @captured3[0].negated, 'failure marked negated';
+  is @captured3[0].message,
      'expected 5.05 not to be within 0.1 of 5.0',
      'negated failure-message recorded';
-  Failures.list = ();
 }
 
 # expect(...).to.be-within(d).of(undefined / non-Real) records a failure.
 {
-  Failures.list = ();
-  expect(5.0).to.be-within(0.1).of(Int);
-  is Failures.list.elems, 1, 'records failure when expected is undefined';
-  Failures.list = ();
+  my @captured4 = capture-failures {
+    expect(5.0).to.be-within(0.1).of(Int);
+  };
+  is @captured4.elems, 1, 'records failure when expected is undefined';
 
-  Failures.list = ();
-  expect(5.0).to.be-within(0.1).of('abc');
-  is Failures.list.elems, 1, 'records failure when expected is non-Real';
-  Failures.list = ();
+  my @captured5 = capture-failures {
+    expect(5.0).to.be-within(0.1).of('abc');
+  };
+  is @captured5.elems, 1, 'records failure when expected is non-Real';
 }

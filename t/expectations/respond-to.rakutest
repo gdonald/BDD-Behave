@@ -104,35 +104,36 @@ class Dog {
 
 # expect integration: passing.
 {
-  Failures.list = ();
-  ok expect(Calculator.new).to.respond-to('add'), 'expect.to.respond-to passes';
-  is Failures.list.elems, 0, 'no failure on pass';
-  Failures.list = ();
+  my @captured = capture-failures {
+    ok expect(Calculator.new).to.respond-to('add'), 'expect.to.respond-to passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 }
 
 # expect integration: failing.
 {
-  Failures.list = ();
-  nok expect(Dog.new).to.respond-to('meow'), 'expect.to.respond-to fails when missing';
-  is Failures.list.elems, 1, 'one failure recorded';
-  ok Failures.list[0].message.contains('to respond to'), 'failure message present';
-  Failures.list = ();
+  my @captured = capture-failures {
+    nok expect(Dog.new).to.respond-to('meow'), 'expect.to.respond-to fails when missing';
+  };
+  is @captured.elems, 1, 'one failure recorded';
+  ok @captured[0].message.contains('to respond to'), 'failure message present';
 }
 
 # Negation integration.
 {
-  Failures.list = ();
-  ok expect(Dog.new).to.not.respond-to('meow'),
-     '.not.respond-to passes when method absent';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect(Dog.new).to.not.respond-to('meow'),
+       '.not.respond-to passes when method absent';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect(Dog.new).to.not.respond-to('bark'),
-      '.not.respond-to fails when method present';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  ok Failures.list[0].negated, 'failure marked negated';
-  ok Failures.list[0].message.contains('not to respond to'), 'negated message';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect(Dog.new).to.not.respond-to('bark'),
+        '.not.respond-to fails when method present';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  ok @captured2[0].negated, 'failure marked negated';
+  ok @captured2[0].message.contains('not to respond to'), 'negated message';
 }
 
 # Empty arg list dies.
@@ -149,11 +150,11 @@ class Dog {
 
 # Failure metadata.
 {
-  Failures.list = ();
-  expect(Dog.new).to.respond-to('meow');
-  ok Failures.list[0].given ~~ Dog, 'Failure.given preserved';
-  my @exp = Failures.list[0].expected.list;
+  my @captured = capture-failures {
+    expect(Dog.new).to.respond-to('meow');
+  };
+  ok @captured[0].given ~~ Dog, 'Failure.given preserved';
+  my @exp = @captured[0].expected.list;
   is @exp.elems, 1, 'Failure.expected has one method';
   is @exp[0], 'meow', 'Failure.expected names the method';
-  Failures.list = ();
 }

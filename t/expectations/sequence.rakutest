@@ -7,6 +7,8 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Collection;
 use BDD::Behave::Failures;
 
+my $*BEHAVE-AGGREGATING = True;
+
 plan 76;
 
 # StartWithMatcher does the Matcher role.
@@ -87,31 +89,33 @@ plan 76;
 
 # expect(...).to.start-with(...) integration.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.start-with(1, 2), 'expect.to.start-with passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.start-with(1, 2), 'expect.to.start-with passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.start-with(2), 'expect.to.start-with fails for non-prefix';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected $[1, 2, 3] to start with 2', 'failure message preserved';
-  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
-  is-deeply Failures.list[0].expected.Array, [2], 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.start-with(2), 'expect.to.start-with fails for non-prefix';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message, 'expected $[1, 2, 3] to start with 2', 'failure message preserved';
+  is-deeply @captured2[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply @captured2[0].expected.Array, [2], 'failure expected preserved';
 }
 
 # Negation flow.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.not.start-with(2), '.not passes when prefix absent';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.not.start-with(2), '.not passes when prefix absent';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.not.start-with(1), '.not fails when prefix present';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message, 'expected $[1, 2, 3] not to start with 1', 'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.not.start-with(1), '.not fails when prefix present';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  is @captured2[0].message, 'expected $[1, 2, 3] not to start with 1', 'negated message used';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # Empty arg list dies.
@@ -202,31 +206,33 @@ plan 76;
 
 # expect(...).to.end-with(...) integration.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.end-with(2, 3), 'expect.to.end-with passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.end-with(2, 3), 'expect.to.end-with passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.end-with(2), 'expect.to.end-with fails for non-suffix';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected $[1, 2, 3] to end with 2', 'failure message preserved';
-  is-deeply Failures.list[0].given.Array, [1, 2, 3], 'failure given preserved';
-  is-deeply Failures.list[0].expected.Array, [2], 'failure expected preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.end-with(2), 'expect.to.end-with fails for non-suffix';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message, 'expected $[1, 2, 3] to end with 2', 'failure message preserved';
+  is-deeply @captured2[0].given.Array, [1, 2, 3], 'failure given preserved';
+  is-deeply @captured2[0].expected.Array, [2], 'failure expected preserved';
 }
 
 # Negation flow.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.not.end-with(2), '.not passes when suffix absent';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.not.end-with(2), '.not passes when suffix absent';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 3]).to.not.end-with(3), '.not fails when suffix present';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message, 'expected $[1, 2, 3] not to end with 3', 'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 3]).to.not.end-with(3), '.not fails when suffix present';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  is @captured2[0].message, 'expected $[1, 2, 3] not to end with 3', 'negated message used';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # Empty arg list dies.
@@ -241,15 +247,14 @@ plan 76;
 
 # String integration.
 {
-  Failures.list = ();
-  ok expect('hello world').to.start-with('hello'), 'string start-with passes';
-  ok expect('hello world').to.end-with('world'), 'string end-with passes';
+  my @captured = capture-failures {
+    ok expect('hello world').to.start-with('hello'), 'string start-with passes';
+    ok expect('hello world').to.end-with('world'), 'string end-with passes';
 
-  nok expect('hello world').to.start-with('world'), 'string start-with fails for non-prefix';
-  is Failures.list.elems, 1, 'one failure for bad string prefix';
-  Failures.list = ();
+    nok expect('hello world').to.start-with('world'), 'string start-with fails for non-prefix';
+  };
+  is @captured.elems, 1, 'one failure for bad string prefix';
 
   nok expect('hello world').to.end-with('hello'), 'string end-with fails for non-suffix';
-  is Failures.list.elems, 1, 'one failure for bad string suffix';
-  Failures.list = ();
+  is @captured.elems, 1, 'one failure for bad string suffix';
 }

@@ -77,29 +77,31 @@ plan 34;
 
 # expect(...).to.match(...) integration.
 {
-  Failures.list = ();
-  ok expect('abc123').to.match(/\d+/), 'expect.to.match passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect('abc123').to.match(/\d+/), 'expect.to.match passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect('abc').to.match(/\d+/), 'expect.to.match fails for missing';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message, 'expected "abc" to match /\d+/', 'failure message preserved';
-  is Failures.list[0].given, 'abc', 'failure given preserved';
-  ok Failures.list[0].expected ~~ Regex, 'failure expected is a Regex';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect('abc').to.match(/\d+/), 'expect.to.match fails for missing';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message, 'expected "abc" to match /\d+/', 'failure message preserved';
+  is @captured2[0].given, 'abc', 'failure given preserved';
+  ok @captured2[0].expected ~~ Regex, 'failure expected is a Regex';
 }
 
 # Negation flow.
 {
-  Failures.list = ();
-  ok expect('abc').to.not.match(/\d+/), '.not passes when no match';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect('abc').to.not.match(/\d+/), '.not passes when no match';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect('abc123').to.not.match(/\d+/), '.not fails when match';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message, 'expected "abc123" not to match /\d+/', 'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect('abc123').to.not.match(/\d+/), '.not fails when match';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  is @captured2[0].message, 'expected "abc123" not to match /\d+/', 'negated message used';
+  ok @captured2[0].negated, 'failure marked negated';
 }

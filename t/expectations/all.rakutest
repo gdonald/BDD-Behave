@@ -118,56 +118,59 @@ class PositiveMatcher does Matcher {
 
 # expect(...).to.all(...) integration.
 {
-  Failures.list = ();
-  ok expect([1, 1, 1]).to.all(1), 'expect.to.all passes when every element matches';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 1, 1]).to.all(1), 'expect.to.all passes when every element matches';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, 2, 1]).to.all(1), 'expect.to.all fails for non-matching element';
-  is Failures.list.elems, 1, 'one failure recorded';
-  ok Failures.list[0].message.contains('to all be 1'), 'failure message contains "to all be 1"';
-  is-deeply Failures.list[0].given.Array, [1, 2, 1], 'failure given preserved';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 2, 1]).to.all(1), 'expect.to.all fails for non-matching element';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  ok @captured2[0].message.contains('to all be 1'), 'failure message contains "to all be 1"';
+  is-deeply @captured2[0].given.Array, [1, 2, 1], 'failure given preserved';
 }
 
 # expect(...).to.all(matcher_instance) integration.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.all(PositiveMatcher.new), 'integration with custom matcher passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.all(PositiveMatcher.new), 'integration with custom matcher passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect([1, -1, 1]).to.all(PositiveMatcher.new), 'integration with custom matcher fails';
-  is Failures.list.elems, 1, 'one failure recorded';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, -1, 1]).to.all(PositiveMatcher.new), 'integration with custom matcher fails';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
 }
 
 # Negation flow.
 {
-  Failures.list = ();
-  ok expect([1, 2, 3]).to.not.all(1), '.not passes when at least one element differs';
-  is Failures.list.elems, 0, 'no failure on negated pass';
+  my @captured = capture-failures {
+    ok expect([1, 2, 3]).to.not.all(1), '.not passes when at least one element differs';
+  };
+  is @captured.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect([1, 1, 1]).to.not.all(1), '.not fails when every element matches';
-  is Failures.list.elems, 1, 'one failure on negated miss';
-  is Failures.list[0].message, 'expected $[1, 1, 1] not to all be 1', 'negated message used';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    nok expect([1, 1, 1]).to.not.all(1), '.not fails when every element matches';
+  };
+  is @captured2.elems, 1, 'one failure on negated miss';
+  is @captured2[0].message, 'expected $[1, 1, 1] not to all be 1', 'negated message used';
+  ok @captured2[0].negated, 'failure marked negated';
 }
 
 # Failure.expected exposes the inner matcher for tooling.
 {
-  Failures.list = ();
-  expect([1, 2, 3]).to.all(0);
-  ok Failures.list[0].expected ~~ Matcher, 'Failure.expected is a Matcher instance';
-  Failures.list = ();
+  my @captured = capture-failures {
+    expect([1, 2, 3]).to.all(0);
+  };
+  ok @captured[0].expected ~~ Matcher, 'Failure.expected is a Matcher instance';
 }
 
 # Empty collection passes through expect.
 {
-  Failures.list = ();
-  ok expect([]).to.all(Int), 'empty array passes vacuously';
-  is Failures.list.elems, 0, 'no failure on empty array';
-  Failures.list = ();
+  my @captured = capture-failures {
+    ok expect([]).to.all(Int), 'empty array passes vacuously';
+  };
+  is @captured.elems, 0, 'no failure on empty array';
 }

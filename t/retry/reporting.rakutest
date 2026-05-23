@@ -49,7 +49,6 @@ sub build-flaky-suite($passes-on) {
 }
 
 {
-  Failures.list = ();
   my $suite = build-flaky-suite(2);
   my $out = stdout-from {
     my $runner = BDD::Behave::Runner::Runner.new(
@@ -80,7 +79,6 @@ sub build-flaky-suite($passes-on) {
 }
 
 {
-  Failures.list = ();
   my $suite = build-flaky-suite(2);
   my $out = stdout-from {
     my $runner = BDD::Behave::Runner::Runner.new(

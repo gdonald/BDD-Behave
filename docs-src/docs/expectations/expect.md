@@ -167,6 +167,10 @@ expect({ load() }).to.not.eventually(:timeout(0.1)).be('error');
 
 `be` accepts any object that does the [`Matcher`](matchers.md) role. The matcher's `matches`, `failure-message`, and `failure-message-negated` methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.
 
-## Grouping expectations
+## Failure behavior
 
-Wrap a sequence of related expectations in `aggregate-failures` to label the group and trap any exceptions thrown mid-block. See [aggregate-failures](aggregate-failures.md).
+When an `expect(...)` matcher fails, the failure is recorded on `Failures.list` and the example body **stops executing** — anything after the failing line is skipped. The example is reported once in the run summary regardless of how many `expect` statements its body contained.
+
+This matches RSpec's default. Ideally each `it` block contains exactly one `expect` so the first miss is also the last. When you do need multiple expectations in a single example, wrap them in `aggregate-failures { ... }`; the throw is suppressed inside the block, every expectation runs, and the inner failures are rolled up into a single labeled `Failures` row at the `aggregate-failures` line. See [aggregate-failures](aggregate-failures.md).
+
+If you're writing meta-tests that deliberately trigger a failure and then inspect the recorded `Failure` records, use `capture-failures { ... }` instead — it suppresses the throw and returns the captured failures without polluting the surrounding example. See [aggregate-failures § `capture-failures` for meta-tests](aggregate-failures.md#capture-failures-for-meta-tests).

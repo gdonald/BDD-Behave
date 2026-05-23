@@ -202,132 +202,132 @@ plan 56;
 
 # ExpectationBuilder .change.by integration.
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 5 }).to.change({ $counter }).by(5);
-  is Failures.list.elems, 0, '.by(5) passes';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 5 }).to.change({ $counter }).by(5);
+  };
+  is @captured.elems, 0, '.by(5) passes';
 }
 
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 3 }).to.change({ $counter }).by(5);
-  is Failures.list.elems, 1, '.by(5) fails on mismatch';
-  is Failures.list[0].message,
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 3 }).to.change({ $counter }).by(5);
+  };
+  is @captured.elems, 1, '.by(5) fails on mismatch';
+  is @captured[0].message,
     'expected block to change observable by 5, but it changed by 3',
     'by-mismatch failure-message via expect';
-  is Failures.list[0].expected, 5, 'Failure.expected carries by value';
-  Failures.list = ();
+  is @captured[0].expected, 5, 'Failure.expected carries by value';
 }
 
 # .by-at-least via expect.
 {
-  Failures.list = ();
   my $counter = 0;
-  expect({ $counter += 10 }).to.change({ $counter }).by-at-least(5);
-  is Failures.list.elems, 0, '.by-at-least passes when delta exceeds';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    expect({ $counter += 10 }).to.change({ $counter }).by-at-least(5);
+  };
+  is @captured2.elems, 0, '.by-at-least passes when delta exceeds';
 }
 
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 3 }).to.change({ $counter }).by-at-least(5);
-  is Failures.list.elems, 1, '.by-at-least fails when delta short';
-  is Failures.list[0].expected, 5, 'Failure.expected carries by-at-least value';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 3 }).to.change({ $counter }).by-at-least(5);
+  };
+  is @captured.elems, 1, '.by-at-least fails when delta short';
+  is @captured[0].expected, 5, 'Failure.expected carries by-at-least value';
 }
 
 # .by-at-most via expect.
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 5 }).to.change({ $counter }).by-at-most(10);
-  is Failures.list.elems, 0, '.by-at-most passes when delta within';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 5 }).to.change({ $counter }).by-at-most(10);
+  };
+  is @captured.elems, 0, '.by-at-most passes when delta within';
 }
 
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 7 }).to.change({ $counter }).by-at-most(5);
-  is Failures.list.elems, 1, '.by-at-most fails when delta above';
-  is Failures.list[0].expected, 5, 'Failure.expected carries by-at-most value';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 7 }).to.change({ $counter }).by-at-most(5);
+  };
+  is @captured.elems, 1, '.by-at-most fails when delta above';
+  is @captured[0].expected, 5, 'Failure.expected carries by-at-most value';
 }
 
 # Composition: .from(0).by(5).
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 5 }).to.change({ $counter }).from(0).by(5);
-  is Failures.list.elems, 0, '.from(0).by(5) passes';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 5 }).to.change({ $counter }).from(0).by(5);
+  };
+  is @captured.elems, 0, '.from(0).by(5) passes';
 }
 
 # Composition: .from(0).by(5) fails with from-precedence on mismatch.
 {
-  Failures.list = ();
-  my $counter = 99;
-  expect({ $counter += 5 }).to.change({ $counter }).from(0).by(5);
-  is Failures.list.elems, 1, 'from-mismatch via expect';
-  is Failures.list[0].message,
+  my @captured = capture-failures {
+    my $counter = 99;
+    expect({ $counter += 5 }).to.change({ $counter }).from(0).by(5);
+  };
+  is @captured.elems, 1, 'from-mismatch via expect';
+  is @captured[0].message,
     'expected block to change observable from 0 by 5, but it started as 99',
     'from-mismatch failure-message includes both clauses';
-  Failures.list = ();
 }
 
 # Chain replaces a prior failure when a later step passes.
 {
-  Failures.list = ();
   my $counter = 0;
-  expect({ $counter += 5 }).to.change({ $counter }).by(99).by(5);
-  is Failures.list.elems, 0, 'prior failure is cleared when later by passes';
-  Failures.list = ();
+  my @captured2 = capture-failures {
+    expect({ $counter += 5 }).to.change({ $counter }).by(99).by(5);
+  };
+  is @captured2.elems, 0, 'prior failure is cleared when later by passes';
 }
 
 # Block runs exactly once across chained by-modifiers.
 {
-  Failures.list = ();
-  my $run-count = 0;
-  my $value = 0;
-  expect({ $run-count++; $value += 5 }).to.change({ $value }).by-at-least(1).by-at-most(10);
-  is $run-count, 1, 'block ran exactly once across by-at-least and by-at-most';
-  is Failures.list.elems, 0, 'final chain passes';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $run-count = 0;
+    my $value = 0;
+    expect({ $run-count++; $value += 5 }).to.change({ $value }).by-at-least(1).by-at-most(10);
+    is $run-count, 1, 'block ran exactly once across by-at-least and by-at-most';
+  };
+  is @captured.elems, 0, 'final chain passes';
 }
 
 # Negation: .not.change(...).by(5) passes when delta does not match.
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 3 }).to.not.change({ $counter }).by(5);
-  is Failures.list.elems, 0, '.not.change.by passes on mismatch';
-  Failures.list = ();
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 3 }).to.not.change({ $counter }).by(5);
+  };
+  is @captured.elems, 0, '.not.change.by passes on mismatch';
 }
 
 # Negation: .not.change(...).by(5) fails when delta matches.
 {
-  Failures.list = ();
-  my $counter = 0;
-  expect({ $counter += 5 }).to.not.change({ $counter }).by(5);
-  is Failures.list.elems, 1, '.not.change.by fails when delta matches';
-  is Failures.list[0].message,
+  my @captured = capture-failures {
+    my $counter = 0;
+    expect({ $counter += 5 }).to.not.change({ $counter }).by(5);
+  };
+  is @captured.elems, 1, '.not.change.by fails when delta matches';
+  is @captured[0].message,
     'expected block not to change observable by 5, but it changed from 0 to 5',
     'negated failure-message with by clause';
-  ok Failures.list[0].negated, 'failure marked negated';
-  Failures.list = ();
+  ok @captured[0].negated, 'failure marked negated';
 }
 
 # Non-Callable actuals via expect.
 {
-  Failures.list = ();
   my $observable = 0;
-  expect(42).to.change({ $observable }).by(5);
-  is Failures.list.elems, 1, 'records failure for non-Callable with by set';
-  is Failures.list[0].message,
+  my @captured2 = capture-failures {
+    expect(42).to.change({ $observable }).by(5);
+  };
+  is @captured2.elems, 1, 'records failure for non-Callable with by set';
+  is @captured2[0].message,
     'expected a Callable for change, but got 42',
     'Callable-shape failure message wins over by';
-  Failures.list = ();
 }

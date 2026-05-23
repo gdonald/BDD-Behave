@@ -7,17 +7,17 @@ describe 'be-greater-than matcher', {
   }
 
   it 'fails when actual equals expected', {
-    Failures.list = ();
-    expect(5).to.be-greater-than(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5).to.be-greater-than(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when actual is less than expected', {
-    Failures.list = ();
-    expect(2).to.be-greater-than(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(2).to.be-greater-than(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'works with Rat values', {
@@ -42,17 +42,17 @@ describe 'be-greater-than matcher', {
   }
 
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Int).to.be-greater-than(0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Int).to.be-greater-than(0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-Real actual', {
-    Failures.list = ();
-    expect('abc').to.be-greater-than(0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('abc').to.be-greater-than(0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when actual is not greater', {
@@ -60,18 +60,18 @@ describe 'be-greater-than matcher', {
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect(2).to.be-greater-than(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(2).to.be-greater-than(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 2 to be greater than 5');
   }
 
   it 'records a negated failure message', {
-    Failures.list = ();
-    expect(7).to.not.be-greater-than(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.not.be-greater-than(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 7 not to be greater than 5');
   }
 
@@ -81,11 +81,11 @@ describe 'be-greater-than matcher', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect(2).to.be-greater-than(5);
-    expect(Failures.list[0].given).to.be(2);
-    expect(Failures.list[0].expected).to.be(5);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(2).to.be-greater-than(5);
+    };
+    expect(@captured[0].given).to.be(2);
+    expect(@captured[0].expected).to.be(5);
   }
 }
 
@@ -99,10 +99,10 @@ describe 'be-greater-than-or-equal-to matcher', {
   }
 
   it 'fails when actual is less than expected', {
-    Failures.list = ();
-    expect(2).to.be-greater-than-or-equal-to(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(2).to.be-greater-than-or-equal-to(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'works with Rat values', {
@@ -114,10 +114,10 @@ describe 'be-greater-than-or-equal-to matcher', {
   }
 
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Int).to.be-greater-than-or-equal-to(0);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Int).to.be-greater-than-or-equal-to(0);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when actual is less', {
@@ -125,10 +125,10 @@ describe 'be-greater-than-or-equal-to matcher', {
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect(2).to.be-greater-than-or-equal-to(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(2).to.be-greater-than-or-equal-to(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 2 to be greater than or equal to 5');
   }
 
@@ -138,11 +138,11 @@ describe 'be-greater-than-or-equal-to matcher', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect(4).to.be-greater-than-or-equal-to(5);
-    expect(Failures.list[0].given).to.be(4);
-    expect(Failures.list[0].expected).to.be(5);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(4).to.be-greater-than-or-equal-to(5);
+    };
+    expect(@captured[0].given).to.be(4);
+    expect(@captured[0].expected).to.be(5);
   }
 }
 
@@ -152,17 +152,17 @@ describe 'be-less-than matcher', {
   }
 
   it 'fails when actual equals expected', {
-    Failures.list = ();
-    expect(5).to.be-less-than(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(5).to.be-less-than(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails when actual is greater than expected', {
-    Failures.list = ();
-    expect(7).to.be-less-than(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be-less-than(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'works with Rat values', {
@@ -183,17 +183,17 @@ describe 'be-less-than matcher', {
   }
 
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Int).to.be-less-than(10);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Int).to.be-less-than(10);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails on non-Real actual', {
-    Failures.list = ();
-    expect('abc').to.be-less-than(10);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('abc').to.be-less-than(10);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when actual is not less', {
@@ -201,18 +201,18 @@ describe 'be-less-than matcher', {
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect(7).to.be-less-than(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be-less-than(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 7 to be less than 5');
   }
 
   it 'records a negated failure message', {
-    Failures.list = ();
-    expect(2).to.not.be-less-than(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(2).to.not.be-less-than(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 2 not to be less than 5');
   }
 
@@ -222,11 +222,11 @@ describe 'be-less-than matcher', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect(7).to.be-less-than(5);
-    expect(Failures.list[0].given).to.be(7);
-    expect(Failures.list[0].expected).to.be(5);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be-less-than(5);
+    };
+    expect(@captured[0].given).to.be(7);
+    expect(@captured[0].expected).to.be(5);
   }
 }
 
@@ -240,10 +240,10 @@ describe 'be-less-than-or-equal-to matcher', {
   }
 
   it 'fails when actual is greater than expected', {
-    Failures.list = ();
-    expect(7).to.be-less-than-or-equal-to(5);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be-less-than-or-equal-to(5);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'works with Rat values', {
@@ -255,10 +255,10 @@ describe 'be-less-than-or-equal-to matcher', {
   }
 
   it 'fails on undefined actual', {
-    Failures.list = ();
-    expect(Int).to.be-less-than-or-equal-to(10);
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Int).to.be-less-than-or-equal-to(10);
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'negation passes when actual is greater', {
@@ -266,10 +266,10 @@ describe 'be-less-than-or-equal-to matcher', {
   }
 
   it 'records a matcher-supplied failure message', {
-    Failures.list = ();
-    expect(7).to.be-less-than-or-equal-to(5);
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be-less-than-or-equal-to(5);
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 7 to be less than or equal to 5');
   }
 
@@ -279,10 +279,10 @@ describe 'be-less-than-or-equal-to matcher', {
   }
 
   it 'preserves Failure.given and Failure.expected for tooling', {
-    Failures.list = ();
-    expect(7).to.be-less-than-or-equal-to(5);
-    expect(Failures.list[0].given).to.be(7);
-    expect(Failures.list[0].expected).to.be(5);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(7).to.be-less-than-or-equal-to(5);
+    };
+    expect(@captured[0].given).to.be(7);
+    expect(@captured[0].expected).to.be(5);
   }
 }

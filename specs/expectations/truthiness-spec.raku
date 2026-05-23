@@ -35,24 +35,24 @@ describe 'be-truthy matcher', {
   }
 
   it 'fails for False', {
-    Failures.list = ();
-    expect(False).to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(False).to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for 0', {
-    Failures.list = ();
-    expect(0).to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(0).to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for an empty string', {
-    Failures.list = ();
-    expect('').to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('').to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it q[passes for the string '0' (non-empty in Raku)], {
@@ -60,31 +60,31 @@ describe 'be-truthy matcher', {
   }
 
   it 'fails for an empty array', {
-    Failures.list = ();
-    expect([]).to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([]).to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for an empty hash', {
-    Failures.list = ();
-    expect({}).to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect({}).to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for Nil', {
-    Failures.list = ();
-    expect(Nil).to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Nil).to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for an undefined type object', {
-    Failures.list = ();
-    expect(Int).to.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(Int).to.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -102,10 +102,10 @@ describe 'be-falsy matcher', {
   }
 
   it q[fails for the string '0' (non-empty in Raku)], {
-    Failures.list = ();
-    expect('0').to.be-falsy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('0').to.be-falsy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'passes for an empty array', {
@@ -129,31 +129,31 @@ describe 'be-falsy matcher', {
   }
 
   it 'fails for True', {
-    Failures.list = ();
-    expect(True).to.be-falsy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(True).to.be-falsy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for 1', {
-    Failures.list = ();
-    expect(1).to.be-falsy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(1).to.be-falsy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for a non-empty string', {
-    Failures.list = ();
-    expect('hello').to.be-falsy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect('hello').to.be-falsy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 
   it 'fails for a non-empty array', {
-    Failures.list = ();
-    expect([1]).to.be-falsy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect([1]).to.be-falsy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -165,10 +165,10 @@ describe 'be-truthy negation', {
   }
 
   it 'fails for a truthy value under .not', {
-    Failures.list = ();
-    expect(True).to.not.be-truthy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(True).to.not.be-truthy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
@@ -180,71 +180,71 @@ describe 'be-falsy negation', {
   }
 
   it 'fails for a falsy value under .not', {
-    Failures.list = ();
-    expect(False).to.not.be-falsy;
-    expect(Failures.list.elems).to.be(1);
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(False).to.not.be-falsy;
+    };
+    expect(@captured.elems).to.be(1);
   }
 }
 
 describe 'be-truthy failure messages', {
   it 'positive form names the actual value', {
-    Failures.list = ();
-    expect(0).to.be-truthy;
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(0).to.be-truthy;
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected 0 to be truthy');
   }
 
   it 'negated form names the actual value', {
-    Failures.list = ();
-    expect(True).to.not.be-truthy;
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(True).to.not.be-truthy;
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected Bool::True not to be truthy');
   }
 }
 
 describe 'be-falsy failure messages', {
   it 'positive form names the actual value', {
-    Failures.list = ();
-    expect(True).to.be-falsy;
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(True).to.be-falsy;
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected Bool::True to be falsy');
   }
 
   it 'negated form names the actual value', {
-    Failures.list = ();
-    expect(False).to.not.be-falsy;
-    my $message = Failures.list[0].message;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(False).to.not.be-falsy;
+    };
+    my $message = @captured[0].message;
     expect($message).to.be('expected Bool::False not to be falsy');
   }
 }
 
 describe 'be-truthy and be-falsy preserve Failure tooling fields', {
   it 'preserves Failure.given for be-truthy', {
-    Failures.list = ();
-    expect(0).to.be-truthy;
-    my $given = Failures.list[0].given;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(0).to.be-truthy;
+    };
+    my $given = @captured[0].given;
     expect($given).to.be(0);
   }
 
   it 'preserves Failure.given for be-falsy', {
-    Failures.list = ();
-    expect(42).to.be-falsy;
-    my $given = Failures.list[0].given;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(42).to.be-falsy;
+    };
+    my $given = @captured[0].given;
     expect($given).to.be(42);
   }
 
   it 'marks negated failures as negated', {
-    Failures.list = ();
-    expect(True).to.not.be-truthy;
-    my $negated = Failures.list[0].negated;
-    Failures.list = ();
+    my @captured = capture-failures {
+      expect(True).to.not.be-truthy;
+    };
+    my $negated = @captured[0].negated;
     expect($negated).to.be-truthy;
   }
 }

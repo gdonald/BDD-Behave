@@ -105,35 +105,35 @@ my class X::T::WithRole is Exception does X::T::Roleish {
 
 # expect(...).to.raise-error integration.
 {
-  Failures.list = ();
-  ok expect({ die "X" }).to.raise-error, 'expect.to.raise-error passes';
-  is Failures.list.elems, 0, 'no failure on pass';
+  my @captured = capture-failures {
+    ok expect({ die "X" }).to.raise-error, 'expect.to.raise-error passes';
+  };
+  is @captured.elems, 0, 'no failure on pass';
 
-  Failures.list = ();
-  nok expect({ 1 + 1 }).to.raise-error, 'expect.to.raise-error fails';
-  is Failures.list.elems, 1, 'one failure recorded';
-  is Failures.list[0].message,
+  my @captured2 = capture-failures {
+    nok expect({ 1 + 1 }).to.raise-error, 'expect.to.raise-error fails';
+  };
+  is @captured2.elems, 1, 'one failure recorded';
+  is @captured2[0].message,
      'expected block to raise an error, but none was raised',
      'failure message preserved';
-  Failures.list = ();
 }
 
 # expect(...).to.not.raise-error integration.
 {
-  Failures.list = ();
   ok expect({ 1 + 1 }).to.not.raise-error, '.not passes when no raise';
   is Failures.list.elems, 0, 'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect({ die "boom" }).to.not.raise-error, '.not fails when raises';
-  is Failures.list.elems, 1, 'one failure recorded';
-  my $message = Failures.list[0].message;
+  my @captured3 = capture-failures {
+    nok expect({ die "boom" }).to.not.raise-error, '.not fails when raises';
+  };
+  is @captured3.elems, 1, 'one failure recorded';
+  my $message = @captured3[0].message;
   ok $message.contains('expected block not to raise an error'),
                                      'negated message head';
   ok $message.contains('X::AdHoc'),  'negated message includes type';
   ok $message.contains('boom'),      'negated message includes detail';
-  ok Failures.list[0].negated,       'failure marked negated';
-  Failures.list = ();
+  ok @captured3[0].negated,       'failure marked negated';
 }
 
 # Typed: matches when exception type matches, including subclasses and roles.
@@ -245,46 +245,45 @@ my class X::T::WithRole is Exception does X::T::Roleish {
 
 # Negation: passes when forbidden type is not raised.
 {
-  Failures.list = ();
   ok expect({ die "boom" }).to.not.raise-error(X::T::Demo),
                                      '.not(Type) passes when other type';
   is Failures.list.elems, 0,         'no failure on negated typed pass';
 
-  Failures.list = ();
-  ok expect({ 1 + 1 }).to.not.raise-error(X::T::Demo),
-                                     '.not(Type) passes when no raise';
-  is Failures.list.elems, 0,         'no failure on negated no-raise';
+  my @captured4 = capture-failures {
+    ok expect({ 1 + 1 }).to.not.raise-error(X::T::Demo),
+                                       '.not(Type) passes when no raise';
+  };
+  is @captured4.elems, 0,         'no failure on negated no-raise';
 }
 
 # Negation: fails when forbidden type IS raised.
 {
-  Failures.list = ();
-  nok expect({ X::T::Demo.new(:code(5)).throw })
-        .to.not.raise-error(X::T::Demo),
-                                     '.not(Type) fails when type raised';
-  is Failures.list.elems, 1,         'one negated typed failure';
-  my $msg = Failures.list[0].message;
+  my @captured = capture-failures {
+    nok expect({ X::T::Demo.new(:code(5)).throw })
+          .to.not.raise-error(X::T::Demo),
+                                       '.not(Type) fails when type raised';
+  };
+  is @captured.elems, 1,         'one negated typed failure';
+  my $msg = @captured[0].message;
   ok $msg.contains('expected block not to raise X::T::Demo'),
                                      'negated typed head';
   ok $msg.contains('X::T::Demo'),    'negated includes actual type';
   ok $msg.contains('code=5'),        'negated includes actual message';
-  Failures.list = ();
 }
 
 # Typed expect(...).to.raise-error(Type) integration.
 {
-  Failures.list = ();
   ok expect({ X::T::Demo.new(:code(1)).throw }).to.raise-error(X::T::Demo),
                                      'typed expect.to.raise-error passes';
   is Failures.list.elems, 0,         'no failure on typed pass';
 
-  Failures.list = ();
-  nok expect({ die "boom" }).to.raise-error(X::T::Demo),
-                                     'typed expect.to.raise-error fails';
-  is Failures.list.elems, 1,         'one typed failure';
-  ok Failures.list[0].expected === X::T::Demo,
+  my @captured2 = capture-failures {
+    nok expect({ die "boom" }).to.raise-error(X::T::Demo),
+                                       'typed expect.to.raise-error fails';
+  };
+  is @captured2.elems, 1,         'one typed failure';
+  ok @captured2[0].expected === X::T::Demo,
                                      'Failure.expected is the type';
-  Failures.list = ();
 }
 
 # Matcher accepts a Str expected-message and uses eq comparison.
@@ -314,43 +313,40 @@ my class X::T::WithRole is Exception does X::T::Roleish {
 
 # with-message (Str) chained off raise-error.
 {
-  Failures.list = ();
   ok expect({ die "boom" }).to.raise-error.with-message('boom'),
                                      'with-message Str pass';
   is Failures.list.elems, 0,         'no failure on with-message pass';
 
-  Failures.list = ();
-  nok expect({ die "boom" }).to.raise-error.with-message('bang'),
-                                     'with-message Str fail';
-  is Failures.list.elems, 1,         'one failure on with-message miss';
-  my $msg = Failures.list[0].message;
+  my @captured3 = capture-failures {
+    nok expect({ die "boom" }).to.raise-error.with-message('bang'),
+                                       'with-message Str fail';
+  };
+  is @captured3.elems, 1,         'one failure on with-message miss';
+  my $msg = @captured3[0].message;
   ok $msg.contains('with message "bang"'),
                                      'failure includes expected message';
   ok $msg.contains('but raised'),    'failure includes raised tail';
   ok $msg.contains('X::AdHoc'),      'failure includes raised type';
   ok $msg.contains('boom'),          'failure includes raised message';
-  Failures.list = ();
 }
 
 # with-message (Regex) chained off raise-error.
 {
-  Failures.list = ();
   ok expect({ die "alpha bravo" }).to.raise-error.with-message(/'bravo'/),
                                      'with-message Regex pass';
   is Failures.list.elems, 0,         'no failure on Regex pass';
 
-  Failures.list = ();
-  nok expect({ die "alpha" }).to.raise-error.with-message(/'bravo'/),
-                                     'with-message Regex fail';
-  is Failures.list.elems, 1,         'one failure on Regex miss';
-  ok Failures.list[0].message.contains('with message matching'),
+  my @captured4 = capture-failures {
+    nok expect({ die "alpha" }).to.raise-error.with-message(/'bravo'/),
+                                       'with-message Regex fail';
+  };
+  is @captured4.elems, 1,         'one failure on Regex miss';
+  ok @captured4[0].message.contains('with message matching'),
                                      'Regex failure includes "matching"';
-  Failures.list = ();
 }
 
 # with-message clears prior failure when the chained constraint flips.
 {
-  Failures.list = ();
   my $exp = expect({ die "boom" }).to.raise-error.with-message('bang');
   is Failures.list.elems, 1,         'first chain records a failure';
   $exp.with-message('boom');
@@ -360,7 +356,6 @@ my class X::T::WithRole is Exception does X::T::Roleish {
 
 # Reapplied with-message replaces (not appends) the prior failure.
 {
-  Failures.list = ();
   my $exp = expect({ die "boom" }).to.raise-error.with-message('one');
   is Failures.list.elems, 1,         'first failure recorded';
   $exp.with-message('two');
@@ -372,56 +367,56 @@ my class X::T::WithRole is Exception does X::T::Roleish {
 
 # with-message chained after a typed raise-error.
 {
-  Failures.list = ();
   ok expect({ X::T::Demo.new(:code(7)).throw })
         .to.raise-error(X::T::Demo).with-message(/'code=7'/),
                                      'typed + with-message Regex pass';
   is Failures.list.elems, 0,         'no failure on typed+regex pass';
 
-  Failures.list = ();
-  ok expect({ X::T::Demo.new(:code(7)).throw })
-        .to.raise-error(X::T::Demo).with-message('t-demo failure: code=7'),
-                                     'typed + with-message Str pass';
-  is Failures.list.elems, 0,         'no failure on typed+Str pass';
+  my @captured5 = capture-failures {
+    ok expect({ X::T::Demo.new(:code(7)).throw })
+          .to.raise-error(X::T::Demo).with-message('t-demo failure: code=7'),
+                                       'typed + with-message Str pass';
+  };
+  is @captured5.elems, 0,         'no failure on typed+Str pass';
 
-  Failures.list = ();
-  nok expect({ X::T::Demo.new(:code(7)).throw })
-        .to.raise-error(X::T::Demo).with-message('wrong'),
-                                     'typed + Str miss fails';
-  is Failures.list.elems, 1,         'one failure on typed Str miss';
-  ok Failures.list[0].message.contains('raise X::T::Demo with message "wrong"'),
+  my @captured6 = capture-failures {
+    nok expect({ X::T::Demo.new(:code(7)).throw })
+          .to.raise-error(X::T::Demo).with-message('wrong'),
+                                       'typed + Str miss fails';
+  };
+  is @captured6.elems, 1,         'one failure on typed Str miss';
+  ok @captured6[0].message.contains('raise X::T::Demo with message "wrong"'),
                                      'typed Str miss includes description';
-  Failures.list = ();
 }
 
 # with-message under .not.
 {
-  Failures.list = ();
   ok expect({ die "boom" }).to.not.raise-error.with-message('bang'),
                                      '.not.with-message passes when msg differs';
   is Failures.list.elems, 0,         'no failure on negated pass';
 
-  Failures.list = ();
-  nok expect({ die "boom" }).to.not.raise-error.with-message('boom'),
-                                     '.not.with-message fails when msg matches';
-  is Failures.list.elems, 1,         'one failure on negated miss';
-  ok Failures.list[0].message.contains('expected block not to raise an error'),
+  my @captured7 = capture-failures {
+    nok expect({ die "boom" }).to.not.raise-error.with-message('boom'),
+                                       '.not.with-message fails when msg matches';
+  };
+  is @captured7.elems, 1,         'one failure on negated miss';
+  ok @captured7[0].message.contains('expected block not to raise an error'),
                                      'negated head';
-  ok Failures.list[0].message.contains('with message "boom"'),
+  ok @captured7[0].message.contains('with message "boom"'),
                                      'negated message body';
-  Failures.list = ();
 }
 
 # Failure.expected carries the message when with-message is used (untyped).
 {
-  Failures.list = ();
-  expect({ 1 + 1 }).to.raise-error.with-message('boom');
-  is Failures.list[0].expected, 'boom',
+  my @captured8 = capture-failures {
+    expect({ 1 + 1 }).to.raise-error.with-message('boom');
+  };
+  is @captured8[0].expected, 'boom',
                                      'Failure.expected is the Str message';
-  Failures.list = ();
+  my @captured9 = capture-failures {
 
-  expect({ 1 + 1 }).to.raise-error.with-message(/'pat'/);
-  ok Failures.list[0].expected ~~ Regex,
+    expect({ 1 + 1 }).to.raise-error.with-message(/'pat'/);
+  };
+  ok @captured9[0].expected ~~ Regex,
                                      'Failure.expected is the Regex';
-  Failures.list = ();
 }

@@ -1,15 +1,9 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
 
-# Helper to splice off failures introduced inside a block, so a deliberately
-# failing expectation does not poison the surrounding example.
-sub induce(&block --> List) {
-  my $start = Failures.list.elems;
-  block();
-  my @new = Failures.list[$start..^Failures.list.elems];
-  Failures.list = Failures.list[^$start];
-  @new.List;
-}
+# Helper to splice off failures introduced inside a block. Delegates to
+# capture-failures, which suppresses the throw-on-failure inside its body.
+sub induce(&block --> List) { capture-failures(&block) }
 
 class Point {
   has $.x;

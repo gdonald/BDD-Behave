@@ -202,23 +202,24 @@ describe 'BDD::Behave::Formatter::JSON', {
     }
 
     it 'captures expectation failures attached to the failing example', {
-      Failures.list = ();
       my $f = BDD::Behave::Formatter::JSON.new;
       my $g = make-group('g');
       my $ex = make-example('broken');
-      my $out = capture-formatter-output({
-        $f.group-start($g);
-        $f.example-start($ex);
-        Failures.list.push: Failure.new(
-          :file('spec.raku'), :line(11), :given('a'), :expected('b'),
-        );
-        $f.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
-        $f.run-summary(fake-result(%( total => 1, failed => 1 )));
-      });
+      my $out;
+      capture-failures {
+        $out = capture-formatter-output({
+          $f.group-start($g);
+          $f.example-start($ex);
+          Failures.list.push: Failure.new(
+            :file('spec.raku'), :line(11), :given('a'), :expected('b'),
+          );
+          $f.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+          $f.run-summary(fake-result(%( total => 1, failed => 1 )));
+        });
+      };
       expect($out).to.include('"expectations":');
       expect($out).to.include('"given":"a"');
       expect($out).to.include('"expected":"b"');
-      Failures.list = ();
     }
   }
 
