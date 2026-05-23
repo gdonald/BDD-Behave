@@ -20,6 +20,7 @@ nav:
   - Example Filter: example-filter/example-filter.md
   - Parallel Execution: parallel/parallel.md
   - Watch Mode: watch/watch.md
+  - Dry Run and Listing: dry-run/dry-run.md
   - Retry and Only-Failures: retry/retry.md
   - Mocks: mocks/mocks.md
   - Expectations:

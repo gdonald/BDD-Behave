@@ -28,6 +28,9 @@ my $parallel-workers = 0;
 my $worker-manifest-path;
 my $watch-mode  = False;
 my @watch-paths;
+my $dry-run-mode    = False;
+my $list-examples   = False;
+my $list-format     = 'text';
 my $cli-config = CLI-CONFIG.new;
 
 sub usage() {
@@ -193,6 +196,24 @@ sub usage() {
                              --bisect-data / --coverage / --doc / --parallel.
     --watch-path PATH        Add PATH to the watched roots (repeatable).
                              Defaults to ./lib and ./specs when omitted.
+    --dry-run                Load specs but skip execution. Prints the
+                             hierarchical list of examples that would run
+                             (honoring --tag, --exclude-tag, --example,
+                             --only-example, focus mode, and skipped
+                             examples) followed by an "N example(s)" count.
+                             Pair with --verbose to also print each
+                             example's file:line and effective tags.
+                             Exit 0 when at least one spec loaded; 1
+                             only on load errors.
+    --list-examples          Emit the metadata query result for editor
+                             integrations (run-this-test,
+                             jump-to-failure, etc). Defaults to plain
+                             text "FILE:LINE  full description" lines.
+                             Honors --tag, --exclude-tag, --example,
+                             and --only-example.
+    --list-examples-format=FORMAT
+                             Output format for --list-examples. FORMAT
+                             is 'text' (default) or 'json'.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -529,6 +550,15 @@ while @args {
     @watch-paths.push: @args.shift;
   } elsif $arg.starts-with('--watch-path=') {
     @watch-paths.push: $arg.substr('--watch-path='.chars);
+  } elsif $arg eq '--dry-run' {
+    $dry-run-mode = True;
+  } elsif $arg eq '--list-examples' {
+    $list-examples = True;
+  } elsif $arg eq '--list-examples-format' {
+    die "--list-examples-format requires a value" unless @args;
+    $list-format = @args.shift;
+  } elsif $arg.starts-with('--list-examples-format=') {
+    $list-format = $arg.substr('--list-examples-format='.chars);
   } elsif $arg ~~ / ^ (.+) ':' (\d+) $ / && ~$0.IO.e {
     my $file-part = ~$0;
     @specs.push: $file-part unless @specs.first(* eq $file-part);
@@ -818,6 +848,61 @@ my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
 
 my $files-obj = Files.new;
 my @files = $files-obj.list(@effective-specs);
+
+if $dry-run-mode || $list-examples {
+  unless $list-format eq 'text' | 'json' {
+    note "Error: --list-examples-format must be 'text' or 'json' (got: '$list-format')";
+    exit 2;
+  }
+
+  use MONKEY-SEE-NO-EVAL;
+  use BDD::Behave::DryRun;
+
+  my $registry = BDD::Behave::SpecRegistry::registry();
+  my @load-errors;
+  my @loaded-suites;
+
+  for @files -> $file {
+    my $load-failed = False;
+    try {
+      EVALFILE $file;
+      CATCH {
+        default {
+          @load-errors.push: %( :$file, :message(.message) );
+          note "Error: Could not load $file: {.message}";
+          $load-failed = True;
+        }
+      }
+    }
+    next if $load-failed;
+    my $suite = $registry.suite-for-file($file.IO);
+    @loaded-suites.push: $suite if $suite.defined;
+  }
+
+  my $opts = BDD::Behave::DryRun::FilterOptions.new(
+    include-tags     => @include-tags.list,
+    exclude-tags     => @exclude-tags.list,
+    example-patterns => @example-patterns.list,
+    only-locations   => @only-locations.list,
+  );
+
+  if $list-examples {
+    if $list-format eq 'json' {
+      print BDD::Behave::DryRun::render-json(@loaded-suites, $opts);
+      say '';
+    } else {
+      for BDD::Behave::DryRun::matching-examples(@loaded-suites, $opts) -> $ex {
+        my @parts = $ex.ancestry.grep(BDD::Behave::SpecTree::ExampleGroup).map(*.description);
+        @parts.push: $ex.description;
+        say "{$ex.file}:{$ex.line}\t{@parts.join(' ')}";
+      }
+    }
+  } else {
+    print BDD::Behave::DryRun::render-text(@loaded-suites, $opts, :$verbose);
+  }
+
+  exit(@load-errors.elems == 0 ?? 0 !! 1);
+}
 
 if $watch-mode {
   use BDD::Behave::Watch;

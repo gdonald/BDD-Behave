@@ -1,0 +1,211 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+constant Suite = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example = BDD::Behave::SpecTree::Example;
+constant ExampleQueryResult = BDD::Behave::SpecRegistry::ExampleQueryResult;
+
+plan 36;
+
+sub fresh-registry() {
+  my $r = BDD::Behave::SpecRegistry::SpecRegistry.new;
+  $r;
+}
+
+sub build-fixture(BDD::Behave::SpecRegistry::SpecRegistry $reg) {
+  my $file = $*PROGRAM.absolute.IO;
+  my $entry = $reg.entry-for($file);
+  my $math = ExampleGroup.new(
+    :description('math'), :file($file), :line(10),
+  );
+  $math.set-metadata(:tags(<arith>));
+  $entry.suite.add-group($math);
+
+  my $adds = Example.new(
+    :description('adds numbers'),
+    :file($file), :line(12),
+    :block(-> { }),
+  );
+  $adds.set-metadata(:tags(<positive fast>));
+  $math.add-example($adds);
+
+  my $subs = Example.new(
+    :description('subtracts numbers'),
+    :file($file), :line(15),
+    :block(-> { }),
+  );
+  $subs.set-metadata(:tags(<slow>));
+  $subs.set-metadata(:type<unit>);
+  $math.add-example($subs);
+
+  my $nested = ExampleGroup.new(
+    :description('division'), :file($file), :line(20),
+  );
+  $math.add-group($nested);
+
+  my $div = Example.new(
+    :description('divides'),
+    :file($file), :line(22),
+    :block(-> { }),
+  );
+  $nested.add-example($div);
+
+  my $other-file = $file.parent.add('other-fixture-spec.raku').IO;
+  my $other-entry = $reg.entry-for($other-file);
+  my $top = ExampleGroup.new(
+    :description('strings'), :file($other-file), :line(5),
+  );
+  $other-entry.suite.add-group($top);
+  my $str-ex = Example.new(
+    :description('joins'),
+    :file($other-file), :line(7),
+    :block(-> { }),
+  );
+  $str-ex.set-metadata(:tags(<positive>));
+  $top.add-example($str-ex);
+
+  my $pending = Example.new(
+    :description('reverses'),
+    :file($other-file), :line(11),
+    :block(-> { }),
+  );
+  $top.add-example($pending);
+  $pending.mark-pending(:reason('todo'));
+
+  my $focused = Example.new(
+    :description('upcases'),
+    :file($other-file), :line(15),
+    :block(-> { }),
+  );
+  $focused.set-metadata(:focused(True));
+  $top.add-example($focused);
+
+  my $skipped = Example.new(
+    :description('downcases'),
+    :file($other-file), :line(19),
+    :block(-> { }),
+  );
+  $skipped.set-metadata(:skipped(True));
+  $top.add-example($skipped);
+}
+
+{
+  my $reg = fresh-registry();
+  build-fixture($reg);
+
+  my @all = $reg.all-examples;
+  is @all.elems, 7, 'all-examples returns one record per example across suites';
+  ok @all[0] ~~ ExampleQueryResult, 'records are ExampleQueryResult';
+
+  my %by-desc = @all.map({ .description => $_ });
+  ok %by-desc{'adds numbers'}:exists, 'finds nested example by description';
+  my $adds = %by-desc{'adds numbers'};
+  is $adds.full-description, 'math adds numbers', 'full-description joins group + example';
+  is-deeply $adds.group-descriptions.List, ('math',).List, 'group-descriptions lists ancestor groups';
+  ok $adds.tags.first(* eq 'positive').defined, 'effective tags include direct tag';
+  ok $adds.tags.first(* eq 'arith').defined, 'effective tags inherit from group';
+
+  my $div = %by-desc{'divides'};
+  is-deeply $div.group-descriptions.List, ('math', 'division').List, 'nested groups carried in order';
+}
+
+{
+  my $reg = fresh-registry();
+  build-fixture($reg);
+
+  is $reg.count-examples, 7, 'count-examples without filters';
+  my @arith = $reg.query-examples(include-tags => ['arith']);
+  is @arith.elems, 3, 'include-tag filter ANDs with effective tags';
+
+  my @positive = $reg.query-examples(include-tags => ['positive']);
+  is @positive.elems, 2, 'cross-suite tag filter spans suites';
+
+  my @both-tags = $reg.query-examples(include-tags => ['positive', 'slow']);
+  is @both-tags.elems, 3, 'multiple include-tags use OR semantics';
+
+  my @exclude-fast = $reg.query-examples(
+    include-tags => ['arith'],
+    exclude-tags => ['fast'],
+  );
+  is @exclude-fast.elems, 2, 'exclude-tag wins over include-tag';
+}
+
+{
+  my $reg = fresh-registry();
+  build-fixture($reg);
+
+  my @match = $reg.query-examples(description-pattern => 'adds');
+  is @match.elems, 1, 'substring description match';
+
+  my @regex = $reg.query-examples(description-pattern => '/^math \s/');
+  is @regex.elems, 3, 'regex description pattern enclosed in slashes';
+
+  my @none = $reg.query-examples(description-pattern => 'no-such-example');
+  is @none.elems, 0, 'unmatched pattern returns empty list';
+}
+
+{
+  my $reg = fresh-registry();
+  build-fixture($reg);
+
+  my @by-basename = $reg.query-examples(file => 'other-fixture-spec.raku');
+  is @by-basename.elems, 4, 'file filter matches by basename';
+
+  my $self-file = $*PROGRAM.absolute.IO;
+  my @by-absolute = $reg.query-examples(file => $self-file.absolute);
+  is @by-absolute.elems, 3, 'file filter matches by absolute path';
+
+  my @by-line = $reg.query-examples(line => 12);
+  is @by-line.elems, 1, 'line filter matches exact line';
+
+  my @file-and-line = $reg.query-examples(
+    file => 'other-fixture-spec.raku', line => 7,
+  );
+  is @file-and-line.elems, 1, 'file + line compose with AND';
+}
+
+{
+  my $reg = fresh-registry();
+  build-fixture($reg);
+
+  my @units = $reg.query-examples(metadata => { type => 'unit' });
+  is @units.elems, 1, 'metadata equality filter';
+
+  my @no-units = $reg.query-examples(metadata-exclude => { type => 'unit' });
+  is @no-units.elems, 6, 'metadata-exclude removes matching examples';
+
+  my @pending = $reg.query-examples(pending => True);
+  is @pending.elems, 1, 'pending filter';
+  is @pending[0].description, 'reverses', 'pending example identified';
+
+  my @focused = $reg.query-examples(focused => True);
+  is @focused.elems, 1, 'focused filter';
+  is @focused[0].description, 'upcases', 'focused example identified';
+
+  my @skipped = $reg.query-examples(skipped => True);
+  is @skipped.elems, 1, 'skipped filter';
+  is @skipped[0].description, 'downcases', 'skipped example identified';
+}
+
+{
+  my $reg = fresh-registry();
+  build-fixture($reg);
+
+  my @all = $reg.all-examples;
+  my $adds = @all.first(*.description eq 'adds numbers');
+  my %h = $adds.to-hash;
+  is %h<description>, 'adds numbers', 'to-hash exposes description';
+  is %h<full-description>, 'math adds numbers', 'to-hash exposes full-description';
+  is %h<line>, 12, 'to-hash exposes line';
+  ok %h<file> ~~ Str, 'to-hash exposes file as Str';
+  ok %h<tags> ~~ Positional, 'to-hash exposes tags as list';
+  ok %h<metadata> ~~ Associative, 'to-hash exposes metadata as hash';
+  is %h<pending>, False, 'to-hash exposes pending Bool';
+  is $adds.location, "{$adds.file}:{$adds.line}", 'location combines file and line';
+}
+
+done-testing;

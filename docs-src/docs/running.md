@@ -58,6 +58,9 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--parallel N`       | Run specs across `N` worker subprocesses with group-affinity LPT distribution. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage`. Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md). |
 | `--watch`            | Watch source and spec files; re-run affected specs whenever a file changes. Reads `r`/`a`/`f`/`q` commands from stdin. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage` / `--doc` / `--parallel`. See [Watch Mode](watch/watch.md). |
 | `--watch-path PATH`  | Add `PATH` to the watched roots (repeatable). Defaults to `./lib` and `./specs` when omitted. See [Watch Mode](watch/watch.md). |
+| `--dry-run`          | Load specs but skip execution; print the hierarchical example list and a count. Honors `--tag`, `--exclude-tag`, `--example`, `--only-example`, focus mode, and skipped examples. Combine with `--verbose` to show each example's `file:line` and effective tags. See [Dry run and listing](dry-run/dry-run.md). |
+| `--list-examples`    | Emit the metadata query result one line per example — `FILE:LINE\t<full description>` by default. Designed for editor integrations (run-this-test, jump-to-failure). See [Dry run and listing](dry-run/dry-run.md). |
+| `--list-examples-format=FORMAT` | Output format for `--list-examples`: `text` (default) or `json`. The JSON document is `{version, count, examples: [...]}` with every example's tags, metadata, and status. See [Dry run and listing](dry-run/dry-run.md). |
 
 ## Order and seed
 

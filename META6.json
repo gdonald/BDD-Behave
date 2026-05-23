@@ -21,6 +21,7 @@
     "BDD::Behave::DSL": "lib/BDD/Behave/DSL.rakumod",
     "BDD::Behave::Diff": "lib/BDD/Behave/Diff.rakumod",
     "BDD::Behave::DocExtractor": "lib/BDD/Behave/DocExtractor.rakumod",
+    "BDD::Behave::DryRun": "lib/BDD/Behave/DryRun.rakumod",
     "BDD::Behave::Expectation": "lib/BDD/Behave/Expectation.rakumod",
     "BDD::Behave::Failure": "lib/BDD/Behave/Failure.rakumod",
     "BDD::Behave::Failures": "lib/BDD/Behave/Failures.rakumod",

@@ -1,0 +1,95 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 10;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/dry-run/sample-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', '-Ilib', $bin.absolute, |@args,
+                 :out, :err, :env(|%*ENV, BEHAVE_DISABLE_CONFIG => '1'));
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :$out, :$err );
+}
+
+# --help mentions --dry-run
+{
+  my %r = run-behave('--help');
+  ok %r<out>.contains('--dry-run'), '--help mentions --dry-run';
+}
+
+# Lists every example without executing
+{
+  my %r = run-behave('--dry-run', $fixture.absolute);
+  ok %r<exit> == 0 && %r<out>.contains('Cart')
+                   && %r<out>.contains('increments the count')
+                   && !%r<out>.contains('passed'),
+    '--dry-run prints hierarchical list without running';
+}
+
+# Prints summary count
+{
+  my %r = run-behave('--dry-run', $fixture.absolute);
+  ok %r<out>.contains('5 examples'), '--dry-run prints example count';
+}
+
+# Singular count
+{
+  my %r = run-behave('--dry-run', '--example', 'increments', $fixture.absolute);
+  ok %r<out>.contains('1 example') && !%r<out>.contains('1 examples'),
+    '--dry-run singularizes count when only one example matches';
+}
+
+# Pending marker
+{
+  my %r = run-behave('--dry-run', $fixture.absolute);
+  ok %r<out>.contains('persists across reloads (PENDING)'),
+    '--dry-run marks pending examples';
+}
+
+# Skipped marker
+{
+  my %r = run-behave('--dry-run', $fixture.absolute);
+  ok %r<out>.contains('is intentionally skipped (SKIPPED)'),
+    '--dry-run marks skipped examples';
+}
+
+# --tag filter
+{
+  my %r = run-behave('--dry-run', '--tag', 'fast', $fixture.absolute);
+  ok %r<out>.contains('increments') && !%r<out>.contains('updates the total'),
+    '--dry-run honors --tag';
+}
+
+# --exclude-tag filter
+{
+  my %r = run-behave('--dry-run', '--exclude-tag', 'slow', $fixture.absolute);
+  ok !%r<out>.contains('decrements the count') && %r<out>.contains('increments'),
+    '--dry-run honors --exclude-tag';
+}
+
+# Verbose metadata
+{
+  my %r = run-behave('--dry-run', '--verbose', $fixture.absolute);
+  ok %r<out>.contains('sample-fixture-spec.raku:5')
+     && %r<out>.contains('tags: fast'),
+    '--dry-run --verbose shows file:line and tags';
+}
+
+# Load error exit code
+{
+  my $bad = $*TMPDIR.add("behave-dry-run-bad-{$*PID}-{(now * 1e6).Int}-spec.raku");
+  $bad.spurt: q:to/END/;
+    use BDD::Behave;
+    die 'boom';
+    END
+  my %r = run-behave('--dry-run', $bad.absolute);
+  $bad.unlink;
+  ok %r<exit> == 1, '--dry-run exits 1 when a spec fails to load';
+}
+
+done-testing;
