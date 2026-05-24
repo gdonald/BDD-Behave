@@ -3,21 +3,21 @@ use BDD::Behave::Failures;
 use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Type;
 
-class Point {
+my class Point {
   has $.x;
   has $.y;
 }
 
-class Person {
+my class Person {
   has Str $.name;
   has Int $.age;
 }
 
-role Coloured {
+my role Coloured {
   has Str $.colour;
 }
 
-class Shape does Coloured {
+my class Shape does Coloured {
   has Int $.sides;
 }
 

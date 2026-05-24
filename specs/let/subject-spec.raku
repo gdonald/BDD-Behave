@@ -1,6 +1,6 @@
 use BDD::Behave;
 
-class Widget {
+my class Widget {
   has $.bar;
   method greet { "hello $!bar" }
 }

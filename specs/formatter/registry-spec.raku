@@ -3,11 +3,11 @@ use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::Tree;
 use BDD::Behave::Formatter::Registry;
 
-class CustomTestFormatter does BDD::Behave::Formatter {
+my class CustomTestFormatter does BDD::Behave::Formatter {
   method name(--> Str) { 'custom-test' }
 }
 
-class NotAFormatter { }
+my class NotAFormatter { }
 
 describe 'BDD::Behave::Formatter::Registry', {
   before-each {

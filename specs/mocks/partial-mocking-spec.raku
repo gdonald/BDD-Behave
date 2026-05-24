@@ -1,13 +1,13 @@
 use BDD::Behave;
 
-class PartialAccount {
+my class PartialAccount {
   has Int $.balance is rw = 0;
   method deposit($n)  { $!balance += $n; $!balance }
   method withdraw($n) { $!balance -= $n; $!balance }
   method label        { "Account($!balance)" }
 }
 
-class PartialRepo {
+my class PartialRepo {
   method find($id)    { "real:$id"   }
   method save($obj)   { "saved:$obj" }
   method delete($id)  { "deleted:$id" }

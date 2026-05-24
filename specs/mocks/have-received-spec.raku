@@ -1,6 +1,6 @@
 use BDD::Behave;
 
-class HRGreeter {
+my class HRGreeter {
   method hello($name)        { "hello, $name"        }
   method farewell(:$lang!)   { "$lang farewell"      }
   method log($level, *@msg)  { "$level: {@msg.join(' ')}" }

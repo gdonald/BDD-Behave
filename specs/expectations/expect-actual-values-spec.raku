@@ -5,7 +5,7 @@ use BDD::Behave::Failures;
 # capture-failures, which suppresses the throw-on-failure inside its body.
 sub induce(&block --> List) { capture-failures(&block) }
 
-class Point {
+my class Point {
   has $.x;
   has $.y;
 }

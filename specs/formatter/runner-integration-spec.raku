@@ -8,7 +8,7 @@ constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example      = BDD::Behave::SpecTree::Example;
 
-class RecordingFormatter does BDD::Behave::Formatter {
+my class RecordingFormatter does BDD::Behave::Formatter {
   has @.events;
 
   method group-start($g)            { @!events.push: ('group-start',    $g.description) }

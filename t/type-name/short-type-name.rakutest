@@ -1,0 +1,23 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::TypeName;
+
+plan 4;
+
+# Plain name with GLOBAL:: prefix gets stripped.
+is short-type-name(my class TN-A { }), 'TN-A',
+   'GLOBAL:: prefix is stripped from a simple name';
+
+# Compound name with GLOBAL:: prefix gets stripped, leaving the rest.
+is short-type-name(my class X::TN::B { }), 'X::TN::B',
+   'GLOBAL:: prefix is stripped from a compound name, preserving the rest';
+
+# Name without GLOBAL:: prefix is returned unchanged.
+class TN-Plain { };
+is short-type-name(TN-Plain), TN-Plain.^name,
+   'a name with no GLOBAL:: prefix is returned unchanged';
+
+# Built-in types have no GLOBAL:: prefix.
+is short-type-name(Int), 'Int',
+   'built-in types are returned unchanged';

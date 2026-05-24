@@ -1,6 +1,6 @@
 # Classes inside specs
 
-Behave specs are ordinary Raku files, so any Raku declaration works inside a `describe` or `context` block — including `class`, `role`, and `enum`. A class declared inside a `describe` is reachable from every example in that group.
+Behave specs are ordinary Raku files, so any Raku declaration works inside them — including `class`, `role`, and `enum`. Declare fixture types with `my class` / `my role` / `my enum` so they stay lexical to the spec file: they don't pollute the loader's package, they don't collide with same-named declarations in other specs, and their `.^name` reads as the short name you wrote.
 
 ## Declaring a class in a describe
 
@@ -8,7 +8,7 @@ Behave specs are ordinary Raku files, so any Raku declaration works inside a `de
 use BDD::Behave;
 
 describe 'Widget', {
-  class Widget {
+  my class Widget {
     has $.bar;
     has $.baz;
 
@@ -29,11 +29,11 @@ The class lives in the lexical scope of the describe body, so it is visible to n
 
 ## Storing instances with `let`
 
-For values you want freshly built per example with optional memoization, combine `class` with [`let`](../let/let.md):
+For values you want freshly built per example with optional memoization, combine `my class` with [`let`](../let/let.md):
 
 ```raku
 describe 'Widget', {
-  class Widget {
+  my class Widget {
     has $.bar;
   }
 
@@ -58,8 +58,8 @@ Roles and enums work the same way:
 
 ```raku
 describe 'Greet role', {
-  role Greet { method hi { 'hi' } }
-  class WithGreet does Greet { }
+  my role Greet { method hi { 'hi' } }
+  my class WithGreet does Greet { }
 
   it 'composes', {
     expect(WithGreet.new.hi).to.be('hi');
@@ -67,7 +67,7 @@ describe 'Greet role', {
 }
 
 describe 'Color enum', {
-  enum Color <Red Green Blue>;
+  my enum Color <Red Green Blue>;
 
   it 'has correct ordinals', {
     expect(Red.Int).to.be(0);
@@ -83,28 +83,6 @@ Classes can also be declared at the top of the spec file, before any `describe`.
 - **Top-level** when several `describe` blocks share the type.
 - **Inside `describe`** when the type is only meaningful for one group of examples — keeping it local makes the relationship between the type and the tests obvious.
 
+In both positions, use `my class` (not `class`) for the same reasons given above — file-scope `class Foo { }` is sugar for `our class Foo { }` and installs `Foo` into the spec loader's package, where it can collide with other specs and grow a package-qualified `.^name`.
+
 See [Variables in specs](../variables/variables.md) for the same scoping rules applied to plain `my`/`our` variables.
-
-## Cross-file isolation
-
-Behave loads every spec file inside its own anonymous wrapper module, so two spec files can declare the same top-level class without colliding:
-
-```raku
-# specs/widgets-a-spec.raku
-use BDD::Behave;
-class Widget { method which { 'a' } }
-describe 'A', { it 'is a', { expect(Widget.new.which).to.be('a') } }
-```
-
-```raku
-# specs/widgets-b-spec.raku
-use BDD::Behave;
-class Widget { method which { 'b' } }
-describe 'B', { it 'is b', { expect(Widget.new.which).to.be('b') } }
-```
-
-Running `behave specs/` loads both files in a single process and both `Widget` classes coexist. Compound names work the same way — `class X::My::Error is Exception { }` in one spec doesn't collide with the same declaration in another.
-
-The wrapper's name is stripped off each declared type before the runner starts, so `Widget.^name` reads as `'Widget'` and failure messages render the names you wrote — there's no `BehaveSpecIso42::` prefix visible to user code or matchers.
-
-Implementation: `BDD::Behave::SpecLoader` reads each spec file, wraps it in `module BehaveSpecIso{N} { ... }`, `EVAL`s the result with the original file path preserved for source-line accuracy, then walks the wrapper's reachable type tree and calls `^set_name` on every type whose `.^name` starts with the wrapper prefix. Line numbers are preserved because the wrapper is appended same-line — there's no newline before the original content, so `$?LINE` and `&block.line` continue to report the user's source-line position.

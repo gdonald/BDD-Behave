@@ -1,6 +1,7 @@
 unit module BDD::Behave::Mock::Double;
 
 use BDD::Behave::Mock::ArgMatcher;
+use BDD::Behave::TypeName;
 
 class Double is export {
   has Str $.double-name;
@@ -85,7 +86,7 @@ our sub double(|args) is export {
       $double-name = @pos[0];
     } else {
       $double-class = @pos[0];
-      $double-name  = $double-class.^name;
+      $double-name  = short-type-name($double-class);
     }
   } else {
     die "double() takes at most one positional argument (a name string or a class)";

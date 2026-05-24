@@ -3,7 +3,7 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Core;
 use BDD::Behave::Failures;
 
-class EvenMatcher does Matcher {
+my class EvenMatcher does Matcher {
   method matches($actual --> Bool) { ?($actual %% 2) }
   method failure-message($actual --> Str) {
     "expected $actual to be even";
@@ -14,7 +14,7 @@ class EvenMatcher does Matcher {
   method expected-value(--> Mu) { 'an even number' }
 }
 
-class TruthyMatcher does Matcher {
+my class TruthyMatcher does Matcher {
   method matches($actual --> Bool) { ?$actual }
   method failure-message($actual --> Str) { "expected truthy, got " ~ $actual.raku }
   method failure-message-negated($actual --> Str) { "expected falsy, got " ~ $actual.raku }

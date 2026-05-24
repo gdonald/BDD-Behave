@@ -123,16 +123,16 @@ describe 'raise-error preserves Failure metadata', {
   }
 }
 
-class X::Behave::Demo is Exception {
+my class X::Behave::Demo is Exception {
   has $.code;
   method message { "demo failure: code={$!code}" }
 }
 
-class X::Behave::Sub is X::Behave::Demo { }
+my class X::Behave::Sub is X::Behave::Demo { }
 
-role X::Behave::Roleish { }
+my role X::Behave::Roleish { }
 
-class X::Behave::WithRole is Exception does X::Behave::Roleish {
+my class X::Behave::WithRole is Exception does X::Behave::Roleish {
   method message { 'with-role failure' }
 }
 

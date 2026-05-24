@@ -4,7 +4,7 @@ use BDD::Behave::Matcher;
 use BDD::Behave::Matcher::Core;
 use BDD::Behave::Matcher::Collection;
 
-class PositiveMatcher does Matcher {
+my class PositiveMatcher does Matcher {
   method matches($actual --> Bool) { ?($actual.defined && $actual > 0) }
   method failure-message($actual --> Str) {
     "expected $actual to be positive";

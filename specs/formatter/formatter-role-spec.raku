@@ -1,7 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Formatter;
 
-class TestFormatter does BDD::Behave::Formatter {
+my class TestFormatter does BDD::Behave::Formatter {
   has @.events;
 
   method name(--> Str) { 'test' }

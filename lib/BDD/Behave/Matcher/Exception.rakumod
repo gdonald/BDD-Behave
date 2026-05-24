@@ -1,6 +1,7 @@
 unit module BDD::Behave::Matcher::Exception;
 
 use BDD::Behave::Matcher;
+use BDD::Behave::TypeName;
 
 class RaiseErrorMatcher does Matcher is export {
   has Mu $.expected-type;
@@ -54,7 +55,7 @@ class RaiseErrorMatcher does Matcher is export {
   }
 
   method !head(--> Str) {
-    $!has-type ?? "raise " ~ $!expected-type.^name !! "raise an error";
+    $!has-type ?? "raise " ~ short-type-name($!expected-type) !! "raise an error";
   }
 
   method !message-clause(--> Str) {
@@ -70,7 +71,7 @@ class RaiseErrorMatcher does Matcher is export {
   }
 
   method !raised-detail(--> Str) {
-    "{$!raised-exception.^name}: {$!raised-exception.message}";
+    "{short-type-name($!raised-exception)}: {$!raised-exception.message}";
   }
 
   method failure-message($actual --> Str) {

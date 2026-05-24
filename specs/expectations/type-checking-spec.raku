@@ -1,15 +1,15 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
 
-class Animal {}
-class Dog is Animal {}
-class Poodle is Dog {}
+my class Animal {}
+my class Dog is Animal {}
+my class Poodle is Dog {}
 
-role Walkable {
+my role Walkable {
   method walk { 'walking' }
 }
 
-class Bird does Walkable {}
+my class Bird does Walkable {}
 
 subset Positive of Int where * > 0;
 

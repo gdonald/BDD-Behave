@@ -1,6 +1,6 @@
 use BDD::Behave;
 
-class IsExpectedWidget {
+my class IsExpectedWidget {
   has $.bar;
   method greet { "hello $!bar" }
 }

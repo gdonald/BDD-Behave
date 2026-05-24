@@ -12,12 +12,12 @@ constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
 constant Example       = BDD::Behave::SpecTree::Example;
 
 # Shared helpers for the runner integration specs.
-class CounterHelper {
+my class CounterHelper {
   has Int $.count is rw = 0;
   method tick { $!count++ }
 }
 
-class GreetHelper {
+my class GreetHelper {
   method hello { 'hello' }
 }
 

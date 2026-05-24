@@ -5,7 +5,7 @@ constant Configuration = BDD::Behave::Configuration::Configuration;
 constant ConfigInclude = BDD::Behave::Configuration::ConfigInclude;
 constant ConfigHook    = BDD::Behave::Configuration::ConfigHook;
 
-class SampleHelpers {
+my class SampleHelpers {
   method greet { 'hello' }
 }
 

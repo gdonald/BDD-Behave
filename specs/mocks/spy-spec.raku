@@ -1,6 +1,6 @@
 use BDD::Behave;
 
-class SpyGreeter {
+my class SpyGreeter {
   method hello($name) { "hello, $name" }
   method bye          { 'bye'         }
 }

@@ -1,20 +1,20 @@
 use BDD::Behave;
 use BDD::Behave::Failures;
 
-class Calculator {
+my class Calculator {
   method add($a, $b) { $a + $b }
   method subtract($a, $b) { $a - $b }
 }
 
-role Greeter {
+my role Greeter {
   method greet { 'hello' }
 }
 
-class Person does Greeter {
+my class Person does Greeter {
   method name { 'Alice' }
 }
 
-class Dog {
+my class Dog {
   method bark { 'woof' }
 }
 

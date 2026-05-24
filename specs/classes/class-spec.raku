@@ -1,7 +1,7 @@
 use BDD::Behave;
 
 describe 'classes in specs', {
-  class Widget {
+  my class Widget {
     has $.bar;
     has $.baz;
 
@@ -75,7 +75,7 @@ describe 'classes in specs', {
   }
 
   it 'can use class methods', {
-    class Calculator {
+    my class Calculator {
       method add($a, $b) { $a + $b }
       method multiply($a, $b) { $a * $b }
     }

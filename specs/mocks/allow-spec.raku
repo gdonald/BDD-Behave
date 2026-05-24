@@ -1,11 +1,11 @@
 use BDD::Behave;
 
-class AllowGreeter {
+my class AllowGreeter {
   method hello($name) { "hello, $name" }
   method bye          { 'bye'         }
 }
 
-class AllowRepo {
+my class AllowRepo {
   method find($id) { "real:$id" }
 }
 

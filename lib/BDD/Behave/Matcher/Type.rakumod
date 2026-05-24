@@ -1,6 +1,7 @@
 unit module BDD::Behave::Matcher::Type;
 
 use BDD::Behave::Matcher;
+use BDD::Behave::TypeName;
 
 class BeAMatcher does Matcher is export {
   has Mu $.type is required;
@@ -10,7 +11,7 @@ class BeAMatcher does Matcher is export {
   }
 
   method type-name(--> Str) {
-    $!type.^name;
+    short-type-name($!type);
   }
 
   method failure-message($actual --> Str) {
@@ -34,7 +35,7 @@ class BeAnInstanceOfMatcher does Matcher is export {
   }
 
   method type-name(--> Str) {
-    $!type.^name;
+    short-type-name($!type);
   }
 
   method failure-message($actual --> Str) {

@@ -11,7 +11,7 @@ sub strip-ansi(Str $s --> Str) {
   $s.subst(/\e '[' \d+ 'm'/, '', :g);
 }
 
-class StubMemoryRunner is BDD::Behave::Runner::Runner {
+my class StubMemoryRunner is BDD::Behave::Runner::Runner {
   has @.rss-readings;
   has Int $!rss-index = 0;
 

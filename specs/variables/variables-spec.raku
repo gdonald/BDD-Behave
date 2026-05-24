@@ -167,7 +167,7 @@ describe 'interaction between let and regular variables', {
 }
 
 describe 'class definitions', {
-  class TestClass {
+  my class TestClass {
     has $.name;
     has $.value;
 
@@ -191,7 +191,7 @@ describe 'class definitions', {
 }
 
 describe 'role definitions', {
-  role TestRole {
+  my role TestRole {
     has $.role-value;
 
     method role-method() {
@@ -199,7 +199,7 @@ describe 'role definitions', {
     }
   }
 
-  class ClassWithRole does TestRole {
+  my class ClassWithRole does TestRole {
     has $.class-value;
   }
 
@@ -212,7 +212,7 @@ describe 'role definitions', {
 }
 
 describe 'enum definitions', {
-  enum Color <Red Green Blue>;
+  my enum Color <Red Green Blue>;
 
   it 'can use enum values', {
     expect(Red).to.be(Red);
