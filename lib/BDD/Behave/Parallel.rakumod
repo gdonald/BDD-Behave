@@ -35,6 +35,7 @@ class ParallelRunOptions is export {
   has @.example-patterns;
   has @.only-locations;
   has Bool     $.fail-fast-any = False;
+  has IO::Path $.coverage-log-dir = IO::Path;
 }
 
 sub discover-suites(@spec-files --> List) is export {
@@ -263,6 +264,7 @@ sub run-parallel(
       :worker-argv($opts.worker-argv),
       :base-env(%(|$opts.base-env)),
       :manifest-dir($manifest-dir),
+      :coverage-log-dir($opts.coverage-log-dir),
       :on-event(sub ($wi, $event) {
         handle-event($opts.formatter, $result, $wi, $event, @suites);
       }),
@@ -288,6 +290,12 @@ sub run-parallel(
     my %env = |$opts.base-env;
     %env<BEHAVE_WORKER_INDEX> = '0';
     %env<BEHAVE_WORKER_COUNT> = '1';
+
+    if $opts.coverage-log-dir.defined {
+      %env<MVM_COVERAGE_LOG>
+        = $opts.coverage-log-dir.add('serial.raw').absolute;
+      %env<MVM_COVERAGE_CONTROL> = '2';
+    }
 
     my $proc = Proc::Async.new(|@argv);
     my $parser = JsonLineParser.new;

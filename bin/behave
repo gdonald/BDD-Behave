@@ -719,14 +719,12 @@ if $watch-mode && ($bisect || $bisect-data || $coverage-enabled
   exit 2;
 }
 
-if $parallel-workers > 0 && $coverage-enabled {
-  note "Error: --parallel is not yet compatible with --coverage in this release";
-  exit 2;
-}
-
 my $coverage-running = %*ENV<BEHAVE_COVERAGE_LOG>.defined;
 
-if $coverage-enabled && !$coverage-running {
+# Under --parallel, coverage is collected per-worker (each worker gets its
+# own MVM_COVERAGE_LOG) and merged in the parallel branch below, so we skip
+# the outer re-exec wrapper.
+if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
   my @effective-include = @coverage-include.elems ?? @coverage-include !! ('lib/',);
   my $root = $*CWD.IO;
 
@@ -1045,23 +1043,53 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
 
   my %base-env = |%*ENV;
   %base-env<BEHAVE_DISABLE_CONFIG> = '1';
+  # Make sure inherited MVM coverage env can't redirect worker hits to a
+  # single shared file or trigger coverage in the parent process.
+  %base-env<MVM_COVERAGE_LOG>:delete;
+  %base-env<MVM_COVERAGE_CONTROL>:delete;
+  %base-env<BEHAVE_COVERAGE_LOG>:delete;
 
-  my $opts = BDD::Behave::Parallel::ParallelRunOptions.new(
-    :worker-count($parallel-workers),
-    :spec-files(@files.map(*.Str).List),
-    :@worker-argv,
-    :%base-env,
-    :formatter($parent-formatter),
-    :verbose($verbose),
-    :seed($seed),
-    :order($order),
-    :seed-mode($seed-mode),
-    :progress-total($progress-total),
-    :include-tags(@include-tags),
-    :exclude-tags(@exclude-tags),
-    :example-patterns(@example-patterns),
-    :only-locations(@only-locations),
-  );
+  my $par-coverage-dir;
+  if $coverage-enabled {
+    my $stamp = sprintf '%d-%d', $*PID, (now * 1e6).Int;
+    $par-coverage-dir = $*TMPDIR.add("behave-coverage-parallel-$stamp");
+    $par-coverage-dir.mkdir;
+  }
+
+  my $opts = $par-coverage-dir.defined
+    ?? BDD::Behave::Parallel::ParallelRunOptions.new(
+         :worker-count($parallel-workers),
+         :spec-files(@files.map(*.Str).List),
+         :@worker-argv,
+         :%base-env,
+         :formatter($parent-formatter),
+         :verbose($verbose),
+         :seed($seed),
+         :order($order),
+         :seed-mode($seed-mode),
+         :progress-total($progress-total),
+         :include-tags(@include-tags),
+         :exclude-tags(@exclude-tags),
+         :example-patterns(@example-patterns),
+         :only-locations(@only-locations),
+         :coverage-log-dir($par-coverage-dir),
+       )
+    !! BDD::Behave::Parallel::ParallelRunOptions.new(
+         :worker-count($parallel-workers),
+         :spec-files(@files.map(*.Str).List),
+         :@worker-argv,
+         :%base-env,
+         :formatter($parent-formatter),
+         :verbose($verbose),
+         :seed($seed),
+         :order($order),
+         :seed-mode($seed-mode),
+         :progress-total($progress-total),
+         :include-tags(@include-tags),
+         :exclude-tags(@exclude-tags),
+         :example-patterns(@example-patterns),
+         :only-locations(@only-locations),
+       );
 
   my $par-result = run-parallel($opts);
 
@@ -1135,7 +1163,122 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     $par-result.failed-locations.list,
   );
 
-  exit(($par-result.success && $par-result.failed == 0) ?? 0 !! 1);
+  my $coverage-failed = False;
+  if $coverage-enabled && $par-coverage-dir.defined {
+    my @effective-include = @coverage-include.elems ?? @coverage-include !! ('lib/',);
+    my $root = $*CWD.IO;
+
+    my @worker-raw-paths;
+    if $par-coverage-dir.e && $par-coverage-dir.d {
+      for $par-coverage-dir.dir.sort -> $entry {
+        next unless $entry.f;
+        next unless $entry.basename.ends-with('.raw');
+        @worker-raw-paths.push: $entry;
+      }
+    }
+
+    my $merged-path = $par-coverage-dir.add('merged.filtered');
+
+    if @worker-raw-paths.elems {
+      sub shq(Str $s) {
+        q{'} ~ $s.subst(q{'}, q{'\''}, :g) ~ q{'};
+      }
+      my @grep-prefixes;
+      for @effective-include -> $p {
+        @grep-prefixes.push: 'HIT  ' ~ $p;
+        unless $p.starts-with('/') {
+          @grep-prefixes.push: 'HIT  ' ~ $root.absolute ~ '/' ~ $p;
+        }
+      }
+      # `grep -h` suppresses the filename prefix that grep adds when
+      # searching multiple files; without it, lines come out as
+      # `path/worker-0.raw:HIT  …` and parse-coverage-log ignores them.
+      my $grep-cmd = 'grep -ahF '
+                   ~ @grep-prefixes.map({ '-e ' ~ shq($_) }).join(' ')
+                   ~ ' ' ~ @worker-raw-paths.map({ shq(.absolute) }).join(' ')
+                   ~ q{ | awk '!seen[$0]++' }
+                   ~ '> ' ~ shq($merged-path.absolute);
+      my $grep-rc = run('sh', '-c', $grep-cmd, :!out, :!err).exitcode;
+      if $grep-rc >= 2 {
+        note "Error: coverage filter (grep) exited $grep-rc";
+        for @worker-raw-paths -> $p { $p.unlink if $p.e }
+        $merged-path.unlink if $merged-path.e;
+        $par-coverage-dir.rmdir if $par-coverage-dir.e && $par-coverage-dir.d;
+        exit 2;
+      }
+    } else {
+      $merged-path.spurt('');
+    }
+
+    for @worker-raw-paths -> $p { $p.unlink if $p.e }
+
+    my @raku-include-paths;
+    for @effective-include -> $p {
+      @raku-include-paths.push: $p;
+      @raku-include-paths.push: $root.absolute ~ '/' ~ $p unless $p.starts-with('/');
+    }
+
+    my %hits = BDD::Behave::Coverage::parse-coverage-log(
+      $merged-path,
+      :include-paths(@raku-include-paths),
+      :exclude-paths(@coverage-exclude),
+    );
+    $merged-path.unlink if $merged-path.e;
+    $par-coverage-dir.rmdir if $par-coverage-dir.e && $par-coverage-dir.d;
+
+    my $opts = BDD::Behave::Coverage::CoverageOptions.new(
+      :enabled,
+      :minimum($coverage-minimum),
+      :format($coverage-format),
+      :output($coverage-output),
+      :baseline($coverage-baseline),
+      :branch($coverage-branch),
+    );
+    $opts.include-path(|@effective-include);
+    $opts.exclude-path(|@coverage-exclude) if @coverage-exclude.elems;
+
+    my $report = BDD::Behave::Coverage::build-report-from-hits(%hits, $opts, $root);
+
+    if $coverage-format eq 'html' {
+      my $out-dir = $coverage-output // $*CWD.IO.add('coverage');
+      if $out-dir.e && $out-dir.d {
+        for $out-dir.dir -> $entry {
+          $entry.unlink if $entry.f;
+        }
+      }
+      BDD::Behave::Coverage::write-html-tree($report, $out-dir);
+      say '';
+      say "Coverage html report written to {$out-dir.absolute}/index.html";
+    } else {
+      my $color = !$coverage-output.defined;
+      my $rendered = BDD::Behave::Coverage::render-report(
+        $report, $coverage-format, :$color,
+      );
+
+      if $coverage-output.defined {
+        $coverage-output.spurt($rendered);
+        say '';
+        say "Coverage $coverage-format report written to {$coverage-output.absolute}";
+      } else {
+        say '';
+        print $rendered;
+      }
+    }
+
+    if $coverage-minimum > 0 && $report.overall-percentage + 0.001 < $coverage-minimum {
+      note sprintf "Error: coverage %.2f%% is below the required minimum %.2f%%",
+        $report.overall-percentage, $coverage-minimum;
+      $coverage-failed = True;
+    }
+
+    if $coverage-baseline.defined {
+      my $diff = BDD::Behave::Coverage::compute-diff($report, $coverage-baseline);
+      print BDD::Behave::Coverage::render-diff($diff);
+    }
+  }
+
+  my $par-failed = !($par-result.success && $par-result.failed == 0);
+  exit(($par-failed || $coverage-failed) ?? 1 !! 0);
 }
 
 if $doc-mode {

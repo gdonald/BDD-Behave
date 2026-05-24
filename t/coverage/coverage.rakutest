@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 78;
+plan 86;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
@@ -316,6 +316,37 @@ sub cleanup-tmp-source(IO::Path $p) {
   for $out-dir.dir -> $f { $f.unlink }
   $out-dir.rmdir;
   cleanup-tmp-source($src);
+}
+
+# merge-coverage-logs unions hits from multiple raw logs.
+{
+  sub tmp-log(Str $body --> IO::Path) {
+    my $p = $*TMPDIR.add("behave-cov-merge-{$*PID}-{(now * 1e6).Int}.log");
+    $p.spurt($body);
+    $p;
+  }
+
+  my $a = tmp-log("HIT  /a.rakumod  1\nHIT  /a.rakumod  2\n");
+  my $b = tmp-log("HIT  /a.rakumod  2\nHIT  /a.rakumod  5\nHIT  /b.rakumod  9\n");
+
+  my %hits = Coverage::merge-coverage-logs([$a, $b], :include-paths(()), :exclude-paths(()));
+
+  is %hits.keys.elems, 2,            'merge-coverage-logs combines two files';
+  ok ?%hits</a.rakumod>{1},          'line from log A is present';
+  ok ?%hits</a.rakumod>{2},          'line common to both logs is present';
+  ok ?%hits</a.rakumod>{5},          'line from log B is present';
+  ok ?%hits</b.rakumod>{9},          'distinct file from log B is present';
+
+  my %filtered = Coverage::merge-coverage-logs(
+    [$a, $b], :include-paths(('/b.',)), :exclude-paths(()),
+  );
+  is %filtered.keys.elems, 1,        'include-paths narrows the merge result';
+  ok %filtered</b.rakumod>:exists,   'merge filtered down to /b.rakumod only';
+
+  ok Coverage::merge-coverage-logs([], :include-paths(()), :exclude-paths(())).elems == 0,
+     'empty input list yields empty merge';
+
+  $a.unlink; $b.unlink;
 }
 
 done-testing;

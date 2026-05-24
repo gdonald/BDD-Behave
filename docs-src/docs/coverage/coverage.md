@@ -123,6 +123,16 @@ line per executed source line to a temp file under `$TMPDIR`. When the child
 exits, the parent runs `grep -F` over that file to keep only lines matching
 the include patterns, parses the filtered result, and renders the report.
 
+Under `--parallel`, the wrapper is skipped: the parallel parent gives each
+worker its own `MVM_COVERAGE_LOG` path
+(`$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/worker-N.raw`), and after
+the workers exit it merges every per-worker log into a single hit map (set
+union, since coverage records *whether* a line was hit). The same report
+pipeline then renders one combined report against the merged data;
+`--coverage-minimum` is gated on the merged percentage. See
+[Coverage under --parallel](../parallel/parallel.md#coverage) in the parallel
+guide for the full description.
+
 Executable line counts are derived from a static read of each source file:
 blank lines, comments, lines that contain only closing punctuation (`}`,
 `)`, etc.), and lines inside `=begin pod` / `=end pod` blocks are ignored.

@@ -317,6 +317,50 @@ describe 'BDD::Behave::Coverage::process-hit-line', {
   }
 }
 
+describe 'BDD::Behave::Coverage::merge-coverage-logs', {
+  it 'unions hits from multiple raw logs into one map', {
+    my $a = tmp-log("HIT  /a.rakumod  1\nHIT  /a.rakumod  2\n");
+    my $b = tmp-log("HIT  /a.rakumod  2\nHIT  /a.rakumod  5\nHIT  /b.rakumod  9\n");
+
+    my %hits = Coverage::merge-coverage-logs([$a, $b], :include-paths(()), :exclude-paths(()));
+
+    $a.unlink; $b.unlink;
+
+    expect(%hits.keys.elems).to.be(2);
+    expect(?%hits</a.rakumod>{1}).to.be-truthy;
+    expect(?%hits</a.rakumod>{2}).to.be-truthy;
+    expect(?%hits</a.rakumod>{5}).to.be-truthy;
+    expect(?%hits</b.rakumod>{9}).to.be-truthy;
+  }
+
+  it 'respects include-paths during the merge', {
+    my $a = tmp-log("HIT  /a.rakumod  1\n");
+    my $b = tmp-log("HIT  /b.rakumod  9\n");
+
+    my %hits = Coverage::merge-coverage-logs(
+      [$a, $b], :include-paths(('/b.',)), :exclude-paths(()),
+    );
+
+    $a.unlink; $b.unlink;
+
+    expect(%hits.keys.elems).to.be(1);
+    expect(%hits</b.rakumod>:exists).to.be-truthy;
+  }
+
+  it 'returns an empty hash when given an empty list', {
+    my %hits = Coverage::merge-coverage-logs([], :include-paths(()), :exclude-paths(()));
+    expect(%hits.elems).to.be(0);
+  }
+
+  it 'silently skips missing log files', {
+    my $missing = $*TMPDIR.add("behave-cov-missing-{$*PID}-{(now * 1e6).Int}.log");
+    my %hits = Coverage::merge-coverage-logs(
+      [$missing], :include-paths(()), :exclude-paths(()),
+    );
+    expect(%hits.elems).to.be(0);
+  }
+}
+
 describe 'BDD::Behave::Coverage::parse-coverage-log', {
   it 'parses a multi-line HIT log into a per-file hit set', {
     my $log = tmp-log(qq:to/EOF/);

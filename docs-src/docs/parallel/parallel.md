@@ -147,7 +147,7 @@ it 'tests the parallel runner itself', :serial, { ... }
 | Flag                   | Behavior under `--parallel N`                                                          |
 | ---------------------- | -------------------------------------------------------------------------------------- |
 | `--bisect` / `--bisect-data` | Mutually exclusive with `--parallel`. The parent errors with a clear message.    |
-| `--coverage`           | Not yet supported with `--parallel` in this release; the parent errors.                 |
+| `--coverage`           | Each worker writes its own raw MoarVM coverage log; the parent merges the logs and renders a single coverage report. `--coverage-minimum` is gated on the merged percentage. See [below](#coverage). |
 | `--doc`                | Ignores `--parallel` — doc mode does not execute, so parallelism is moot.               |
 | `--tag` / `--exclude-tag` / `--example` / `--only-example` | Applied during discovery; each worker sees exactly its filtered slice. |
 | `--seed`               | See `--seed-mode` below — `xor` (default) derives a per-worker seed (`seed XOR worker-index`); `stable` keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way. |
@@ -159,7 +159,7 @@ it 'tests the parallel runner itself', :serial, { ... }
 - **Reproducibility across worker counts.** Default (`--seed-mode=xor`) reproduces only when `--parallel N` matches. Use `--seed-mode=stable` for a K-invariant execution order.
 - ~~**No live progress totals.**~~ Use `--progress-total` (see above) to print `(N/TOTAL)` after each example char.
 - ~~**Profile / memory / benchmark sections.**~~ `--profile`, `--memory-profile`, and `--benchmark` are now aggregated across workers (see [below](#profile-memory-benchmark)).
-- **`--coverage` integration.** Pending; combine `--parallel` with `--coverage` and Behave will error out for now.
+- ~~**`--coverage` integration.**~~ `--coverage` is now aggregated across workers (see [below](#coverage)).
 - **Worker crashes are fatal.** If a worker exits with code > 1 (signal, uncaught exception in the runner itself), the parent prints the partial transcript and exits 1. There is no per-shard retry — that's a 9.3 concern, not parallel-execution scope.
 
 ## Profile, memory, benchmark {#profile-memory-benchmark}
@@ -188,8 +188,27 @@ Notes:
 - `--benchmark-iterations=N` and `--benchmark-threshold=PCT` are forwarded to every worker; per-example timings collected across iterations are merged in the parent before medians are computed.
 - `--benchmark-baseline` / `--benchmark-save` are not forwarded to workers; only the parent reads / writes baseline files, against the aggregated summary list.
 
+## Coverage {#coverage}
+
+`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path (`$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/worker-N.raw`), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union — coverage records whether a line was hit, not how many times — so a line counted only by worker 2 still shows up in the merged report.
+
+```bash
+behave --parallel 4 --coverage specs/
+behave --parallel 4 --coverage --coverage-format=html --coverage-output=coverage specs/
+behave --parallel 4 --coverage --coverage-minimum=90 specs/
+```
+
+`--coverage-include` / `--coverage-exclude` apply during the merge — same semantics as serial coverage. `--coverage-minimum` is gated on the *merged* percentage, so a line hit by any single worker contributes. `--coverage-baseline` compares the merged report against the saved baseline, the same as serial mode.
+
+Notes:
+
+- The parent process never has `MVM_COVERAGE_LOG` set, so it does not record its own bytecode. Coverage only reflects user code executed inside workers.
+- `:serial` examples run on the post-parallel serial worker, which also writes to a per-worker log (`serial.raw`); its hits merge in with everyone else's.
+- Worker raw logs can be very large (hundreds of megabytes per worker on big suites). The merge uses `grep -ahF | awk '!seen'` over the worker logs, so peak transient disk in `$TMPDIR` is proportional to the *raw* per-worker volume, not the filtered set. Workers' raw logs are deleted as soon as the merged-and-deduped file is written.
+
 ## See also
 
 - [Tags](../tags/tags.md) — the `:tag` / `:exclude-tag` machinery underpinning `:serial` and `:database` patterns.
 - [Hooks](../hooks/hooks.md) — `before-each` / `after-each` filters for transaction wrapping.
 - [Configuration](../configuration/configuration.md) — adding a `--parallel` default to a project `.behave` file.
+- [Coverage](../coverage/coverage.md) — full coverage reference (formats, baseline, branch tracking).

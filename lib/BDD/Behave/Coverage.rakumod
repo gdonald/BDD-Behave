@@ -423,6 +423,23 @@ our sub parse-coverage-stream(
   %hits;
 }
 
+our sub merge-coverage-logs(
+  @log-paths,
+  :@include-paths,
+  :@exclude-paths,
+  --> Hash
+) {
+  my %hits;
+  for @log-paths -> $p {
+    my $io = $p ~~ IO::Path ?? $p !! $p.IO;
+    next unless $io.defined && $io.e;
+    for $io.lines -> $line {
+      process-hit-line($line, %hits, :@include-paths, :@exclude-paths);
+    }
+  }
+  %hits;
+}
+
 our sub normalize-display-path(Str $file, IO::Path $root --> Str) {
   my $abs = $file.IO.absolute;
   my $root-abs = $root.absolute ~ '/';

@@ -1,0 +1,111 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Coverage;
+
+plan 11;
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $lib  = $root.add('lib');
+my $bin  = $root.add('bin/behave');
+my $fix  = $root.add('t/fixtures/coverage/parallel-fixture-spec.raku');
+
+sub strip-ansi(Str $s --> Str) {
+  $s.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
+}
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $result = await $done;
+
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+# Both buckets executed in parallel ⇒ merged report covers every line.
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    '--coverage', '--coverage-format=text',
+    '--coverage-include', $fix.absolute,
+    $fix.absolute,
+  );
+
+  is %r<exit>, 0, '--parallel --coverage exits 0 on success';
+
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('Coverage report'),     'text report header is printed';
+  ok $clean.contains('16/16 lines (100.0%)'),'merged coverage is 100%';
+}
+
+# JSON-format payload covers body lines from each bucket.
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    '--coverage', '--coverage-format=json',
+    '--coverage-include', $fix.absolute,
+    $fix.absolute,
+  );
+
+  is %r<exit>, 0, 'json format exits 0';
+
+  my $brace = %r<out>.index('{');
+  my %rep   = BDD::Behave::Coverage::minimal-json-parse(%r<out>.substr($brace));
+
+  is %rep<summary><lines><covered>, 16, 'merged covered = 16';
+  is %rep<summary><lines><total>,   16, 'merged total = 16';
+
+  my @covered = %rep<files>[0]<covered-line-numbers>.list;
+  my %seen    = @covered.map(* => True);
+  ok %seen{15} && %seen{19} && %seen{25} && %seen{29},
+     'merged covered-line-numbers contains body lines from both buckets';
+}
+
+# --coverage-minimum fails when only one bucket runs (≈68.8%).
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    '--coverage', '--coverage-format=text',
+    '--coverage-include', $fix.absolute,
+    '--coverage-minimum', '90',
+    '--example', 'bucket A',
+    $fix.absolute,
+  );
+
+  is %r<exit>, 1, '--coverage-minimum 90 fails when only one bucket runs';
+
+  my $clean = strip-ansi(%r<out>);
+  ok $clean.contains('11/16 lines (68.8%)'),
+     'merged percentage uses only the executed buckets hits';
+
+  my $err-clean = strip-ansi(%r<err>);
+  ok $err-clean.contains('coverage 68.75% is below the required minimum 90.00%'),
+     'minimum gate references the merged percentage';
+}
+
+# --coverage-minimum 100 passes when every line is hit.
+{
+  my %r = run-behave(
+    '--parallel', '2', '--order', 'defined',
+    '--coverage', '--coverage-format=text',
+    '--coverage-include', $fix.absolute,
+    '--coverage-minimum', '100',
+    $fix.absolute,
+  );
+
+  is %r<exit>, 0, '--coverage-minimum 100 passes with merged 100%';
+}
+
+done-testing;

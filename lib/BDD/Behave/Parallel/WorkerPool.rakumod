@@ -20,6 +20,7 @@ class WorkerPool is export {
   has @.worker-argv is required;
   has %.base-env;
   has IO::Path $.manifest-dir is required;
+  has IO::Path $.coverage-log-dir;
   has &.on-event = sub ($wi, $event) { };
 
   has WorkerHandle @!workers;
@@ -42,6 +43,12 @@ class WorkerPool is export {
       my %env = |%!base-env;
       %env<BEHAVE_WORKER_INDEX> = $i.Str;
       %env<BEHAVE_WORKER_COUNT> = $!worker-count.Str;
+
+      if $!coverage-log-dir.defined {
+        %env<MVM_COVERAGE_LOG>
+          = $!coverage-log-dir.add("worker-$i.raw").absolute;
+        %env<MVM_COVERAGE_CONTROL> = '2';
+      }
 
       my $proc = Proc::Async.new(|@argv);
 
