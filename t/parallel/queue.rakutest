@@ -1,0 +1,141 @@
+use Test;
+use BDD::Behave::Parallel::Queue;
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::SpecTree;
+
+constant Example = BDD::Behave::SpecTree::Example;
+constant Bucket  = BDD::Behave::Parallel::Distribution::Bucket;
+
+plan 36;
+
+sub mk-bucket(Str $id, Int $count = 1, Str $file = '/abs/spec.raku') {
+  my $b = Bucket.new(:$id, :$file);
+  for ^$count {
+    $b.add(Example.new(:description("ex$_"), :file($file.IO), :line(10 + $_), :block(sub { })));
+  }
+  $b;
+}
+
+# QueueScheduler
+{
+  my $s = QueueScheduler.new;
+  nok $s.has-pending,        'empty scheduler reports no pending';
+  is  $s.pending-count, 0,   'empty scheduler reports 0 pending';
+  nok $s.next-bucket.defined,'next-bucket returns undefined when empty';
+  ok  $s.all-complete,       'empty scheduler is all-complete';
+}
+
+{
+  my $s = QueueScheduler.new;
+  $s.enqueue(mk-bucket('a'));
+  $s.enqueue(mk-bucket('b'));
+  $s.enqueue(mk-bucket('c'));
+
+  is $s.pending-count,   3,   'pending-count tracks enqueued buckets';
+  is $s.next-bucket.id, 'a', 'FIFO: a comes first';
+  is $s.next-bucket.id, 'b', 'FIFO: b second';
+  is $s.next-bucket.id, 'c', 'FIFO: c third';
+  is $s.dispatched, 3,        'dispatched count includes every pop';
+  is $s.completed,  0,        'completed count starts at 0';
+  nok $s.all-complete,        'not all-complete until completes acked';
+
+  $s.mark-complete for ^3;
+  ok  $s.all-complete,        'all-complete after every dispatch acked';
+}
+
+{
+  my $s = QueueScheduler.new;
+  $s.enqueue-sorted([
+    mk-bucket('small',  1),
+    mk-bucket('large',  5),
+    mk-bucket('medium', 3),
+  ]);
+  is $s.next-bucket.id, 'large',  'enqueue-sorted: cost-desc, large first';
+  is $s.next-bucket.id, 'medium', 'enqueue-sorted: medium second';
+  is $s.next-bucket.id, 'small',  'enqueue-sorted: small last';
+}
+
+# format-bucket-command
+{
+  my $b = mk-bucket('id-1', 1, '/abs/foo.raku');
+  my $cmd = format-bucket-command($b);
+  like $cmd, /^ 'BUCKET' \t 'id-1' \t '/abs/foo.raku' \t /, 'format-bucket-command starts with tab-delimited header';
+  like $cmd, /':10' $/, 'format-bucket-command ends with the location line number';
+  nok $cmd.contains("\n"), 'format-bucket-command has no embedded newline';
+}
+
+{
+  my $b = mk-bucket('id-2', 3, '/abs/bar.raku');
+  my $cmd = format-bucket-command($b);
+  ok  $cmd.contains('/abs/bar.raku:10,/abs/bar.raku:11,/abs/bar.raku:12'),
+      'format-bucket-command joins multiple locations with commas';
+}
+
+# parse-bucket-command
+{
+  my %r = parse-bucket-command("SHUTDOWN");
+  is %r<type>, 'shutdown', 'parse-bucket-command recognizes SHUTDOWN';
+}
+
+{
+  my %r = parse-bucket-command("SHUTDOWN\n");
+  is %r<type>, 'shutdown', 'parse-bucket-command tolerates trailing newline on SHUTDOWN';
+}
+
+{
+  my %r = parse-bucket-command('');
+  is %r<type>, 'unknown', 'parse-bucket-command treats empty input as unknown';
+}
+
+{
+  my %r = parse-bucket-command("garbage line");
+  is %r<type>, 'unknown', 'parse-bucket-command treats garbage as unknown';
+}
+
+{
+  my %r = parse-bucket-command("BUCKET\tid-only");
+  is %r<type>, 'unknown', 'parse-bucket-command rejects BUCKET with too few fields';
+}
+
+{
+  my %r = parse-bucket-command("BUCKET\tbucket-1\t/abs/x.raku\t/abs/x.raku:10");
+  is %r<type>, 'bucket',         'parse-bucket-command recognizes a BUCKET line';
+  is %r<id>,   'bucket-1',       'parse-bucket-command extracts the bucket id';
+  is %r<file>, '/abs/x.raku',    'parse-bucket-command extracts the file path';
+  is-deeply %r<locations>.list.List, ('/abs/x.raku:10',).List,
+            'parse-bucket-command yields a one-element location list';
+}
+
+{
+  my %r = parse-bucket-command("BUCKET\tbucket-2\t/abs/y.raku\t/abs/y.raku:10,/abs/y.raku:20,/abs/y.raku:30");
+  is-deeply %r<locations>.list.List,
+            ('/abs/y.raku:10', '/abs/y.raku:20', '/abs/y.raku:30').List,
+            'parse-bucket-command yields a multi-element location list';
+}
+
+{
+  # round-trip
+  my $b = mk-bucket('rt-1', 4, '/abs/round.raku');
+  my $cmd = format-bucket-command($b);
+  my %r = parse-bucket-command($cmd);
+
+  is %r<type>,    'bucket',            'round-trip: type is bucket';
+  is %r<id>,      'rt-1',              'round-trip: id preserved';
+  is %r<file>,    '/abs/round.raku',   'round-trip: file preserved';
+  is %r<locations>.elems, 4,           'round-trip: every location preserved';
+}
+
+# QueueWorkerPool surface shape (no Proc spawn, just check it can be
+# constructed and surfaces its required attributes)
+{
+  my $pool = BDD::Behave::Parallel::Queue::QueueWorkerPool.new(
+    :worker-count(2),
+    :worker-argv(('raku', '-Ilib', 'bin/behave').List),
+    :spec-files(().List),
+  );
+  is  $pool.worker-count,    2, 'QueueWorkerPool stores worker-count';
+  is  $pool.workers.elems,   0, 'QueueWorkerPool has no workers until launch';
+  ok  $pool.worker-argv.elems > 0, 'QueueWorkerPool stores worker-argv';
+}
+
+done-testing;

@@ -2,6 +2,7 @@ unit module BDD::Behave::Parallel;
 
 use BDD::Behave::Parallel::Distribution;
 use BDD::Behave::Parallel::WorkerPool;
+use BDD::Behave::Parallel::Queue;
 use BDD::Behave::Parallel::Manifest;
 use BDD::Behave::Parallel::EventStream;
 use BDD::Behave::SpecRegistry;
@@ -38,6 +39,7 @@ class ParallelRunOptions is export {
   has @.only-locations;
   has Bool     $.fail-fast-any = False;
   has Bool     $.discovery-in-process = False;
+  has Str      $.parallel-mode = 'lpt';
   has IO::Path $.coverage-log-dir = IO::Path;
 }
 
@@ -208,16 +210,13 @@ sub locations-for-buckets(@buckets --> List) is export {
   @all.List;
 }
 
-sub build-worker-manifests(
+sub collect-filtered-buckets(
   @suites,
-  Int $worker-count,
   :@include-tags,
   :@exclude-tags,
   :@example-patterns,
   :@only-locations,
-  Str :$seed-mode = 'xor',
-  Int :$seed,
-  --> Hash
+  --> List
 ) is export {
   my @all-buckets;
   for @suites -> $suite {
@@ -242,6 +241,28 @@ sub build-worker-manifests(
       $new;
     }
   }).grep(*.defined);
+
+  @filtered.List;
+}
+
+sub build-worker-manifests(
+  @suites,
+  Int $worker-count,
+  :@include-tags,
+  :@exclude-tags,
+  :@example-patterns,
+  :@only-locations,
+  Str :$seed-mode = 'xor',
+  Int :$seed,
+  --> Hash
+) is export {
+  my @filtered = collect-filtered-buckets(
+    @suites,
+    :@include-tags,
+    :@exclude-tags,
+    :@example-patterns,
+    :@only-locations,
+  );
 
   my ($parallel-buckets, $serial-buckets) = split-parallel-and-serial(@filtered);
 
@@ -363,6 +384,139 @@ class ParallelRunResult is export {
   method success(--> Bool) { $!failed == 0 && @!load-errors.elems == 0 && $!exit-code == 0 }
 }
 
+sub run-parallel-queue-impl(
+  ParallelRunOptions $opts,
+  ParallelRunResult $result,
+  @suites,
+  --> ParallelRunResult
+) {
+  my @filtered = collect-filtered-buckets(
+    @suites,
+    :include-tags($opts.include-tags),
+    :exclude-tags($opts.exclude-tags),
+    :example-patterns($opts.example-patterns),
+    :only-locations($opts.only-locations),
+  );
+
+  my ($parallel-buckets, $serial-buckets) = split-parallel-and-serial(@filtered);
+  my @parallel = $parallel-buckets.list;
+  my @serial   = $serial-buckets.list;
+
+  if $opts.progress-total {
+    my $total = @parallel.map(*.cost).sum + @serial.map(*.cost).sum;
+    $opts.formatter.set-total($total);
+  }
+
+  if @parallel.elems {
+    my $worker-count = $opts.worker-count min @parallel.elems;
+    my $scheduler = BDD::Behave::Parallel::Queue::QueueScheduler.new;
+    $scheduler.enqueue-sorted(@parallel);
+
+    my Lock $dispatch-lock .= new;
+    my Lock $event-lock    .= new;
+    my $pool;
+
+    my &dispatch-or-shutdown = sub (Int $wi --> Nil) {
+      my $next;
+      $dispatch-lock.protect: {
+        $next = $scheduler.next-bucket;
+      }
+      if $next.defined {
+        $pool.send-bucket($wi, $next);
+      } else {
+        $pool.send-shutdown($wi);
+      }
+    }
+
+    $pool = BDD::Behave::Parallel::Queue::QueueWorkerPool.new(
+      :$worker-count,
+      :worker-argv($opts.worker-argv),
+      :spec-files($opts.spec-files.map(*.Str).List),
+      :base-env(%(|$opts.base-env)),
+      :coverage-log-dir($opts.coverage-log-dir),
+      # Tap callbacks for every worker fire on the thread pool, so
+      # several can be processing events concurrently. handle-event
+      # mutates $result.total / $result.passed / ... and writes to the
+      # parent formatter; both are unsynchronized state, so we serialize
+      # all per-event work behind a single lock.
+      :on-event(sub ($wi, $event) {
+        $event-lock.protect: {
+          handle-event($opts.formatter, $result, $wi, $event, @suites);
+        }
+      }),
+      :on-ready(&dispatch-or-shutdown),
+      :on-done(sub ($wi, $id) {
+        $dispatch-lock.protect: { $scheduler.mark-complete }
+        dispatch-or-shutdown($wi);
+      }),
+    );
+
+    $pool.launch;
+    $pool.wait-all;
+    for $pool.workers -> $w {
+      if $w.exit-code > 1 {
+        $result.exit-code = 1;
+        note red("Queue worker {$w.index} exited with code {$w.exit-code}");
+      }
+    }
+  }
+
+  if @serial.elems {
+    my $serial-dir = $*TMPDIR.add("behave-parallel-queue-serial-{$*PID}-{(now * 1e6).Int}");
+    $serial-dir.mkdir;
+    LEAVE {
+      if $serial-dir.defined && $serial-dir.e && $serial-dir.d {
+        for $serial-dir.dir -> $f { $f.unlink if $f.f }
+        $serial-dir.rmdir;
+      }
+    }
+
+    my @serial-locations;
+    for @serial -> $b { @serial-locations.append: $b.locations.list }
+
+    my $serial-manifest-path = $serial-dir.add('serial.manifest');
+    write-manifest($serial-manifest-path, @serial-locations);
+    my @files = files-from-manifest(@serial-locations);
+    my @argv = $opts.worker-argv.Slip;
+    @argv.push: '--worker-manifest', $serial-manifest-path.absolute;
+    @argv.append: @files;
+
+    my %env = |$opts.base-env;
+    %env<BEHAVE_WORKER_INDEX> = '0';
+    %env<BEHAVE_WORKER_COUNT> = '1';
+
+    if $opts.coverage-log-dir.defined {
+      %env<MVM_COVERAGE_LOG>
+        = $opts.coverage-log-dir.add('serial.raw').absolute;
+      %env<MVM_COVERAGE_CONTROL> = '2';
+    }
+
+    my $proc = Proc::Async.new(|@argv);
+    my $parser = JsonLineParser.new;
+
+    $proc.stdout.tap(-> $chunk {
+      for $parser.feed($chunk) -> $event {
+        handle-event($opts.formatter, $result, -1, $event, @suites);
+      }
+    });
+    $proc.stderr.tap(-> $chunk {
+      $*ERR.print($chunk);
+    });
+
+    my $start = $proc.start(:ENV(%env));
+    my $proc-result = await $start;
+    for $parser.flush -> $event {
+      handle-event($opts.formatter, $result, -1, $event, @suites);
+    }
+    if $proc-result.exitcode > 1 {
+      $result.exit-code = 1;
+      note red("Serial worker exited with code {$proc-result.exitcode}");
+    }
+  }
+
+  $result;
+}
+
 sub run-parallel(
   ParallelRunOptions $opts,
   --> ParallelRunResult
@@ -379,6 +533,12 @@ sub run-parallel(
   my @suites      = $disco[0].list;
   my @load-errors = $disco[1].list;
   $result.load-errors.append: @load-errors;
+
+  my $mode = ($opts.parallel-mode // 'lpt').lc;
+
+  if $mode eq 'queue' {
+    return run-parallel-queue-impl($opts, $result, @suites);
+  }
 
   my %plan = build-worker-manifests(
     @suites,
@@ -403,21 +563,27 @@ sub run-parallel(
   $manifest-dir.mkdir;
 
   LEAVE {
-    if $manifest-dir.e && $manifest-dir.d {
+    if $manifest-dir.defined && $manifest-dir.e && $manifest-dir.d {
       for $manifest-dir.dir -> $f { $f.unlink if $f.f }
       $manifest-dir.rmdir;
     }
   }
 
   if @parallel-manifests.grep({ .elems }).elems {
+    my Lock $event-lock .= new;
     my $pool = WorkerPool.new(
       :worker-count($opts.worker-count),
       :worker-argv($opts.worker-argv),
       :base-env(%(|$opts.base-env)),
       :manifest-dir($manifest-dir),
       :coverage-log-dir($opts.coverage-log-dir),
+      # Tap callbacks fire on the thread pool — N workers can dispatch
+      # concurrently into handle-event, which mutates $result.* and
+      # writes to the parent formatter. Serialize both.
       :on-event(sub ($wi, $event) {
-        handle-event($opts.formatter, $result, $wi, $event, @suites);
+        $event-lock.protect: {
+          handle-event($opts.formatter, $result, $wi, $event, @suites);
+        }
       }),
     );
     $pool.launch(@parallel-manifests);

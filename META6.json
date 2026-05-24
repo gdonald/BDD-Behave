@@ -59,6 +59,7 @@
     "BDD::Behave::Parallel::Distribution": "lib/BDD/Behave/Parallel/Distribution.rakumod",
     "BDD::Behave::Parallel::EventStream": "lib/BDD/Behave/Parallel/EventStream.rakumod",
     "BDD::Behave::Parallel::Manifest": "lib/BDD/Behave/Parallel/Manifest.rakumod",
+    "BDD::Behave::Parallel::Queue": "lib/BDD/Behave/Parallel/Queue.rakumod",
     "BDD::Behave::Parallel::WorkerPool": "lib/BDD/Behave/Parallel/WorkerPool.rakumod",
     "BDD::Behave::Runner": "lib/BDD/Behave/Runner.rakumod",
     "BDD::Behave::SharedContexts": "lib/BDD/Behave/SharedContexts.rakumod",

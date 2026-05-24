@@ -27,6 +27,7 @@ my $doc-format  = 'markdown';
 my $doc-output;
 my $parallel-workers = 0;
 my $worker-manifest-path;
+my $queue-worker-mode = False;
 my $watch-mode  = False;
 my @watch-paths;
 my $dry-run-mode    = False;
@@ -201,6 +202,16 @@ sub usage() {
                              seed) mod N, and the global hash-sorted
                              order is identical regardless of N. Forces
                              --order=defined per worker.
+    --parallel-mode MODE     Bucket distribution strategy under
+                             --parallel N. 'lpt' (default): static
+                             longest-processing-time-first assignment
+                             based on example count. 'queue': workers
+                             dynamically pull buckets from a parent-
+                             managed queue, useful when bucket
+                             runtimes are wildly uneven and example
+                             count is a poor cost proxy. Queue mode
+                             forces --order=defined per worker; the
+                             dispatch order is cost-desc.
     --watch                  Watch source and spec files; re-run affected
                              specs whenever a file changes. Reads
                              interactive commands from stdin:
@@ -569,6 +580,13 @@ while @args {
     $worker-manifest-path = @args.shift;
   } elsif $arg.starts-with('--worker-manifest=') {
     $worker-manifest-path = $arg.substr('--worker-manifest='.chars);
+  } elsif $arg eq '--queue-worker' {
+    $queue-worker-mode = True;
+  } elsif $arg eq '--parallel-mode' {
+    die "--parallel-mode requires a value" unless @args;
+    $cli-config.parallel-mode = @args.shift;
+  } elsif $arg.starts-with('--parallel-mode=') {
+    $cli-config.parallel-mode = $arg.substr('--parallel-mode='.chars);
   } elsif $arg eq '--watch' {
     $watch-mode = True;
   } elsif $arg eq '--watch-path' {
@@ -626,6 +644,7 @@ my $format               = $final-config.format;
 my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
 my $seed-mode            = $final-config.seed-mode // 'xor';
+my $parallel-mode        = $final-config.parallel-mode // 'lpt';
 my $progress-total       = ?$final-config.progress-total;
 my $fail-fast            = $final-config.fail-fast;
 my $retry-default        = $final-config.retry // 0;
@@ -685,6 +704,11 @@ unless $order eq 'random' | 'defined' {
 
 unless $seed-mode eq 'xor' | 'stable' {
   note "Error: --seed-mode must be 'xor' or 'stable' (got: '$seed-mode')";
+  exit 2;
+}
+
+unless $parallel-mode eq 'lpt' | 'queue' {
+  note "Error: --parallel-mode must be 'lpt' or 'queue' (got: '$parallel-mode')";
   exit 2;
 }
 
@@ -858,6 +882,104 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
 if !$seed.defined && !$bisect-data
    && ($order eq 'random' || $seed-mode eq 'stable') {
   $seed = (1 .. 2_147_483_646).pick;
+}
+
+if $queue-worker-mode {
+  use BDD::Behave::Formatter::Registry;
+  use BDD::Behave::Worker;
+  use BDD::Behave::Parallel::Queue;
+
+  $format = 'json-events';
+
+  # Disable stdout buffering for the entire worker lifetime: every event
+  # crosses a pipe to the parent process and any buffered tail can be
+  # dropped if the process exits before the buffer flushes.
+  $*OUT.out-buffer = False;
+
+  if $seed.defined && $seed-mode eq 'xor' {
+    $seed = $seed +^ BDD::Behave::Worker.id;
+  }
+
+  my $formatter = BDD::Behave::Formatter::Registry.create($format);
+  my $registry  = BDD::Behave::SpecRegistry::registry();
+  my %loaded-files;
+
+  sub json-escape(Str $s --> Str) {
+    $s.subst('\\', '\\\\', :g)
+      .subst('"', '\\"', :g)
+      .subst("\n", '\\n', :g)
+      .subst("\r", '\\r', :g)
+      .subst("\t", '\\t', :g);
+  }
+
+  # Hand the original stdin off to the queue control channel and replace
+  # the user-visible $*IN with /dev/null. Otherwise any spec that reads
+  # stdin (e.g. the Watch UI session tests, which spawn a reader thread
+  # that calls $*IN.get) races with our control loop and can steal the
+  # next BUCKET / SHUTDOWN command, losing examples or hanging the worker.
+  my $control-in = $*IN;
+  my $devnull-in = open($*SPEC.devnull, :r);
+
+  $*OUT.say('{"type":"worker-ready"}');
+  $*OUT.flush;
+
+  for $control-in.lines -> $line {
+    my %cmd = BDD::Behave::Parallel::Queue::parse-bucket-command($line);
+
+    if %cmd<type> eq 'shutdown' {
+      last;
+    } elsif %cmd<type> eq 'bucket' {
+      my $bucket-id = (%cmd<id>   // '').Str;
+      my $bucket-file = (%cmd<file> // '').Str;
+      my @locations = %cmd<locations>.list;
+
+      unless %loaded-files{$bucket-file}:exists {
+        my $load-err;
+        try {
+          my $*IN = $devnull-in;
+          BDD::Behave::SpecLoader::load-spec-file($bucket-file.IO);
+          CATCH { default { $load-err = .message } }
+        }
+        if $load-err.defined {
+          my $esc-file = json-escape($bucket-file);
+          my $esc-msg  = json-escape($load-err);
+          $*OUT.say(qq[\{"type":"load-error","file":"$esc-file","message":"$esc-msg"\}]);
+          $*OUT.say(qq[\{"type":"bucket-done","id":"{json-escape($bucket-id)}"\}]);
+          $*OUT.flush;
+          next;
+        }
+        %loaded-files{$bucket-file} = True;
+      }
+
+      my $suite = $registry.suite-for-file($bucket-file.IO);
+      if $suite.defined {
+        my $runner = BDD::Behave::Runner::Runner.new(
+          :$formatter,
+          :only-locations(@locations),
+          :aggregate-failures($aggregate-failures),
+          :order('defined'),
+          :fail-fast(0),
+          :retry($retry-default),
+          :profile-limit($profile-limit),
+          :memory-profile-limit($memory-profile-limit),
+          :$memory-threshold,
+          :memory-profile($memory-profile-limit > 0 || $memory-threshold > 0),
+          :$slow-threshold,
+          :benchmark-mode($benchmark-mode),
+          :benchmark-iterations($benchmark-iterations),
+          :benchmark-threshold($benchmark-threshold),
+          :benchmark-format($benchmark-format),
+          :config($final-config),
+        );
+        my $*IN = $devnull-in;
+        $runner.run($suite);
+      }
+
+      $*OUT.say(qq[\{"type":"bucket-done","id":"{json-escape($bucket-id)}"\}]);
+      $*OUT.flush;
+    }
+  }
+  exit 0;
 }
 
 if $worker-manifest-path.defined {
@@ -1067,6 +1189,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
          :seed($seed),
          :order($order),
          :seed-mode($seed-mode),
+         :parallel-mode($parallel-mode),
          :progress-total($progress-total),
          :include-tags(@include-tags),
          :exclude-tags(@exclude-tags),
@@ -1084,6 +1207,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
          :seed($seed),
          :order($order),
          :seed-mode($seed-mode),
+         :parallel-mode($parallel-mode),
          :progress-total($progress-total),
          :include-tags(@include-tags),
          :exclude-tags(@exclude-tags),

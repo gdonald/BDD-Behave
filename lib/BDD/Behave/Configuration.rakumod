@@ -47,6 +47,7 @@ our class Configuration {
   has Str      $.order                is rw;
   has Int      $.seed                 is rw;
   has Str      $.seed-mode            is rw;
+  has Str      $.parallel-mode        is rw;
   has Bool     $.progress-total       is rw;
   has Int      $.fail-fast            is rw;
   has Int      $.retry                is rw;
@@ -183,7 +184,7 @@ our class Configuration {
 
   method merge(Configuration $other --> Configuration) {
     my $result = Configuration.new;
-    for <format order seed seed-mode progress-total fail-fast retry only-failures failures-path verbose aggregate-failures
+    for <format order seed seed-mode parallel-mode progress-total fail-fast retry only-failures failures-path verbose aggregate-failures
          profile-limit slow-threshold memory-profile-limit memory-threshold
          benchmark-mode benchmark-iterations benchmark-baseline benchmark-save
          benchmark-threshold benchmark-format benchmark-output
@@ -229,6 +230,7 @@ our sub defaults(--> Configuration) {
   $c.format               = 'progress';
   $c.order                = 'random';
   $c.seed-mode            = 'xor';
+  $c.parallel-mode        = 'lpt';
   $c.fail-fast            = 0;
   $c.retry                = 0;
   $c.only-failures        = False;

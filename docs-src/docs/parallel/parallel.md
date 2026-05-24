@@ -79,6 +79,51 @@ Caveats:
 
 `xor` mode is the default for unsurprising single-machine behavior: the LPT distributor balances by `example-count`, and each worker shuffles its slice using `parent-seed XOR worker-index`. Two runs with the same `--seed N --parallel K` are reproducible only when `K` matches.
 
+## Parallel mode (`--parallel-mode`)
+
+`--parallel-mode` controls *how* buckets are mapped to workers under `--parallel K`. The default is the static LPT distributor described above; the alternative is a dynamic queue.
+
+| Mode            | Strategy                                                         | When to use                                                                       |
+| --------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `lpt` (default) | Static longest-processing-time-first, cost proxy = example count | Most suites where example count is a reasonable cost proxy.                       |
+| `queue`         | Dynamic work-stealing: workers pull buckets one at a time        | Suites with wildly uneven runtimes where example count poorly predicts wall time. |
+
+### `queue`
+
+```shell
+$ behave --parallel 4 --parallel-mode queue
+```
+
+In `queue` mode the parent maintains a FIFO queue of buckets sorted by cost (example count) descending, and dispatches one bucket to each worker over its stdin pipe. As each worker finishes its bucket it pulls the next one. When the queue is empty the parent sends `SHUTDOWN` to every worker and waits for them to exit.
+
+Worker behavior in queue mode:
+
+- Spec files are loaded **lazily** on the first bucket from that file (vs. eagerly at startup in LPT mode). If a worker never receives a bucket from a file, it never loads that file.
+- Each worker forces `--order=defined` for the examples inside its current bucket. Dispatch order between buckets is cost-desc, then arrival order; within a bucket, declared order.
+- `:serial` examples are still routed to a single post-parallel serial worker, exactly as in LPT mode.
+
+### When queue mode helps
+
+Queue mode wins over LPT when:
+
+- A few buckets dominate runtime but have similar example counts to the rest (so LPT's example-count proxy can't tell them apart).
+- The bucket count significantly exceeds the worker count, giving the queue many opportunities to rebalance.
+- Per-example runtime varies by an order of magnitude across the suite.
+
+Queue mode tends to match LPT (and adds a small per-bucket coordination overhead) when:
+
+- The suite has fewer buckets than workers — neither strategy can prevent idle workers.
+- Example counts are well-correlated with runtime.
+- One single bucket dominates total runtime — both strategies bottleneck on it.
+
+The roadmap notes that "default stays static LPT": queue mode is opt-in. Benchmark your own suite with both modes before flipping the default.
+
+### Reproducibility
+
+Queue mode is **inherently non-deterministic** in bucket-to-worker assignment: which worker ends up running a given bucket depends on real wall-clock timing. Pass-fail outcomes are deterministic (each example runs exactly once), but the worker number reported for an example, the per-worker bucket order, and per-worker timing will vary run-to-run. `--seed` still seeds within-example randomness, but bucket dispatch order is timing-driven.
+
+If you need cross-run reproducibility under `--parallel`, use `--seed-mode stable` with the default `--parallel-mode lpt`.
+
 ## Live progress totals (`--progress-total`)
 
 By default the `progress` formatter streams one character per example (`.` / `F` / `*` / `S`) with no running count. Pass `--progress-total` to append a `(N/TOTAL)` counter after each char, where `TOTAL` is the example count discovered by the parent after applying tag / `--example` / location filters:
