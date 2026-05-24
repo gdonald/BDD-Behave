@@ -236,7 +236,7 @@ sub render-text-children(
   }
 }
 
-our sub render-json(@suites, FilterOptions $opts --> Str) {
+our sub render-json(@suites, FilterOptions $opts, :@load-errors --> Str) {
   my $focus-mode = has-focus(@suites);
   my @examples;
   for matching-examples(@suites, $opts) -> $ex {
@@ -254,9 +254,65 @@ our sub render-json(@suites, FilterOptions $opts --> Str) {
       skipped           => $ex.effective-skipped.so,
     );
   }
+
+  my @suite-tree = @suites.map(&serialize-suite-node);
+
+  my @load-error-records = @load-errors.map(-> %e {
+    %(
+      file    => (%e<file> // '').Str,
+      message => (%e<message> // '').Str,
+    );
+  });
+
   BDD::Behave::Benchmark::Format::to-json(%(
-    version  => 1,
-    count    => @examples.elems,
-    examples => @examples,
+    version      => 1,
+    count        => @examples.elems,
+    examples     => @examples,
+    suites       => @suite-tree,
+    'load-errors' => @load-error-records,
   ));
+}
+
+our sub serialize-suite-node($node --> Hash) {
+  given $node {
+    when Suite {
+      %(
+        type        => 'suite',
+        description => $node.description,
+        file        => $node.file.Str,
+        line        => $node.line,
+        metadata    => sanitize-metadata($node.metadata),
+        children    => $node.children.map(&serialize-suite-node).List,
+      );
+    }
+    when ExampleGroup {
+      %(
+        type        => 'group',
+        description => $node.description,
+        file        => $node.file.Str,
+        line        => $node.line,
+        metadata    => sanitize-metadata($node.metadata),
+        children    => $node.children.map(&serialize-suite-node).List,
+      );
+    }
+    when Example {
+      %(
+        type        => 'example',
+        description => $node.description,
+        file        => $node.file.Str,
+        line        => $node.line,
+        metadata    => sanitize-metadata($node.metadata),
+        pending     => $node.pending.so,
+      );
+    }
+    default {
+      %();
+    }
+  }
+}
+
+sub sanitize-metadata(%metadata --> Hash) {
+  my %m = %metadata.clone;
+  %m<lets>:delete;
+  %m;
 }

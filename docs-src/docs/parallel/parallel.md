@@ -12,6 +12,10 @@ Behave's parent process discovers your spec tree, splits it into work shards, th
 
 Workers are subprocesses, not threads — every worker has its own Raku runtime, its own loaded classes, and its own `%*ENV`. State you mutate in one example never leaks to another worker.
 
+### Discovery subprocess
+
+Spec discovery itself also runs in a subprocess. Before launching workers, the parent invokes `raku bin/behave --no-config --list-examples --list-examples-format=json <spec-files>`, parses the emitted JSON tree, and rebuilds a skeleton `Suite` / `ExampleGroup` / `Example` tree used only for bucket distribution and event lookups. The parent itself never `EVALFILE`s any user spec file, so user-declared `class` / `role` definitions and other top-level effects never run in the parent and cannot collide with one another or with Behave's own loaded modules.
+
 ## Group affinity
 
 All examples inside a `describe` / `context` block run on the same worker. This makes `before-all`, `after-all`, and `around-all` amortize correctly — one setup per group per worker, not `N` setups per group. Distribution happens at the top-level `describe` granularity by default.
@@ -32,10 +36,10 @@ describe 'huge group with 5000 cases', :parallel-split, {
 
 Inside spec code, `BDD::Behave::Worker.id` and `BDD::Behave::Worker.count` give the current worker's zero-based index and the total worker count. Both are also exposed as environment variables:
 
-| Variable                 | Meaning                                     |
-| ------------------------ | ------------------------------------------- |
-| `BEHAVE_WORKER_INDEX`    | This worker's zero-based index (0..count-1) |
-| `BEHAVE_WORKER_COUNT`    | The total worker count for this run         |
+| Variable              | Meaning                                     |
+| --------------------- | ------------------------------------------- |
+| `BEHAVE_WORKER_INDEX` | This worker's zero-based index (0..count-1) |
+| `BEHAVE_WORKER_COUNT` | The total worker count for this run         |
 
 Both are always set: in single-process mode `BEHAVE_WORKER_INDEX=0` and `BEHAVE_WORKER_COUNT=1`, so configuration that interpolates the index into a per-worker resource name works identically in serial and parallel modes.
 
@@ -50,9 +54,9 @@ my $db-name = "myapp_test_{BDD::Behave::Worker.id}";
 
 `--seed-mode` controls how `--seed N` combines with `--parallel K`:
 
-| Mode      | Bucket → worker assignment                | Within-worker shuffle seed         | K-invariant? |
-| --------- | ----------------------------------------- | ---------------------------------- | ------------ |
-| `xor` (default) | Longest-processing-time-first (LPT) | `parent-seed XOR worker-index`     | No: changing `K` reshuffles assignment and per-worker seeds. |
+| Mode            | Bucket → worker assignment          | Within-worker shuffle seed                                         | K-invariant?                                                             |
+| --------------- | ----------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| `xor` (default) | Longest-processing-time-first (LPT) | `parent-seed XOR worker-index`                                     | No: changing `K` reshuffles assignment and per-worker seeds.             |
 | `stable`        | Deterministic hash mod `K`          | Parent seed (same for every worker); workers run `--order=defined` | Yes: the global hash-sorted bucket order is identical regardless of `K`. |
 
 ### `stable`
@@ -144,15 +148,15 @@ it 'tests the parallel runner itself', :serial, { ... }
 
 ## Interaction with other flags
 
-| Flag                   | Behavior under `--parallel N`                                                          |
-| ---------------------- | -------------------------------------------------------------------------------------- |
-| `--bisect` / `--bisect-data` | Mutually exclusive with `--parallel`. The parent errors with a clear message.    |
-| `--coverage`           | Each worker writes its own raw MoarVM coverage log; the parent merges the logs and renders a single coverage report. `--coverage-minimum` is gated on the merged percentage. See [below](#coverage). |
-| `--doc`                | Ignores `--parallel` — doc mode does not execute, so parallelism is moot.               |
-| `--tag` / `--exclude-tag` / `--example` / `--only-example` | Applied during discovery; each worker sees exactly its filtered slice. |
-| `--seed`               | See `--seed-mode` below — `xor` (default) derives a per-worker seed (`seed XOR worker-index`); `stable` keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way. |
-| `--seed-mode`          | `xor` (default) or `stable`. `stable` makes the global execution order K-invariant for a given `--seed`. See [Seed mode](#seed-mode-seed-mode). |
-| `--fail-fast`          | Aggregated across workers. Surviving workers are SIGTERMed at threshold (best-effort). |
+| Flag                                                       | Behavior under `--parallel N`                                                                                                                                                                                                             |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--bisect` / `--bisect-data`                               | Mutually exclusive with `--parallel`. The parent errors with a clear message.                                                                                                                                                             |
+| `--coverage`                                               | Each worker writes its own raw MoarVM coverage log; the parent merges the logs and renders a single coverage report. `--coverage-minimum` is gated on the merged percentage. See [below](#coverage).                                      |
+| `--doc`                                                    | Ignores `--parallel` — doc mode does not execute, so parallelism is moot.                                                                                                                                                                 |
+| `--tag` / `--exclude-tag` / `--example` / `--only-example` | Applied during discovery; each worker sees exactly its filtered slice.                                                                                                                                                                    |
+| `--seed`                                                   | See `--seed-mode` below — `xor` (default) derives a per-worker seed (`seed XOR worker-index`); `stable` keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way. |
+| `--seed-mode`                                              | `xor` (default) or `stable`. `stable` makes the global execution order K-invariant for a given `--seed`. See [Seed mode](#seed-mode-seed-mode).                                                                                           |
+| `--fail-fast`                                              | Aggregated across workers. Surviving workers are SIGTERMed at threshold (best-effort).                                                                                                                                                    |
 
 ## Known limitations (v1)
 

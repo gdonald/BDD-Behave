@@ -11,6 +11,7 @@ use BDD::Behave::Formatter;
 use BDD::Behave::Failures;
 use BDD::Behave::Failure;
 use BDD::Behave::Colors;
+use BDD::Behave::Coverage;
 
 need BDD::Behave::SpecTree;
 
@@ -23,6 +24,7 @@ class ParallelRunOptions is export {
   has Int      $.worker-count is required;
   has @.spec-files;
   has @.worker-argv;
+  has @.discovery-argv;
   has %.base-env;
   has BDD::Behave::Formatter $.formatter is required;
   has Bool     $.verbose = False;
@@ -35,6 +37,7 @@ class ParallelRunOptions is export {
   has @.example-patterns;
   has @.only-locations;
   has Bool     $.fail-fast-any = False;
+  has Bool     $.discovery-in-process = False;
   has IO::Path $.coverage-log-dir = IO::Path;
 }
 
@@ -55,6 +58,146 @@ sub discover-suites(@spec-files --> List) is export {
     @suites.push($suite) if $suite.defined;
   }
   (@suites.List, @load-errors.List).List;
+}
+
+sub default-discovery-argv(--> List) is export {
+  (
+    'raku',
+    "-I{$*CWD.IO.add('lib').absolute}",
+    $*PROGRAM-NAME,
+  ).List;
+}
+
+sub discover-suites-subprocess(
+  @spec-files,
+  :@discovery-argv,
+  :%base-env,
+  --> List
+) is export {
+  my @suites;
+  my @load-errors;
+
+  return (@suites.List, @load-errors.List).List unless @spec-files.elems;
+
+  my @argv = (@discovery-argv.elems ?? @discovery-argv.list !! default-discovery-argv()).list;
+  @argv.push: '--no-config';
+  @argv.push: '--list-examples';
+  @argv.push: '--list-examples-format=json';
+  @argv.append: @spec-files.map(*.Str);
+
+  my %env = %base-env.elems ?? %base-env.Hash !! %*ENV.Hash;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<MVM_COVERAGE_LOG>:delete;
+  %env<MVM_COVERAGE_CONTROL>:delete;
+  %env<BEHAVE_COVERAGE_LOG>:delete;
+
+  my $proc = Proc::Async.new(|@argv);
+  my $stdout = '';
+  my $stderr = '';
+  $proc.stdout.tap(-> $chunk { $stdout ~= $chunk });
+  $proc.stderr.tap(-> $chunk { $stderr ~= $chunk });
+
+  my $result;
+  try {
+    my $promise = $proc.start(:ENV(%env));
+    $result = await $promise;
+    CATCH {
+      default {
+        for @spec-files -> $f {
+          @load-errors.push: %( file => $f.Str, message => "discovery subprocess failed: {.message}" );
+        }
+        return (@suites.List, @load-errors.List).List;
+      }
+    }
+  }
+
+  if $result.exitcode > 1 {
+    my $msg = "discovery subprocess exited with code {$result.exitcode}";
+    $msg ~= ": $stderr" if $stderr.chars;
+    for @spec-files -> $f {
+      @load-errors.push: %( file => $f.Str, :message($msg) );
+    }
+    return (@suites.List, @load-errors.List).List;
+  }
+
+  my %doc;
+  try {
+    %doc = BDD::Behave::Coverage::parse-baseline-json($stdout);
+    CATCH {
+      default {
+        for @spec-files -> $f {
+          @load-errors.push: %( file => $f.Str, message => "discovery subprocess returned invalid JSON: {.message}" );
+        }
+        return (@suites.List, @load-errors.List).List;
+      }
+    }
+  }
+
+  for ((%doc<suites> // ()).list) -> %node {
+    my $suite = rebuild-suite(%node);
+    @suites.push: $suite if $suite.defined;
+  }
+
+  for ((%doc<load-errors> // ()).list) -> %err {
+    @load-errors.push: %(
+      file    => (%err<file>    // '').Str,
+      message => (%err<message> // '').Str,
+    );
+  }
+
+  (@suites.List, @load-errors.List).List;
+}
+
+sub rebuild-suite(%node) {
+  my %meta = json-metadata-to-raku(%node<metadata> // %());
+  my $suite = Suite.new(
+    :description((%node<description> // '').Str),
+    :file((%node<file> // '').IO),
+    :line((%node<line> // 0).Int),
+    :metadata(%meta),
+  );
+  for ((%node<children> // ()).list) -> %child {
+    rebuild-child-into($suite, %child);
+  }
+  $suite;
+}
+
+sub rebuild-child-into($parent, %node) {
+  my $type = (%node<type> // '').Str;
+  my %meta = json-metadata-to-raku(%node<metadata> // %());
+  given $type {
+    when 'group' {
+      my $group = ExampleGroup.new(
+        :description((%node<description> // '').Str),
+        :file((%node<file> // '').IO),
+        :line((%node<line> // 0).Int),
+        :metadata(%meta),
+      );
+      $parent.add-child($group);
+      for ((%node<children> // ()).list) -> %child {
+        rebuild-child-into($group, %child);
+      }
+    }
+    when 'example' {
+      my $example = Example.new(
+        :description((%node<description> // '').Str),
+        :file((%node<file> // '').IO),
+        :line((%node<line> // 0).Int),
+        :metadata(%meta),
+        :block(sub { }),
+      );
+      $example.pending = ?(%node<pending>);
+      $parent.add-child($example);
+    }
+  }
+}
+
+sub json-metadata-to-raku(%raw --> Hash) {
+  my %m;
+  for %raw.kv -> $k, $v {
+    %m{$k} = $v;
+  }
+  %m;
 }
 
 sub locations-for-buckets(@buckets --> List) is export {
@@ -226,7 +369,15 @@ sub run-parallel(
 ) is export {
   my $result = ParallelRunResult.new;
 
-  my (@suites, @load-errors) := discover-suites($opts.spec-files);
+  my $disco = $opts.discovery-in-process
+    ?? discover-suites($opts.spec-files)
+    !! discover-suites-subprocess(
+         $opts.spec-files,
+         :discovery-argv($opts.discovery-argv),
+         :base-env(%(|$opts.base-env)),
+       );
+  my @suites      = $disco[0].list;
+  my @load-errors = $disco[1].list;
   $result.load-errors.append: @load-errors;
 
   my %plan = build-worker-manifests(

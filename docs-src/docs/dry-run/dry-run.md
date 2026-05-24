@@ -98,19 +98,59 @@ $ behave --list-examples --list-examples-format=json specs/cart-spec.raku
 
 Field reference:
 
-| Field              | Type              | Notes                                                     |
-| ------------------ | ----------------- | --------------------------------------------------------- |
-| `description`      | string            | The example's own description.                            |
-| `full-description` | string            | Ancestor groups + example, joined with a space.            |
-| `file`             | string            | Absolute path to the spec file.                            |
-| `line`             | integer           | Line of the `it` (or `fit`/`xit`/`pending`).               |
-| `tags`             | list of strings   | Effective tags (own + inherited from ancestor groups).     |
-| `metadata`         | object            | The example's own metadata (excluding the internal `lets`).|
-| `pending`          | boolean           | Declared with `pending` or marked pending.                 |
-| `focused`          | boolean           | Effectively focused (own or via an ancestor `fdescribe`).  |
-| `skipped`          | boolean           | Effectively skipped (own or via an ancestor `xdescribe`).  |
+| Field              | Type            | Notes                                                       |
+| ------------------ | --------------- | ----------------------------------------------------------- |
+| `description`      | string          | The example's own description.                              |
+| `full-description` | string          | Ancestor groups + example, joined with a space.             |
+| `file`             | string          | Absolute path to the spec file.                             |
+| `line`             | integer         | Line of the `it` (or `fit`/`xit`/`pending`).                |
+| `tags`             | list of strings | Effective tags (own + inherited from ancestor groups).      |
+| `metadata`         | object          | The example's own metadata (excluding the internal `lets`). |
+| `pending`          | boolean         | Declared with `pending` or marked pending.                  |
+| `focused`          | boolean         | Effectively focused (own or via an ancestor `fdescribe`).   |
+| `skipped`          | boolean         | Effectively skipped (own or via an ancestor `xdescribe`).   |
 
 Unknown future fields may appear; keep your parser tolerant.
+
+#### Hierarchical `suites` field
+
+Alongside the flat `examples` list, the JSON document also includes a top-level `suites` key with the full discovered tree (suites → groups → examples, with each node carrying `type`, `description`, `file`, `line`, `metadata`, and — for examples — `pending`). Unlike `examples`, the `suites` tree is **unfiltered** — focus mode and tag filters don't prune it. Behave's `--parallel` parent uses this field to rebuild the spec tree without `EVALFILE`-ing user code in the parent process. External tools can use it for the same purpose, or ignore it and read `examples` as before.
+
+```json
+{
+  "version": 1,
+  "count": 5,
+  "examples": [ /* filtered flat list, as above */ ],
+  "suites": [
+    {
+      "type": "suite",
+      "description": "cart-spec.raku",
+      "file": "/path/to/cart-spec.raku",
+      "line": 0,
+      "metadata": {},
+      "children": [
+        {
+          "type": "group",
+          "description": "Cart",
+          "file": "/path/to/cart-spec.raku",
+          "line": 3,
+          "metadata": { "tags": ["unit"] },
+          "children": [
+            {
+              "type": "example",
+              "description": "increments the count",
+              "file": "/path/to/cart-spec.raku",
+              "line": 5,
+              "metadata": { "tags": ["fast"] },
+              "pending": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
 
 ## Programmatic query API
 

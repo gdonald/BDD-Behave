@@ -1,0 +1,179 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel;
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+plan 19;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $lib     = $root.add('lib');
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/parallel/discovery-fixture-spec.raku');
+my $clean   = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
+my $bad     = $root.add('t/fixtures/parallel-bad-spec.raku');
+
+my @discovery-argv = 'raku', "-I{$lib.absolute}", $bin.absolute;
+
+sub collect-examples($node, @out) {
+  given $node {
+    when Example      { @out.push: $node }
+    when ExampleGroup { collect-examples($_, @out) for $node.children }
+    when Suite        { collect-examples($_, @out) for $node.children }
+  }
+}
+
+sub example-summary($ex) {
+  %(
+    description       => $ex.description,
+    file              => $ex.file.absolute,
+    line              => $ex.line,
+    pending           => $ex.pending.so,
+    effective-focused => $ex.effective-focused.so,
+    effective-skipped => $ex.effective-skipped.so,
+    effective-tags    => $ex.effective-tags.sort.List,
+  );
+}
+
+sub group-summary($g) {
+  %(
+    description    => $g.description,
+    file           => $g.file.absolute,
+    line           => $g.line,
+    own-tags       => $g.tags.sort.List,
+    effective-tags => $g.effective-tags.sort.List,
+    metadata-type  => ($g.effective-metadata-value('type') // Str),
+  );
+}
+
+sub summarize-suite($s) {
+  my @groups;
+  my @examples;
+  sub walk($node) {
+    given $node {
+      when ExampleGroup {
+        @groups.push: group-summary($node);
+        walk($_) for $node.children;
+      }
+      when Example {
+        @examples.push: example-summary($node);
+      }
+      when Suite {
+        walk($_) for $node.children;
+      }
+    }
+  }
+  walk($s);
+  %(
+    description => $s.description,
+    file        => $s.file.absolute,
+    line        => $s.line,
+    groups      => @groups,
+    examples    => @examples,
+  );
+}
+
+# Empty file list shortcut.
+{
+  my $r = discover-suites-subprocess((), :@discovery-argv);
+  is $r[0].elems, 0, 'empty input returns no suites';
+  is $r[1].elems, 0, 'empty input returns no load errors';
+}
+
+# Parity between in-process and subprocess discovery for clean fixtures.
+{
+  my @files = ($fixture, $clean);
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $in  = discover-suites(@files);
+  my $sub = discover-suites-subprocess(@files, :@discovery-argv);
+
+  my @in-suites  = $in[0].list;
+  my @in-errs    = $in[1].list;
+  my @sub-suites = $sub[0].list;
+  my @sub-errs   = $sub[1].list;
+
+  is @sub-suites.elems, @in-suites.elems,
+    'subprocess discovery returns same number of suites';
+  is @sub-errs.elems, @in-errs.elems,
+    'subprocess discovery returns same number of load errors';
+
+  my @in-sum  = @in-suites.map(&summarize-suite);
+  my @sub-sum = @sub-suites.map(&summarize-suite);
+
+  is-deeply @sub-sum.elems, @in-sum.elems,
+    'subprocess discovery produces the same number of suite summaries';
+
+  for ^@in-sum.elems -> $i {
+    is-deeply @sub-sum[$i], @in-sum[$i],
+      "subprocess suite $i matches in-process structurally";
+  }
+
+  # Rebuilt fixture: pending / focused / skipped / effective-tags.
+  my $discovery-suite = @sub-suites.first({ .file.absolute eq $fixture.absolute });
+  my @examples;
+  collect-examples($discovery-suite, @examples);
+
+  my $pending = @examples.first({ .description eq 'persists across reloads' });
+  ok $pending.defined && $pending.pending,
+    'pending example flag round-trips through JSON';
+
+  my $focused = @examples.first({ .description eq 'is the focused one' });
+  ok $focused.defined && $focused.effective-focused,
+    'effective-focused round-trips through JSON';
+
+  my $skipped = @examples.first({ .description eq 'is intentionally skipped' });
+  ok $skipped.defined && $skipped.effective-skipped,
+    'effective-skipped round-trips through JSON';
+
+  my $tagged = @examples.first({ .description eq 'decrements the count' });
+  is-deeply $tagged.effective-tags.sort.List, <slow unit>.sort.List,
+    'effective-tags inherits both group and example tags';
+
+  my $inner = @examples.first({ .description eq 'increments the count' });
+  is $inner.effective-metadata-value('type'), 'integration',
+    'arbitrary metadata propagates from ancestor groups';
+
+  my @top-level-examples = $discovery-suite.children.grep(Example);
+  is @top-level-examples.elems, 1,
+    'top-level example outside any describe is preserved';
+  is @top-level-examples[0].description,
+    'top-level example outside any describe',
+    'top-level example description matches';
+
+  # Bucket identity parity.
+  my @in-bucket-ids;
+  for @in-suites -> $s {
+    @in-bucket-ids.append: collect-buckets($s).map(*.id);
+  }
+  my @sub-bucket-ids;
+  for @sub-suites -> $s {
+    @sub-bucket-ids.append: collect-buckets($s).map(*.id);
+  }
+  is-deeply @sub-bucket-ids.sort.List, @in-bucket-ids.sort.List,
+    'collect-buckets produces the same ids from both discovery paths';
+}
+
+# Load error surfacing.
+{
+  my $r = discover-suites-subprocess(($bad,), :@discovery-argv);
+  ok $r[1].elems > 0, 'failed-to-load file produces a load error';
+}
+
+# default-discovery-argv shape.
+{
+  my @argv = default-discovery-argv();
+  is @argv.elems, 3, 'default-discovery-argv returns 3 components';
+  is @argv[0], 'raku', 'first arg is the raku interpreter';
+  ok @argv[1].starts-with('-I'),
+    'second arg is the -I lib path';
+}
+
+done-testing;

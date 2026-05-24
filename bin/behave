@@ -924,7 +924,7 @@ if $dry-run-mode || $list-examples {
 
   if $list-examples {
     if $list-format eq 'json' {
-      print BDD::Behave::DryRun::render-json(@loaded-suites, $opts);
+      print BDD::Behave::DryRun::render-json(@loaded-suites, $opts, :@load-errors);
       say '';
     } else {
       for BDD::Behave::DryRun::matching-examples(@loaded-suites, $opts) -> $ex {
