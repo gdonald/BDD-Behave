@@ -1,10 +1,12 @@
 use v6.d;
 use lib 'lib';
+use lib 'specs/lib';
 use Test;
 
 use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
+use Behave::Test::FakeResult;
 
 plan 25;
 
@@ -81,14 +83,6 @@ ok $around-each-out.contains('SKIPPED (around-each did not invoke continuation)'
 my $around-all-out = strip-ansi capture({ $f.group-around-skipped($g) });
 ok $around-all-out.contains('SKIPPED (around-all did not invoke continuation)'),
   'group-around-skipped uses the around-all phrasing';
-
-my class FakeResult {
-  has Int $.total   = 0;
-  has Int $.passed  = 0;
-  has Int $.failed  = 0;
-  has Int $.pending = 0;
-  has Int $.skipped = 0;
-}
 
 my $sum = strip-ansi capture({
   $f.run-summary(FakeResult.new(:total(3), :passed(3)));

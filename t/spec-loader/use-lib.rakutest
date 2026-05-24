@@ -1,0 +1,79 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use MONKEY-SEE-NO-EVAL;
+use BDD::Behave::SpecLoader;
+
+plan 9;
+
+# Source without `use lib` is wrapped unchanged.
+{
+  my $wrapped = BDD::Behave::SpecLoader::wrap-source('say 42', 'TestIso');
+  is $wrapped, "module TestIso \{ say 42\n}",
+     'plain source is wrapped unchanged when no use lib is present';
+}
+
+# A top-level `use lib` is lifted before the module wrapper.
+{
+  my $code    = "use lib 'lib';\nsay 42";
+  my $wrapped = BDD::Behave::SpecLoader::wrap-source($code, 'TestIso');
+
+  ok $wrapped.starts-with(q{use lib 'lib'; module TestIso }),
+     'use lib is emitted before the module declaration';
+
+  nok $wrapped.contains("module TestIso \{ use lib"),
+      'use lib does not remain inside the module wrapper';
+}
+
+# Leading whitespace before `use lib` is tolerated.
+{
+  my $code    = "  use lib 'lib';\nsay 42";
+  my $wrapped = BDD::Behave::SpecLoader::wrap-source($code, 'TestIso');
+
+  ok $wrapped.starts-with(q{  use lib 'lib'; module TestIso }),
+     'indented use lib is also lifted';
+}
+
+# Multiple use lib directives are all lifted, in original order.
+{
+  my $code    = "use lib 'lib';\nuse lib 'other';\nsay 42";
+  my $wrapped = BDD::Behave::SpecLoader::wrap-source($code, 'TestIso');
+
+  ok $wrapped.starts-with(q{use lib 'lib'; use lib 'other'; module TestIso }),
+     'multiple use libs are lifted in order';
+}
+
+# A `use lib` that appears past line 1 still gets lifted and the lines
+# below it keep their original line numbers (the lifted line is replaced
+# by an empty line in the body).
+{
+  my $code    = "use v6.d;\nuse lib 'lib';\nsay 42";
+  my $wrapped = BDD::Behave::SpecLoader::wrap-source($code, 'TestIso');
+  my @lines   = $wrapped.lines;
+
+  ok $wrapped.starts-with(q[use lib 'lib'; module TestIso { use v6.d;]),
+     'first body line is packed onto the wrapper opening line';
+
+  is @lines[2], 'say 42',
+     'line 3 of the wrapped source is line 3 of the original source';
+}
+
+# Integration: a spec file with `use lib` at file scope must load
+# without "Cannot 'use lib' inside a module".
+{
+  my $root = $?FILE.IO.parent.parent.parent;
+  my $spec = $root.add('specs/spec-loader/use-lib-spec.raku');
+
+  ok $spec.e, 'fixture spec file exists';
+
+  my Bool $loaded = False;
+
+  try {
+    BDD::Behave::SpecLoader::load-spec-file($spec);
+    $loaded = True;
+
+    CATCH { default { diag "load failed: {.message}" } }
+  }
+
+  ok $loaded, 'spec with `use lib` at file scope loads cleanly';
+}

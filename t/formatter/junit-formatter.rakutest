@@ -1,5 +1,6 @@
 use v6.d;
 use lib 'lib';
+use lib 'specs/lib';
 use Test;
 
 use BDD::Behave::Failure;
@@ -8,6 +9,7 @@ use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::JUnit;
 use BDD::Behave::SpecTree;
 use BDD::Behave::DSL;
+use Behave::Test::FakeResult;
 
 my $*BEHAVE-AGGREGATING = True;
 
@@ -40,16 +42,6 @@ sub capture(&block) {
   my $text = $buf.slurp;
   $buf.unlink;
   $text;
-}
-
-sub fake-result(%counts) {
-  class :: {
-    has Int $.total   is rw = 0;
-    has Int $.passed  is rw = 0;
-    has Int $.failed  is rw = 0;
-    has Int $.pending is rw = 0;
-    has Int $.skipped is rw = 0;
-  }.new(|%counts);
 }
 
 my $f = BDD::Behave::Formatter::JUnit.new;

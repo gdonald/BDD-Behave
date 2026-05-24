@@ -1,9 +1,11 @@
+use lib 'specs/lib';
 use BDD::Behave;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
 use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::HTML;
 use BDD::Behave::SpecTree;
+use Behave::Test::FakeResult;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -32,16 +34,6 @@ sub capture-formatter-output(&block) {
   my $text = $buf.slurp;
   $buf.unlink;
   $text;
-}
-
-sub fake-result(%counts) {
-  class :: {
-    has Int $.total   is rw = 0;
-    has Int $.passed  is rw = 0;
-    has Int $.failed  is rw = 0;
-    has Int $.pending is rw = 0;
-    has Int $.skipped is rw = 0;
-  }.new(|%counts);
 }
 
 describe 'BDD::Behave::Formatter::HTML', {

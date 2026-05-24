@@ -8,8 +8,30 @@ our sub next-iso-name(--> Str) {
   "BehaveSpecIso{++$counter}";
 }
 
+# `use lib '...'` is illegal inside a `module { ... }` declaration, so any
+# top-level occurrence is lifted out and re-emitted before the wrapper. The
+# lifted line is replaced with an empty line in the body so error messages
+# from later lines still report their original line numbers.
 our sub wrap-source(Str:D $code, Str:D $iso-name --> Str) {
-  "module $iso-name \{ {$code}\n}";
+  my @prelude;
+  my @body;
+
+  for $code.lines -> $line {
+    if $line ~~ /^ \h* 'use' \h+ 'lib' \h+ <-[;]>+ \; \h* $/ {
+      @prelude.push: $line;
+      @body.push: '';
+    }
+    else {
+      @body.push: $line;
+    }
+  }
+
+  return "module $iso-name \{ {$code}\n}" unless @prelude;
+
+  my $prefix = @prelude.join(' ');
+  my $body   = @body.join("\n");
+
+  "{$prefix} module $iso-name \{ {$body}\n}";
 }
 
 # Strip the wrapper prefix from every reachable type's .^name so failure

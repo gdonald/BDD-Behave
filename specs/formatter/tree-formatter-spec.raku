@@ -1,7 +1,9 @@
+use lib 'specs/lib';
 use BDD::Behave;
 use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
+use Behave::Test::FakeResult;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -139,16 +141,6 @@ describe 'BDD::Behave::Formatter::Tree', {
   }
 
   describe 'summary output', {
-    sub fake-result(%counts) {
-      class :: {
-        has Int $.total   is rw = 0;
-        has Int $.passed  is rw = 0;
-        has Int $.failed  is rw = 0;
-        has Int $.pending is rw = 0;
-        has Int $.skipped is rw = 0;
-      }.new(|%counts);
-    }
-
     it 'emits a counts line that pluralizes correctly', {
       my $f   = BDD::Behave::Formatter::Tree.new;
       my $r   = fake-result(%( total => 3, passed => 3 ));
@@ -241,13 +233,7 @@ describe 'BDD::Behave::Formatter::Tree', {
   describe 'multi-file output', {
     it 'multi-file-overall prints the separator and totals', {
       my $f = BDD::Behave::Formatter::Tree.new;
-      my $r = class :: {
-        has Int $.total   = 4;
-        has Int $.passed  = 3;
-        has Int $.failed  = 1;
-        has Int $.pending = 0;
-        has Int $.skipped = 0;
-      }.new;
+      my $r = FakeResult.new(:total(4), :passed(3), :failed(1));
       my $out = strip-ansi capture-formatter-output({
         $f.multi-file-overall($r, :order('defined'));
       });

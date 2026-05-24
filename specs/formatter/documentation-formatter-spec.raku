@@ -1,8 +1,10 @@
+use lib 'specs/lib';
 use BDD::Behave;
 use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::Tree;
 use BDD::Behave::Formatter::Documentation;
 use BDD::Behave::SpecTree;
+use Behave::Test::FakeResult;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -212,16 +214,6 @@ describe 'BDD::Behave::Formatter::Documentation', {
   }
 
   describe 'summary output (inherited)', {
-    sub fake-result(%counts) {
-      class :: {
-        has Int $.total   is rw = 0;
-        has Int $.passed  is rw = 0;
-        has Int $.failed  is rw = 0;
-        has Int $.pending is rw = 0;
-        has Int $.skipped is rw = 0;
-      }.new(|%counts);
-    }
-
     it 'run-summary still emits the counts line', {
       my $f   = BDD::Behave::Formatter::Documentation.new;
       my $r   = fake-result(%( total => 3, passed => 2, failed => 1 ));
