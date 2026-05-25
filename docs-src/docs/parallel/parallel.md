@@ -124,6 +124,37 @@ Queue mode is **inherently non-deterministic** in bucket-to-worker assignment: w
 
 If you need cross-run reproducibility under `--parallel`, use `--seed-mode stable` with the default `--parallel-mode lpt`.
 
+## Per-shard retry on worker crash (`--parallel-retry`)
+
+A worker subprocess can die for reasons unrelated to a test failure: a SIGKILL from the OOM killer, a segfault, an uncaught exception in the runner itself, or a runaway example calling `exit`. By default the parent prints whatever transcript it had and exits 1.
+
+`--parallel-retry N` adds per-shard retry: when a worker exits with code > 1 (test failures use exit 1 and do **not** trigger this path), the parent re-spawns it with the same manifest up to `N` additional times. Buffered events from the crashed attempt are discarded so the user-visible transcript reflects only the final attempt:
+
+```shell
+$ behave --parallel 4 --parallel-retry 2
+```
+
+A typical end-of-run summary shows the retried shards:
+
+```
+Shard retries: 1
+  worker 2: recovered after 2 attempts (crash exit codes: 137; final exit: 0)
+```
+
+If every attempt crashes the run still exits 1, with the shard listed as `crashed`:
+
+```
+Shard retries: 1
+  worker 2: crashed after 3 attempts (crash exit codes: 137, 137, 137; final exit: 137)
+```
+
+`--parallel-retry` composes with `--retry N` (per-example flake retry, [9.3]): a flaky example retries inside one worker incarnation; a crashed worker spawns a fresh incarnation that re-runs its whole manifest. Both counts are independent.
+
+Caveats:
+
+- Under `--parallel-retry N`, the parent **buffers** per-worker events until the worker exits. The transcript no longer streams in real time during the worker's run; instead each worker's events appear as a batch once the worker terminates. This is the price of being able to discard a crashed attempt cleanly. With `--parallel-retry 0` (the default) the streaming behavior is preserved.
+- `--parallel-retry` only applies under `--parallel-mode=lpt` (the default). Queue mode dispatches buckets dynamically, so "re-spawn with the same manifest" has no analogue; a queue-mode worker crash remains fatal.
+
 ## Live progress totals (`--progress-total`)
 
 By default the `progress` formatter streams one character per example (`.` / `F` / `*` / `S`) with no running count. Pass `--progress-total` to append a `(N/TOTAL)` counter after each char, where `TOTAL` is the example count discovered by the parent after applying tag / `--example` / location filters:
@@ -203,13 +234,29 @@ it 'tests the parallel runner itself', :serial, { ... }
 | `--seed-mode`                                              | `xor` (default) or `stable`. `stable` makes the global execution order K-invariant for a given `--seed`. See [Seed mode](#seed-mode-seed-mode).                                                                                           |
 | `--fail-fast`                                              | Aggregated across workers. Surviving workers are SIGTERMed at threshold (best-effort).                                                                                                                                                    |
 
+## Default-on parallel from `.behave`
+
+`--parallel N` can be set as a project (or user) default through the [config file](../configuration/configuration.md):
+
+```raku
+# .behave
+use BDD::Behave::Configuration;
+
+configure-behave -> $c {
+  $c.parallel = 4;
+  $c.parallel-mode = 'queue';
+}
+```
+
+After this, `behave` alone runs the suite under 4 workers. The usual precedence applies: CLI > project (`./.behave`) > user (`~/.behave`) > built-in default (serial). A CLI `--parallel N` overrides the config value; pass `--parallel 1` to opt back into single-worker parallel execution from a higher-N config setting, or use `--no-config` to bypass the config entirely for one run.
+
 ## Known limitations (v1)
 
 - **Reproducibility across worker counts.** Default (`--seed-mode=xor`) reproduces only when `--parallel N` matches. Use `--seed-mode=stable` for a K-invariant execution order.
 - ~~**No live progress totals.**~~ Use `--progress-total` (see above) to print `(N/TOTAL)` after each example char.
 - ~~**Profile / memory / benchmark sections.**~~ `--profile`, `--memory-profile`, and `--benchmark` are now aggregated across workers (see [below](#profile-memory-benchmark)).
 - ~~**`--coverage` integration.**~~ `--coverage` is now aggregated across workers (see [below](#coverage)).
-- **Worker crashes are fatal.** If a worker exits with code > 1 (signal, uncaught exception in the runner itself), the parent prints the partial transcript and exits 1. There is no per-shard retry — that's a 9.3 concern, not parallel-execution scope.
+- ~~**Worker crashes are fatal.**~~ Use `--parallel-retry N` (see above) to re-spawn crashed shards. Default behavior with `--parallel-retry 0` keeps the previous fatal semantics. Queue mode still treats a crashed worker as fatal.
 
 ## Profile, memory, benchmark {#profile-memory-benchmark}
 

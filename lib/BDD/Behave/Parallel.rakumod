@@ -40,6 +40,7 @@ class ParallelRunOptions is export {
   has Bool     $.fail-fast-any = False;
   has Bool     $.discovery-in-process = False;
   has Str      $.parallel-mode = 'lpt';
+  has Int      $.parallel-retry = 0;
   has IO::Path $.coverage-log-dir = IO::Path;
 }
 
@@ -365,6 +366,14 @@ sub location-matches(Str $ex-loc, Str $pattern --> Bool) {
   False;
 }
 
+class ShardRetryRecord is export {
+  has Int $.worker      is required;
+  has Int $.attempts    is required;
+  has Int $.final-exit  is required;
+  has Str $.outcome     is required;
+  has @.crash-codes;
+}
+
 class ParallelRunResult is export {
   has Int $.total   is rw = 0;
   has Int $.passed  is rw = 0;
@@ -374,6 +383,7 @@ class ParallelRunResult is export {
   has @.failures;
   has @.load-errors;
   has @.retry-records;
+  has @.shard-retry-records;
   has @.executed-locations;
   has @.failed-locations;
   has @.timed-examples;
@@ -577,6 +587,7 @@ sub run-parallel(
       :base-env(%(|$opts.base-env)),
       :manifest-dir($manifest-dir),
       :coverage-log-dir($opts.coverage-log-dir),
+      :retry-count($opts.parallel-retry),
       # Tap callbacks fire on the thread pool — N workers can dispatch
       # concurrently into handle-event, which mutates $result.* and
       # writes to the parent formatter. Serialize both.
@@ -585,13 +596,28 @@ sub run-parallel(
           handle-event($opts.formatter, $result, $wi, $event, @suites);
         }
       }),
+      :on-shard-retry(sub ($wi, $attempt, $exit-code) {
+        $event-lock.protect: {
+          note yellow("Worker $wi crashed with exit $exit-code; retrying (attempt $attempt of {$opts.parallel-retry + 1})");
+        }
+      }),
     );
     $pool.launch(@parallel-manifests);
     $pool.wait-all;
     for $pool.workers -> $w {
+      if $w.attempt > 1 {
+        my $outcome = $w.exit-code > 1 ?? 'crashed' !! 'recovered';
+        $result.shard-retry-records.push: ShardRetryRecord.new(
+          :worker($w.index),
+          :attempts($w.attempt),
+          :final-exit($w.exit-code),
+          :$outcome,
+          :crash-codes($w.crash-codes.list),
+        );
+      }
       if $w.exit-code > 1 {
         $result.exit-code = 1;
-        note red("Worker {$w.index} exited with code {$w.exit-code}");
+        note red("Worker {$w.index} exited with code {$w.exit-code} (after {$w.attempt} attempt{$w.attempt == 1 ?? '' !! 's'})");
       }
     }
   }

@@ -212,6 +212,15 @@ sub usage() {
                              count is a poor cost proxy. Queue mode
                              forces --order=defined per worker; the
                              dispatch order is cost-desc.
+    --parallel-retry N       When a worker subprocess crashes (exits
+                             with code > 1: signal, OOM, uncaught
+                             exception in the runner itself), re-spawn
+                             it with the same manifest up to N
+                             additional times. Default 0. Per-example
+                             flake retries (--retry) compose inside
+                             each worker. Only effective under
+                             --parallel-mode=lpt; queue mode treats a
+                             worker crash as a hard failure.
     --watch                  Watch source and spec files; re-run affected
                              specs whenever a file changes. Reads
                              interactive commands from stdin:
@@ -567,14 +576,14 @@ while @args {
       note "Error: --parallel N requires a positive integer (got: '$value')";
       exit 2;
     }
-    $parallel-workers = $value.Int;
+    $cli-config.parallel = $value.Int;
   } elsif $arg.starts-with('--parallel=') {
     my $value = $arg.substr('--parallel='.chars);
     unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
       note "Error: --parallel N requires a positive integer (got: '$value')";
       exit 2;
     }
-    $parallel-workers = $value.Int;
+    $cli-config.parallel = $value.Int;
   } elsif $arg eq '--worker-manifest' {
     die "--worker-manifest requires a value" unless @args;
     $worker-manifest-path = @args.shift;
@@ -587,6 +596,21 @@ while @args {
     $cli-config.parallel-mode = @args.shift;
   } elsif $arg.starts-with('--parallel-mode=') {
     $cli-config.parallel-mode = $arg.substr('--parallel-mode='.chars);
+  } elsif $arg eq '--parallel-retry' {
+    die "--parallel-retry requires a value" unless @args;
+    my $value = @args.shift;
+    unless $value ~~ /^ \d+ $/ {
+      note "Error: --parallel-retry requires a non-negative integer (got: '$value')";
+      exit 2;
+    }
+    $cli-config.parallel-retry = $value.Int;
+  } elsif $arg.starts-with('--parallel-retry=') {
+    my $value = $arg.substr('--parallel-retry='.chars);
+    unless $value ~~ /^ \d+ $/ {
+      note "Error: --parallel-retry=N requires a non-negative integer (got: '$value')";
+      exit 2;
+    }
+    $cli-config.parallel-retry = $value.Int;
   } elsif $arg eq '--watch' {
     $watch-mode = True;
   } elsif $arg eq '--watch-path' {
@@ -645,6 +669,8 @@ my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
 my $seed-mode            = $final-config.seed-mode // 'xor';
 my $parallel-mode        = $final-config.parallel-mode // 'lpt';
+my $parallel-retry       = $final-config.parallel-retry // 0;
+$parallel-workers        = $final-config.parallel // 0;
 my $progress-total       = ?$final-config.progress-total;
 my $fail-fast            = $final-config.fail-fast;
 my $retry-default        = $final-config.retry // 0;
@@ -1190,6 +1216,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
          :order($order),
          :seed-mode($seed-mode),
          :parallel-mode($parallel-mode),
+         :parallel-retry($parallel-retry),
          :progress-total($progress-total),
          :include-tags(@include-tags),
          :exclude-tags(@exclude-tags),
@@ -1208,6 +1235,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
          :order($order),
          :seed-mode($seed-mode),
          :parallel-mode($parallel-mode),
+         :parallel-retry($parallel-retry),
          :progress-total($progress-total),
          :include-tags(@include-tags),
          :exclude-tags(@exclude-tags),
@@ -1240,6 +1268,18 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
 
   $parent-formatter.retry-summary($par-result.retry-records)
     if $par-result.retry-records.elems;
+
+  if $par-result.shard-retry-records.elems {
+    say '';
+    say "Shard retries: {$par-result.shard-retry-records.elems}";
+    for $par-result.shard-retry-records.list -> $rec {
+      my $crashes = $rec.crash-codes.join(', ');
+      my $tag = $rec.outcome eq 'recovered'
+        ?? green('recovered')
+        !! red('crashed');
+      say "  worker {$rec.worker}: $tag after {$rec.attempts} attempts (crash exit codes: $crashes; final exit: {$rec.final-exit})";
+    }
+  }
 
   if $profile-limit > 0 && $par-result.timed-examples.elems {
     $parent-formatter.multi-file-profile(
