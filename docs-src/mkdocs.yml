@@ -40,9 +40,12 @@ nav:
   - Classes in specs: classes/classes.md
   - Variables in specs: variables/variables.md
   - Contributing: contributing.md
+not_in_nav: |
+  parallel/design.md
 theme:
   name: 'material'
 markdown_extensions:
+  - attr_list
   - pymdownx.highlight:
       linenums: true
   - pymdownx.superfences
