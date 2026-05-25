@@ -71,6 +71,7 @@
     "BDD::Behave::SpecTree::Example": "lib/BDD/Behave/SpecTree/Example.rakumod",
     "BDD::Behave::SpecTree::ExampleGroup": "lib/BDD/Behave/SpecTree/ExampleGroup.rakumod",
     "BDD::Behave::SpecTree::Suite": "lib/BDD/Behave/SpecTree/Suite.rakumod",
+    "BDD::Behave::Time": "lib/BDD/Behave/Time.rakumod",
     "BDD::Behave::TypeName": "lib/BDD/Behave/TypeName.rakumod",
     "BDD::Behave::Watch": "lib/BDD/Behave/Watch.rakumod",
     "BDD::Behave::Watch::Session": "lib/BDD/Behave/Watch/Session.rakumod",

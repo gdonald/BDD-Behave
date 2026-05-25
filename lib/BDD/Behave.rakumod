@@ -338,3 +338,35 @@ sub benchmark(|args) is export {
   };
   $impl(|args);
 }
+
+sub freeze-time(|args) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&freeze-time');
+  };
+  $impl(|args);
+}
+
+sub travel-to($when, &block) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&travel-to');
+  };
+  $impl($when, &block);
+}
+
+sub travel-by(Real() $delta) is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&travel-by');
+  };
+  $impl($delta);
+}
+
+sub current-time() is export {
+  state $impl = do {
+    require ::('BDD::Behave::DSL');
+    ::('BDD::Behave::DSL::&current-time');
+  };
+  $impl();
+}

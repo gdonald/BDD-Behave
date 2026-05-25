@@ -14,6 +14,7 @@ need BDD::Behave::Mock::Allow;
 need BDD::Behave::Mock::Spy;
 need BDD::Behave::Matcher::Custom;
 need BDD::Behave::Benchmark;
+need BDD::Behave::Time;
 
 sub registry() { BDD::Behave::SpecRegistry::registry() }
 sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
@@ -399,6 +400,22 @@ our sub matcher(Str:D $name, |c) is export {
 
 our sub benchmark(|c) is export {
   BDD::Behave::Benchmark::benchmark(|c);
+}
+
+our sub freeze-time(|c) is export {
+  BDD::Behave::Time::freeze-time(|c);
+}
+
+our sub travel-to($when, &block) is export {
+  BDD::Behave::Time::travel-to($when, &block);
+}
+
+our sub travel-by(Real() $delta) is export {
+  BDD::Behave::Time::travel-by($delta);
+}
+
+our sub current-time() is export {
+  BDD::Behave::Time::current-time();
 }
 
 our proto sub fit(|) is export {*}

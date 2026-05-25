@@ -36,6 +36,7 @@ nav:
   - Code Coverage: coverage/coverage.md
   - Doc Extraction: doc-extraction/doc-extraction.md
   - Timing: timing/timing.md
+  - Time Mocking: timing/time-mocking.md
   - Classes in specs: classes/classes.md
   - Variables in specs: variables/variables.md
   - Contributing: contributing.md

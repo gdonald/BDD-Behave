@@ -13,6 +13,7 @@ need BDD::Behave::Benchmark;
 need BDD::Behave::Benchmark::Baseline;
 need BDD::Behave::Benchmark::Format;
 need BDD::Behave::Configuration;
+need BDD::Behave::Time;
 
 constant Suite = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -874,7 +875,8 @@ our class Runner {
     my $error;
     my $started = now;
     $example.started-at = $started;
-    {
+
+    my sub run-body() {
       my $*BEHAVE-AUTO-MATCHERS = $auto ?? @captured-matchers !! Array;
       my $*BEHAVE-AGGREGATION-LABEL = $auto-agg-on ?? ($auto-agg-label // Str) !! Str;
       my $*BEHAVE-AGGREGATING = ?$auto-agg-on;
@@ -883,8 +885,6 @@ our class Runner {
         $example.execute;
         CATCH {
           when X::BDD::Behave::ExpectationFailed {
-            # Failure already pushed onto Failures.list by the expect()
-            # that threw; nothing else to record here.
           }
           default {
             if $auto-agg-on {
@@ -902,6 +902,17 @@ our class Runner {
         }
       }
     }
+
+    my $freeze-meta = $example.effective-metadata-value('freeze-time');
+
+    if !$freeze-meta.defined || ($freeze-meta ~~ Bool && !$freeze-meta) {
+      run-body();
+    } elsif $freeze-meta === True {
+      BDD::Behave::Time::freeze-time({ run-body() });
+    } else {
+      BDD::Behave::Time::freeze-time($freeze-meta, { run-body() });
+    }
+
     my $finished = now;
     $example.finished-at = $finished;
     $example.duration = ($finished - $started).Real;
