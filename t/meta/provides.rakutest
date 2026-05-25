@@ -1,0 +1,25 @@
+#!/usr/bin/env raku
+
+use v6;
+use Test;
+use JSON::Fast;
+
+sub find-rakumod(IO::Path $dir) {
+  gather for $dir.dir {
+    when .d                      { .take for find-rakumod($_) }
+    when .extension eq 'rakumod' { .take }
+  }
+}
+
+my %meta = from-json('META6.json'.IO.slurp);
+my %provided-paths = %meta<provides>.values.Set;
+my @rakumod-files = find-rakumod('lib'.IO);
+
+plan @rakumod-files.elems;
+
+for @rakumod-files -> $file {
+  my $rel = $file.relative;
+  ok %provided-paths{$rel}:exists, "$rel is listed in META6.json provides";
+}
+
+done-testing;
