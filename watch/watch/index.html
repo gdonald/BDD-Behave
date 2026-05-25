@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/shared-examples/shared-examples/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/watch/watch/">
       
       
-        <link rel="prev" href="../../shared-contexts/shared-contexts/">
+        <link rel="prev" href="../../parallel/parallel/">
       
       
-        <link rel="next" href="../../tags/tags/">
+        <link rel="next" href="../../dry-run/dry-run/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Shared Examples - BDD::Behave</title>
+        <title>Watch Mode - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shared-examples" class="md-skip">
+        <a href="#watch-mode" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Shared Examples
+              Watch Mode
             
           </span>
         </div>
@@ -602,37 +602,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Examples
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -648,92 +621,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        it-behaves-like: wrap shared examples in a nested group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        include-examples: merge shared examples into the current group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterizing shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reusing shared examples across multiple groups
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -850,10 +737,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../watch/watch/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watch Mode
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -869,6 +783,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#initial-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Initial run
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#smart-test-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smart test selection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive commands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#forwarding-other-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Forwarding other flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1473,10 +1484,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
+  <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining shared examples
+        Usage
       
     </span>
   </a>
@@ -1484,10 +1495,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
+  <a href="#initial-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        it-behaves-like: wrap shared examples in a nested group
+        Initial run
       
     </span>
   </a>
@@ -1495,10 +1506,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
+  <a href="#smart-test-selection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        include-examples: merge shared examples into the current group
+        Smart test selection
       
     </span>
   </a>
@@ -1506,10 +1517,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
+  <a href="#interactive-commands" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameterizing shared examples
+        Interactive commands
       
     </span>
   </a>
@@ -1517,10 +1528,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
+  <a href="#forwarding-other-flags" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing shared examples across multiple groups
+        Forwarding other flags
       
     </span>
   </a>
@@ -1528,10 +1539,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
+  <a href="#implementation-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Errors
+        Implementation notes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations
       
     </span>
   </a>
@@ -1558,151 +1580,117 @@
   
 
 
-<h1 id="shared-examples">Shared Examples<a class="headerlink" href="#shared-examples" title="Permanent link">&para;</a></h1>
-<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the <code>it</code>s into every spec.</p>
-<p><code>shared-examples</code>, <code>include-examples</code>, and <code>it-behaves-like</code> are exported from <code>BDD::Behave</code>.</p>
-<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks); shared <em>examples</em> contribute the assertions themselves.</p>
-<h2 id="defining-shared-examples">Defining shared examples<a class="headerlink" href="#defining-shared-examples" title="Permanent link">&para;</a></h2>
-<p><code>shared-examples</code> takes a name and a block. The block typically contains one or more <code>it</code> blocks, but it can call any DSL helper that's legal inside a group:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
-
-<span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
-  }
-};
+<h1 id="watch-mode">Watch mode<a class="headerlink" href="#watch-mode" title="Permanent link">&para;</a></h1>
+<p>Watch mode keeps <code>behave</code> running between runs. When a file under <code>lib/</code> or <code>specs/</code> changes, Behave figures out which spec files are affected and re-runs only those. The rest of the time you read pass/fail output, type a single-letter command, and keep editing.</p>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--watch
 </code></pre></div></td></tr></table></div>
-<p>The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.</p>
-<h2 id="it-behaves-like-wrap-shared-examples-in-a-nested-group"><code>it-behaves-like</code>: wrap shared examples in a nested group<a class="headerlink" href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" title="Permanent link">&para;</a></h2>
-<p>The most common form is <code>it-behaves-like 'name'</code>. It creates a nested <code>behaves like 'name'</code> group inside the current <code>describe</code> and runs the shared block there. The wrapper group keeps the shared examples visually grouped in the runner's output:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
+<p>The default watched roots are <code>./lib</code> and <code>./specs</code> when each one exists. To watch additional directories or a custom layout, pass <code>--watch-path PATH</code> (repeatable):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--watch<span class="w"> </span>--watch-path<span class="w"> </span>app/<span class="w"> </span>--watch-path<span class="w"> </span>test/
 </code></pre></div></td></tr></table></div>
-<p>Output:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;an integer counter&#39;
-  ⮑  &#39;behaves like &#39;a counter&#39;&#39;
-    ⮑  &#39;starts at zero&#39;
-      ⮑  SUCCESS
-    ⮑  &#39;has an increment step&#39;
-      ⮑  SUCCESS
+<p>When <code>--watch-path</code> is given at least once, the default <code>lib/</code>/<code>specs/</code> roots are replaced by your list — pass them explicitly if you still want them.</p>
+<p><code>--watch</code> is mutually exclusive with <code>--bisect</code>, <code>--bisect-data</code>, <code>--coverage</code>, <code>--doc</code>, and <code>--parallel</code>. Combining any of these exits with status <code>2</code>.</p>
+<h2 id="initial-run">Initial run<a class="headerlink" href="#initial-run" title="Permanent link">&para;</a></h2>
+<p>When you start <code>--watch</code>, Behave does a baseline run of every spec file it can see. The exit code of that run does not terminate watch mode — failures are reported and the loop continues. After the initial run, the watch prompt appears:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>[behave watch] press r rerun selection, a rerun all, f failed only, q quit
 </code></pre></div></td></tr></table></div>
-<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group — including the <code>describe</code> they're invoked from — exactly the same way ordinary nested examples do.</p>
-<h2 id="include-examples-merge-shared-examples-into-the-current-group"><code>include-examples</code>: merge shared examples into the current group<a class="headerlink" href="#include-examples-merge-shared-examples-into-the-current-group" title="Permanent link">&para;</a></h2>
-<p><code>include-examples 'name'</code> is the lower-ceremony form: the shared block runs directly in the current group, so its <code>it</code>s become siblings of any locally-defined <code>it</code>s instead of being wrapped in a new group.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">include-examples</span> <span class="s">&#39;a counter&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;is initialized&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output; use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
-<h2 id="parameterizing-shared-examples">Parameterizing shared examples<a class="headerlink" href="#parameterizing-shared-examples" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a sized collection&#39;</span>, -&gt; <span class="nv">$expected</span> {
-  <span class="n">it</span> <span class="s">&quot;reports its size as $expected&quot;</span>, {
-    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;size&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nv">$expected</span>);
-  }
-};
-
-<span class="n">describe</span> <span class="s">&#39;a three-element list&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">size</span>, { <span class="mi">3</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a sized collection&#39;</span>, <span class="mi">3</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Both <code>it-behaves-like</code> and <code>include-examples</code> forward extra arguments to the shared block.</p>
-<h2 id="reusing-shared-examples-across-multiple-groups">Reusing shared examples across multiple groups<a class="headerlink" href="#reusing-shared-examples-across-multiple-groups" title="Permanent link">&para;</a></h2>
-<p>Shared examples are typically defined once at the top of a spec file (or in a shared helper file) and referenced from many <code>describe</code>s. Each call to <code>it-behaves-like</code> or <code>include-examples</code> is independent, so you can mix and match per-group setup:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, { <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>); }
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, { <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>); }
-};
-
-<span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
-
-<span class="n">describe</span> <span class="s">&#39;a fractional counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;   <span class="c1"># multiple invocations are fine</span>
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<h2 id="smart-test-selection">Smart test selection<a class="headerlink" href="#smart-test-selection" title="Permanent link">&para;</a></h2>
+<p>When a file changes, Behave decides which specs to re-run:</p>
+<table>
+<thead>
+<tr>
+<th>Change kind</th>
+<th>What runs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>specs/foo-spec.raku</code> (matches <code>*-spec.raku</code>)</td>
+<td>That spec file only.</td>
+</tr>
+<tr>
+<td><code>lib/Foo.rakumod</code> or <code>lib/A/B.rakumod</code></td>
+<td>Every spec whose source contains the module's basename (<code>Foo</code>) or its joined module path (<code>A::B</code>).</td>
+</tr>
+<tr>
+<td>A <code>lib/</code> change that no spec references</td>
+<td>Falls back to every spec file (so you never miss a real failure).</td>
+</tr>
+<tr>
+<td>A removed file</td>
+<td>Ignored.</td>
+</tr>
+<tr>
+<td>Multiple files in one tick</td>
+<td>Union of all of the above, deduplicated.</td>
+</tr>
+</tbody>
+</table>
+<p>The mapping is intentionally a substring search rather than a parse. It is fast, has no false negatives in the common case, and makes the fallback explicit: if nothing matches, <em>everything</em> runs.</p>
+<h2 id="interactive-commands">Interactive commands<a class="headerlink" href="#interactive-commands" title="Permanent link">&para;</a></h2>
+<p>While the loop is running, type one of the following on its own line and press Enter:</p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>r</code></td>
+<td>Re-run the last selection (the most recent set of specs, whether triggered by a change or by <code>a</code>).</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td>Re-run every spec.</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td>Re-run only previously-failed examples (uses <code>.behave-failures</code>; see <a href="../../retry/retry/">Retry and Only-Failures</a>).</td>
+</tr>
+<tr>
+<td><code>h</code> / <code>?</code></td>
+<td>Re-print the prompt.</td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td>Exit watch mode. The Behave process exits with status <code>0</code>.</td>
+</tr>
+<tr>
+<td>(Enter)</td>
+<td>Equivalent to <code>r</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Unknown input prints a warning and re-prints the prompt.</p>
+<h2 id="forwarding-other-flags">Forwarding other flags<a class="headerlink" href="#forwarding-other-flags" title="Permanent link">&para;</a></h2>
+<p><code>--watch</code> forwards a subset of CLI flags to each spawned subprocess so your filters and formatters stay in effect across re-runs:</p>
 <ul>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> with an unregistered name dies with <code>Unknown shared examples: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies — shared examples can only be instantiated inside a group.</li>
+<li><code>--format NAME</code> (unless the default <code>progress</code>)</li>
+<li><code>--order ORDER</code> (unless <code>random</code>)</li>
+<li><code>--seed N</code> (when <code>--order=random</code> and a seed was set)</li>
+<li><code>--verbose</code></li>
+<li><code>--retry N</code> (when N &gt; 0)</li>
+<li><code>--tag NAME</code> (repeatable)</li>
+<li><code>--exclude-tag NAME</code> (repeatable)</li>
+<li><code>--example PATTERN</code> (repeatable)</li>
+</ul>
+<p>Each subprocess inherits a <code>BEHAVE_DISABLE_CONFIG=1</code> environment so it does not re-read <code>~/.behave</code> or <code>./.behave</code> and conflict with the parent's resolved configuration.</p>
+<h2 id="implementation-notes">Implementation notes<a class="headerlink" href="#implementation-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>File detection is <strong>mtime + size polling</strong> at <code>0.25s</code> intervals. There is no <code>inotify</code> / <code>kqueue</code> / <code>FSEvents</code> dependency. For typical projects (hundreds to a few thousand files) the polling overhead is negligible.</li>
+<li>Watched files are filtered by basename to <code>.rakumod</code>, <code>.raku</code>, <code>.rakutest</code>, and <code>.pm6</code>. Hidden directories (<code>.git</code>, <code>.precomp</code>) are skipped during the walk.</li>
+<li>Each re-run is a <strong>subprocess</strong> (<code>raku -Ilib bin/behave …</code>) so user-level <code>class</code> / <code>role</code> / <code>enum</code> declarations from one run cannot collide with the next. This is the same isolation pattern used by <code>--bisect</code>, <code>--coverage</code>, and <code>--parallel</code>.</li>
+<li>The watch loop itself is a single thread. The interactive reader is a <code>start { }</code> block that pushes lines into a <code>Channel</code>; the main loop drains it non-blocking with <code>Channel.poll</code>.</li>
+</ul>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
+<ul>
+<li>New file detection requires a poll tick after the file lands on disk — saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.</li>
+<li>File renames register as one <code>removed</code> plus one <code>added</code>. Smart selection treats only the <code>added</code> half.</li>
+<li>Watch mode does not surface profile / memory / benchmark summaries across runs — each subprocess emits its own. Aggregation across runs is out of scope for v1.</li>
+<li><code>--coverage</code> is incompatible: each subprocess would need its own MoarVM coverage log path and merge step, which is tracked under roadmap 9.8.4 for the parallel-mode case and would need similar work here.</li>
+<li>Smart selection is a substring search; if a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use <code>--watch-path</code> and the <code>a</code>/<code>r</code> commands to cover that case.</li>
 </ul>
 
 

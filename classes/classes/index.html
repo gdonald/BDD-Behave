@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/classes/classes/">
       
       
-        <link rel="prev" href="../../timing/timing/">
+        <link rel="prev" href="../../timing/time-mocking/">
       
       
         <link rel="next" href="../../variables/variables/">
@@ -713,6 +713,114 @@
   
   
     <li class="md-nav__item">
+      <a href="../../parallel/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../watch/watch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watch Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dry-run/dry-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dry Run and Listing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retry/retry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retry and Only-Failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../mocks/mocks/" class="md-nav__link">
         
   
@@ -748,10 +856,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" >
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
             
   
   
@@ -769,8 +877,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1121,6 +1229,33 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../../timing/time-mocking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time Mocking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -1380,7 +1515,7 @@
 
 
 <h1 id="classes-inside-specs">Classes inside specs<a class="headerlink" href="#classes-inside-specs" title="Permanent link">&para;</a></h1>
-<p>Behave specs are ordinary Raku files, so any Raku declaration works inside a <code>describe</code> or <code>context</code> block — including <code>class</code>, <code>role</code>, and <code>enum</code>. A class declared inside a <code>describe</code> is reachable from every example in that group.</p>
+<p>Behave specs are ordinary Raku files, so any Raku declaration works inside them — including <code>class</code>, <code>role</code>, and <code>enum</code>. Declare fixture types with <code>my class</code> / <code>my role</code> / <code>my enum</code> so they stay lexical to the spec file: they don't pollute the loader's package, they don't collide with same-named declarations in other specs, and their <code>.^name</code> reads as the short name you wrote.</p>
 <h2 id="declaring-a-class-in-a-describe">Declaring a class in a describe<a class="headerlink" href="#declaring-a-class-in-a-describe" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1402,7 +1537,7 @@
 <span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
 
 <span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
-  <span class="k">class</span> <span class="n">Widget</span> {
+  <span class="k">my</span> <span class="k">class</span> <span class="n">Widget</span> {
     <span class="k">has</span> <span class="nv">$.bar</span>;
     <span class="k">has</span> <span class="nv">$.baz</span>;
 
@@ -1420,7 +1555,7 @@
 </code></pre></div></td></tr></table></div>
 <p>The class lives in the lexical scope of the describe body, so it is visible to nested <code>context</code> blocks and every <code>it</code> inside them.</p>
 <h2 id="storing-instances-with-let">Storing instances with <code>let</code><a class="headerlink" href="#storing-instances-with-let" title="Permanent link">&para;</a></h2>
-<p>For values you want freshly built per example with optional memoization, combine <code>class</code> with <a href="../../let/let/"><code>let</code></a>:</p>
+<p>For values you want freshly built per example with optional memoization, combine <code>my class</code> with <a href="../../let/let/"><code>let</code></a>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1437,7 +1572,7 @@
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
-  <span class="k">class</span> <span class="n">Widget</span> {
+  <span class="k">my</span> <span class="k">class</span> <span class="n">Widget</span> {
     <span class="k">has</span> <span class="nv">$.bar</span>;
   }
 
@@ -1473,8 +1608,8 @@
 <span class="normal">15</span>
 <span class="normal">16</span>
 <span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Greet role&#39;</span>, {
-  <span class="k">role</span> <span class="n">Greet</span> { <span class="k">method</span> <span class="n">hi</span> { <span class="s">&#39;hi&#39;</span> } }
-  <span class="k">class</span> <span class="n">WithGreet</span> <span class="k">does</span> <span class="n">Greet</span> { }
+  <span class="k">my</span> <span class="k">role</span> <span class="n">Greet</span> { <span class="k">method</span> <span class="n">hi</span> { <span class="s">&#39;hi&#39;</span> } }
+  <span class="k">my</span> <span class="k">class</span> <span class="n">WithGreet</span> <span class="k">does</span> <span class="n">Greet</span> { }
 
   <span class="n">it</span> <span class="s">&#39;composes&#39;</span>, {
     <span class="n">expect</span>(<span class="n">WithGreet</span>.<span class="nb">new</span>.<span class="n">hi</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;hi&#39;</span>);
@@ -1482,7 +1617,7 @@
 }
 
 <span class="n">describe</span> <span class="s">&#39;Color enum&#39;</span>, {
-  <span class="k">enum</span> <span class="n">Color</span> <span class="s">&lt;Red Green Blue&gt;</span>;
+  <span class="k">my</span> <span class="k">enum</span> <span class="n">Color</span> <span class="s">&lt;Red Green Blue&gt;</span>;
 
   <span class="n">it</span> <span class="s">&#39;has correct ordinals&#39;</span>, {
     <span class="n">expect</span>(<span class="n">Red</span>.<span class="nb">Int</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
@@ -1496,6 +1631,7 @@
 <li><strong>Top-level</strong> when several <code>describe</code> blocks share the type.</li>
 <li><strong>Inside <code>describe</code></strong> when the type is only meaningful for one group of examples — keeping it local makes the relationship between the type and the tests obvious.</li>
 </ul>
+<p>In both positions, use <code>my class</code> (not <code>class</code>) for the same reasons given above — file-scope <code>class Foo { }</code> is sugar for <code>our class Foo { }</code> and installs <code>Foo</code> into the spec loader's package, where it can collide with other specs and grow a package-qualified <code>.^name</code>.</p>
 <p>See <a href="../../variables/variables/">Variables in specs</a> for the same scoping rules applied to plain <code>my</code>/<code>our</code> variables.</p>
 
 

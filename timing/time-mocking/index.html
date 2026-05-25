@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/shared-examples/shared-examples/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/timing/time-mocking/">
       
       
-        <link rel="prev" href="../../shared-contexts/shared-contexts/">
+        <link rel="prev" href="../timing/">
       
       
-        <link rel="next" href="../../tags/tags/">
+        <link rel="next" href="../../classes/classes/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Shared Examples - BDD::Behave</title>
+        <title>Time Mocking - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shared-examples" class="md-skip">
+        <a href="#time-mocking" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Shared Examples
+              Time Mocking
             
           </span>
         </div>
@@ -602,37 +602,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Examples
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -648,92 +621,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        it-behaves-like: wrap shared examples in a nested group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        include-examples: merge shared examples into the current group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterizing shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reusing shared examples across multiple groups
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1318,7 +1205,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../timing/timing/" class="md-nav__link">
+      <a href="../timing/" class="md-nav__link">
         
   
   
@@ -1342,10 +1229,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../timing/time-mocking/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time Mocking
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1361,6 +1275,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#freeze-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        freeze-time
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#travel-to" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        travel-to
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#travel-by" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        travel-by
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nested-freezes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nested freezes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restoration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Restoration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#freeze-time-metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :freeze-time metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        current-time
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1473,10 +1484,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
+  <a href="#freeze-time" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining shared examples
+        freeze-time
       
     </span>
   </a>
@@ -1484,10 +1495,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
+  <a href="#travel-to" class="md-nav__link">
     <span class="md-ellipsis">
       
-        it-behaves-like: wrap shared examples in a nested group
+        travel-to
       
     </span>
   </a>
@@ -1495,10 +1506,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
+  <a href="#travel-by" class="md-nav__link">
     <span class="md-ellipsis">
       
-        include-examples: merge shared examples into the current group
+        travel-by
       
     </span>
   </a>
@@ -1506,10 +1517,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
+  <a href="#nested-freezes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameterizing shared examples
+        Nested freezes
       
     </span>
   </a>
@@ -1517,10 +1528,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
+  <a href="#restoration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing shared examples across multiple groups
+        Restoration
       
     </span>
   </a>
@@ -1528,10 +1539,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
+  <a href="#freeze-time-metadata" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Errors
+        :freeze-time metadata
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        current-time
       
     </span>
   </a>
@@ -1558,152 +1580,156 @@
   
 
 
-<h1 id="shared-examples">Shared Examples<a class="headerlink" href="#shared-examples" title="Permanent link">&para;</a></h1>
-<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the <code>it</code>s into every spec.</p>
-<p><code>shared-examples</code>, <code>include-examples</code>, and <code>it-behaves-like</code> are exported from <code>BDD::Behave</code>.</p>
-<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks); shared <em>examples</em> contribute the assertions themselves.</p>
-<h2 id="defining-shared-examples">Defining shared examples<a class="headerlink" href="#defining-shared-examples" title="Permanent link">&para;</a></h2>
-<p><code>shared-examples</code> takes a name and a block. The block typically contains one or more <code>it</code> blocks, but it can call any DSL helper that's legal inside a group:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
-
-<span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
-  }
-};
-</code></pre></div></td></tr></table></div>
-<p>The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.</p>
-<h2 id="it-behaves-like-wrap-shared-examples-in-a-nested-group"><code>it-behaves-like</code>: wrap shared examples in a nested group<a class="headerlink" href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" title="Permanent link">&para;</a></h2>
-<p>The most common form is <code>it-behaves-like 'name'</code>. It creates a nested <code>behaves like 'name'</code> group inside the current <code>describe</code> and runs the shared block there. The wrapper group keeps the shared examples visually grouped in the runner's output:</p>
+<h1 id="time-mocking">Time Mocking<a class="headerlink" href="#time-mocking" title="Permanent link">&para;</a></h1>
+<p><code>BDD::Behave</code> ships with Timecop-style helpers for freezing and traveling
+through time inside an example. They work by wrapping Raku's <code>now</code>,
+<code>Instant.now</code>, <code>DateTime.now</code>, and <code>Date.today</code> so the wrap consults a
+dynamically-scoped freeze. When no freeze is active, the wrappers fall
+through to the real time source — they have no effect outside a freeze block.</p>
+<h2 id="freeze-time"><code>freeze-time</code><a class="headerlink" href="#freeze-time" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> {
+  <span class="c1"># `now`, `Instant.now`, `DateTime.now`, and `Date.today` are all frozen</span>
+  <span class="c1"># at the moment the block began.</span>
+  <span class="k">my</span> <span class="nv">$a</span> = <span class="nb">now</span>;
+  <span class="nb">sleep</span> <span class="mf">0.5</span>;
+  <span class="k">my</span> <span class="nv">$b</span> = <span class="nb">now</span>;
+  <span class="n">expect</span>(<span class="nv">$a</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="nv">$b</span>);
+};
 </code></pre></div></td></tr></table></div>
-<p>Output:</p>
+<p>Freeze at an explicit moment with a <code>DateTime</code>, <code>Instant</code>, or ISO 8601 string:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;an integer counter&#39;
-  ⮑  &#39;behaves like &#39;a counter&#39;&#39;
-    ⮑  &#39;starts at zero&#39;
-      ⮑  SUCCESS
-    ⮑  &#39;has an increment step&#39;
-      ⮑  SUCCESS
-</code></pre></div></td></tr></table></div>
-<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group — including the <code>describe</code> they're invoked from — exactly the same way ordinary nested examples do.</p>
-<h2 id="include-examples-merge-shared-examples-into-the-current-group"><code>include-examples</code>: merge shared examples into the current group<a class="headerlink" href="#include-examples-merge-shared-examples-into-the-current-group" title="Permanent link">&para;</a></h2>
-<p><code>include-examples 'name'</code> is the lower-ceremony form: the shared block runs directly in the current group, so its <code>it</code>s become siblings of any locally-defined <code>it</code>s instead of being wrapped in a new group.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">include-examples</span> <span class="s">&#39;a counter&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;is initialized&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output; use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
-<h2 id="parameterizing-shared-examples">Parameterizing shared examples<a class="headerlink" href="#parameterizing-shared-examples" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a sized collection&#39;</span>, -&gt; <span class="nv">$expected</span> {
-  <span class="n">it</span> <span class="s">&quot;reports its size as $expected&quot;</span>, {
-    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;size&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nv">$expected</span>);
-  }
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> <span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2024-01-01T00:00:00Z&#39;</span>), {
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2024</span>);
 };
 
-<span class="n">describe</span> <span class="s">&#39;a three-element list&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">size</span>, { <span class="mi">3</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a sized collection&#39;</span>, <span class="mi">3</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Both <code>it-behaves-like</code> and <code>include-examples</code> forward extra arguments to the shared block.</p>
-<h2 id="reusing-shared-examples-across-multiple-groups">Reusing shared examples across multiple groups<a class="headerlink" href="#reusing-shared-examples-across-multiple-groups" title="Permanent link">&para;</a></h2>
-<p>Shared examples are typically defined once at the top of a spec file (or in a shared helper file) and referenced from many <code>describe</code>s. Each call to <code>it-behaves-like</code> or <code>include-examples</code> is independent, so you can mix and match per-group setup:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, { <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>); }
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, { <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>); }
+<span class="n">freeze-time</span> <span class="s">&#39;2030-06-15T12:00:00Z&#39;</span>, {
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2030</span>);
 };
-
-<span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
-
-<span class="n">describe</span> <span class="s">&#39;a fractional counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;   <span class="c1"># multiple invocations are fine</span>
-}
 </code></pre></div></td></tr></table></div>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
-<ul>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> with an unregistered name dies with <code>Unknown shared examples: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies — shared examples can only be instantiated inside a group.</li>
-</ul>
+<p><code>Date.today</code> is also frozen to the same instant:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> <span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2024-07-04T12:00:00Z&#39;</span>), {
+  <span class="n">expect</span>(<span class="nb">Date</span>.<span class="nb">today</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2024</span>);
+  <span class="n">expect</span>(<span class="nb">Date</span>.<span class="nb">today</span>.<span class="nb">month</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">7</span>);
+  <span class="n">expect</span>(<span class="nb">Date</span>.<span class="nb">today</span>.<span class="nb">day</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">4</span>);
+};
+</code></pre></div></td></tr></table></div>
+<h2 id="travel-to"><code>travel-to</code><a class="headerlink" href="#travel-to" title="Permanent link">&para;</a></h2>
+<p><code>travel-to</code> is a synonym for the explicit-moment form of <code>freeze-time</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">travel-to</span> <span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2026-03-15T00:00:00Z&#39;</span>), {
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2026</span>);
+};
+</code></pre></div></td></tr></table></div>
+<h2 id="travel-by"><code>travel-by</code><a class="headerlink" href="#travel-by" title="Permanent link">&para;</a></h2>
+<p>Inside an active freeze block, <code>travel-by</code> advances the frozen instant
+forward by a <code>Duration</code> (or a plain <code>Real</code> number of seconds):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> <span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2024-01-01T00:00:00Z&#39;</span>), {
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">hour</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">0</span>);
+
+  <span class="n">travel-by</span>(<span class="nb">Duration</span>.<span class="nb">new</span>(<span class="mi">3600</span>));
+
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">hour</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">1</span>);
+};
+</code></pre></div></td></tr></table></div>
+<p>Multiple advances compose:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> <span class="nv">$start</span>, {
+  <span class="n">travel-by</span>(<span class="mi">10</span>);
+  <span class="n">travel-by</span>(<span class="mi">20</span>);
+  <span class="n">travel-by</span>(<span class="mi">30</span>);
+  <span class="c1"># frozen instant is now $start + 60 seconds</span>
+};
+</code></pre></div></td></tr></table></div>
+<p>Calling <code>travel-by</code> outside an active freeze dies with a clear message.</p>
+<h2 id="nested-freezes">Nested freezes<a class="headerlink" href="#nested-freezes" title="Permanent link">&para;</a></h2>
+<p>Inner freezes shadow outer ones. When the inner block exits, the outer
+freeze is restored:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> <span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2020-01-01T00:00:00Z&#39;</span>), {
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2020</span>);
+
+  <span class="n">freeze-time</span> <span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2030-06-15T00:00:00Z&#39;</span>), {
+    <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2030</span>);
+  };
+
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2020</span>);
+};
+</code></pre></div></td></tr></table></div>
+<h2 id="restoration">Restoration<a class="headerlink" href="#restoration" title="Permanent link">&para;</a></h2>
+<p>Time is always restored when a freeze block exits, including when the block
+throws. The frozen state never leaks to the next example.</p>
+<h2 id="freeze-time-metadata"><code>:freeze-time</code> metadata<a class="headerlink" href="#freeze-time-metadata" title="Permanent link">&para;</a></h2>
+<p>Examples and groups can opt into a freeze via the <code>:freeze-time</code> metadata.
+The runner wraps the example body in a freeze around <code>before-each</code> /
+<code>after-each</code> hooks — wall-clock duration is measured outside the freeze, so
+the example's <code>started-at</code> / <code>finished-at</code> / <code>duration</code> accessors still
+report real time.</p>
+<p>Freeze at the moment the example body begins:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">it</span> <span class="s">&#39;freezes at start&#39;</span>, :<span class="n">freeze-time</span>, {
+  <span class="k">my</span> <span class="nv">$a</span> = <span class="nb">now</span>;
+  <span class="nb">sleep</span> <span class="mf">0.1</span>;
+  <span class="k">my</span> <span class="nv">$b</span> = <span class="nb">now</span>;
+  <span class="n">expect</span>(<span class="nv">$a</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="nv">$b</span>);
+};
+</code></pre></div></td></tr></table></div>
+<p>Freeze at an explicit moment:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">it</span> <span class="s">&#39;freezes at 2024-01-01&#39;</span>, :<span class="n">freeze-time</span>(<span class="nb">DateTime</span>.<span class="nb">new</span>(<span class="s">&#39;2024-01-01T00:00:00Z&#39;</span>)), {
+  <span class="n">expect</span>(<span class="nb">DateTime</span>.<span class="nb">now</span>.<span class="nb">year</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">2024</span>);
+};
+</code></pre></div></td></tr></table></div>
+<p>Pass <code>:freeze-time(False)</code> to explicitly opt out (useful when overriding an
+inherited group-level freeze).</p>
+<h2 id="current-time"><code>current-time</code><a class="headerlink" href="#current-time" title="Permanent link">&para;</a></h2>
+<p><code>current-time</code> returns the current <code>Instant</code> — frozen when a freeze is
+active, real <code>now</code> otherwise. Use it from helpers that want to read "time"
+without bypassing the freeze.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">freeze-time</span> <span class="nv">$instant</span>, {
+  <span class="n">expect</span>(<span class="n">current-time</span>()).<span class="nb">to</span>.<span class="o">eq</span>(<span class="nv">$instant</span>);
+};
+</code></pre></div></td></tr></table></div>
 
 
 

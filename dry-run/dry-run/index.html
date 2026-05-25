@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/shared-examples/shared-examples/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/dry-run/dry-run/">
       
       
-        <link rel="prev" href="../../shared-contexts/shared-contexts/">
+        <link rel="prev" href="../../watch/watch/">
       
       
-        <link rel="next" href="../../tags/tags/">
+        <link rel="next" href="../../retry/retry/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Shared Examples - BDD::Behave</title>
+        <title>Dry Run and Listing - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shared-examples" class="md-skip">
+        <a href="#dry-run-and-listing" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Shared Examples
+              Dry Run and Listing
             
           </span>
         </div>
@@ -602,37 +602,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Examples
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -648,92 +621,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        it-behaves-like: wrap shared examples in a nested group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        include-examples: merge shared examples into the current group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterizing shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reusing shared examples across multiple groups
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -877,10 +764,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../dry-run/dry-run/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dry Run and Listing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -896,6 +810,121 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#-dry-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --dry-run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--dry-run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-dry-run-verbose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --dry-run --verbose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exit-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exit code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-list-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --list-examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--list-examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-list-examples-formatjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --list-examples-format=json
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--list-examples-format=json">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hierarchical-suites-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hierarchical suites field
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#programmatic-query-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic query API
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1473,65 +1502,94 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
+  <a href="#-dry-run" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining shared examples
+        --dry-run
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--dry-run">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-dry-run-verbose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --dry-run --verbose
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#exit-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        it-behaves-like: wrap shared examples in a nested group
+        Exit code
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
+  <a href="#-list-examples" class="md-nav__link">
     <span class="md-ellipsis">
       
-        include-examples: merge shared examples into the current group
+        --list-examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--list-examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#-list-examples-formatjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --list-examples-format=json
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--list-examples-format=json">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hierarchical-suites-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hierarchical suites field
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterizing shared examples
-      
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
+  <a href="#programmatic-query-api" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing shared examples across multiple groups
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
+        Programmatic query API
       
     </span>
   </a>
@@ -1558,12 +1616,14 @@
   
 
 
-<h1 id="shared-examples">Shared Examples<a class="headerlink" href="#shared-examples" title="Permanent link">&para;</a></h1>
-<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the <code>it</code>s into every spec.</p>
-<p><code>shared-examples</code>, <code>include-examples</code>, and <code>it-behaves-like</code> are exported from <code>BDD::Behave</code>.</p>
-<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks); shared <em>examples</em> contribute the assertions themselves.</p>
-<h2 id="defining-shared-examples">Defining shared examples<a class="headerlink" href="#defining-shared-examples" title="Permanent link">&para;</a></h2>
-<p><code>shared-examples</code> takes a name and a block. The block typically contains one or more <code>it</code> blocks, but it can call any DSL helper that's legal inside a group:</p>
+<h1 id="dry-run-and-listing">Dry run and listing<a class="headerlink" href="#dry-run-and-listing" title="Permanent link">&para;</a></h1>
+<p>Behave can load spec files and report what <em>would</em> run without actually executing any example. Two CLI flags surface this from different angles:</p>
+<ul>
+<li><code>--dry-run</code> is for humans: a hierarchical, indented listing followed by an <code>N example(s)</code> count.</li>
+<li><code>--list-examples</code> is for tools: one line per example (or a JSON document) suitable for editor integrations.</li>
+</ul>
+<p>Both flags honor <code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code>, <code>--only-example</code>, focus mode (<code>fit</code>/<code>fdescribe</code>), and skip metadata (<code>xit</code>/<code>xdescribe</code>).</p>
+<h2 id="-dry-run"><code>--dry-run</code><a class="headerlink" href="#-dry-run" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1574,97 +1634,64 @@
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --dry-run specs/cart-spec.raku
+Cart
+  adding items
+    increments the count
+    updates the total price
+    persists across reloads (PENDING)
+  removing items
+    decrements the count
+    is intentionally skipped (SKIPPED)
 
-<span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
-  }
-};
+5 examples
 </code></pre></div></td></tr></table></div>
-<p>The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.</p>
-<h2 id="it-behaves-like-wrap-shared-examples-in-a-nested-group"><code>it-behaves-like</code>: wrap shared examples in a nested group<a class="headerlink" href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" title="Permanent link">&para;</a></h2>
-<p>The most common form is <code>it-behaves-like 'name'</code>. It creates a nested <code>behaves like 'name'</code> group inside the current <code>describe</code> and runs the shared block there. The wrapper group keeps the shared examples visually grouped in the runner's output:</p>
+<p>Statuses appear in parentheses after the description:</p>
+<ul>
+<li><code>(PENDING)</code> — declared with <code>pending</code></li>
+<li><code>(SKIPPED)</code> — declared with <code>xit</code> / <code>xdescribe</code> (or <code>:skipped</code> metadata)</li>
+<li><code>(FOCUSED)</code> — declared with <code>fit</code> / <code>fdescribe</code> (or <code>:focused</code> metadata)</li>
+</ul>
+<p>The trailing <code>N example(s)</code> line reports the count after filters.</p>
+<h3 id="-dry-run-verbose"><code>--dry-run --verbose</code><a class="headerlink" href="#-dry-run-verbose" title="Permanent link">&para;</a></h3>
+<p>Adds each example's <code>file:line</code> and effective tag list (tags inherited from ancestor <code>describe</code>/<code>context</code> blocks are included):</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
+<span class="normal">6</span>
+<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>Cart
+  adding items
+    increments the count
+      /path/to/cart-spec.raku:5
+      tags: fast
+    updates the total price
+      /path/to/cart-spec.raku:6
 </code></pre></div></td></tr></table></div>
-<p>Output:</p>
+<h3 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h3>
+<p><code>--dry-run</code> exits <code>0</code> when every spec file loaded cleanly, and <code>1</code> when at least one spec file failed to load. The exit code is independent of whether the filters matched any examples — zero matching examples is still a successful dry run.</p>
+<h2 id="-list-examples"><code>--list-examples</code><a class="headerlink" href="#-list-examples" title="Permanent link">&para;</a></h2>
+<p>Plain-text mode prints one line per matching example. Each line is:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>&lt;absolute spec file&gt;:&lt;line&gt;&lt;TAB&gt;&lt;full nested description&gt;
+</code></pre></div></td></tr></table></div>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
 <span class="normal">4</span>
 <span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;an integer counter&#39;
-  ⮑  &#39;behaves like &#39;a counter&#39;&#39;
-    ⮑  &#39;starts at zero&#39;
-      ⮑  SUCCESS
-    ⮑  &#39;has an increment step&#39;
-      ⮑  SUCCESS
+<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --list-examples specs/cart-spec.raku
+/path/to/cart-spec.raku:5   Cart adding items increments the count
+/path/to/cart-spec.raku:6   Cart adding items updates the total price
+/path/to/cart-spec.raku:7   Cart adding items persists across reloads
+/path/to/cart-spec.raku:11  Cart removing items decrements the count
+/path/to/cart-spec.raku:12  Cart removing items is intentionally skipped
 </code></pre></div></td></tr></table></div>
-<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group — including the <code>describe</code> they're invoked from — exactly the same way ordinary nested examples do.</p>
-<h2 id="include-examples-merge-shared-examples-into-the-current-group"><code>include-examples</code>: merge shared examples into the current group<a class="headerlink" href="#include-examples-merge-shared-examples-into-the-current-group" title="Permanent link">&para;</a></h2>
-<p><code>include-examples 'name'</code> is the lower-ceremony form: the shared block runs directly in the current group, so its <code>it</code>s become siblings of any locally-defined <code>it</code>s instead of being wrapped in a new group.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">include-examples</span> <span class="s">&#39;a counter&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;is initialized&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-}
+<p>The tab separator makes the format easy to parse with <code>cut -f1</code> (locations) or <code>cut -f2</code> (descriptions). Pair with <code>xargs behave --only-example</code> or your editor's "run this test" action.</p>
+<h3 id="-list-examples-formatjson"><code>--list-examples-format=json</code><a class="headerlink" href="#-list-examples-formatjson" title="Permanent link">&para;</a></h3>
+<p>For richer integrations the JSON output exposes the same fields as the programmatic <a href="#programmatic-query-api"><code>SpecRegistry</code> query API</a>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --list-examples --list-examples-format=json specs/cart-spec.raku
 </code></pre></div></td></tr></table></div>
-<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output; use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
-<h2 id="parameterizing-shared-examples">Parameterizing shared examples<a class="headerlink" href="#parameterizing-shared-examples" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a sized collection&#39;</span>, -&gt; <span class="nv">$expected</span> {
-  <span class="n">it</span> <span class="s">&quot;reports its size as $expected&quot;</span>, {
-    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;size&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nv">$expected</span>);
-  }
-};
-
-<span class="n">describe</span> <span class="s">&#39;a three-element list&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">size</span>, { <span class="mi">3</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a sized collection&#39;</span>, <span class="mi">3</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Both <code>it-behaves-like</code> and <code>include-examples</code> forward extra arguments to the shared block.</p>
-<h2 id="reusing-shared-examples-across-multiple-groups">Reusing shared examples across multiple groups<a class="headerlink" href="#reusing-shared-examples-across-multiple-groups" title="Permanent link">&para;</a></h2>
-<p>Shared examples are typically defined once at the top of a spec file (or in a shared helper file) and referenced from many <code>describe</code>s. Each call to <code>it-behaves-like</code> or <code>include-examples</code> is independent, so you can mix and match per-group setup:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1681,29 +1708,214 @@
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, { <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>); }
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, { <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>); }
-};
-
-<span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
-
-<span class="n">describe</span> <span class="s">&#39;a fractional counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;   <span class="c1"># multiple invocations are fine</span>
-}
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;examples&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;increments the count&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;full-description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cart adding items increments the count&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/cart-spec.raku&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;fast&quot;</span><span class="p">],</span>
+<span class="w">      </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;fast&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;pending&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;focused&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;skipped&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p>Field reference:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>description</code></td>
+<td>string</td>
+<td>The example's own description.</td>
+</tr>
+<tr>
+<td><code>full-description</code></td>
+<td>string</td>
+<td>Ancestor groups + example, joined with a space.</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>string</td>
+<td>Absolute path to the spec file.</td>
+</tr>
+<tr>
+<td><code>line</code></td>
+<td>integer</td>
+<td>Line of the <code>it</code> (or <code>fit</code>/<code>xit</code>/<code>pending</code>).</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td>list of strings</td>
+<td>Effective tags (own + inherited from ancestor groups).</td>
+</tr>
+<tr>
+<td><code>metadata</code></td>
+<td>object</td>
+<td>The example's own metadata (excluding the internal <code>lets</code>).</td>
+</tr>
+<tr>
+<td><code>pending</code></td>
+<td>boolean</td>
+<td>Declared with <code>pending</code> or marked pending.</td>
+</tr>
+<tr>
+<td><code>focused</code></td>
+<td>boolean</td>
+<td>Effectively focused (own or via an ancestor <code>fdescribe</code>).</td>
+</tr>
+<tr>
+<td><code>skipped</code></td>
+<td>boolean</td>
+<td>Effectively skipped (own or via an ancestor <code>xdescribe</code>).</td>
+</tr>
+</tbody>
+</table>
+<p>Unknown future fields may appear; keep your parser tolerant.</p>
+<h4 id="hierarchical-suites-field">Hierarchical <code>suites</code> field<a class="headerlink" href="#hierarchical-suites-field" title="Permanent link">&para;</a></h4>
+<p>Alongside the flat <code>examples</code> list, the JSON document also includes a top-level <code>suites</code> key with the full discovered tree (suites → groups → examples, with each node carrying <code>type</code>, <code>description</code>, <code>file</code>, <code>line</code>, <code>metadata</code>, and — for examples — <code>pending</code>). Unlike <code>examples</code>, the <code>suites</code> tree is <strong>unfiltered</strong> — focus mode and tag filters don't prune it. Behave's <code>--parallel</code> parent uses this field to rebuild the spec tree without <code>EVALFILE</code>-ing user code in the parent process. External tools can use it for the same purpose, or ignore it and read <code>examples</code> as before.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;examples&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="cm">/* filtered flat list, as above */</span><span class="w"> </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;suites&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;suite&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cart-spec.raku&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/cart-spec.raku&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">      </span><span class="nt">&quot;children&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;group&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cart&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/cart-spec.raku&quot;</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;unit&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">          </span><span class="nt">&quot;children&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;example&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;increments the count&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">&quot;file&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;/path/to/cart-spec.raku&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">&quot;line&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;tags&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;fast&quot;</span><span class="p">]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">              </span><span class="nt">&quot;pending&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+<h2 id="programmatic-query-api">Programmatic query API<a class="headerlink" href="#programmatic-query-api" title="Permanent link">&para;</a></h2>
+<p>Tooling that wants to drive Behave from inside a Raku process (without parsing CLI output) should use <code>BDD::Behave::SpecRegistry</code>'s query methods directly.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::SpecRegistry</span>;
+
+<span class="c1"># After your spec files have been loaded (e.g. via EVALFILE), the</span>
+<span class="c1"># global registry holds every Suite/ExampleGroup/Example node.</span>
+<span class="k">my</span> <span class="nv">$reg</span> = <span class="n">BDD::Behave::SpecRegistry::registry</span>();
+
+<span class="c1"># Every example across every loaded suite, as ExampleQueryResult records:</span>
+<span class="k">my</span> <span class="nv">@all</span> = <span class="nv">$reg</span>.<span class="n">all-examples</span>;
+
+<span class="c1"># Filtered query — every kwarg below is optional and ANDed:</span>
+<span class="k">my</span> <span class="nv">@hits</span> = <span class="nv">$reg</span>.<span class="n">query-examples</span>(
+  <span class="n">description-pattern</span> =&gt; <span class="s">&#39;/^Cart\s/&#39;</span>,     <span class="c1"># substring or /regex/</span>
+  <span class="nb">file</span>                =&gt; <span class="s">&#39;cart-spec.raku&#39;</span>,<span class="c1"># basename, relative, or absolute</span>
+  <span class="nb">line</span>                =&gt; <span class="mi">5</span>,
+  <span class="n">include-tags</span>        =&gt; [<span class="s">&#39;fast&#39;</span>],         <span class="c1"># OR across listed tags</span>
+  <span class="n">exclude-tags</span>        =&gt; [<span class="s">&#39;slow&#39;</span>],         <span class="c1"># ANDed with the rest</span>
+  <span class="n">metadata</span>            =&gt; { <span class="nb">type</span> =&gt; <span class="s">&#39;unit&#39;</span> },
+  <span class="n">metadata-exclude</span>    =&gt; { <span class="nb">type</span> =&gt; <span class="s">&#39;integration&#39;</span> },
+  <span class="n">pending</span>             =&gt; <span class="nb">False</span>,
+  <span class="n">focused</span>             =&gt; <span class="nb">True</span>,
+  <span class="n">skipped</span>             =&gt; <span class="nb">False</span>,
+);
+
+<span class="c1"># Count without materializing the records:</span>
+<span class="k">my</span> <span class="nv">$n</span> = <span class="nv">$reg</span>.<span class="n">count-examples</span>(<span class="n">include-tags</span> =&gt; [<span class="s">&#39;fast&#39;</span>]);
+</code></pre></div></td></tr></table></div>
+<p>Each <code>ExampleQueryResult</code> exposes:</p>
 <ul>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> with an unregistered name dies with <code>Unknown shared examples: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies — shared examples can only be instantiated inside a group.</li>
+<li><code>.description</code> / <code>.full-description</code></li>
+<li><code>.file</code> (<code>IO::Path</code>) / <code>.line</code> / <code>.location</code></li>
+<li><code>.suite-file</code> (<code>IO::Path</code>) / <code>.suite-description</code></li>
+<li><code>.group-descriptions</code> (list of strings, outermost first)</li>
+<li><code>.tags</code> (effective tags)</li>
+<li><code>.metadata</code> (own metadata hash with the internal <code>lets</code> key removed)</li>
+<li><code>.pending</code> / <code>.focused</code> / <code>.skipped</code> (Bool)</li>
+<li><code>.to-hash</code> for serialization (used by <code>--list-examples-format=json</code>)</li>
 </ul>
+<p>This API is stable for editor and IDE integrations; the CLI <code>--list-examples</code> output is a thin wrapper over it.</p>
 
 
 

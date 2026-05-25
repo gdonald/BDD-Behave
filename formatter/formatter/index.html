@@ -713,6 +713,114 @@
   
   
     <li class="md-nav__item">
+      <a href="../../parallel/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../watch/watch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watch Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dry-run/dry-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dry Run and Listing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retry/retry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retry and Only-Failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../mocks/mocks/" class="md-nav__link">
         
   
@@ -748,10 +856,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" >
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
             
   
   
@@ -769,8 +877,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1329,6 +1437,33 @@
     
   
     Timing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../timing/time-mocking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time Mocking
   
 
     
@@ -2043,17 +2178,22 @@ ok 5 - Calculator subtraction subtracts a positive from a positive
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --format progress specs/
-.....F*.S....
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --format progress specs/
+.....FF*.S....
 
 Failures:
 
   [ ✗ ] specs/calc-spec.raku:24
       Expected: 1
       to be: 2
+  [ ✗ ] specs/db-spec.raku:11
+      exception in Database connect refuses without credentials: connection refused
 
-13 examples, 1 failed, 1 pending, 1 skipped, 10 passed
+14 examples, 2 failed, 1 pending, 1 skipped, 10 passed
 </code></pre></div></td></tr></table></div>
+<p>Both expectation mismatches and exception-based failures (an example body that <code>die</code>s or throws) appear in the <code>Failures:</code> block with their source <code>file:line</code>, so a <code>progress</code> run is enough to diagnose what to fix without re-running under <code>tree</code>.</p>
 <h2 id="the-bddbehaveformatter-role">The <code>BDD::Behave::Formatter</code> role<a class="headerlink" href="#the-bddbehaveformatter-role" title="Permanent link">&para;</a></h2>
 <p><code>BDD::Behave::Formatter</code> is a Raku role that declares a hook for every interesting event the runner emits. All hooks have no-op default bodies, so custom formatters only need to override the events they care about.</p>
 <h3 id="lifecycle-hooks">Lifecycle hooks<a class="headerlink" href="#lifecycle-hooks" title="Permanent link">&para;</a></h3>

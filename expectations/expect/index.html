@@ -713,6 +713,114 @@
   
   
     <li class="md-nav__item">
+      <a href="../../parallel/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../watch/watch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watch Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dry-run/dry-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dry Run and Listing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retry/retry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retry and Only-Failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../mocks/mocks/" class="md-nav__link">
         
   
@@ -750,10 +858,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" checked>
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
             
   
   
@@ -771,8 +879,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -926,10 +1034,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grouping-expectations" class="md-nav__link">
+  <a href="#failure-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Grouping expectations
+        Failure behavior
       
     </span>
   </a>
@@ -1261,6 +1369,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../timing/time-mocking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time Mocking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../classes/classes/" class="md-nav__link">
         
   
@@ -1439,10 +1574,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grouping-expectations" class="md-nav__link">
+  <a href="#failure-behavior" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Grouping expectations
+        Failure behavior
       
     </span>
   </a>
@@ -1771,8 +1906,10 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="custom-matchers">Custom matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h2>
 <p><code>be</code> accepts any object that does the <a href="../matchers/"><code>Matcher</code></a> role. The matcher's <code>matches</code>, <code>failure-message</code>, and <code>failure-message-negated</code> methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.</p>
-<h2 id="grouping-expectations">Grouping expectations<a class="headerlink" href="#grouping-expectations" title="Permanent link">&para;</a></h2>
-<p>Wrap a sequence of related expectations in <code>aggregate-failures</code> to label the group and trap any exceptions thrown mid-block. See <a href="../aggregate-failures/">aggregate-failures</a>.</p>
+<h2 id="failure-behavior">Failure behavior<a class="headerlink" href="#failure-behavior" title="Permanent link">&para;</a></h2>
+<p>When an <code>expect(...)</code> matcher fails, the failure is recorded on <code>Failures.list</code> and the example body <strong>stops executing</strong> — anything after the failing line is skipped. The example is reported once in the run summary regardless of how many <code>expect</code> statements its body contained.</p>
+<p>This matches RSpec's default. Ideally each <code>it</code> block contains exactly one <code>expect</code> so the first miss is also the last. When you do need multiple expectations in a single example, wrap them in <code>aggregate-failures { ... }</code>; the throw is suppressed inside the block, every expectation runs, and the inner failures are rolled up into a single labeled <code>Failures</code> row at the <code>aggregate-failures</code> line. See <a href="../aggregate-failures/">aggregate-failures</a>.</p>
+<p>If you're writing meta-tests that deliberately trigger a failure and then inspect the recorded <code>Failure</code> records, use <code>capture-failures { ... }</code> instead — it suppresses the throw and returns the captured failures without polluting the surrounding example. See <a href="../aggregate-failures/#capture-failures-for-meta-tests">aggregate-failures § <code>capture-failures</code> for meta-tests</a>.</p>
 
 
 

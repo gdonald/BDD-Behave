@@ -458,6 +458,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#retry-and-only-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry and only-failures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#bisect" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1015,6 +1026,114 @@
   
   
     <li class="md-nav__item">
+      <a href="../parallel/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../watch/watch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watch Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dry-run/dry-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dry Run and Listing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retry/retry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retry and Only-Failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../mocks/mocks/" class="md-nav__link">
         
   
@@ -1050,10 +1169,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" >
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
             
   
   
@@ -1071,8 +1190,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1426,6 +1545,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../timing/time-mocking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time Mocking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../classes/classes/" class="md-nav__link">
         
   
@@ -1645,6 +1791,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retry-and-only-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry and only-failures
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1871,6 +2028,18 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 <td>Stop after <code>N</code> failed examples (<code>N</code> must be a positive integer). See <a href="#fail-fast">Fail-fast</a>.</td>
 </tr>
 <tr>
+<td><code>--retry N</code></td>
+<td>Retry failing examples up to <code>N</code> additional times (a total of <code>N+1</code> attempts). Per-example <code>:retry(M)</code> metadata overrides this default. See <a href="../retry/retry/">Retry and Only-Failures</a>.</td>
+</tr>
+<tr>
+<td><code>--only-failures</code></td>
+<td>Run only examples that failed in the previous run (read from <code>.behave-failures</code>). See <a href="../retry/retry/">Retry and Only-Failures</a>.</td>
+</tr>
+<tr>
+<td><code>--failures-path=PATH</code></td>
+<td>Override the path used to persist (and read, with <code>--only-failures</code>) the list of failing examples. Defaults to <code>./.behave-failures</code>. See <a href="../retry/retry/">Retry and Only-Failures</a>.</td>
+</tr>
+<tr>
 <td><code>--only-example LOC</code></td>
 <td>Run only examples whose <code>file:line</code> matches <code>LOC</code> (repeatable; OR semantics). <code>LOC</code> is <code>FILE:LINE</code> — <code>FILE</code> may be absolute, relative, or a basename. See <a href="#bisect">Bisect</a>.</td>
 </tr>
@@ -1884,7 +2053,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--profile</code> / <code>--profile=N</code></td>
-<td>Print the top N slowest examples after the run (default <code>N=10</code>). Across multiple spec files the profile is a single global section after the <code>Overall:</code> counts. See <a href="../timing/timing/#-profile">Timing</a>.</td>
+<td>Print the top N slowest examples after the run (default <code>N=10</code>). Across multiple spec files — and across <code>--parallel</code> workers — the profile is a single global section after the <code>Overall:</code> counts. See <a href="../timing/timing/#-profile">Timing</a>.</td>
 </tr>
 <tr>
 <td><code>--slow-threshold=SECONDS</code></td>
@@ -1892,7 +2061,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--memory-profile</code> / <code>--memory-profile=N</code></td>
-<td>Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default <code>N=10</code>). See <a href="../timing/timing/#memory-profiling">Memory profiling</a>.</td>
+<td>Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default <code>N=10</code>). Aggregated across <code>--parallel</code> workers. See <a href="../timing/timing/#memory-profiling">Memory profiling</a>.</td>
 </tr>
 <tr>
 <td><code>--memory-threshold=KB</code></td>
@@ -1909,6 +2078,46 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 <tr>
 <td><code>--no-config</code> / <code>--no-user-config</code> / <code>--no-project-config</code></td>
 <td>Skip all / user / project config files for this run. <code>BEHAVE_DISABLE_CONFIG=1</code> is equivalent to <code>--no-config</code>. See <a href="../configuration/configuration/">Configuration</a>.</td>
+</tr>
+<tr>
+<td><code>--parallel N</code></td>
+<td>Run specs across <code>N</code> worker subprocesses with group-affinity LPT distribution. Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code>. Aggregates coverage across workers when combined with <code>--coverage</code> (see <a href="../parallel/parallel/#coverage">Coverage under --parallel</a>). Ignored under <code>--doc</code>. See <a href="../parallel/parallel/">Parallel Execution</a>.</td>
+</tr>
+<tr>
+<td><code>--seed-mode MODE</code></td>
+<td>How <code>--seed</code> combines with <code>--parallel N</code>. <code>xor</code> (default) derives per-worker seeds as <code>seed XOR worker-index</code> and uses LPT distribution. <code>stable</code> keeps the global execution order identical regardless of <code>N</code> via hash-based bucket assignment. See <a href="../parallel/parallel/#seed-mode-seed-mode">Seed mode</a>.</td>
+</tr>
+<tr>
+<td><code>--parallel-mode MODE</code></td>
+<td>Bucket distribution strategy under <code>--parallel N</code>. <code>lpt</code> (default) uses static longest-processing-time-first assignment by example count. <code>queue</code> uses dynamic work-stealing: workers pull buckets from a parent-managed queue, useful when bucket runtimes are wildly uneven. Forces <code>--order=defined</code> per worker. See <a href="../parallel/parallel/#parallel-mode-parallel-mode">Parallel mode</a>.</td>
+</tr>
+<tr>
+<td><code>--parallel-retry N</code></td>
+<td>When a worker subprocess crashes (exits with code &gt; 1: signal, OOM, uncaught exception in the runner itself — <strong>not</strong> test failures), re-spawn it with the same manifest up to <code>N</code> additional times. Default 0. Composes with <code>--retry</code> (per-example flake retry). LPT mode only; queue-mode crashes remain fatal. See <a href="../parallel/parallel/#per-shard-retry-on-worker-crash-parallel-retry">Per-shard retry</a>.</td>
+</tr>
+<tr>
+<td><code>--progress-total</code></td>
+<td>Append a running <code>(N/TOTAL)</code> counter after each example char emitted by the <code>progress</code> formatter under <code>--parallel</code>. No-op without <code>--parallel</code>. See <a href="../parallel/parallel/#live-progress-totals-progress-total">Live progress totals</a>.</td>
+</tr>
+<tr>
+<td><code>--watch</code></td>
+<td>Watch source and spec files; re-run affected specs whenever a file changes. Reads <code>r</code>/<code>a</code>/<code>f</code>/<code>q</code> commands from stdin. Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code> / <code>--coverage</code> / <code>--doc</code> / <code>--parallel</code>. See <a href="../watch/watch/">Watch Mode</a>.</td>
+</tr>
+<tr>
+<td><code>--watch-path PATH</code></td>
+<td>Add <code>PATH</code> to the watched roots (repeatable). Defaults to <code>./lib</code> and <code>./specs</code> when omitted. See <a href="../watch/watch/">Watch Mode</a>.</td>
+</tr>
+<tr>
+<td><code>--dry-run</code></td>
+<td>Load specs but skip execution; print the hierarchical example list and a count. Honors <code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code>, <code>--only-example</code>, focus mode, and skipped examples. Combine with <code>--verbose</code> to show each example's <code>file:line</code> and effective tags. See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
+</tr>
+<tr>
+<td><code>--list-examples</code></td>
+<td>Emit the metadata query result one line per example — <code>FILE:LINE\t&lt;full description&gt;</code> by default. Designed for editor integrations (run-this-test, jump-to-failure). See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
+</tr>
+<tr>
+<td><code>--list-examples-format=FORMAT</code></td>
+<td>Output format for <code>--list-examples</code>: <code>text</code> (default) or <code>json</code>. The JSON document is <code>{version, count, examples: [...]}</code> with every example's tags, metadata, and status. See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -1983,6 +2192,8 @@ Randomized with seed 595739438
 <span class="nb">say</span> <span class="s">&#39;aborted early&#39;</span> <span class="k">if</span> <span class="nv">$runner</span>.<span class="n">aborted</span>;
 </code></pre></div></td></tr></table></div>
 <p><code>Runner.new(:fail-fast(-1))</code> (or any negative integer) dies at construction time.</p>
+<h2 id="retry-and-only-failures">Retry and only-failures<a class="headerlink" href="#retry-and-only-failures" title="Permanent link">&para;</a></h2>
+<p>Flaky examples can be retried automatically via <code>--retry N</code> (or per-example <code>:retry(N)</code> metadata). After every non-bisect run, the list of failing examples is persisted to <code>./.behave-failures</code> so the next run can be scoped to just those failures with <code>--only-failures</code>. See <a href="../retry/retry/">Retry and Only-Failures</a> for the full reference.</p>
 <h2 id="bisect">Bisect<a class="headerlink" href="#bisect" title="Permanent link">&para;</a></h2>
 <p>When a failure shows up only when a specific other example ran first — classic order-dependent test pollution — <code>--bisect</code> finds the minimal set of preceding examples needed to reproduce the failure.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--bisect

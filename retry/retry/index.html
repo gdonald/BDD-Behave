@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/shared-examples/shared-examples/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/retry/retry/">
       
       
-        <link rel="prev" href="../../shared-contexts/shared-contexts/">
+        <link rel="prev" href="../../dry-run/dry-run/">
       
       
-        <link rel="next" href="../../tags/tags/">
+        <link rel="next" href="../../mocks/mocks/">
       
       
         
@@ -25,7 +25,7 @@
     
     
       
-        <title>Shared Examples - BDD::Behave</title>
+        <title>Retry and Only-Failures - BDD::Behave</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shared-examples" class="md-skip">
+        <a href="#retry-and-only-failures" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Shared Examples
+              Retry and Only-Failures
             
           </span>
         </div>
@@ -602,37 +602,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Examples
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -648,92 +621,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        it-behaves-like: wrap shared examples in a nested group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        include-examples: merge shared examples into the current group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterizing shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reusing shared examples across multiple groups
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -904,10 +791,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../retry/retry/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retry and Only-Failures
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -923,6 +837,137 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#-retry-n" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --retry N
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--retry N">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-example-retryn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-example :retry(N)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-re-runs-between-attempts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What re-runs between attempts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-while-retries-happen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output while retries happen
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Programmatic use
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#-only-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --only-failures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--only-failures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-file-is-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the file is updated
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#-failures-path-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --failures-path PATH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modes-that-do-not-write-behave-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modes that do not write .behave-failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1473,68 +1518,113 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
+  <a href="#-retry-n" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining shared examples
+        --retry N
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--retry N">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-example-retryn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-example :retry(N)
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#what-re-runs-between-attempts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        it-behaves-like: wrap shared examples in a nested group
+        What re-runs between attempts
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#output-while-retries-happen" class="md-nav__link">
     <span class="md-ellipsis">
       
-        include-examples: merge shared examples into the current group
+        Output while retries happen
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#programmatic-use" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameterizing shared examples
+        Programmatic use
       
     </span>
   </a>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
         <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
+  <a href="#-only-failures" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing shared examples across multiple groups
+        --only-failures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="--only-failures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#how-the-file-is-updated" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the file is updated
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#-failures-path-path" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Errors
+        --failures-path PATH
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modes-that-do-not-write-behave-failures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modes that do not write .behave-failures
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1558,113 +1648,15 @@
   
 
 
-<h1 id="shared-examples">Shared Examples<a class="headerlink" href="#shared-examples" title="Permanent link">&para;</a></h1>
-<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the <code>it</code>s into every spec.</p>
-<p><code>shared-examples</code>, <code>include-examples</code>, and <code>it-behaves-like</code> are exported from <code>BDD::Behave</code>.</p>
-<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks); shared <em>examples</em> contribute the assertions themselves.</p>
-<h2 id="defining-shared-examples">Defining shared examples<a class="headerlink" href="#defining-shared-examples" title="Permanent link">&para;</a></h2>
-<p><code>shared-examples</code> takes a name and a block. The block typically contains one or more <code>it</code> blocks, but it can call any DSL helper that's legal inside a group:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
-
-<span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
-  }
-};
+<h1 id="retry-and-only-failures">Retry and only-failures<a class="headerlink" href="#retry-and-only-failures" title="Permanent link">&para;</a></h1>
+<p>Flaky examples — those that fail intermittently because of timing, network jitter, ordering of external services, or other non-determinism — can be retried automatically. Behave also persists the list of failing examples after every run so you can re-run just those failures next time.</p>
+<h2 id="-retry-n"><code>--retry N</code><a class="headerlink" href="#-retry-n" title="Permanent link">&para;</a></h2>
+<p><code>--retry N</code> runs each failing example up to <code>N</code> additional times. A total of <code>N+1</code> attempts will be made. The first attempt that passes wins; the example is marked passing in the final summary. If every attempt fails, the example is marked failing and the final attempt's failures are the ones reported.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--retry<span class="w"> </span><span class="m">2</span>
 </code></pre></div></td></tr></table></div>
-<p>The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.</p>
-<h2 id="it-behaves-like-wrap-shared-examples-in-a-nested-group"><code>it-behaves-like</code>: wrap shared examples in a nested group<a class="headerlink" href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" title="Permanent link">&para;</a></h2>
-<p>The most common form is <code>it-behaves-like 'name'</code>. It creates a nested <code>behaves like 'name'</code> group inside the current <code>describe</code> and runs the shared block there. The wrapper group keeps the shared examples visually grouped in the runner's output:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Output:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;an integer counter&#39;
-  ⮑  &#39;behaves like &#39;a counter&#39;&#39;
-    ⮑  &#39;starts at zero&#39;
-      ⮑  SUCCESS
-    ⮑  &#39;has an increment step&#39;
-      ⮑  SUCCESS
-</code></pre></div></td></tr></table></div>
-<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group — including the <code>describe</code> they're invoked from — exactly the same way ordinary nested examples do.</p>
-<h2 id="include-examples-merge-shared-examples-into-the-current-group"><code>include-examples</code>: merge shared examples into the current group<a class="headerlink" href="#include-examples-merge-shared-examples-into-the-current-group" title="Permanent link">&para;</a></h2>
-<p><code>include-examples 'name'</code> is the lower-ceremony form: the shared block runs directly in the current group, so its <code>it</code>s become siblings of any locally-defined <code>it</code>s instead of being wrapped in a new group.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">include-examples</span> <span class="s">&#39;a counter&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;is initialized&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output; use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
-<h2 id="parameterizing-shared-examples">Parameterizing shared examples<a class="headerlink" href="#parameterizing-shared-examples" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a sized collection&#39;</span>, -&gt; <span class="nv">$expected</span> {
-  <span class="n">it</span> <span class="s">&quot;reports its size as $expected&quot;</span>, {
-    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;size&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nv">$expected</span>);
-  }
-};
-
-<span class="n">describe</span> <span class="s">&#39;a three-element list&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">size</span>, { <span class="mi">3</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a sized collection&#39;</span>, <span class="mi">3</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Both <code>it-behaves-like</code> and <code>include-examples</code> forward extra arguments to the shared block.</p>
-<h2 id="reusing-shared-examples-across-multiple-groups">Reusing shared examples across multiple groups<a class="headerlink" href="#reusing-shared-examples-across-multiple-groups" title="Permanent link">&para;</a></h2>
-<p>Shared examples are typically defined once at the top of a spec file (or in a shared helper file) and referenced from many <code>describe</code>s. Each call to <code>it-behaves-like</code> or <code>include-examples</code> is independent, so you can mix and match per-group setup:</p>
+<p>This is the simplest form: every failing example in the run gets up to two retries.</p>
+<h3 id="per-example-retryn">Per-example <code>:retry(N)</code><a class="headerlink" href="#per-example-retryn" title="Permanent link">&para;</a></h3>
+<p>Override the runner default for a single example or group with <code>:retry(N)</code> metadata. The DSL forwards arbitrary metadata onto the example, and the runner looks up <code>retry</code> through the usual <code>effective-metadata-value</code> walk (so group-level <code>:retry(N)</code> cascades to descendants).</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1677,33 +1669,86 @@
 <span class="normal">10</span>
 <span class="normal">11</span>
 <span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, { <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>); }
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, { <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>); }
-};
+<span class="normal">13</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;flaky API tests&#39;</span>, :<span class="n">retry</span>(<span class="mi">2</span>), {
+  <span class="n">it</span> <span class="s">&#39;fetches the timeline&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">api</span>.<span class="n">timeline</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;latest&#39;</span>);
+  }
 
-<span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
+  <span class="n">it</span> <span class="s">&#39;pings once with an aggressive timeout&#39;</span>, :<span class="n">retry</span>(<span class="mi">5</span>), {
+    <span class="n">expect</span>(<span class="n">api</span>.<span class="n">ping</span>(:<span class="n">timeout</span>(<span class="mf">0.1</span>))).<span class="nb">to</span>.<span class="n">be-truthy</span>;
+  }
 
-<span class="n">describe</span> <span class="s">&#39;a fractional counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;   <span class="c1"># multiple invocations are fine</span>
+  <span class="n">it</span> <span class="s">&#39;never retries this one&#39;</span>, :<span class="n">retry</span>(<span class="mi">0</span>), {
+    <span class="c1"># Even with --retry 5, this example runs at most once.</span>
+  }
 }
 </code></pre></div></td></tr></table></div>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<p><code>:retry(N)</code> on a single example overrides any inherited value, including <code>--retry</code> from the command line. <code>:retry(0)</code> is the explicit way to disable retries for an example that would otherwise inherit a higher value.</p>
+<h3 id="what-re-runs-between-attempts">What re-runs between attempts<a class="headerlink" href="#what-re-runs-between-attempts" title="Permanent link">&para;</a></h3>
+<p>A retry re-runs the example body and the example's <code>before-each</code> / <code>after-each</code> / <code>around-each</code> hooks. Group-level <code>before-all</code> / <code>after-all</code> and <code>around-all</code> run once per group as usual — they are not re-executed on retry.</p>
+<p>Other per-attempt state:</p>
 <ul>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> with an unregistered name dies with <code>Unknown shared examples: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies — shared examples can only be instantiated inside a group.</li>
+<li><strong><code>let</code> memoization</strong> is reset between attempts, so lazy <code>let { ... }</code> bodies re-evaluate.</li>
+<li><strong>Stubs installed via <code>allow(...)</code></strong> are cleaned up between attempts via the same <code>StubRegistry</code> snapshot-and-restore mechanism that wraps every example. Stubs installed in <code>before-all</code> survive across attempts.</li>
+<li><strong><code>Failures.list</code></strong> is snapshotted at the start of each attempt. If the attempt fails and we are going to retry, the intermediate failures are spliced back out — they never make it into the final summary or into <code>.behave-failures</code>.</li>
 </ul>
+<p>Pending (<code>pending</code> or <code>it 'todo'</code>) and skipped (<code>:skipped</code>, <code>xit</code>, <code>xdescribe</code>) examples are never retried.</p>
+<h3 id="output-while-retries-happen">Output while retries happen<a class="headerlink" href="#output-while-retries-happen" title="Permanent link">&para;</a></h3>
+<p>Between attempts the formatter emits a retry marker:</p>
+<ul>
+<li><strong>Progress formatter</strong>: yellow <code>R</code> for each failed attempt.</li>
+<li><strong>Tree / documentation formatters</strong>: a <code>RETRY (attempt N of M)</code> line.</li>
+</ul>
+<p>After the run, if at least one retry actually happened, a summary section is printed:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code>Retried 2 examples:
+  [PASS] flaky API tests fetches the timeline (2/3 attempts)
+         /Users/me/repo/specs/api-spec.raku:8
+  [FAIL] flaky API tests pings once with an aggressive timeout (6/6 attempts)
+         /Users/me/repo/specs/api-spec.raku:12
+</code></pre></div></td></tr></table></div>
+<p><code>[PASS]</code> means the example eventually succeeded after <code>N</code> retries; <code>[FAIL]</code> means every attempt failed. <code>N/M attempts</code> is the actual number of attempts used over the maximum allowed. When no retries occurred, the section is omitted entirely.</p>
+<h3 id="programmatic-use">Programmatic use<a class="headerlink" href="#programmatic-use" title="Permanent link">&para;</a></h3>
+<p><code>BDD::Behave::Runner::Runner.new</code> accepts <code>:retry(N)</code> (default <code>0</code>, meaning no retries). After the run, <code>$runner.result.retry-records</code> is a list of <code>BDD::Behave::Runner::RetryRecord</code> objects, each with <code>description</code>, <code>location</code>, <code>attempts</code>, <code>max-attempts</code>, and <code>outcome</code> (the string <code>'pass'</code> or <code>'fail'</code>):</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$runner</span> = <span class="n">BDD::Behave::Runner::Runner</span>.<span class="nb">new</span>(:<span class="n">retry</span>(<span class="mi">3</span>));
+<span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
+<span class="k">for</span> <span class="nv">$runner</span>.<span class="nb">result</span>.<span class="n">retry-records</span> -&gt; <span class="nv">$rec</span> {
+  <span class="nb">say</span> <span class="s">&quot;{$rec.outcome.uc} {$rec.description} ({$rec.attempts}/{$rec.max-attempts})&quot;</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p><code>Runner.new(:retry(-1))</code> (or any negative integer) dies at construction time.</p>
+<h2 id="-only-failures"><code>--only-failures</code><a class="headerlink" href="#-only-failures" title="Permanent link">&para;</a></h2>
+<p><code>--only-failures</code> re-runs only the examples that failed in the previous run. After every non-bisect run, Behave writes a list of failing locations to <code>./.behave-failures</code> (one <code>FILE:LINE</code> per line). On the next invocation, <code>--only-failures</code> reads that file and treats each entry as if it were passed via <code>--only-example</code>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w">                  </span><span class="c1"># full run; some examples fail</span>
+$<span class="w"> </span>behave<span class="w"> </span>--only-failures<span class="w">  </span><span class="c1"># rerun just the failures</span>
+</code></pre></div></td></tr></table></div>
+<p>When <code>--only-failures</code> is set but the file is missing or contains no entries, every example runs (with a notice on stderr).</p>
+<p><code>--only-failures</code> combines with <code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code>, <code>--retry</code>, and the other filters using the existing AND semantics. A common workflow is <code>behave --only-failures --retry 2</code> to give every previously-failing example two extra chances after a fix attempt.</p>
+<h3 id="how-the-file-is-updated">How the file is updated<a class="headerlink" href="#how-the-file-is-updated" title="Permanent link">&para;</a></h3>
+<p>After every run, Behave merges the new failure list with the existing file:</p>
+<ul>
+<li>Examples that ran in this run and now pass are removed.</li>
+<li>Examples that ran and still fail are kept (or added).</li>
+<li>Examples that did NOT run this time (filtered out, in a spec file you did not select, etc.) are preserved as-is.</li>
+</ul>
+<p>A filtered run like <code>behave specs/auth-spec.raku --only-failures</code> will only update entries belonging to <code>auth-spec.raku</code>; failing entries for other spec files stay in the list until you re-run them.</p>
+<h3 id="-failures-path-path"><code>--failures-path PATH</code><a class="headerlink" href="#-failures-path-path" title="Permanent link">&para;</a></h3>
+<p>Override the default path with <code>--failures-path PATH</code> (or <code>--failures-path=PATH</code>). Useful when running concurrent suites that should not share a failures list, or when persisting failures somewhere outside the working directory:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--failures-path<span class="w"> </span>/tmp/behave-failures-feature-x.txt
+$<span class="w"> </span>behave<span class="w"> </span>--only-failures<span class="w"> </span>--failures-path<span class="w"> </span>/tmp/behave-failures-feature-x.txt
+</code></pre></div></td></tr></table></div>
+<h3 id="modes-that-do-not-write-behave-failures">Modes that do not write <code>.behave-failures</code><a class="headerlink" href="#modes-that-do-not-write-behave-failures" title="Permanent link">&para;</a></h3>
+<p><code>--bisect</code> and <code>--bisect-data</code> use their own machine-readable output protocol and do not write the failures file. All other modes — including <code>--parallel</code>, <code>--coverage</code>, and <code>--doc</code> — write the file at the end of the run.</p>
+<p><code>.behave-failures</code> is plain text (one location per line, blank lines and <code>#</code> comments ignored on read) so it is safe to edit by hand or to consume from other tooling.</p>
 
 
 

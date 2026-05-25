@@ -713,6 +713,114 @@
   
   
     <li class="md-nav__item">
+      <a href="../../parallel/parallel/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel Execution
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../watch/watch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Watch Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dry-run/dry-run/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dry Run and Listing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../retry/retry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retry and Only-Failures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../mocks/mocks/" class="md-nav__link">
         
   
@@ -748,10 +856,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_17" >
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_17" id="__nav_17_label" tabindex="0">
             
   
   
@@ -769,8 +877,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_17">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1259,6 +1367,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../../timing/time-mocking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time Mocking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../classes/classes/" class="md-nav__link">
         
   
@@ -1593,6 +1728,15 @@ process that runs the same <code>bin/behave</code> invocation. MoarVM writes one
 line per executed source line to a temp file under <code>$TMPDIR</code>. When the child
 exits, the parent runs <code>grep -F</code> over that file to keep only lines matching
 the include patterns, parses the filtered result, and renders the report.</p>
+<p>Under <code>--parallel</code>, the wrapper is skipped: the parallel parent gives each
+worker its own <code>MVM_COVERAGE_LOG</code> path
+(<code>$TMPDIR/behave-coverage-parallel-&lt;pid&gt;-&lt;stamp&gt;/worker-N.raw</code>), and after
+the workers exit it merges every per-worker log into a single hit map (set
+union, since coverage records <em>whether</em> a line was hit). The same report
+pipeline then renders one combined report against the merged data;
+<code>--coverage-minimum</code> is gated on the merged percentage. See
+<a href="../../parallel/parallel/#coverage">Coverage under --parallel</a> in the parallel
+guide for the full description.</p>
 <p>Executable line counts are derived from a static read of each source file:
 blank lines, comments, lines that contain only closing punctuation (<code>}</code>,
 <code>)</code>, etc.), and lines inside <code>=begin pod</code> / <code>=end pod</code> blocks are ignored.</p>

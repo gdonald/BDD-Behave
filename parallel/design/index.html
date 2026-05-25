@@ -8,13 +8,9 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/shared-examples/shared-examples/">
+        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/parallel/design/">
       
       
-        <link rel="prev" href="../../shared-contexts/shared-contexts/">
-      
-      
-        <link rel="next" href="../../tags/tags/">
       
       
         
@@ -25,7 +21,7 @@
     
     
       
-        <title>Shared Examples - BDD::Behave</title>
+        <title>Parallel Execution — Design Strategy - BDD::Behave</title>
       
     
     
@@ -66,7 +62,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#shared-examples" class="md-skip">
+        <a href="#parallel-execution-design-strategy" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +98,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Shared Examples
+              Parallel Execution — Design Strategy
             
           </span>
         </div>
@@ -602,37 +598,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Shared Examples
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../shared-examples/shared-examples/" class="md-nav__link">
         
   
   
@@ -648,92 +617,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Defining shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        it-behaves-like: wrap shared examples in a nested group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        include-examples: merge shared examples into the current group
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameterizing shared examples
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Reusing shared examples across multiple groups
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Errors
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -826,7 +709,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../parallel/parallel/" class="md-nav__link">
+      <a href="../parallel/" class="md-nav__link">
         
   
   
@@ -1473,10 +1356,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#defining-shared-examples" class="md-nav__link">
+  <a href="#goal" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Defining shared examples
+        Goal
       
     </span>
   </a>
@@ -1484,10 +1367,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" class="md-nav__link">
+  <a href="#constraints-from-the-rest-of-91" class="md-nav__link">
     <span class="md-ellipsis">
       
-        it-behaves-like: wrap shared examples in a nested group
+        Constraints from the rest of 9.1
       
     </span>
   </a>
@@ -1495,10 +1378,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#include-examples-merge-shared-examples-into-the-current-group" class="md-nav__link">
+  <a href="#process-based-not-thread-based" class="md-nav__link">
     <span class="md-ellipsis">
       
-        include-examples: merge shared examples into the current group
+        Process-based, not thread-based
       
     </span>
   </a>
@@ -1506,10 +1389,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#parameterizing-shared-examples" class="md-nav__link">
+  <a href="#worker-lifecycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameterizing shared examples
+        Worker lifecycle
       
     </span>
   </a>
@@ -1517,10 +1400,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reusing-shared-examples-across-multiple-groups" class="md-nav__link">
+  <a href="#spec-discovery" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reusing shared examples across multiple groups
+        Spec discovery
       
     </span>
   </a>
@@ -1528,10 +1411,98 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#errors" class="md-nav__link">
+  <a href="#work-distribution" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Errors
+        Work distribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#serial-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        :serial phase
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ipc-parent-worker-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IPC: parent ⇆ worker protocol
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-rendering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output rendering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-identity-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker identity API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interaction-with-existing-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interaction with existing flags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-limitations-v1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known limitations (v1)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-phasing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation phasing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-document-is-not" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this document is not
       
     </span>
   </a>
@@ -1558,152 +1529,204 @@
   
 
 
-<h1 id="shared-examples">Shared Examples<a class="headerlink" href="#shared-examples" title="Permanent link">&para;</a></h1>
-<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the <code>it</code>s into every spec.</p>
-<p><code>shared-examples</code>, <code>include-examples</code>, and <code>it-behaves-like</code> are exported from <code>BDD::Behave</code>.</p>
-<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks); shared <em>examples</em> contribute the assertions themselves.</p>
-<h2 id="defining-shared-examples">Defining shared examples<a class="headerlink" href="#defining-shared-examples" title="Permanent link">&para;</a></h2>
-<p><code>shared-examples</code> takes a name and a block. The block typically contains one or more <code>it</code> blocks, but it can call any DSL helper that's legal inside a group:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave</span>;
-
-<span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>);
-  }
-};
-</code></pre></div></td></tr></table></div>
-<p>The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.</p>
-<h2 id="it-behaves-like-wrap-shared-examples-in-a-nested-group"><code>it-behaves-like</code>: wrap shared examples in a nested group<a class="headerlink" href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" title="Permanent link">&para;</a></h2>
-<p>The most common form is <code>it-behaves-like 'name'</code>. It creates a nested <code>behaves like 'name'</code> group inside the current <code>describe</code> and runs the shared block there. The wrapper group keeps the shared examples visually grouped in the runner's output:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Output:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;an integer counter&#39;
-  ⮑  &#39;behaves like &#39;a counter&#39;&#39;
-    ⮑  &#39;starts at zero&#39;
-      ⮑  SUCCESS
-    ⮑  &#39;has an increment step&#39;
-      ⮑  SUCCESS
-</code></pre></div></td></tr></table></div>
-<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group — including the <code>describe</code> they're invoked from — exactly the same way ordinary nested examples do.</p>
-<h2 id="include-examples-merge-shared-examples-into-the-current-group"><code>include-examples</code>: merge shared examples into the current group<a class="headerlink" href="#include-examples-merge-shared-examples-into-the-current-group" title="Permanent link">&para;</a></h2>
-<p><code>include-examples 'name'</code> is the lower-ceremony form: the shared block runs directly in the current group, so its <code>it</code>s become siblings of any locally-defined <code>it</code>s instead of being wrapped in a new group.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-
-  <span class="n">include-examples</span> <span class="s">&#39;a counter&#39;</span>;
-
-  <span class="n">it</span> <span class="s">&#39;is initialized&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>);
-  }
-}
-</code></pre></div></td></tr></table></div>
-<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output; use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
-<h2 id="parameterizing-shared-examples">Parameterizing shared examples<a class="headerlink" href="#parameterizing-shared-examples" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a sized collection&#39;</span>, -&gt; <span class="nv">$expected</span> {
-  <span class="n">it</span> <span class="s">&quot;reports its size as $expected&quot;</span>, {
-    <span class="n">expect</span>(<span class="vg">$*LET-RUNTIME</span>.<span class="nb">value</span>(<span class="s">&#39;size&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nv">$expected</span>);
-  }
-};
-
-<span class="n">describe</span> <span class="s">&#39;a three-element list&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">size</span>, { <span class="mi">3</span> });
-
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a sized collection&#39;</span>, <span class="mi">3</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Both <code>it-behaves-like</code> and <code>include-examples</code> forward extra arguments to the shared block.</p>
-<h2 id="reusing-shared-examples-across-multiple-groups">Reusing shared examples across multiple groups<a class="headerlink" href="#reusing-shared-examples-across-multiple-groups" title="Permanent link">&para;</a></h2>
-<p>Shared examples are typically defined once at the top of a spec file (or in a shared helper file) and referenced from many <code>describe</code>s. Each call to <code>it-behaves-like</code> or <code>include-examples</code> is independent, so you can mix and match per-group setup:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
-<span class="normal"> 2</span>
-<span class="normal"> 3</span>
-<span class="normal"> 4</span>
-<span class="normal"> 5</span>
-<span class="normal"> 6</span>
-<span class="normal"> 7</span>
-<span class="normal"> 8</span>
-<span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
-<span class="normal">12</span>
-<span class="normal">13</span>
-<span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">shared-examples</span> <span class="s">&#39;a counter&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;starts at zero&#39;</span>, { <span class="n">expect</span>(:<span class="n">start</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">0</span>); }
-  <span class="n">it</span> <span class="s">&#39;has an increment step&#39;</span>, { <span class="n">expect</span>(:<span class="n">step</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span>); }
-};
-
-<span class="n">describe</span> <span class="s">&#39;an integer counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-}
-
-<span class="n">describe</span> <span class="s">&#39;a fractional counter&#39;</span>, {
-  <span class="k">let</span>(:<span class="n">start</span>, { <span class="mi">0</span> });
-  <span class="k">let</span>(:<span class="n">step</span>,  { <span class="mi">1</span> });
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;
-  <span class="n">it-behaves-like</span> <span class="s">&#39;a counter&#39;</span>;   <span class="c1"># multiple invocations are fine</span>
-}
-</code></pre></div></td></tr></table></div>
-<h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
+<h1 id="parallel-execution-design-strategy">Parallel Execution — Design Strategy<a class="headerlink" href="#parallel-execution-design-strategy" title="Permanent link">&para;</a></h1>
+<p>This document is the design strategy for roadmap item <strong>9.1 Add parallel test execution</strong>. It is the deliverable for <strong>9.1.1</strong> and the reference subsequent subtasks (9.1.2 – 9.1.8) implement against. It is <em>not</em> yet a user-facing guide — that lands with 9.1.3 and 9.1.8.</p>
+<h2 id="goal">Goal<a class="headerlink" href="#goal" title="Permanent link">&para;</a></h2>
+<p>Let <code>behave</code> run a spec suite across multiple workers concurrently, opt-in via <code>--parallel N</code>. Default (no flag) keeps the current single-process, single-worker behavior bit-for-bit.</p>
+<p>Success criteria:</p>
 <ul>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> with an unregistered name dies with <code>Unknown shared examples: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies — shared examples can only be instantiated inside a group.</li>
+<li>A suite that takes T seconds serially takes roughly T / N seconds on N cores, modulo per-worker startup overhead and load imbalance.</li>
+<li>Failure output, summary counts, profile/memory/benchmark sections, exit code, and seed reporting remain meaningful and reproducible.</li>
+<li>User code that already assumes a fresh process per worker (DB connection per worker, file per worker, port per worker) has a clean way to discover its worker identity.</li>
+<li>Tests that <em>cannot</em> safely run concurrently with anything else have an opt-out (<code>:serial</code>).</li>
 </ul>
+<h2 id="constraints-from-the-rest-of-91">Constraints from the rest of 9.1<a class="headerlink" href="#constraints-from-the-rest-of-91" title="Permanent link">&para;</a></h2>
+<p>The roadmap text for 9.1.5 – 9.1.8 has already locked in several decisions, and this design has to satisfy them:</p>
+<ul>
+<li><strong>9.1.5</strong> wants <code>BEHAVE_WORKER_INDEX</code> / <code>BEHAVE_WORKER_COUNT</code> env vars and a programmatic <code>BDD::Behave::Worker.id</code> / <code>.count</code>. Env vars are per-process — so workers are processes, not threads.</li>
+<li><strong>9.1.6</strong> wants distribution at <code>ExampleGroup</code> granularity so <code>before-all</code> / <code>after-all</code> / <code>around-all</code> amortize correctly inside a single worker.</li>
+<li><strong>9.1.7</strong> wants <code>:serial</code> to pin examples that mutate shared global state to a single worker, run after the parallel batch.</li>
+<li><strong>9.1.8</strong> wants the canonical pattern to be DB-per-worker keyed off <code>BEHAVE_WORKER_INDEX</code>.</li>
+</ul>
+<p>All four push toward process-based workers with strong isolation. None of them require shared memory between workers.</p>
+<h2 id="process-based-not-thread-based">Process-based, not thread-based<a class="headerlink" href="#process-based-not-thread-based" title="Permanent link">&para;</a></h2>
+<p>Threads in Raku are real (MoarVM has no GIL), but threading the runner would be the wrong call here:</p>
+<ul>
+<li>Spec files declare top-level <code>class</code>/<code>role</code>/<code>enum</code>/<code>subset</code>/<code>constant</code> symbols. Loading two spec files into the same process can already collide (see roadmap 9.7) — loading them concurrently into the same process would make the collision races as well as collisions.</li>
+<li>User code commonly uses thread-hostile global state — DB connection objects, <code>%*ENV</code> mutation in <code>before-each</code>, <code>chdir</code>, signal handlers, framework singletons. Most of this is process-safe but not thread-safe.</li>
+<li><code>EVAL</code> / <code>EVALFILE</code> and the surrounding compiler state are not designed to run multiple unrelated programs concurrently.</li>
+<li><code>--bisect</code> and <code>--coverage</code> already shell out to subprocesses for isolation. Parallel execution follows the same pattern, so the operational model is uniform.</li>
+</ul>
+<p>So: each worker is a separate <code>raku bin/behave</code> subprocess.</p>
+<h2 id="worker-lifecycle">Worker lifecycle<a class="headerlink" href="#worker-lifecycle" title="Permanent link">&para;</a></h2>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code>parent (orchestrator)
+  ├── discovery pass (load spec tree, plan shards)
+  ├── fork worker 0  ── runs assigned groups, streams events back
+  ├── fork worker 1  ── …
+  ├── …
+  ├── fork worker N-1
+  ├── wait, aggregate
+  └── serial phase (run any :serial examples on a single worker)
+</code></pre></div></td></tr></table></div>
+<p>A worker:</p>
+<ol>
+<li>Receives, on stdin or via a temp control file, a manifest of <code>(spec-file, group-path)</code> shards plus its <code>BEHAVE_WORKER_INDEX</code> and <code>BEHAVE_WORKER_COUNT</code>.</li>
+<li><code>EVALFILE</code>s every spec file it owns at least one shard of (load cost is paid once per worker).</li>
+<li>Walks the same <code>Runner</code> we already have, but with an additional filter that gates each example on "is this example in one of my assigned shards?"</li>
+<li>Emits one JSON line per spec-tree event (suite-start, example-start, example-pass, example-fail, example-skip, suite-end) on stdout. stderr is forwarded to the parent's stderr verbatim.</li>
+<li>Exits 0 on a clean run (regardless of test failures — failures are reported via events). Non-zero exit is reserved for <em>worker crashes</em> (uncaught exception escaping the runner, OOM, signal).</li>
+</ol>
+<p>The worker is launched as <code>raku -Ilib bin/behave --worker-mode &lt;manifest-path&gt;</code> so the same binary serves both roles. <code>--worker-mode</code> is a hidden flag; users never type it.</p>
+<h2 id="spec-discovery">Spec discovery<a class="headerlink" href="#spec-discovery" title="Permanent link">&para;</a></h2>
+<p>Group affinity (9.1.6) requires the parent to know what groups exist so it can shard them. Two options were considered:</p>
+<ol>
+<li><strong>Parent loads the tree itself.</strong> The parent <code>EVALFILE</code>s every spec into its own registry, then partitions. Cheapest, but inherits the 9.7 in-process collision problem and pays the load cost twice (parent + each worker that owns any group from that file).</li>
+<li><strong>Discovery subprocess.</strong> The parent forks a single short-lived <code>behave --list-examples --format json</code> (9.6.2) subprocess that dumps the example metadata, then partitions from the JSON.</li>
+</ol>
+<p><strong>Decision: option 2</strong>, gated on 9.6.2. If 9.6.2 is not yet implemented when 9.1.2 lands, we ship 9.1 with option 1 as a stopgap and migrate to option 2 after 9.6.2 lands. The migration is a one-function swap inside the parent — workers don't care how the manifest was computed.</p>
+<p>The discovery output is normalized to a list of records:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>{ file: &quot;specs/foo-spec.raku&quot;, group-path: [&quot;FooThing&quot;, &quot;when X&quot;], example-count: 7, file-line: 42, tags: [...], serial: false }
+</code></pre></div></td></tr></table></div>
+<p><code>group-path</code> is the chain of <code>describe</code>/<code>context</code> descriptions from the suite root down to (but not including) the leaf example. Affinity is enforced by sharding on the <em>deepest</em> group that fits a single worker comfortably — by default the top-level <code>describe</code>. Users with one very large top-level <code>describe</code> can opt into a finer split with metadata (see "Future work" below).</p>
+<h2 id="work-distribution">Work distribution<a class="headerlink" href="#work-distribution" title="Permanent link">&para;</a></h2>
+<p><strong>Static partitioning, longest-processing-time-first (LPT).</strong> The parent sorts discovered groups by <code>example-count</code> descending (a rough cost proxy in the absence of historical timing data), then greedily assigns each group to the worker with the smallest current load. This is a 4/3-approximation of optimal makespan; in practice, with N &lt;&lt; group-count, it's within a couple percent of perfect.</p>
+<p>We deliberately do <em>not</em> start with a dynamic work-stealing queue:</p>
+<ul>
+<li>It requires a control channel and protocol that workers can pull from; that's a lot of complexity for a v1.</li>
+<li>With group affinity, work units are already coarse (a <code>describe</code> block), so the gain from stealing is small in the common case.</li>
+<li>A future PR can add <code>--parallel-mode=queue</code> if real-world suites show LPT is leaving too much idle worker time.</li>
+</ul>
+<p>Future timing data (from <code>--profile</code> history or <code>.behave-timings.json</code>) can replace <code>example-count</code> as the cost proxy without changing the algorithm. That's an enhancement, not a v1 requirement.</p>
+<h2 id="serial-phase"><code>:serial</code> phase<a class="headerlink" href="#serial-phase" title="Permanent link">&para;</a></h2>
+<p>Examples or groups tagged <code>:serial</code> are filtered out of the parallel manifests during discovery. After all parallel workers have exited cleanly, the parent forks one more worker (worker index 0, count 1) with a manifest containing only the serial examples and runs them sequentially.</p>
+<p><code>:serial</code> interacts with existing flags using AND semantics, identical to <code>:tag</code>:</p>
+<ul>
+<li><code>--tag foo</code> + <code>:serial</code>: example runs only if it has both <code>foo</code> and <code>:serial</code>.</li>
+<li><code>--exclude-tag serial</code> skips them entirely.</li>
+<li><code>--example PATTERN</code> and focus mode apply normally.</li>
+</ul>
+<p>Failures in the serial phase merge into the same <code>RunResult</code> as the parallel phase. The summary line stays a single line.</p>
+<p>If <code>--parallel</code> is omitted or is 1, <code>:serial</code> is a no-op — everything is already serial.</p>
+<h2 id="ipc-parent-worker-protocol">IPC: parent ⇆ worker protocol<a class="headerlink" href="#ipc-parent-worker-protocol" title="Permanent link">&para;</a></h2>
+<p>Workers emit one JSON line per event on stdout. Events:</p>
+<ul>
+<li><code>{type: "suite-start", file, group-path, started-at}</code></li>
+<li><code>{type: "example-start", file, line, description, full-description}</code></li>
+<li><code>{type: "example-pass", file, line, duration-ms}</code></li>
+<li><code>{type: "example-fail", file, line, duration-ms, failures: [...]}</code></li>
+<li><code>{type: "example-skip", file, line, reason}</code></li>
+<li><code>{type: "example-pending", file, line, reason}</code></li>
+<li><code>{type: "suite-end", file, group-path, counts: {...}}</code></li>
+<li><code>{type: "profile-record", file, line, duration-ms}</code> (only when <code>--profile</code> requested)</li>
+<li><code>{type: "memory-record", ...}</code> (only when <code>--memory-profile</code> requested)</li>
+<li><code>{type: "benchmark-record", ...}</code> (only when <code>--benchmark</code> requested)</li>
+<li><code>{type: "worker-error", message, backtrace}</code> for worker-internal failures (uncaught exception in the runner itself, not in user code)</li>
+</ul>
+<p>The parent reads these line-by-line (a <code>Tap</code> on the worker's stdout <code>Channel</code>), feeds them to the existing formatter via a thin adapter, and aggregates counts into a single <code>RunResult</code>.</p>
+<p>Format choice — JSON-lines — was picked over a binary protocol or a Raku-native serialization for three reasons:</p>
+<ol>
+<li>Trivially streamable, line-buffered, no length-prefix framing.</li>
+<li>Debuggable: <code>BEHAVE_WORKER_DEBUG=1</code> can dump worker stdout to a file and you can read it.</li>
+<li>Survives stdout flushing edge cases (a half-line is detectable as malformed and reported, not silently lost).</li>
+</ol>
+<p>stderr from workers is forwarded to the parent's stderr unchanged. User <code>note</code> / <code>say *.error</code> calls reach the user as-is.</p>
+<h2 id="output-rendering">Output rendering<a class="headerlink" href="#output-rendering" title="Permanent link">&para;</a></h2>
+<p>The parent owns the terminal. Workers never write directly to the user's stdout.</p>
+<p>For the default <code>progress</code> formatter, this is trivial: the parent prints one <code>.</code> / <code>F</code> / <code>*</code> per <code>example-pass</code> / <code>example-fail</code> / <code>example-skip</code> event as it arrives, in the order events arrive. Interleaved order across workers is fine — <code>progress</code> already makes no per-line ordering promise.</p>
+<p>For the verbose / documentation formatters, the parent buffers per-suite: it accumulates events for a given <code>(worker, file)</code> pair until that worker emits <code>suite-end</code> for the file, then flushes the whole suite as a single block to the formatter. This keeps a single suite's nested output contiguous on the terminal. The cost is bounded memory per worker (one suite's worth of events).</p>
+<p>This is 9.1.4 ("Handle parallel output"). It does <em>not</em> require formatter changes — the formatter sees the same call sequence it would in serial mode; the parent just reorders the worker stream before calling into it.</p>
+<h2 id="worker-identity-api">Worker identity API<a class="headerlink" href="#worker-identity-api" title="Permanent link">&para;</a></h2>
+<p><code>BDD::Behave::Worker</code> is a new tiny module:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">BDD::Behave::Worker</span> {
+  <span class="k">method</span> <span class="nb">id</span>    (--&gt; <span class="nb">Int</span>) { <span class="vg">%*ENV&lt;BEHAVE_WORKER_INDEX&gt;</span> // <span class="mi">0</span> }
+  <span class="k">method</span> <span class="nb">count</span> (--&gt; <span class="nb">Int</span>) { <span class="vg">%*ENV&lt;BEHAVE_WORKER_COUNT&gt;</span> // <span class="mi">1</span> }
+}
+</code></pre></div></td></tr></table></div>
+<p>Both env vars are always set: in serial mode <code>BEHAVE_WORKER_INDEX=0</code> and <code>BEHAVE_WORKER_COUNT=1</code>, so user config that interpolates <code>BDD::Behave::Worker.id</code> into a DB name (<code>myapp_test_{id}</code>) works identically in serial and parallel modes. This is the explicit requirement from 9.1.5.</p>
+<p>The accessor is read-only at the user level; the values are seeded by the parent in the child's environment at fork time and must not be mutated by user code (mutation would be a no-op anyway since the env vars are read each call — but mutation in <code>before-each</code> would cause confusing readings, so docs will note it).</p>
+<h2 id="interaction-with-existing-flags">Interaction with existing flags<a class="headerlink" href="#interaction-with-existing-flags" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Flag</th>
+<th>Behavior under <code>--parallel N</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--fail-fast</code> / <code>=N</code></td>
+<td>Parent tracks aggregated failure count; sends SIGTERM to workers when threshold hit.</td>
+</tr>
+<tr>
+<td><code>--order random</code> + <code>--seed</code></td>
+<td>Each worker gets a <em>derived</em> seed <code>seed XOR worker-index</code>. Summary still prints the root seed.</td>
+</tr>
+<tr>
+<td><code>--order defined</code></td>
+<td>Within each worker, declared order is preserved for that worker's assigned groups.</td>
+</tr>
+<tr>
+<td><code>--bisect</code> / <code>--bisect-data</code></td>
+<td>Mutually exclusive with <code>--parallel</code>. The parent errors with a clear message.</td>
+</tr>
+<tr>
+<td><code>--coverage</code></td>
+<td>Compatible. The parent's coverage subprocess wrapper runs <em>outside</em> the parallel layer; each worker writes to a per-worker coverage log path, and the parent merges them before reporting. (Detail belongs to 9.1.8.)</td>
+</tr>
+<tr>
+<td><code>--doc</code></td>
+<td>Ignores <code>--parallel</code> — doc mode does not execute, so parallelism is moot.</td>
+</tr>
+<tr>
+<td><code>--profile</code> / <code>--memory-profile</code> / <code>--benchmark</code></td>
+<td>Records are streamed back via worker events; parent merges into the multi-file aggregation it already does.</td>
+</tr>
+<tr>
+<td><code>--only-example</code> / <code>--example</code> / <code>--tag</code> / <code>--exclude-tag</code> / focus</td>
+<td>Filters are pushed into the worker manifest, not re-applied in workers. The parent does one filter pass during discovery so workers see exactly what they need to run.</td>
+</tr>
+<tr>
+<td><code>--aggregate-failures</code></td>
+<td>Pure per-example behavior, unchanged.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="known-limitations-v1">Known limitations (v1)<a class="headerlink" href="#known-limitations-v1" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Determinism across worker counts.</strong> A given <code>--seed</code> reproduces the run only when the worker count also matches. A separate flag (<code>--seed-mode=stable</code>) could fix this later by mapping examples to workers via a stable hash; not v1.</li>
+<li><strong>Discovery cost on huge suites.</strong> A 10,000-example suite discovered via option 2 (subprocess) pays the load cost twice on a worker that owns groups in every file. Real timing data will tell us whether the optimization is worth a worker-side discovery cache; not v1.</li>
+<li><strong>No live progress totals.</strong> The default <code>progress</code> formatter does not print "423 / 5000" mid-run. Parallel mode keeps the same behavior. A future formatter event can add this.</li>
+<li><strong>Worker crashes are fatal.</strong> If a worker exits non-zero from an uncaught runner exception, the parent prints the partial transcript and exits 1. We do not currently retry the assigned shard on another worker. Adding retry is a 9.3 concern.</li>
+</ul>
+<h2 id="implementation-phasing">Implementation phasing<a class="headerlink" href="#implementation-phasing" title="Permanent link">&para;</a></h2>
+<p>This maps the design back onto the open roadmap subtasks:</p>
+<ul>
+<li><strong>9.1.2 Worker pool.</strong> Implement <code>BDD::Behave::Parallel::WorkerPool</code> (process spawn, manifest serialization, event reader, lifecycle/cleanup). Unit-test against a fake worker binary.</li>
+<li><strong>9.1.3 <code>--parallel N</code> flag.</strong> Wire it into <code>bin/behave</code> and config. Add LPT distribution. End-to-end specs against a small spec dir.</li>
+<li><strong>9.1.4 Output coordination.</strong> Add the per-worker buffering adapter that feeds the existing formatter.</li>
+<li><strong>9.1.5 Worker identity.</strong> <code>BDD::Behave::Worker</code> module + env-var plumbing in <code>WorkerPool</code> + parity in serial mode.</li>
+<li><strong>9.1.6 Group affinity.</strong> Already baked into the distribution; this subtask is the spec proving it (<code>before-all</code> runs once per worker per group, not once per example) plus opt-in metadata for splitting large groups.</li>
+<li><strong>9.1.7 <code>:serial</code> metadata.</strong> Discovery splits the manifest into parallel + serial buckets; parent runs the serial phase after the parallel phase.</li>
+<li><strong>9.1.8 DB-per-worker guide.</strong> User-facing <code>docs-src/docs/parallel/parallel.md</code> covering the canonical fixture/cleanup pattern plus mkdocs nav entry.</li>
+</ul>
+<p>Open items intentionally deferred outside 9.1:</p>
+<ul>
+<li>Work stealing / dynamic queue (revisit if static LPT proves inadequate).</li>
+<li>Worker pooling across runs / persistent workers (would require detecting spec changes; out of scope).</li>
+<li>Distributed multi-host execution (not on the roadmap).</li>
+</ul>
+<h2 id="what-this-document-is-not">What this document is not<a class="headerlink" href="#what-this-document-is-not" title="Permanent link">&para;</a></h2>
+<p>This is the strategy, not the API contract. Module names (<code>BDD::Behave::Parallel::WorkerPool</code>, <code>BDD::Behave::Worker</code>) and event field names are <em>proposed</em>; the implementing PR can refine them. If a name or shape changes during 9.1.2 – 9.1.8, this doc is updated to match.</p>
 
 
 
