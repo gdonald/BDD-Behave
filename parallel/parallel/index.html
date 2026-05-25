@@ -989,10 +989,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#profile-memory-benchmark-profile-memory-benchmark" class="md-nav__link">
+  <a href="#profile-memory-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profile, memory, benchmark {#profile-memory-benchmark}
+        Profile, memory, benchmark
       
     </span>
   </a>
@@ -1000,10 +1000,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#coverage-coverage" class="md-nav__link">
+  <a href="#coverage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Coverage {#coverage}
+        Coverage
       
     </span>
   </a>
@@ -1872,10 +1872,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#profile-memory-benchmark-profile-memory-benchmark" class="md-nav__link">
+  <a href="#profile-memory-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profile, memory, benchmark {#profile-memory-benchmark}
+        Profile, memory, benchmark
       
     </span>
   </a>
@@ -1883,10 +1883,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#coverage-coverage" class="md-nav__link">
+  <a href="#coverage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Coverage {#coverage}
+        Coverage
       
     </span>
   </a>
@@ -2228,7 +2228,7 @@ F<span class="w"> </span><span class="o">(</span><span class="m">3</span>/247<sp
 <li>~~<strong><code>--coverage</code> integration.</strong>~~ <code>--coverage</code> is now aggregated across workers (see <a href="#coverage">below</a>).</li>
 <li>~~<strong>Worker crashes are fatal.</strong>~~ Use <code>--parallel-retry N</code> (see above) to re-spawn crashed shards. Default behavior with <code>--parallel-retry 0</code> keeps the previous fatal semantics. Queue mode still treats a crashed worker as fatal.</li>
 </ul>
-<h2 id="profile-memory-benchmark-profile-memory-benchmark">Profile, memory, benchmark {#profile-memory-benchmark}<a class="headerlink" href="#profile-memory-benchmark-profile-memory-benchmark" title="Permanent link">&para;</a></h2>
+<h2 id="profile-memory-benchmark">Profile, memory, benchmark<a class="headerlink" href="#profile-memory-benchmark" title="Permanent link">&para;</a></h2>
 <p><code>--profile</code>, <code>--memory-profile</code>, and <code>--benchmark</code> work under <code>--parallel</code>. Each worker measures its own slice; the parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -2253,7 +2253,7 @@ behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">
 <li><code>--benchmark-iterations=N</code> and <code>--benchmark-threshold=PCT</code> are forwarded to every worker; per-example timings collected across iterations are merged in the parent before medians are computed.</li>
 <li><code>--benchmark-baseline</code> / <code>--benchmark-save</code> are not forwarded to workers; only the parent reads / writes baseline files, against the aggregated summary list.</li>
 </ul>
-<h2 id="coverage-coverage">Coverage {#coverage}<a class="headerlink" href="#coverage-coverage" title="Permanent link">&para;</a></h2>
+<h2 id="coverage">Coverage<a class="headerlink" href="#coverage" title="Permanent link">&para;</a></h2>
 <p><code>--coverage</code> works under <code>--parallel</code>. The parent assigns each worker its own <code>MVM_COVERAGE_LOG</code> path (<code>$TMPDIR/behave-coverage-parallel-&lt;pid&gt;-&lt;stamp&gt;/worker-N.raw</code>), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union — coverage records whether a line was hit, not how many times — so a line counted only by worker 2 still shows up in the merged report.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
