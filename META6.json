@@ -83,7 +83,9 @@
   "resources": [],
   "support": {
     "source": "https://github.com/gdonald/BDD-Behave.git",
-    "bugtracker": "https://github.com/gdonald/BDD-Behave/issues"
+    "bugtracker": "https://github.com/gdonald/BDD-Behave/issues",
+    "homepage": "https://behave.dev",
+    "documentation": "https://gdonald.github.io/BDD-Behave/"
   },
   "license": "Artistic-2.0",
   "tags": [
