@@ -73,6 +73,7 @@
     "BDD::Behave::SpecTree::Suite": "lib/BDD/Behave/SpecTree/Suite.rakumod",
     "BDD::Behave::Time": "lib/BDD/Behave/Time.rakumod",
     "BDD::Behave::TypeName": "lib/BDD/Behave/TypeName.rakumod",
+    "BDD::Behave::Version": "lib/BDD/Behave/Version.rakumod",
     "BDD::Behave::Watch": "lib/BDD/Behave/Watch.rakumod",
     "BDD::Behave::Watch::Session": "lib/BDD/Behave/Watch/Session.rakumod",
     "BDD::Behave::Watch::SmartSelector": "lib/BDD/Behave/Watch/SmartSelector.rakumod",

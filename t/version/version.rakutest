@@ -1,0 +1,113 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Version;
+
+plan 9;
+
+my $stamp    = sprintf '%d-%d', $*PID, (now * 1e6).Int;
+my $tmp-root = $*TMPDIR.add("behave-version-test-$stamp");
+
+$tmp-root.mkdir;
+
+LEAVE {
+  run('rm', '-rf', $tmp-root.absolute, :!out, :!err) if $tmp-root.e;
+}
+
+sub make-tree(*@segments) {
+  my $dir = $tmp-root;
+
+  for @segments -> $seg {
+    $dir = $dir.add($seg);
+  }
+
+  $dir.mkdir;
+  $dir;
+}
+
+# from-meta-file
+{
+  my $missing = $tmp-root.add('does-not-exist.json');
+
+  nok BDD::Behave::Version::from-meta-file($missing).defined,
+    'from-meta-file returns Str for a missing path';
+}
+
+{
+  nok BDD::Behave::Version::from-meta-file(IO::Path).defined,
+    'from-meta-file returns Str for an undefined path';
+}
+
+{
+  my $meta = $tmp-root.add('METAa.json');
+
+  $meta.spurt(q:to/JSON/);
+  {
+    "name": "Demo",
+    "version": "1.2.3"
+  }
+  JSON
+
+  is BDD::Behave::Version::from-meta-file($meta), '1.2.3',
+    'from-meta-file returns the "version" field value';
+}
+
+{
+  my $meta = $tmp-root.add('METAb.json');
+  $meta.spurt('{ "name": "NoVersion" }');
+
+  nok BDD::Behave::Version::from-meta-file($meta).defined,
+    'from-meta-file returns Str when "version" is absent';
+}
+
+# from-source-checkout
+{
+  my $deep = make-tree('a', 'b', 'c');
+  my $meta = $tmp-root.add('a').add('META6.json');
+
+  $meta.spurt('{ "version": "4.5.6" }');
+
+  my $fake-program = $deep.add('behave');
+  $fake-program.spurt('');
+
+  is BDD::Behave::Version::from-source-checkout($fake-program), '4.5.6',
+    'from-source-checkout walks up and finds META6.json';
+}
+
+{
+  my $deep = make-tree('x', 'y');
+
+  my $fake-program = $deep.add('behave');
+  $fake-program.spurt('');
+
+  my $ver = BDD::Behave::Version::from-source-checkout($fake-program);
+
+  ok !($ver.defined && $ver eq '4.5.6'),
+    'from-source-checkout returns Str when no META6.json is found in scope';
+}
+
+{
+  nok BDD::Behave::Version::from-source-checkout(IO::Path).defined,
+    'from-source-checkout returns Str for an undefined program-path';
+}
+
+# version
+{
+  ok BDD::Behave::Version::version().chars > 0,
+    'version() returns a non-empty string';
+}
+
+{
+  my $deep = make-tree('checkout');
+  my $meta = $tmp-root.add('checkout').add('META6.json');
+
+  $meta.spurt('{ "version": "9.9.9" }');
+
+  my $fake-program = $deep.add('behave');
+  $fake-program.spurt('');
+
+  my $reported = BDD::Behave::Version::version(:program-path($fake-program));
+
+  ok $reported.chars > 0,
+    'version() with a program-path returns a non-empty string';
+}

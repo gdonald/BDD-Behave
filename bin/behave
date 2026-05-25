@@ -12,6 +12,7 @@ use BDD::Behave::DocExtractor;
 use BDD::Behave::Coverage;
 use BDD::Behave::FailureStore;
 use BDD::Behave::SpecLoader;
+use BDD::Behave::Version;
 
 constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
 
@@ -46,6 +47,7 @@ sub usage() {
 
   Options:
     --help                   Displays how to run behave.
+    --version, -V            Print the installed BDD::Behave version and exit.
     --verbose                Display verbose output during the specs execution.
     --tag NAME               Run only examples tagged NAME (repeatable; OR semantics).
     --exclude-tag NAME       Skip examples tagged NAME (repeatable).
@@ -301,6 +303,9 @@ while @args {
 
   if $arg eq '--help' {
     usage;
+    exit;
+  } elsif $arg eq '--version' | '-V' {
+    say BDD::Behave::Version::version();
     exit;
   } elsif $arg eq '--verbose' {
     $cli-config.verbose = True;
