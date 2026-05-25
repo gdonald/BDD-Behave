@@ -1,22 +1,22 @@
 ## Behave
 
-A behavior driven development framework written in [Raku](https://raku.org/).
+A behavior-driven testing framework written in [Raku](https://raku.org/).
 
 Currently developed against Raku `v6.d`.
 
 #### Install using zef
 
-```
+```bash
 zef install BDD::Behave
 ```
 
-#### Running Behave:
+#### Running Behave
 
-If a file is not specified Behave will automatically look for a `specs` directory and will run anything matching `/spec.raku/`.
+If no file is specified, Behave looks for a `specs/` directory and runs every file in it whose name matches `*spec.raku`.
 
-#### An example:
+#### An example
 
-**specs/001-spec.raku**
+**specs/answer-spec.raku**
 
 ```raku
 use BDD::Behave;
@@ -40,13 +40,13 @@ describe 'this final spec', {
 
 You can run the spec like this:
 
-```
-$ behave specs/001-spec.raku
+```bash
+behave --format=tree specs/answer-spec.raku
 ```
 
 Output:
 
-```raku
+```console
 ⮑ 'this spec'
   ⮑ 'passes'
     ⮑ SUCCESS
@@ -56,36 +56,50 @@ Output:
 
 Failures:
 
-  [ ✗ ] specs/001-spec.raku:15
+  [ ✗ ] /path/to/project/specs/answer-spec.raku:15
+      this final spec fails at line 15
+      Expected: 42
+      to be: 41
 
 2 examples, 1 failed, 1 passed
+Randomized with seed 581808742
 ```
 
-#### Local Behave development:
+#### Local Behave development
 
 For local development of Behave itself:
 
-```
+```bash
 raku -Ilib bin/behave
 ```
 
-#### Prove Tests
+#### Tests
 
-To run the tests in t/*:
+To run the full test suite (both `t/` and `specs/`):
 
+```bash
+raku test.raku
 ```
+
+To run just the `t/` tests:
+
+```bash
 prove6 -Ilib t
 ```
 
 #### Status
 
-[![.github/workflows/raku.yml](https://github.com/gdonald/BDD-Behave/workflows/.github/workflows/raku.yml/badge.svg)](https://github.com/gdonald/BDD-Behave/actions)
+[![CI](https://github.com/gdonald/BDD-Behave/actions/workflows/ci.yml/badge.svg)](https://github.com/gdonald/BDD-Behave/actions/workflows/ci.yml)
 
 #### Documentation
 
-Full documentation: [https://gdonald.github.io/BDD-Behave/](https://gdonald.github.io/BDD-Behave/)
+Documentation: [https://gdonald.github.io/BDD-Behave/](https://gdonald.github.io/BDD-Behave/)
 
-See also the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/master/specs).
+See also the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/main/specs).
+
+#### Website
+
+[https://behave.dev](https://behave.dev)
 
 #### License
 
@@ -93,4 +107,4 @@ Copyright (c) 2019-2026 Greg Donald
 
 This software is licensed under the Artistic License 2.0.
 
-[![GitHub](https://img.shields.io/github/license/gdonald/BDD-Behave?color=aa0000)](https://github.com/gdonald/BDD-Behave/blob/master/LICENSE)
+[![GitHub](https://img.shields.io/github/license/gdonald/BDD-Behave?color=4b0082)](https://github.com/gdonald/BDD-Behave/blob/main/LICENSE)
