@@ -842,6 +842,17 @@ expect({ X::AdHoc.new(payload => 'x').throw }).to.raise-error;
 expect({ 1 + 1 }).to.not.raise-error;
 ```
 
+`raise-error` is also available under two aliases — `throw` and `raise` —
+which take the same arguments and behave identically. Pick whichever
+reads best at the call site:
+
+```raku
+expect({ die "boom" }).to.throw;
+expect({ X::Demo.new.throw }).to.throw(X::Demo, /'demo'/);
+expect({ 1 + 1 }).to.not.raise;
+expect({ die "boom" }).to.raise.with-message('boom');
+```
+
 ### Filtering by exception type
 
 Pass an exception type as the first argument to require that the raised
@@ -962,7 +973,7 @@ records a normal expectation failure rather than blowing up. The failure
 message names the unwrapped value so the mistake is obvious:
 
 ```
-expected a Callable for raise-error, but got 42
+expected a Callable, but got 42
 ```
 
 ### Failure metadata

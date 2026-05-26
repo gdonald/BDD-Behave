@@ -1,0 +1,115 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 31;
+
+my class X::T::Throw::Demo is Exception {
+  has $.code;
+  method message { "t-throw-demo failure: code={$!code}" }
+}
+
+my class X::T::Throw::Sub is X::T::Throw::Demo { }
+
+# Bare throw passes for any raised exception.
+{
+  ok expect({ die "X" }).to.throw, 'expect.to.throw passes on die';
+  ok expect({ X::AdHoc.new(payload => 'p').throw }).to.throw,
+                                     'expect.to.throw passes on .throw';
+  is Failures.list.elems, 0, 'no failure on pass';
+}
+
+# Bare throw fails when nothing is raised.
+{
+  my @captured = capture-failures {
+    nok expect({ 1 + 1 }).to.throw, 'expect.to.throw fails on no-raise';
+  };
+  is @captured.elems, 1, 'one failure recorded';
+  is @captured[0].message,
+     'expected block to raise an error, but none was raised',
+     'failure message matches raise-error wording';
+}
+
+# Negated throw.
+{
+  ok expect({ 1 + 1 }).to.not.throw, '.not.throw passes when no raise';
+  is Failures.list.elems, 0, 'no failure on negated pass';
+
+  my @captured = capture-failures {
+    nok expect({ die "boom" }).to.not.throw, '.not.throw fails when raises';
+  };
+  is @captured.elems, 1, 'one failure recorded';
+  ok @captured[0].negated, 'failure marked negated';
+}
+
+# Typed throw matches the type, including subclasses.
+{
+  ok expect({ X::T::Throw::Demo.new(:code(1)).throw }).to.throw(X::T::Throw::Demo),
+                                     'typed throw passes for exact type';
+  ok expect({ X::T::Throw::Sub.new(:code(2)).throw }).to.throw(X::T::Throw::Demo),
+                                     'typed throw passes for subclass';
+  is Failures.list.elems, 0, 'no failure on typed pass';
+
+  my @captured = capture-failures {
+    nok expect({ die "boom" }).to.throw(X::T::Throw::Demo),
+                                       'typed throw fails on other type';
+  };
+  is @captured.elems, 1, 'one typed failure';
+  ok @captured[0].expected === X::T::Throw::Demo,
+                                     'Failure.expected is the type';
+}
+
+# Typed + regex message.
+{
+  ok expect({ X::T::Throw::Demo.new(:code(11)).throw })
+        .to.throw(X::T::Throw::Demo, /'code=11'/),
+                                     'typed+regex throw passes when both match';
+
+  my @captured = capture-failures {
+    nok expect({ X::T::Throw::Demo.new(:code(11)).throw })
+          .to.throw(X::T::Throw::Demo, /'code=99'/),
+                                       'typed+regex throw fails on bad message';
+  };
+  is @captured.elems, 1, 'one failure on bad message';
+}
+
+# Message-only regex.
+{
+  ok expect({ die "alpha bravo" }).to.throw(/'bravo'/),
+                                     'message-only throw passes on match';
+
+  my @captured = capture-failures {
+    nok expect({ die "alpha" }).to.throw(/'bravo'/),
+                                       'message-only throw fails on miss';
+  };
+  is @captured.elems, 1, 'one failure on message miss';
+}
+
+# Chained with-message (Str and Regex).
+{
+  ok expect({ die "boom" }).to.throw.with-message('boom'),
+                                     'throw.with-message Str passes';
+  ok expect({ die "alpha bravo" }).to.throw.with-message(/'bravo'/),
+                                     'throw.with-message Regex passes';
+  is Failures.list.elems, 0, 'no failure on with-message pass';
+
+  my @captured = capture-failures {
+    nok expect({ die "boom" }).to.throw.with-message('bang'),
+                                       'throw.with-message fails on miss';
+  };
+  is @captured.elems, 1, 'one failure on with-message miss';
+}
+
+# Non-Callable actual produces the same failure wording as raise-error.
+{
+  my @captured = capture-failures {
+    nok expect(42).to.throw, 'throw fails on non-Callable';
+  };
+  is @captured.elems, 1, 'one failure on non-Callable';
+  is @captured[0].message,
+     'expected a Callable, but got 42',
+     'failure wording is matcher-agnostic';
+}

@@ -72,7 +72,7 @@ describe 'raise-error with non-Callable actuals', {
     expect(42).to.raise-error;
     my $message = Failures.list[0].message;
     Failures.list = ();
-    expect($message).to.be('expected a Callable for raise-error, but got 42');
+    expect($message).to.be('expected a Callable, but got 42');
   }
 }
 

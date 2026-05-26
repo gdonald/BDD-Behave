@@ -799,6 +799,50 @@ class ExpectationBuilder is export {
     );
   }
 
+  proto method throw(|) {*}
+
+  multi method throw() {
+    self!build-raise-expectation;
+  }
+
+  multi method throw(Regex $message) {
+    self!build-raise-expectation(:expected-message($message));
+  }
+
+  multi method throw(Mu \type) {
+    self!build-raise-expectation(:expected-type(type), :has-type);
+  }
+
+  multi method throw(Mu \type, Regex $message) {
+    self!build-raise-expectation(
+      :expected-type(type),
+      :has-type,
+      :expected-message($message),
+    );
+  }
+
+  proto method raise(|) {*}
+
+  multi method raise() {
+    self!build-raise-expectation;
+  }
+
+  multi method raise(Regex $message) {
+    self!build-raise-expectation(:expected-message($message));
+  }
+
+  multi method raise(Mu \type) {
+    self!build-raise-expectation(:expected-type(type), :has-type);
+  }
+
+  multi method raise(Mu \type, Regex $message) {
+    self!build-raise-expectation(
+      :expected-type(type),
+      :has-type,
+      :expected-message($message),
+    );
+  }
+
   method change(&observable) {
     my $expectation = ChangeExpectation.new(
       :given($!given),

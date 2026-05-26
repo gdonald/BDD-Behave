@@ -76,7 +76,7 @@ class RaiseErrorMatcher does Matcher is export {
 
   method failure-message($actual --> Str) {
     unless $!callable-given {
-      return "expected a Callable for raise-error, but got " ~ $actual.raku;
+      return "expected a Callable, but got " ~ $actual.raku;
     }
     given $!miss-reason {
       when 'none' {

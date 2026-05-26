@@ -85,7 +85,7 @@ my class X::T::WithRole is Exception does X::T::Roleish {
   my $m = RaiseErrorMatcher.new;
   $m.matches(42);
   is $m.failure-message(42),
-     'expected a Callable for raise-error, but got 42',
+     'expected a Callable, but got 42',
      'Callable-shape failure-message for non-Callable';
 }
 
