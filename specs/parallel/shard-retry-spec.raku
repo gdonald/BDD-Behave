@@ -17,7 +17,8 @@ sub run-behave(:%env-extra, *@args) {
   %env<BEHAVE_WORKER_COUNT>:delete;
   for %env-extra.kv -> $k, $v { %env{$k} = $v }
   my $proc = Proc::Async.new(
-    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+    'raku', "-I{$lib.absolute}", $bin.absolute,
+    '--parallel-mode=lpt', |@args, :w,
   );
   my $out = '';
   my $err = '';

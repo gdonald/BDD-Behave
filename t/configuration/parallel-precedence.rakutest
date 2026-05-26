@@ -38,8 +38,8 @@ sub run-behave(:%env-extra, *@args) {
   %( :exit($result.exitcode), :$out, :$err );
 }
 
-# Default is serial: no --parallel flag and no config → fixture runs in the
-# parent process, no BEHAVE_WORKER_COUNT in env.
+# Default isolates each spec file in its own worker subprocess: no --parallel
+# flag and no config → fixture sees BEHAVE_WORKER_COUNT set.
 {
   my $detect = make-detect-path;
   LEAVE { $detect.unlink if $detect.e }
@@ -50,9 +50,9 @@ sub run-behave(:%env-extra, *@args) {
     $fixture.absolute,
   );
 
-  is %r<exit>, 0, 'default serial run succeeds';
-  is $detect.slurp, 'serial',
-    'fixture sees serial mode (no BEHAVE_WORKER_COUNT) when no --parallel anywhere';
+  is %r<exit>, 0, 'default run succeeds';
+  isnt $detect.slurp, 'serial',
+    'fixture sees subprocess worker (BEHAVE_WORKER_COUNT defined) by default';
 }
 
 # Config file sets parallel = 2 → fixture sees BEHAVE_WORKER_COUNT=2.

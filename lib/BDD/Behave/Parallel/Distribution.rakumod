@@ -89,6 +89,22 @@ sub group-has-only-serial(Bucket $bucket --> Bool) {
   True;
 }
 
+sub coalesce-by-file(@buckets --> List) is export {
+  my %by-file;
+  my @order;
+
+  for @buckets -> $b {
+    unless %by-file{$b.file}:exists {
+      %by-file{$b.file} = Bucket.new(:id($b.file), :file($b.file));
+      @order.push: $b.file;
+    }
+
+    %by-file{$b.file}.add($_) for $b.examples;
+  }
+
+  @order.map({ %by-file{$_} }).List;
+}
+
 sub split-parallel-and-serial(@buckets --> List) is export {
   my @parallel;
   my @serial;

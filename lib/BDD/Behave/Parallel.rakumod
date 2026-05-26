@@ -63,12 +63,14 @@ sub discover-suites(@spec-files --> List) is export {
   (@suites.List, @load-errors.List).List;
 }
 
+sub current-include-flags(--> List) is export {
+  (gather for $*REPO.repo-chain.reverse {
+    take '-I' ~ .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;
+  }).List;
+}
+
 sub default-discovery-argv(--> List) is export {
-  (
-    'raku',
-    "-I{$*CWD.IO.add('lib').absolute}",
-    $*PROGRAM-NAME,
-  ).List;
+  ('raku', |current-include-flags(), $*PROGRAM-NAME).List;
 }
 
 sub discover-suites-subprocess(
@@ -394,6 +396,106 @@ class ParallelRunResult is export {
   method success(--> Bool) { $!failed == 0 && @!load-errors.elems == 0 && $!exit-code == 0 }
 }
 
+sub run-parallel-isolated-impl(
+  ParallelRunOptions $opts,
+  ParallelRunResult $result,
+  @suites,
+  --> ParallelRunResult
+) {
+  my @filtered = collect-filtered-buckets(
+    @suites,
+    :include-tags($opts.include-tags),
+    :exclude-tags($opts.exclude-tags),
+    :example-patterns($opts.example-patterns),
+    :only-locations($opts.only-locations),
+  );
+
+  my @file-buckets = coalesce-by-file(@filtered);
+
+  if $opts.progress-total {
+    my $total = @file-buckets.map(*.cost).sum;
+    $opts.formatter.set-total($total);
+  }
+
+  return $result unless @file-buckets.elems;
+
+  my $manifest-dir = $*TMPDIR.add("behave-parallel-isolated-{$*PID}-{(now * 1e6).Int}");
+  $manifest-dir.mkdir;
+
+  LEAVE {
+    if $manifest-dir.defined && $manifest-dir.e && $manifest-dir.d {
+      for $manifest-dir.dir -> $f { $f.unlink if $f.f }
+      $manifest-dir.rmdir;
+    }
+  }
+
+  my Lock $event-lock .= new;
+  my $sem = Semaphore.new($opts.worker-count);
+
+  my @promises;
+  my $file-index = 0;
+
+  for @file-buckets -> $bucket {
+    my $idx          = $file-index++;
+    my $file         = $bucket.file;
+    my @locations    = $bucket.locations.list;
+    my $manifest-path = $manifest-dir.add("file-$idx.manifest");
+    write-manifest($manifest-path, @locations);
+
+    my @argv = $opts.worker-argv.Slip;
+    @argv.push: '--worker-manifest', $manifest-path.absolute;
+    @argv.push: $file;
+
+    my %env = |$opts.base-env;
+    %env<BEHAVE_WORKER_INDEX> = $idx.Str;
+    %env<BEHAVE_WORKER_COUNT> = $opts.worker-count.Str;
+
+    if $opts.coverage-log-dir.defined {
+      %env<MVM_COVERAGE_LOG>
+        = $opts.coverage-log-dir.add("isolated-$idx.raw").absolute;
+      %env<MVM_COVERAGE_CONTROL> = '2';
+    }
+
+    @promises.push: start {
+      $sem.acquire;
+
+      LEAVE { $sem.release }
+
+      my $proc   = Proc::Async.new(|@argv);
+      my $parser = JsonLineParser.new;
+
+      $proc.stdout.tap(-> $chunk {
+        for $parser.feed($chunk) -> $event {
+          $event-lock.protect: {
+            handle-event($opts.formatter, $result, $idx, $event, @suites);
+          }
+        }
+      });
+      $proc.stderr.tap(-> $chunk {
+        $event-lock.protect: { $*ERR.print($chunk) }
+      });
+
+      my $proc-result = await $proc.start(:ENV(%env));
+
+      for $parser.flush -> $event {
+        $event-lock.protect: {
+          handle-event($opts.formatter, $result, $idx, $event, @suites);
+        }
+      }
+
+      if $proc-result.exitcode > 1 {
+        $event-lock.protect: {
+          $result.exit-code = 1;
+          note red("Isolated worker for $file exited with code {$proc-result.exitcode}");
+        }
+      }
+    };
+  }
+
+  await Promise.allof(@promises);
+  $result;
+}
+
 sub run-parallel-queue-impl(
   ParallelRunOptions $opts,
   ParallelRunResult $result,
@@ -548,6 +650,10 @@ sub run-parallel(
 
   if $mode eq 'queue' {
     return run-parallel-queue-impl($opts, $result, @suites);
+  }
+
+  if $mode eq 'isolated' {
+    return run-parallel-isolated-impl($opts, $result, @suites);
   }
 
   my %plan = build-worker-manifests(
@@ -764,10 +870,14 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       }
       unless @event-failures.elems {
         with %event<exception-message> -> $msg {
+          my $prefixed = $desc.chars
+            ?? "exception in $desc: " ~ $msg.Str
+            !! $msg.Str;
+
           Failures.list.push: Failure.new(
             :file(%failure-info<file>.Str),
             :line(%failure-info<line>.Int),
-            :message($msg.Str),
+            :message($prefixed),
             :description($desc),
             :from-runner-exception,
           );
@@ -799,6 +909,16 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $formatter.example-around-skipped($example) if $example.defined;
       $result.total++;
       $result.skipped++;
+    }
+    when 'example-slow' {
+      my $example = resolve-example(@suites, %event);
+      $formatter.example-slow($example, :threshold((%event<threshold> // 0).Real))
+        if $example.defined;
+    }
+    when 'example-memory-leak' {
+      my $example = resolve-example(@suites, %event);
+      $formatter.example-memory-leak($example, :threshold((%event<threshold> // 0).Int))
+        if $example.defined;
     }
     when 'profile-record' {
       my $example = resolve-example(@suites, %event);

@@ -1,16 +1,52 @@
 # Parallel Execution
 
-`behave --parallel N` runs your spec suite across `N` worker subprocesses concurrently. Default (no flag) keeps single-process serial execution, bit-for-bit identical to prior releases.
+`behave` runs every spec file in its own subprocess by default, up to a concurrency cap of `$*KERNEL.cpu-cores`. Pass `--parallel N` to set a different concurrency cap.
 
 ```shell
-$ behave --parallel 4
+$ behave             # one subprocess per spec file, up to CPU-cores in flight
+$ behave --parallel 4 # one subprocess per spec file, up to 4 in flight
 ```
 
 ## How it works
 
-Behave's parent process discovers your spec tree, splits it into work shards, then forks `N` `raku bin/behave --worker-manifest …` subprocesses. Each worker loads only the spec files it owns shards in, runs only its assigned examples, and streams structured JSON events back to the parent over stdout. The parent renders those events into your chosen formatter so your terminal sees a single coherent run, not `N` interleaved transcripts.
+Behave's parent process discovers your spec tree, then for each spec file spawns a fresh `raku bin/behave --worker-manifest …` subprocess. Each worker loads exactly one spec file, runs its assigned examples, and streams structured JSON events back to the parent over stdout. A semaphore caps the number of concurrent subprocesses. The parent renders the events into your chosen formatter so your terminal sees a single coherent run, not `N` interleaved transcripts.
 
 Workers are subprocesses, not threads — every worker has its own Raku runtime, its own loaded classes, and its own `%*ENV`. State you mutate in one example never leaks to another worker.
+
+## The file boundary is the isolation boundary
+
+Because each spec file loads in its own subprocess, **cross-file in-process state cannot be shared via spec files**. If file A declares a `define-matcher`, `shared-examples`, or `shared-contexts` block and file B references it by name, the reference will fail under the default loader — file B's subprocess never loaded file A.
+
+Put anything that needs to be available to multiple spec files in a module under `lib/` and `use` it from each spec:
+
+```raku
+# lib/MyProject/SharedMatchers.rakumod
+unit module MyProject::SharedMatchers;
+
+use BDD::Behave;
+
+define-matcher 'be-a-positive-integer', {
+  match -> $actual { $actual ~~ Int && $actual > 0 }
+}
+```
+
+```raku
+# specs/whatever-spec.raku
+use BDD::Behave;
+use MyProject::SharedMatchers;
+
+describe 'order quantity', {
+  it 'is a positive integer', {
+    expect(42).to.be-a-positive-integer;
+  }
+}
+```
+
+This is the same pattern that has always worked across `--parallel` workers — making file-as-isolation-boundary the default just makes it universal.
+
+## Why subprocess-per-file
+
+Loading multiple spec files into one process has hazards that don't exist when each file lives in its own subprocess. The most common is a runtime `require ::($name)` inside one spec (for example `DBIish.connect(...)` lazy-loading a driver) mutating the host process's GLOBAL in a way that breaks subsequent `X::*`-prefixed symbol lookups in other specs that already imported them. Per-file subprocesses sidestep this class of problem entirely.
 
 ### Discovery subprocess
 
@@ -41,10 +77,10 @@ Inside spec code, `BDD::Behave::Worker.id` and `BDD::Behave::Worker.count` give 
 | `BEHAVE_WORKER_INDEX` | This worker's zero-based index (0..count-1) |
 | `BEHAVE_WORKER_COUNT` | The total worker count for this run         |
 
-Both are always set: in single-process mode `BEHAVE_WORKER_INDEX=0` and `BEHAVE_WORKER_COUNT=1`, so configuration that interpolates the index into a per-worker resource name works identically in serial and parallel modes.
+Both are always set — each spec file's subprocess sees its index and the total concurrency cap. Configuration that interpolates the index into a per-worker resource name works in any concurrency configuration.
 
 ```raku
-# Pick a DB by worker index — works in serial (index=0, count=1) and parallel modes.
+# Pick a DB by worker index.
 use BDD::Behave::Worker;
 
 my $db-name = "myapp_test_{BDD::Behave::Worker.id}";

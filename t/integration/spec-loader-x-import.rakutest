@@ -1,0 +1,41 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+# Regression: when one spec triggers DBIish.connect at file load (which does
+# a runtime `require ::($driver)` internally), a sibling spec that imports
+# `X::*` symbols via `is export` from a separate module loses access to them
+# inside its `it` blocks. The closure raises:
+#
+#   Could not find symbol '&Boom' in 'X::ImportRepro'
+#
+# See t/fixtures/x-import/ for the minimal fixtures.
+
+plan 4;
+
+my $root    = $?FILE.IO.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/x-import');
+
+my $proc = run('raku', '-Ilib', "-I{$fixture.absolute}", $bin.absolute,
+               '--order=defined',
+               $fixture.add('a-spec.raku').absolute,
+               $fixture.add('b-spec.raku').absolute,
+               :out, :err);
+
+my $stdout = $proc.out.slurp(:close);
+my $stderr = $proc.err.slurp(:close);
+
+is $proc.exitcode, 0,
+  'behave exits 0 when a sibling spec triggered DBIish.connect at load time';
+
+isnt $stdout, '',
+  'behave produced output (so the unlike below cannot pass vacuously)';
+
+unlike $stdout, /"Could not find symbol '&Boom' in 'X::ImportRepro'"/,
+  'b-spec still resolves X::ImportRepro::Boom from its own `use`';
+
+like $stdout, /"2 passed"/,
+  'both fixture examples passed';
+
+done-testing;

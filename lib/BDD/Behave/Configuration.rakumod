@@ -232,7 +232,7 @@ our sub defaults(--> Configuration) {
   $c.format               = 'progress';
   $c.order                = 'random';
   $c.seed-mode            = 'xor';
-  $c.parallel-mode        = 'lpt';
+  $c.parallel-mode        = 'isolated';
   $c.fail-fast            = 0;
   $c.retry                = 0;
   $c.only-failures        = False;

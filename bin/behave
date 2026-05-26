@@ -673,9 +673,10 @@ my $format               = $final-config.format;
 my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
 my $seed-mode            = $final-config.seed-mode // 'xor';
-my $parallel-mode        = $final-config.parallel-mode // 'lpt';
+my $parallel-mode        = $final-config.parallel-mode // 'isolated';
 my $parallel-retry       = $final-config.parallel-retry // 0;
-$parallel-workers        = $final-config.parallel // 0;
+my $parallel-explicit    = $final-config.parallel.defined;
+$parallel-workers        = $final-config.parallel // $*KERNEL.cpu-cores;
 my $progress-total       = ?$final-config.progress-total;
 my $fail-fast            = $final-config.fail-fast;
 my $retry-default        = $final-config.retry // 0;
@@ -738,8 +739,8 @@ unless $seed-mode eq 'xor' | 'stable' {
   exit 2;
 }
 
-unless $parallel-mode eq 'lpt' | 'queue' {
-  note "Error: --parallel-mode must be 'lpt' or 'queue' (got: '$parallel-mode')";
+unless $parallel-mode eq 'lpt' | 'queue' | 'isolated' {
+  note "Error: --parallel-mode must be 'lpt', 'queue', or 'isolated' (got: '$parallel-mode')";
   exit 2;
 }
 
@@ -763,15 +764,23 @@ if $bisect && $bisect-data {
   exit 2;
 }
 
-if $parallel-workers > 0 && ($bisect || $bisect-data) {
-  note "Error: --parallel is mutually exclusive with --bisect / --bisect-data";
-  exit 2;
+if $bisect || $bisect-data {
+  if $parallel-explicit && $parallel-workers > 0 {
+    note "Error: --parallel is mutually exclusive with --bisect / --bisect-data";
+    exit 2;
+  }
+
+  $parallel-workers = 0;
 }
 
-if $watch-mode && ($bisect || $bisect-data || $coverage-enabled
-                || $doc-mode || $parallel-workers > 0) {
-  note "Error: --watch is mutually exclusive with --bisect / --bisect-data / --coverage / --doc / --parallel";
-  exit 2;
+if $watch-mode {
+  if $bisect || $bisect-data || $coverage-enabled || $doc-mode
+     || ($parallel-explicit && $parallel-workers > 0) {
+    note "Error: --watch is mutually exclusive with --bisect / --bisect-data / --coverage / --doc / --parallel";
+    exit 2;
+  }
+
+  $parallel-workers = 0;
 }
 
 my $coverage-running = %*ENV<BEHAVE_COVERAGE_LOG>.defined;
@@ -1150,11 +1159,11 @@ if $watch-mode {
   exit 0;
 }
 
-if $parallel-workers >= 1 && !$worker-manifest-path.defined {
+if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   use BDD::Behave::Parallel;
   use BDD::Behave::Colors;
 
-  my @worker-argv = 'raku', '-Ilib', $*PROGRAM-NAME;
+  my @worker-argv = 'raku', |current-include-flags(), $*PROGRAM-NAME;
 
   my $worker-order = $seed-mode eq 'stable' ?? 'defined' !! $order;
   if $worker-order eq 'defined' {
@@ -1167,10 +1176,18 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     @worker-argv.push: '--seed', $seed.Str;
   }
 
-  @worker-argv.push: '--no-config';
+  if $config-path-arg.defined {
+    @worker-argv.push: '--config', $config-path-arg.IO.absolute;
+  } else {
+    @worker-argv.push: '--no-config';
+  }
+
   @worker-argv.push: '--format', 'json-events';
   if $retry-default > 0 {
     @worker-argv.push: '--retry', $retry-default.Str;
+  }
+  if $fail-fast > 0 {
+    @worker-argv.push: '--fail-fast=' ~ $fail-fast.Str;
   }
 
   if $profile-limit > 0 {
@@ -1181,6 +1198,9 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
   }
   if $memory-threshold > 0 {
     @worker-argv.push: '--memory-threshold=' ~ $memory-threshold.Str;
+  }
+  if $slow-threshold.defined && $slow-threshold > 0 {
+    @worker-argv.push: '--slow-threshold=' ~ $slow-threshold.Str;
   }
   if $benchmark-mode {
     @worker-argv.push: '--benchmark';
@@ -1258,11 +1278,12 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined {
     :skipped($par-result.skipped),
   );
 
-  say '';
+  my $aborted = $fail-fast > 0 && $par-result.failed >= $fail-fast;
+
   if @files.elems > 1 {
     $parent-formatter.multi-file-overall($rr, :$order, :$seed);
   } else {
-    $parent-formatter.run-summary($rr, :$order, :$seed);
+    $parent-formatter.run-summary($rr, :$order, :$seed, :$aborted, :$fail-fast);
   }
 
   if $par-result.load-errors.elems {
@@ -1683,7 +1704,7 @@ if $multi {
 
 $formatter.load-errors(@load-errors);
 
-unless $bisect || $bisect-data {
+unless $bisect || $bisect-data || $worker-manifest-path.defined {
   BDD::Behave::FailureStore::write-failures(
     $failures-path,
     @all-execution-order,
