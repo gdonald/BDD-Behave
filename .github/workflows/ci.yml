@@ -11,14 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install Raku
-        run: |
-          curl -fsSL "https://rakudo.org/dl/rakudo/rakudo-moar-2026.04-01-linux-x86_64-gcc.tar.gz" -o /tmp/rakudo.tar.gz
-          sudo mkdir -p /opt/rakudo
-          sudo tar -xzf /tmp/rakudo.tar.gz -C /opt/rakudo --strip-components=1
-          echo "/opt/rakudo/bin" >> "$GITHUB_PATH"
-          echo "/opt/rakudo/share/perl6/site/bin" >> "$GITHUB_PATH"
-          echo "$HOME/.raku/bin" >> "$GITHUB_PATH"
+      - uses: Raku/setup-raku@v1
+        with:
+          raku-version: 'latest'
       - name: Raku version
         run: raku --version
       - name: Install Dependencies
