@@ -1,6 +1,14 @@
 
 use v6.d;
 
+use BDD::Behave::Slang;
+
+# Engage the bareword `let` slang in the consuming spec's compilation scope.
+sub EXPORT(|) {
+  engage-let-slang();
+  Map.new;
+}
+
 # Re-export DSL functions with lazy loading
 # Each function uses 'state' to cache the implementation after first require
 sub describe(|args) is export {

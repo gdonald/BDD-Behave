@@ -1,0 +1,124 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use MONKEY-SEE-NO-EVAL;
+
+plan 12;
+
+sub run-clean(&build) {
+  registry().clear;
+  build();
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $r = BDD::Behave::Runner::Runner.new.run(registry().suites[0]);
+  $sink.close;
+  $r;
+}
+
+sub compile-stderr(Str $code) {
+  my $h = class :: {
+    has $.sink is rw = '';
+    method print(*@a) { $!sink ~= @a.join }
+    method flush {}
+  }.new;
+  { my $*ERR = $h; try EVAL $code; }
+  $h.sink;
+}
+
+# Bareword resolves in a nested example, and in a method-call position.
+my $basic = run-clean({
+  describe 'basic', {
+    let(:owner, { 'ALICE' });
+    it 'plain',  { expect(owner).to.eq('ALICE') }
+    it 'method', { expect(owner.chars).to.eq(5) }
+  }
+});
+is $basic.failed, 0, 'bareword resolves plain and in method position';
+is $basic.passed, 2, 'both basic examples ran';
+
+# Hyphenated name.
+my $hyphen = run-clean({
+  describe 'hyphen', {
+    let(:u-seed, { 'BOB' });
+    it 'x', { expect(u-seed).to.eq('BOB') }
+  }
+});
+is $hyphen.failed, 0, 'hyphenated bareword resolves';
+
+# Shadowing: inner let wins, outer keeps its value.
+my $shadow = run-clean({
+  describe 'shadow', {
+    let(:x, { 'outer' });
+    context 'inner', {
+      let(:x, { 'inner' });
+      it 'inner', { expect(x).to.eq('inner') }
+    }
+    it 'outer', { expect(x).to.eq('outer') }
+  }
+});
+is $shadow.failed, 0, 'inner let shadows, outer intact';
+is $shadow.passed, 2, 'both shadow examples ran';
+
+# let-bang bareword (eager).
+my $bang = run-clean({
+  describe 'bang', {
+    let-bang(:eager, { 7 });
+    it 'x', { expect(eager).to.eq(7) }
+  }
+});
+is $bang.failed, 0, 'let-bang bareword resolves';
+
+# subject bareword (named).
+my $subj = run-clean({
+  describe 'subject', {
+    subject(:thing, { 99 });
+    it 'x', { expect(thing).to.eq(99) }
+  }
+});
+is $subj.failed, 0, 'named subject bareword resolves';
+
+# Fetch form: let(:name) / let('name') with no block, in any position.
+my $fetch = run-clean({
+  describe 'fetch', {
+    let(:answer, { 42 });
+    it 'colonpair', { expect(let(:answer)).to.eq(42) }
+    it 'string',    { expect(let('answer')).to.eq(42) }
+    it 'method',    { expect(let(:answer).Str).to.eq('42') }
+  }
+});
+is $fetch.failed, 0, 'fetch form resolves in every position';
+
+# Compile-failure: forward reference (use before let).
+my $fwd = try EVAL q:to/CODE/;
+  use BDD::Behave;
+  describe 'fwd', { it 'early', { expect(y).to.eq(1) }; let(:y, { 1 }); }
+  CODE
+nok $fwd.defined, 'forward reference does not compile';
+
+# Compile-failure: undeclared bareword.
+my $undef = try EVAL q:to/CODE/;
+  use BDD::Behave;
+  describe 'undef', { it 'x', { expect(nope).to.eq(1) } }
+  CODE
+nok $undef.defined, 'undeclared bareword does not compile';
+
+# Sibling isolation.
+my $sib = try EVAL q:to/CODE/;
+  use BDD::Behave;
+  describe 'sib', {
+    context 'a', { let(:only-a, { 1 }); it 'x', { True } }
+    context 'b', { it 'y', { expect(only-a).to.eq(1) } }
+  }
+  CODE
+nok $sib.defined, 'sibling context cannot see the other bareword';
+
+# Shadowing warning: warns for a non-let symbol, silent for let-over-let.
+my $warn = compile-stderr(q:to/CODE/);
+  use BDD::Behave;
+  describe 'w', { sub helper { 'real' }; let(:helper, { 'v' }); it 'x', { True } }
+  CODE
+ok $warn.contains('shadows'), 'warns when a let shadows an existing sub';

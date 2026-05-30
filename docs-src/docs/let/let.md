@@ -56,6 +56,52 @@ it 'reads via the context parameter', -> $_ {
 }
 ```
 
+### 4. Bareword
+
+A `let` name is also available as a bareword inside the group that defined it —
+no sigil, no `expect` wrapper. This is the most direct form and works in any
+position: method calls, arguments, and data structures.
+
+```raku
+describe 'pages', {
+  let(:owner, { User.create(name => 'Alice') });
+
+  it 'reads the bareword anywhere', {
+    Page.create({user => owner, name => 'Home'});
+
+    expect(User.find(owner.id).pages.elems).to.eq(1);
+  }
+}
+```
+
+Barewords also work for `let-bang` and `subject` names.
+
+A `let` must be **defined before it is used**: a bareword referenced earlier in
+the file than its `let` line will not compile. A bareword that was never
+defined as a `let` is an ordinary undeclared-routine compile error, so typos
+are caught at compile time.
+
+## Fetch form
+
+Calling `let` with a name and no block returns the value directly. Both name
+spellings work — `let(:answer)` and `let('answer')` — and it can be used in any
+position:
+
+```raku
+describe 'fetch form', {
+  let(:user, { User.create(name => 'Alice') });
+
+  it 'reads the value in any position', {
+    Page.create({user => let(:user), name => 'Home'});
+
+    expect(User.find(let(:user).id).pages.elems).to.eq(1);
+  }
+}
+```
+
+The fetch form shares the same memoization as the definition, must be called
+while an example is running, and raises for an unknown name.
+
 ## Memoization
 
 Within a single example, calling a let multiple times returns the same value:
@@ -87,6 +133,10 @@ describe 'shadowing', {
   }
 }
 ```
+
+Shadowing one `let` with another of the same name is normal and silent. But if
+a `let` name shadows an existing non-let symbol in the same scope (a `sub` or
+variable), a warning is printed at compile time so the collision is not silent.
 
 ## `let-bang` (eager evaluation)
 

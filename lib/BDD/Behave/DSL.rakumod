@@ -122,6 +122,22 @@ our sub let(|c) is export {
   my $name;
   my $block;
 
+  my $has-block = @pos.first(* ~~ Callable).defined;
+
+  unless $has-block {
+    my $fetch-name;
+
+    if @pos.elems == 1 && @pos[0] ~~ Str && !%named {
+      $fetch-name = @pos[0];
+    } elsif @pos.elems == 0 && %named.elems == 1 {
+      $fetch-name = %named.keys[0].Str;
+    } else {
+      die "let expects either let('name', \{ block \}) or let(:name, \{ block \}), or a fetch form let('name') / let(:name)";
+    }
+
+    return let-value($fetch-name);
+  }
+
   if @pos.elems == 2 && @pos[0] ~~ Str && @pos[1] ~~ Callable {
     $name = @pos[0];
     $block = @pos[1];
@@ -166,6 +182,19 @@ our sub let(|c) is export {
   }
 
   $definition;
+}
+
+our sub let-value(Str:D $name) is export {
+  my $runtime;
+  try {
+    $runtime = $*LET-RUNTIME if $*LET-RUNTIME.defined;
+  }
+
+  unless $runtime.defined {
+    die "let(:$name) fetch form must be called while an example is running";
+  }
+
+  $runtime.value($name);
 }
 
 our sub let-bang(|c) is export {
