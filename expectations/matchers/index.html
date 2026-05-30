@@ -3606,6 +3606,17 @@ block must be passed unevaluated — wrap the code under test in <code>{ ... }</
 <span class="n">expect</span>({ <span class="o">X</span>::<span class="n">AdHoc</span>.<span class="nb">new</span>(<span class="nb">payload</span> =&gt; <span class="s">&#39;x&#39;</span>).<span class="nb">throw</span> }).<span class="nb">to</span>.<span class="n">raise-error</span>;
 <span class="n">expect</span>({ <span class="mi">1</span> + <span class="mi">1</span> }).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">raise-error</span>;
 </code></pre></div></td></tr></table></div>
+<p><code>raise-error</code> is also available under two aliases — <code>throw</code> and <code>raise</code> —
+which take the same arguments and behave identically. Pick whichever
+reads best at the call site:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>({ <span class="nb">die</span> <span class="s">&quot;boom&quot;</span> }).<span class="nb">to</span>.<span class="nb">throw</span>;
+<span class="n">expect</span>({ <span class="o">X</span>::<span class="n">Demo</span>.<span class="nb">new</span>.<span class="nb">throw</span> }).<span class="nb">to</span>.<span class="nb">throw</span>(<span class="o">X</span>::<span class="n">Demo</span>,<span class="sr"> /&#39;demo&#39;/</span>);
+<span class="n">expect</span>({ <span class="mi">1</span> + <span class="mi">1</span> }).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">raise</span>;
+<span class="n">expect</span>({ <span class="nb">die</span> <span class="s">&quot;boom&quot;</span> }).<span class="nb">to</span>.<span class="n">raise</span>.<span class="n">with-message</span>(<span class="s">&#39;boom&#39;</span>);
+</code></pre></div></td></tr></table></div>
 <h3 id="filtering-by-exception-type">Filtering by exception type<a class="headerlink" href="#filtering-by-exception-type" title="Permanent link">&para;</a></h3>
 <p>Pass an exception type as the first argument to require that the raised
 exception is <em>that</em> type, a subclass of it, or a class that does it as a
@@ -3704,7 +3715,7 @@ expected block not to raise X::Demo, but one was raised (X::Demo: demo)
 <p>Non-<code>Callable</code> actuals fail rather than throw — <code>expect(42).to.raise-error</code>
 records a normal expectation failure rather than blowing up. The failure
 message names the unwrapped value so the mistake is obvious:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected a Callable for raise-error, but got 42
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected a Callable, but got 42
 </code></pre></div></td></tr></table></div>
 <h3 id="failure-metadata">Failure metadata<a class="headerlink" href="#failure-metadata" title="Permanent link">&para;</a></h3>
 <p><code>Failure.given</code> carries the original <code>Callable</code>. <code>Failure.expected</code>
@@ -4113,7 +4124,7 @@ assertion completes quickly. A miss runs out the full timeout before
 recording a failure.</p>
 <p>Failure messages report the iteration count and the elapsed wall-clock
 time:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>eventually: Expected: 99 to be 0 (after 5 iterations in 0.05s)
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>eventually: did not match be 0 (after 5 iterations in 0.05s)
 </code></pre></div></td></tr></table></div>
 <p>If the block throws on every iteration, the failure message names the
 last exception:</p>
@@ -4136,8 +4147,9 @@ matches early fails quickly rather than waiting out the timeout.</p>
 <li><code>Failure.message</code> includes iteration count and elapsed time</li>
 </ul>
 <h3 id="non-callable-actuals_2">Non-Callable actuals<a class="headerlink" href="#non-callable-actuals_2" title="Permanent link">&para;</a></h3>
-<p><code>expect(42).to.eventually.be(42)</code> records a Promise-shape failure
-because the actual is not a <code>Callable</code>. The block form is required.</p>
+<p><code>expect(42).to.eventually.be(42)</code> fails with <code>expected a Callable for
+eventually, but got 42</code> because the actual is not a <code>Callable</code>. The
+block form is required.</p>
 <h2 id="writing-a-custom-matcher">Writing a custom matcher<a class="headerlink" href="#writing-a-custom-matcher" title="Permanent link">&para;</a></h2>
 <p>Define a class that does <code>Matcher</code> and pass an instance to <code>.be(...)</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

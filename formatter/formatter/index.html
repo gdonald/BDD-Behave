@@ -1224,6 +1224,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#junit" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1651,6 +1662,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#json" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        json
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#junit" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1786,10 +1808,10 @@
 <p>Pass <code>--format NAME</code> to <code>behave</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--format<span class="w"> </span>tree<span class="w"> </span>specs/users-spec.raku
 </code></pre></div></td></tr></table></div>
-<p><code>NAME</code> must be a registered formatter. The built-in formatters are <code>documentation</code>, <code>html</code>, <code>json</code>, <code>junit</code>, <code>progress</code>, <code>tap</code>, and <code>tree</code>. An unknown name fails fast:</p>
+<p><code>NAME</code> must be a registered formatter. The built-in formatters are <code>documentation</code>, <code>html</code>, <code>json</code>, <code>json-events</code>, <code>junit</code>, <code>progress</code>, <code>tap</code>, and <code>tree</code>. (<code>json-events</code> is the line-delimited event stream parallel workers use to report back to the parent; it is registered and selectable but rarely useful on its own.) An unknown name fails fast:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --format nope
-Error: unknown --format &#39;nope&#39; (available: documentation, html, json, junit, progress, tap, tree)
+Error: unknown --format &#39;nope&#39; (available: documentation, html, json, json-events, junit, progress, tap, tree)
 </code></pre></div></td></tr></table></div>
 <p>When <code>--format</code> is omitted, <code>progress</code> is selected. The currently registered names are also listed in <code>behave --help</code>.</p>
 <h2 id="built-in-formatters">Built-in formatters<a class="headerlink" href="#built-in-formatters" title="Permanent link">&para;</a></h2>
@@ -1900,6 +1922,7 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 </tbody>
 </table>
 <p>Inline <code>&lt;style&gt;</code> provides the default theme; colors are hard-coded (no external CSS). All user descriptions and file paths are HTML-escaped (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, <code>"</code>). In multi-file mode every spec file gets an <code>&lt;h2 class="suite-file"&gt;</code> heading and a single HTML document covers the entire run.</p>
+<h3 id="json"><code>json</code><a class="headerlink" href="#json" title="Permanent link">&para;</a></h3>
 <p>Emits a single JSON document on stdout after the run finishes — designed for CI dashboards and tool integration. No per-example or per-group output is printed, so the document is the only thing on stdout (load errors and CLI flag errors are still emitted to stderr as usual).</p>
 <p>Top-level shape:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -2006,17 +2029,17 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
-<span class="nt">&lt;testsuites</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;behave&quot;</span><span class="w"> </span><span class="na">tests=</span><span class="s">&quot;5&quot;</span><span class="w"> </span><span class="na">failures=</span><span class="s">&quot;1&quot;</span><span class="w"> </span><span class="na">errors=</span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="na">skipped=</span><span class="s">&quot;2&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.045&quot;</span><span class="nt">&gt;</span>
-<span class="w">  </span><span class="nt">&lt;testsuite</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calc-spec.raku&quot;</span><span class="w"> </span><span class="na">tests=</span><span class="s">&quot;5&quot;</span><span class="w"> </span><span class="na">failures=</span><span class="s">&quot;1&quot;</span><span class="w"> </span><span class="na">errors=</span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="na">skipped=</span><span class="s">&quot;2&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.045&quot;</span><span class="w"> </span><span class="na">timestamp=</span><span class="s">&quot;...&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="nt">&gt;</span>
-<span class="w">    </span><span class="nt">&lt;testcase</span><span class="w"> </span><span class="na">classname=</span><span class="s">&quot;Calculator&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;adds positive numbers&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="w"> </span><span class="na">line=</span><span class="s">&quot;4&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.001&quot;</span><span class="nt">/&gt;</span>
-<span class="w">    </span><span class="nt">&lt;testcase</span><span class="w"> </span><span class="na">classname=</span><span class="s">&quot;Calculator &amp;gt; addition&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;overflows&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="w"> </span><span class="na">line=</span><span class="s">&quot;9&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.001&quot;</span><span class="nt">&gt;</span>
+<span class="nt">&lt;testsuites</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;behave&quot;</span><span class="w"> </span><span class="na">tests=</span><span class="s">&quot;5&quot;</span><span class="w"> </span><span class="na">failures=</span><span class="s">&quot;1&quot;</span><span class="w"> </span><span class="na">errors=</span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="na">skipped=</span><span class="s">&quot;2&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.045000&quot;</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;testsuite</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;calc-spec.raku&quot;</span><span class="w"> </span><span class="na">tests=</span><span class="s">&quot;5&quot;</span><span class="w"> </span><span class="na">failures=</span><span class="s">&quot;1&quot;</span><span class="w"> </span><span class="na">errors=</span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="na">skipped=</span><span class="s">&quot;2&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.045000&quot;</span><span class="w"> </span><span class="na">timestamp=</span><span class="s">&quot;...&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;testcase</span><span class="w"> </span><span class="na">classname=</span><span class="s">&quot;Calculator&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;adds positive numbers&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="w"> </span><span class="na">line=</span><span class="s">&quot;4&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.001000&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;testcase</span><span class="w"> </span><span class="na">classname=</span><span class="s">&quot;Calculator &amp;gt; addition&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;overflows&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="w"> </span><span class="na">line=</span><span class="s">&quot;9&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.001000&quot;</span><span class="nt">&gt;</span>
 <span class="w">      </span><span class="nt">&lt;failure</span><span class="w"> </span><span class="na">type=</span><span class="s">&quot;Expectation&quot;</span><span class="w"> </span><span class="na">message=</span><span class="s">&quot;Expected 2147483648 to be -2147483648&quot;</span><span class="nt">&gt;</span><span class="cp">&lt;![CDATA[</span>
 <span class="cp">specs/calc-spec.raku:9</span>
 <span class="cp">  Expected: 2147483648</span>
 <span class="cp">  to be:    -2147483648</span>
 <span class="cp">      ]]&gt;</span><span class="nt">&lt;/failure&gt;</span>
 <span class="w">    </span><span class="nt">&lt;/testcase&gt;</span>
-<span class="w">    </span><span class="nt">&lt;testcase</span><span class="w"> </span><span class="na">classname=</span><span class="s">&quot;Calculator&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;todo&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="w"> </span><span class="na">line=</span><span class="s">&quot;12&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0&quot;</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;testcase</span><span class="w"> </span><span class="na">classname=</span><span class="s">&quot;Calculator&quot;</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;todo&quot;</span><span class="w"> </span><span class="na">file=</span><span class="s">&quot;specs/calc-spec.raku&quot;</span><span class="w"> </span><span class="na">line=</span><span class="s">&quot;12&quot;</span><span class="w"> </span><span class="na">time=</span><span class="s">&quot;0.000000&quot;</span><span class="nt">&gt;</span>
 <span class="w">      </span><span class="nt">&lt;skipped</span><span class="w"> </span><span class="na">message=</span><span class="s">&quot;pending: not yet implemented&quot;</span><span class="nt">/&gt;</span>
 <span class="w">    </span><span class="nt">&lt;/testcase&gt;</span>
 <span class="w">  </span><span class="nt">&lt;/testsuite&gt;</span>
@@ -2261,8 +2284,8 @@ Failures:
 </thead>
 <tbody>
 <tr>
-<td><code>run-summary($result, :$aborted, :$fail-fast, :$order, :$seed)</code></td>
-<td>Per-suite summary: failures, counts, aborted line, seed announcement.</td>
+<td><code>run-summary($result, :$aborted, :$fail-fast, :$order, :$seed, :$show-seed)</code></td>
+<td>Per-suite summary: failures, counts, aborted line, seed announcement. The seed line is shown only when <code>$show-seed</code> is set or the run had failures.</td>
 </tr>
 <tr>
 <td><code>profile-summary(@records, :$limit)</code></td>
@@ -2277,8 +2300,8 @@ Failures:
 <td>Per-suite benchmark section when <code>--benchmark</code> is enabled.</td>
 </tr>
 <tr>
-<td><code>multi-file-overall($result, :$order, :$seed)</code></td>
-<td>The <code>Overall:</code> block printed when running more than one spec file.</td>
+<td><code>multi-file-overall($result, :$order, :$seed, :$show-seed)</code></td>
+<td>The <code>Overall:</code> block printed when running more than one spec file. Same seed-line gating as <code>run-summary</code>.</td>
 </tr>
 <tr>
 <td><code>multi-file-profile</code>, <code>multi-file-memory-profile</code>, <code>multi-file-benchmark</code></td>
@@ -2343,7 +2366,7 @@ Failures:
 <span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Formatter::Registry</span>;
 
 <span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">names</span>;
-<span class="c1"># → (documentation html json junit progress tap tree)</span>
+<span class="c1"># → (documentation html json json-events junit progress tap tree)</span>
 
 <span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">register</span>(<span class="s">&#39;dots&#39;</span>, <span class="n">DotsFormatter</span>);
 <span class="n">BDD::Behave::Formatter::Registry</span>.<span class="n">registered</span>(<span class="s">&#39;dots&#39;</span>);   <span class="c1"># True</span>

@@ -1999,7 +1999,7 @@
 <span class="nv">$log</span>.<span class="nb">warn</span>(<span class="s">&#39;careful&#39;</span>);                    <span class="c1"># returns Any</span>
 <span class="n">expect</span>(<span class="nv">$log</span>.<span class="n">received</span>(<span class="s">&#39;warn&#39;</span>)).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">True</span>);
 </code></pre></div></td></tr></table></div>
-<p>This makes ad-hoc doubles permissive by design — they let you focus on the calls you actually care about.</p>
+<p>Ad-hoc doubles are permissive by design: calls you haven't stubbed return <code>Any</code> instead of erroring.</p>
 <h2 id="callable-stubs">Callable stubs<a class="headerlink" href="#callable-stubs" title="Permanent link">&para;</a></h2>
 <p>If the stub value is a <code>Callable</code>, the double invokes it with the call's arguments and returns the result:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>

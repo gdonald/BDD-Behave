@@ -392,6 +392,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#-show-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --show-seed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#-order-defined" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1729,6 +1740,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#-show-seed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        --show-seed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#-order-defined" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1988,6 +2010,10 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 <td>Display usage</td>
 </tr>
 <tr>
+<td><code>--version</code>, <code>-V</code></td>
+<td>Print the installed <code>BDD::Behave</code> version and exit. Reads the version from the loaded distribution's metadata; falls back to walking up from the script to find <code>META6.json</code> when running from a source checkout.</td>
+</tr>
+<tr>
 <td><code>--verbose</code></td>
 <td>Print each spec file as it is loaded</td>
 </tr>
@@ -2017,7 +2043,11 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--seed N</code></td>
-<td>Seed the random-order RNG for reproducible runs. Ignored when <code>--order=defined</code>. Auto-generated when omitted and <code>--order=random</code>. See <a href="#order-and-seed">Order and seed</a>.</td>
+<td>Seed the random-order RNG for reproducible runs. Ignored when <code>--order=defined</code>. Auto-generated when omitted and <code>--order=random</code>. The seed is printed at the end of a run only when an example fails (or with <code>--show-seed</code>). See <a href="#order-and-seed">Order and seed</a>.</td>
+</tr>
+<tr>
+<td><code>--show-seed</code> / <code>--no-show-seed</code></td>
+<td>Always (or never) print <code>Randomized with seed N</code> at the end of a random-order run. The default prints it only when a spec fails, so a green run stays quiet. See <a href="#order-and-seed">Order and seed</a>.</td>
 </tr>
 <tr>
 <td><code>--fail-fast</code></td>
@@ -2081,7 +2111,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--parallel N</code></td>
-<td>Run specs across <code>N</code> worker subprocesses with group-affinity LPT distribution. Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code>. Aggregates coverage across workers when combined with <code>--coverage</code> (see <a href="../parallel/parallel/#coverage">Coverage under --parallel</a>). Ignored under <code>--doc</code>. See <a href="../parallel/parallel/">Parallel Execution</a>.</td>
+<td>Run specs across <code>N</code> worker subprocesses (the default mode runs one subprocess per spec file, up to <code>N</code> in flight; see <code>--parallel-mode</code>). Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code>. Aggregates coverage across workers when combined with <code>--coverage</code> (see <a href="../parallel/parallel/#coverage">Coverage under --parallel</a>). Ignored under <code>--doc</code>. See <a href="../parallel/parallel/">Parallel Execution</a>.</td>
 </tr>
 <tr>
 <td><code>--seed-mode MODE</code></td>
@@ -2089,7 +2119,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--parallel-mode MODE</code></td>
-<td>Bucket distribution strategy under <code>--parallel N</code>. <code>lpt</code> (default) uses static longest-processing-time-first assignment by example count. <code>queue</code> uses dynamic work-stealing: workers pull buckets from a parent-managed queue, useful when bucket runtimes are wildly uneven. Forces <code>--order=defined</code> per worker. See <a href="../parallel/parallel/#parallel-mode-parallel-mode">Parallel mode</a>.</td>
+<td>Execution model under <code>--parallel N</code>. <code>isolated</code> (default) runs one subprocess per spec file. <code>lpt</code> uses a fixed pool of <code>N</code> workers with static longest-processing-time-first assignment by example count. <code>queue</code> uses a fixed pool with dynamic work-stealing, useful when bucket runtimes are wildly uneven. See <a href="../parallel/parallel/#parallel-mode-parallel-mode">Parallel mode</a>.</td>
 </tr>
 <tr>
 <td><code>--parallel-retry N</code></td>
@@ -2123,22 +2153,36 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </table>
 <h2 id="order-and-seed">Order and seed<a class="headerlink" href="#order-and-seed" title="Permanent link">&para;</a></h2>
 <p>Behave runs examples in <strong>random order by default</strong>. This shuffles the children of every <code>describe</code> / <code>context</code> group (and the top-level suite) before execution. Random ordering catches accidental order dependencies — examples that pass only because a sibling ran first — and is the recommended default.</p>
-<p>When a run finishes, Behave prints the seed used so the order is reproducible:</p>
+<p>When a run <strong>fails</strong>, Behave prints the seed used so the failing order is reproducible:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>Overall: 1247 examples
-  1236 passed
+<span class="normal">3</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code>Overall: 1247 examples
+  1 failed
+  1246 passed
 Randomized with seed 595739438
 </code></pre></div></td></tr></table></div>
+<p>A fully passing run stays quiet — there is nothing to reproduce, so the seed line is omitted to keep green output clean.</p>
 <p>Pass <code>--seed N</code> to reproduce a specific order:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--seed<span class="w"> </span><span class="m">595739438</span>
 </code></pre></div></td></tr></table></div>
 <p>If random order surfaces a failure, the seed in the summary is all you need to re-run the same permutation.</p>
+<h3 id="-show-seed"><code>--show-seed</code><a class="headerlink" href="#-show-seed" title="Permanent link">&para;</a></h3>
+<p>To print the seed even on a passing run — for instance to record the exact order a green CI run used — pass <code>--show-seed</code>:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--show-seed
+</code></pre></div></td></tr></table></div>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>Overall: 1247 examples
+  1247 passed
+Randomized with seed 595739438
+</code></pre></div></td></tr></table></div>
+<p><code>--no-show-seed</code> restores the default (print the seed only when a spec fails). The seed line is never printed under <code>--order defined</code> regardless of <code>--show-seed</code>, since defined order has no seed to reproduce.</p>
 <h3 id="-order-defined"><code>--order defined</code><a class="headerlink" href="#-order-defined" title="Permanent link">&para;</a></h3>
 <p>For tests that intentionally depend on declaration order across sibling examples (cross-example accumulation, side-effect testing, hook-cascade verification), pass <code>--order defined</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--order<span class="w"> </span>defined
 </code></pre></div></td></tr></table></div>
-<p>No seed is auto-generated and no seed line is printed under defined order.</p>
+<p>No seed is auto-generated and no seed line is printed under defined order (even with <code>--show-seed</code>).</p>
 <h3 id="per-group-order-override">Per-group order override<a class="headerlink" href="#per-group-order-override" title="Permanent link">&para;</a></h3>
 <p>A single <code>describe</code> / <code>context</code> block can opt out of random order with <code>:order&lt;defined&gt;</code> metadata:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

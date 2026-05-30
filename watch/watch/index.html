@@ -1670,6 +1670,7 @@
 <li><code>--format NAME</code> (unless the default <code>progress</code>)</li>
 <li><code>--order ORDER</code> (unless <code>random</code>)</li>
 <li><code>--seed N</code> (when <code>--order=random</code> and a seed was set)</li>
+<li><code>--show-seed</code> (when set)</li>
 <li><code>--verbose</code></li>
 <li><code>--retry N</code> (when N &gt; 0)</li>
 <li><code>--tag NAME</code> (repeatable)</li>
@@ -1689,7 +1690,7 @@
 <li>New file detection requires a poll tick after the file lands on disk — saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.</li>
 <li>File renames register as one <code>removed</code> plus one <code>added</code>. Smart selection treats only the <code>added</code> half.</li>
 <li>Watch mode does not surface profile / memory / benchmark summaries across runs — each subprocess emits its own. Aggregation across runs is out of scope for v1.</li>
-<li><code>--coverage</code> is incompatible: each subprocess would need its own MoarVM coverage log path and merge step, which is tracked under roadmap 9.8.4 for the parallel-mode case and would need similar work here.</li>
+<li><code>--coverage</code> is incompatible: each subprocess would need its own MoarVM coverage log path and merge step.</li>
 <li>Smart selection is a substring search; if a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use <code>--watch-path</code> and the <code>a</code>/<code>r</code> commands to cover that case.</li>
 </ul>
 

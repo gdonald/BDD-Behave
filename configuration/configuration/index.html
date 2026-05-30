@@ -1801,7 +1801,7 @@
 <tr>
 <td><code>$config.parallel-mode</code></td>
 <td><code>--parallel-mode</code></td>
-<td><code>'lpt'</code> (default) or <code>'queue'</code>. See <a href="../../parallel/parallel/#parallel-mode-parallel-mode">Parallel Execution</a>.</td>
+<td><code>'isolated'</code> (default), <code>'lpt'</code>, or <code>'queue'</code>. See <a href="../../parallel/parallel/#parallel-mode-parallel-mode">Parallel Execution</a>.</td>
 </tr>
 <tr>
 <td><code>$config.parallel-retry</code></td>
@@ -1812,6 +1812,11 @@
 <td><code>$config.seed-mode</code></td>
 <td><code>--seed-mode</code></td>
 <td><code>'xor'</code> (default) or <code>'stable'</code>.</td>
+</tr>
+<tr>
+<td><code>$config.show-seed</code></td>
+<td><code>--show-seed</code></td>
+<td>Bool; print the seed even on a passing run (default prints it only on failure).</td>
 </tr>
 <tr>
 <td><code>$config.progress-total</code></td>
