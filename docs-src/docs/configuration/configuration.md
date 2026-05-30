@@ -73,9 +73,10 @@ Every scalar attribute corresponds to its CLI counterpart:
 | `$config.benchmark-format`     | `--benchmark-format` | `'text'` or `'json'`. |
 | `$config.benchmark-output`     | `--benchmark-output` | `IO::Path`. |
 | `$config.parallel`             | `--parallel N`     | Int >= 1 enables parallel execution with N worker subprocesses; absence (or value 0) keeps single-process serial execution. CLI overrides config. |
-| `$config.parallel-mode`        | `--parallel-mode`  | `'lpt'` (default) or `'queue'`. See [Parallel Execution](../parallel/parallel.md#parallel-mode-parallel-mode). |
+| `$config.parallel-mode`        | `--parallel-mode`  | `'isolated'` (default), `'lpt'`, or `'queue'`. See [Parallel Execution](../parallel/parallel.md#parallel-mode-parallel-mode). |
 | `$config.parallel-retry`       | `--parallel-retry` | Non-negative Int; per-shard retry budget when a worker crashes (exit > 1). See [Per-shard retry](../parallel/parallel.md#per-shard-retry-on-worker-crash-parallel-retry). |
 | `$config.seed-mode`            | `--seed-mode`      | `'xor'` (default) or `'stable'`. |
+| `$config.show-seed`            | `--show-seed`      | Bool; print the seed even on a passing run (default prints it only on failure). |
 | `$config.progress-total`       | `--progress-total` | Bool; append a `(N/TOTAL)` counter to each progress char under `--parallel`. |
 
 The list-style mutators are repeatable:

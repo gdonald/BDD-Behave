@@ -44,7 +44,7 @@ $log.warn('careful');                    # returns Any
 expect($log.received('warn')).to.be(True);
 ```
 
-This makes ad-hoc doubles permissive by design — they let you focus on the calls you actually care about.
+Ad-hoc doubles are permissive by design: calls you haven't stubbed return `Any` instead of erroring.
 
 ## Callable stubs
 

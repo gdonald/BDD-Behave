@@ -8,7 +8,7 @@ use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
 use Behave::Test::FakeResult;
 
-plan 25;
+plan 31;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -100,16 +100,53 @@ my $abort = strip-ansi capture({
 });
 ok $abort.contains('Aborted after 1 failure'), 'aborted line uses singular for fail-fast=1';
 
-my $seed = strip-ansi capture({
+my $seed-quiet = strip-ansi capture({
   $f.run-summary(FakeResult.new(:total(1), :passed(1)), :order('random'), :seed(42));
 });
-ok $seed.contains('Randomized with seed 42'), 'random order prints the seed line';
+nok $seed-quiet.contains('Randomized with seed'),
+  'passing random run omits the seed line by default';
+
+my $seed-shown = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :passed(1)), :order('random'), :seed(42), :show-seed);
+});
+ok $seed-shown.contains('Randomized with seed 42'),
+  ':show-seed prints the seed on a passing random run';
+
+my $seed-failed = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :failed(1)), :order('random'), :seed(42));
+});
+ok $seed-failed.contains('Randomized with seed 42'),
+  'failing random run prints the seed without :show-seed';
 
 my $defined-order = strip-ansi capture({
-  $f.run-summary(FakeResult.new(:total(1), :passed(1)), :order('defined'), :seed(42));
+  $f.run-summary(FakeResult.new(:total(1), :failed(1)), :order('defined'), :seed(42), :show-seed);
 });
 nok $defined-order.contains('Randomized with seed'),
-  'defined order omits the seed line';
+  'defined order omits the seed line even with :show-seed';
+
+my $seed-undef = strip-ansi capture({
+  $f.run-summary(FakeResult.new(:total(1), :failed(1)), :order('random'), :show-seed);
+});
+nok $seed-undef.contains('Randomized with seed'),
+  'undefined seed omits the seed line';
+
+my $mf-quiet = strip-ansi capture({
+  $f.multi-file-overall(FakeResult.new(:total(4), :passed(4)), :order('random'), :seed(7));
+});
+nok $mf-quiet.contains('Randomized with seed'),
+  'multi-file-overall omits the seed on a passing random run by default';
+
+my $mf-failed = strip-ansi capture({
+  $f.multi-file-overall(FakeResult.new(:total(4), :passed(3), :failed(1)), :order('random'), :seed(7));
+});
+ok $mf-failed.contains('Randomized with seed 7'),
+  'multi-file-overall prints the seed on a failing random run';
+
+my $mf-shown = strip-ansi capture({
+  $f.multi-file-overall(FakeResult.new(:total(4), :passed(4)), :order('random'), :seed(7), :show-seed);
+});
+ok $mf-shown.contains('Randomized with seed 7'),
+  'multi-file-overall prints the seed when :show-seed is set';
 
 my @records = (
   %( description => 'fast', duration => 0.001, example => Any ),

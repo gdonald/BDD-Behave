@@ -78,7 +78,7 @@ describe 'it-local vars', {
 | Cheap constants | Expensive setup that should run lazily |
 | Counters, accumulators | Test subjects, fixtures |
 
-`let` plays nicely alongside plain variables — you can mix both in the same describe.
+`let` works alongside plain variables — you can mix both in the same describe.
 
 ## Classes, roles, enums
 

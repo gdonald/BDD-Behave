@@ -6,6 +6,9 @@ my $bin  = $root.add('bin/behave');
 # Use a small, well-behaved fixture so the CLI runs are fast.
 my $fixture = $root.add('specs/expectations/be-between-spec.raku');
 
+# A fixture with a deliberate failure, for the failure-shows-seed path.
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
+
 sub run-behave(*@args) {
   my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
   my $out = $proc.out.slurp(:close);
@@ -14,20 +17,32 @@ sub run-behave(*@args) {
 }
 
 describe 'bin/behave --order and --seed', {
-  it 'prints "Randomized with seed N" by default and exits successfully', {
+  it 'omits the seed line on a passing run by default', {
     my %r = run-behave($fixture.absolute);
-    expect(%r<exit>).to.be(0);
-    expect(%r<out>).to.match(/'Randomized with seed' \s+ \d+/);
-  }
-
-  it 'omits the seed line when --order=defined is passed', {
-    my %r = run-behave('--order', 'defined', $fixture.absolute);
     expect(%r<exit>).to.be(0);
     expect(%r<out>.contains('Randomized with seed')).to.be-falsy;
   }
 
-  it 'echoes the supplied --seed value in the seed line', {
-    my %r = run-behave('--seed', '424242', $fixture.absolute);
+  it 'prints "Randomized with seed N" on a passing run with --show-seed', {
+    my %r = run-behave('--show-seed', $fixture.absolute);
+    expect(%r<exit>).to.be(0);
+    expect(%r<out>).to.match(/'Randomized with seed' \s+ \d+/);
+  }
+
+  it 'prints the seed on a failing run without --show-seed', {
+    my %r = run-behave('--seed', '424242', $failing.absolute);
+    expect(%r<exit>).to.not.be(0);
+    expect(%r<out>).to.include('Randomized with seed 424242');
+  }
+
+  it 'omits the seed line when --order=defined is passed', {
+    my %r = run-behave('--order', 'defined', '--show-seed', $fixture.absolute);
+    expect(%r<exit>).to.be(0);
+    expect(%r<out>.contains('Randomized with seed')).to.be-falsy;
+  }
+
+  it 'echoes the supplied --seed value with --show-seed', {
+    my %r = run-behave('--seed', '424242', '--show-seed', $fixture.absolute);
     expect(%r<exit>).to.be(0);
     expect(%r<out>).to.include('Randomized with seed 424242');
   }

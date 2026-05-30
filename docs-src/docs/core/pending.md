@@ -10,7 +10,7 @@ describe 'PaymentProcessor', {
 }
 ```
 
-The runner output for the above renders the description in blue and prints `⮑  PENDING` underneath, and the final summary includes a `N pending` count alongside passes and failures.
+The runner output for the above renders the description in yellow and prints `⮑  PENDING` underneath, and the final summary includes a `N pending` count alongside passes and failures.
 
 ## Forms
 

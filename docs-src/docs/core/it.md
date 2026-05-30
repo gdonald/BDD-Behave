@@ -39,7 +39,7 @@ it 'a User is valid after construction', {
 
 ## Pending examples
 
-You can mark an example as pending by setting its `pending` flag on the returned object (advanced). The simplest path is to comment out the body or skip writing the assertion until you implement the behavior.
+Mark an example as pending with the [`pending`](pending.md) helper. While iterating, you can also comment out the body or leave the assertion unwritten until you implement the behavior.
 
 ## Optional context parameter
 

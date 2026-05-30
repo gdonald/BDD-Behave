@@ -96,6 +96,7 @@ our class Runner {
   has Bool $!top-level  = False;
   has Str $.order = 'defined';
   has Int $.seed;
+  has Bool $.show-seed = False;
   has Int $!rng-state;
   has Int $.fail-fast = 0;
   has Int $.retry     = 0;
@@ -1119,7 +1120,7 @@ our class Runner {
   method print-summary {
     $!formatter.run-summary(
       $!result,
-      :$!aborted, :$!fail-fast, :$!order, :$!seed,
+      :$!aborted, :$!fail-fast, :$!order, :$!seed, :$!show-seed,
     );
 
     $!formatter.retry-summary($!result.retry-records)

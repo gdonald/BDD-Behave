@@ -165,24 +165,56 @@ describe 'BDD::Behave::Formatter::Tree', {
       expect($out).to.include('Aborted after 1 failure');
     }
 
-    it 'prints the seed line only when order is random and seed is defined', {
-      my $f = BDD::Behave::Formatter::Tree.new;
-      my $r = fake-result(%( total => 1, passed => 1 ));
+    describe 'seed line', {
+      it 'stays silent on a passing random run by default', {
+        my $f = BDD::Behave::Formatter::Tree.new;
+        my $r = fake-result(%( total => 1, passed => 1 ));
 
-      my $with-seed = strip-ansi capture-formatter-output({
-        $f.run-summary($r, :order('random'), :seed(42));
-      });
-      expect($with-seed).to.include('Randomized with seed 42');
+        my $out = strip-ansi capture-formatter-output({
+          $f.run-summary($r, :order('random'), :seed(42));
+        });
+        expect($out.contains('Randomized with seed')).to.be-falsy;
+      }
 
-      my $defined = strip-ansi capture-formatter-output({
-        $f.run-summary($r, :order('defined'), :seed(42));
-      });
-      expect($defined.contains('Randomized with seed')).to.be-falsy;
+      it 'prints on a passing random run when :show-seed is set', {
+        my $f = BDD::Behave::Formatter::Tree.new;
+        my $r = fake-result(%( total => 1, passed => 1 ));
 
-      my $no-seed = strip-ansi capture-formatter-output({
-        $f.run-summary($r, :order('random'));
-      });
-      expect($no-seed.contains('Randomized with seed')).to.be-falsy;
+        my $out = strip-ansi capture-formatter-output({
+          $f.run-summary($r, :order('random'), :seed(42), :show-seed);
+        });
+        expect($out).to.include('Randomized with seed 42');
+      }
+
+      it 'prints on a failing random run even without :show-seed', {
+        my $f = BDD::Behave::Formatter::Tree.new;
+        my $r = fake-result(%( total => 1, failed => 1 ));
+
+        my $out = strip-ansi capture-formatter-output({
+          $f.run-summary($r, :order('random'), :seed(42));
+        });
+        expect($out).to.include('Randomized with seed 42');
+      }
+
+      it 'stays silent under defined order even with :show-seed', {
+        my $f = BDD::Behave::Formatter::Tree.new;
+        my $r = fake-result(%( total => 1, failed => 1 ));
+
+        my $out = strip-ansi capture-formatter-output({
+          $f.run-summary($r, :order('defined'), :seed(42), :show-seed);
+        });
+        expect($out.contains('Randomized with seed')).to.be-falsy;
+      }
+
+      it 'stays silent when the seed is undefined', {
+        my $f = BDD::Behave::Formatter::Tree.new;
+        my $r = fake-result(%( total => 1, failed => 1 ));
+
+        my $out = strip-ansi capture-formatter-output({
+          $f.run-summary($r, :order('random'), :show-seed);
+        });
+        expect($out.contains('Randomized with seed')).to.be-falsy;
+      }
     }
   }
 
@@ -241,6 +273,33 @@ describe 'BDD::Behave::Formatter::Tree', {
       expect($out).to.include('Overall: 4 examples');
       expect($out).to.include('1 failed');
       expect($out).to.include('3 passed');
+    }
+
+    it 'multi-file-overall stays silent on a passing random run by default', {
+      my $f = BDD::Behave::Formatter::Tree.new;
+      my $r = FakeResult.new(:total(4), :passed(4));
+      my $out = strip-ansi capture-formatter-output({
+        $f.multi-file-overall($r, :order('random'), :seed(7));
+      });
+      expect($out.contains('Randomized with seed')).to.be-falsy;
+    }
+
+    it 'multi-file-overall prints the seed on a failing random run', {
+      my $f = BDD::Behave::Formatter::Tree.new;
+      my $r = FakeResult.new(:total(4), :passed(3), :failed(1));
+      my $out = strip-ansi capture-formatter-output({
+        $f.multi-file-overall($r, :order('random'), :seed(7));
+      });
+      expect($out).to.include('Randomized with seed 7');
+    }
+
+    it 'multi-file-overall prints the seed when :show-seed is set', {
+      my $f = BDD::Behave::Formatter::Tree.new;
+      my $r = FakeResult.new(:total(4), :passed(4));
+      my $out = strip-ansi capture-formatter-output({
+        $f.multi-file-overall($r, :order('random'), :seed(7), :show-seed);
+      });
+      expect($out).to.include('Randomized with seed 7');
     }
 
     it 'suite-start in multi-file mode prints the basename', {

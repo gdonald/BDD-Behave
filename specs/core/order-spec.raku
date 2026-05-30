@@ -156,6 +156,7 @@ sub run-and-capture-output($suite, *%runner-args) {
   my $fh  = $tmp.open(:w);
   {
     my $*OUT = $fh;
+    my $*BEHAVE-TOP-LEVEL-RUN = False;
     BDD::Behave::Runner::Runner.new(|%runner-args).run($suite);
   }
   $fh.close;
@@ -164,9 +165,47 @@ sub run-and-capture-output($suite, *%runner-args) {
   $captured;
 }
 
+# The failing example dies rather than using expect(): a matcher failure
+# pushes to the global Failures.list unconditionally, which would leak this
+# synthetic failure into the outer behave run. A thrown exception is recorded
+# only on this nested runner's result (and only globally when top-level), so
+# run-and-capture-output runs it as a non-top-level run.
+sub build-failing-suite() {
+  my $suite = Suite.create(:description('fail-suite'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('fail-group'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+
+  $group.add-example(Example.new(
+    :description('passes'),
+    :file('synthetic'.IO),
+    :line(10),
+    :block({ True }),
+  ));
+  $group.add-example(Example.new(
+    :description('fails'),
+    :file('synthetic'.IO),
+    :line(11),
+    :block({ die 'boom' }),
+  ));
+
+  $suite;
+}
+
 describe 'Runner output', {
-  it 'prints "Randomized with seed N" under random order', {
+  it 'omits the seed line on a passing random run by default', {
     my ($suite, $recorded) = build-recording-suite(<a b c>);
+    my $output = run-and-capture-output($suite, :order<random>, :seed(12345));
+    expect($output.contains('Randomized with seed')).to.be-falsy;
+  }
+
+  it 'prints the seed on a passing random run with :show-seed', {
+    my ($suite, $recorded) = build-recording-suite(<a b c>);
+    my $output = run-and-capture-output($suite, :order<random>, :seed(12345), :show-seed);
+    expect($output).to.include('Randomized with seed 12345');
+  }
+
+  it 'prints the seed on a failing random run without :show-seed', {
+    my $suite  = build-failing-suite();
     my $output = run-and-capture-output($suite, :order<random>, :seed(12345));
     expect($output).to.include('Randomized with seed 12345');
   }

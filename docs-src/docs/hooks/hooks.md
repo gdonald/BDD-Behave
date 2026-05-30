@@ -191,7 +191,7 @@ matches the filter — mirroring `before-all` / `after-all` filter semantics.
 
 ## Metadata-keyed hooks
 
-All four hooks accept metadata filters that gate when the hook fires. Filters
+All six hooks accept metadata filters that gate when the hook fires. Filters
 are passed as named arguments before the block:
 
 ```raku

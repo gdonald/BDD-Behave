@@ -2,11 +2,12 @@ use v6.d;
 use lib 'lib';
 use Test;
 
-plan 8;
+plan 11;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $bin     = $root.add('bin/behave');
 my $fixture = $root.add('specs/expectations/be-between-spec.raku');
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
 
 sub run-behave(*@args) {
   my $proc = run('raku', '-Ilib', $bin.absolute, |@args, :out, :err);
@@ -15,27 +16,42 @@ sub run-behave(*@args) {
   %( :exit($proc.exitcode), :$out, :$err );
 }
 
-# Default (no flags) prints a seed announcement.
+# Default (no flags) on a passing run is quiet about the seed.
 {
   my %r = run-behave($fixture.absolute);
   is %r<exit>, 0, 'default run exits successfully';
-  like %r<out>, /'Randomized with seed' \s+ \d+/,
-    'default run prints "Randomized with seed N"';
-}
-
-# --order=defined omits the seed announcement.
-{
-  my %r = run-behave('--order', 'defined', $fixture.absolute);
-  is %r<exit>, 0, '--order=defined exits successfully';
   unlike %r<out>, /'Randomized with seed'/,
-    '--order=defined omits the seed line';
+    'passing run omits the seed line by default';
 }
 
-# --seed N is echoed back exactly.
+# --show-seed prints the seed on a passing run.
 {
-  my %r = run-behave('--seed', '12345', $fixture.absolute);
+  my %r = run-behave('--show-seed', $fixture.absolute);
+  is %r<exit>, 0, '--show-seed run exits successfully';
+  like %r<out>, /'Randomized with seed' \s+ \d+/,
+    '--show-seed prints "Randomized with seed N" on a passing run';
+}
+
+# A failing run prints the seed even without --show-seed.
+{
+  my %r = run-behave('--seed', '424242', $failing.absolute);
+  isnt %r<exit>, 0, 'failing run exits non-zero';
+  ok %r<out>.contains('Randomized with seed 424242'),
+    'failing run prints the seed without --show-seed';
+}
+
+# --order=defined omits the seed announcement even with --show-seed.
+{
+  my %r = run-behave('--order', 'defined', '--show-seed', $fixture.absolute);
+  unlike %r<out>, /'Randomized with seed'/,
+    '--order=defined omits the seed line even with --show-seed';
+}
+
+# --seed N is echoed back exactly when --show-seed is set.
+{
+  my %r = run-behave('--seed', '12345', '--show-seed', $fixture.absolute);
   ok %r<out>.contains('Randomized with seed 12345'),
-    '--seed value is echoed in the seed line';
+    '--seed value is echoed in the seed line with --show-seed';
 }
 
 # An invalid --order is rejected with a non-zero exit and a stderr message.
@@ -48,8 +64,8 @@ sub run-behave(*@args) {
 
 # Same seed → identical run output (modulo the seed announcement line itself).
 {
-  my %a = run-behave('--seed', '111', $fixture.absolute);
-  my %b = run-behave('--seed', '111', $fixture.absolute);
+  my %a = run-behave('--seed', '111', '--show-seed', $fixture.absolute);
+  my %b = run-behave('--seed', '111', '--show-seed', $fixture.absolute);
   my $strip = sub ($text) {
     $text.lines.grep({ !.contains('Randomized with seed') }).join("\n");
   };

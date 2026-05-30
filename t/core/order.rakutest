@@ -138,13 +138,40 @@ sub silent-run($suite, *%runner-args) {
     ':order<defined> inherits through nested groups';
 }
 
-# Seed announcement in output
+# Seed announcement: passing random run is quiet by default
 {
   my ($suite, $recorded) = build-recording-suite(<a b c>);
   my $output = stdout-from({
     BDD::Behave::Runner::Runner.new(:order<random>, :seed(42)).run($suite);
   });
-  like $output, /'Randomized with seed 42'/, 'random run prints seed line';
+  unlike $output, /'Randomized with seed'/,
+    'passing random run omits the seed line by default';
+}
+
+# Seed announcement: :show-seed forces it on a passing run
+{
+  my ($suite, $recorded) = build-recording-suite(<a b c>);
+  my $output = stdout-from({
+    BDD::Behave::Runner::Runner.new(:order<random>, :seed(42), :show-seed).run($suite);
+  });
+  like $output, /'Randomized with seed 42'/,
+    ':show-seed prints the seed on a passing random run';
+}
+
+# Seed announcement: a failing run prints it without :show-seed
+{
+  my $suite = Suite.create(:description('s'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('g'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example(Example.new(
+    :description('fails'), :file('synthetic'.IO), :line(10),
+    :block({ die 'boom' }),
+  ));
+  my $output = stdout-from({
+    BDD::Behave::Runner::Runner.new(:order<random>, :seed(42)).run($suite);
+  });
+  like $output, /'Randomized with seed 42'/,
+    'failing random run prints the seed without :show-seed';
 }
 
 # No seed announcement under defined

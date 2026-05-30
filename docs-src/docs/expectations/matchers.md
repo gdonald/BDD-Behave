@@ -1410,7 +1410,7 @@ Failure messages report the iteration count and the elapsed wall-clock
 time:
 
 ```
-eventually: Expected: 99 to be 0 (after 5 iterations in 0.05s)
+eventually: did not match be 0 (after 5 iterations in 0.05s)
 ```
 
 If the block throws on every iteration, the failure message names the
@@ -1444,8 +1444,9 @@ matches early fails quickly rather than waiting out the timeout.
 
 ### Non-Callable actuals
 
-`expect(42).to.eventually.be(42)` records a Promise-shape failure
-because the actual is not a `Callable`. The block form is required.
+`expect(42).to.eventually.be(42)` fails with `expected a Callable for
+eventually, but got 42` because the actual is not a `Callable`. The
+block form is required.
 
 ## Writing a custom matcher
 

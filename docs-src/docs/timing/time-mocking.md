@@ -1,8 +1,8 @@
 # Time Mocking
 
 `BDD::Behave` ships with Timecop-style helpers for freezing and traveling
-through time inside an example. They work by wrapping Raku's `now`,
-`Instant.now`, `DateTime.now`, and `Date.today` so the wrap consults a
+through time inside an example. They work by wrapping Raku's `now` term,
+`DateTime.now`, and `Date.today` so the wrap consults a
 dynamically-scoped freeze. When no freeze is active, the wrappers fall
 through to the real time source — they have no effect outside a freeze block.
 
@@ -10,7 +10,7 @@ through to the real time source — they have no effect outside a freeze block.
 
 ```raku
 freeze-time {
-  # `now`, `Instant.now`, `DateTime.now`, and `Date.today` are all frozen
+  # `now`, `DateTime.now`, and `Date.today` are all frozen
   # at the moment the block began.
   my $a = now;
   sleep 0.5;

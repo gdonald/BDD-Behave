@@ -10,11 +10,11 @@ Pass `--format NAME` to `behave`:
 $ behave --format tree specs/users-spec.raku
 ```
 
-`NAME` must be a registered formatter. The built-in formatters are `documentation`, `html`, `json`, `junit`, `progress`, `tap`, and `tree`. An unknown name fails fast:
+`NAME` must be a registered formatter. The built-in formatters are `documentation`, `html`, `json`, `json-events`, `junit`, `progress`, `tap`, and `tree`. (`json-events` is the line-delimited event stream parallel workers use to report back to the parent; it is registered and selectable but rarely useful on its own.) An unknown name fails fast:
 
 ```text
 $ behave --format nope
-Error: unknown --format 'nope' (available: documentation, html, json, junit, progress, tap, tree)
+Error: unknown --format 'nope' (available: documentation, html, json, json-events, junit, progress, tap, tree)
 ```
 
 When `--format` is omitted, `progress` is selected. The currently registered names are also listed in `behave --help`.
@@ -83,6 +83,8 @@ Structure:
 
 Inline `<style>` provides the default theme; colors are hard-coded (no external CSS). All user descriptions and file paths are HTML-escaped (`<`, `>`, `&`, `"`). In multi-file mode every spec file gets an `<h2 class="suite-file">` heading and a single HTML document covers the entire run.
 
+### `json`
+
 Emits a single JSON document on stdout after the run finishes — designed for CI dashboards and tool integration. No per-example or per-group output is printed, so the document is the only thing on stdout (load errors and CLI flag errors are still emitted to stderr as usual).
 
 Top-level shape:
@@ -130,17 +132,17 @@ JUnit XML format consumable by Jenkins, GitLab CI, CircleCI, and other CI dashbo
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="behave" tests="5" failures="1" errors="0" skipped="2" time="0.045">
-  <testsuite name="calc-spec.raku" tests="5" failures="1" errors="0" skipped="2" time="0.045" timestamp="..." file="specs/calc-spec.raku">
-    <testcase classname="Calculator" name="adds positive numbers" file="specs/calc-spec.raku" line="4" time="0.001"/>
-    <testcase classname="Calculator &gt; addition" name="overflows" file="specs/calc-spec.raku" line="9" time="0.001">
+<testsuites name="behave" tests="5" failures="1" errors="0" skipped="2" time="0.045000">
+  <testsuite name="calc-spec.raku" tests="5" failures="1" errors="0" skipped="2" time="0.045000" timestamp="..." file="specs/calc-spec.raku">
+    <testcase classname="Calculator" name="adds positive numbers" file="specs/calc-spec.raku" line="4" time="0.001000"/>
+    <testcase classname="Calculator &gt; addition" name="overflows" file="specs/calc-spec.raku" line="9" time="0.001000">
       <failure type="Expectation" message="Expected 2147483648 to be -2147483648"><![CDATA[
 specs/calc-spec.raku:9
   Expected: 2147483648
   to be:    -2147483648
       ]]></failure>
     </testcase>
-    <testcase classname="Calculator" name="todo" file="specs/calc-spec.raku" line="12" time="0">
+    <testcase classname="Calculator" name="todo" file="specs/calc-spec.raku" line="12" time="0.000000">
       <skipped message="pending: not yet implemented"/>
     </testcase>
   </testsuite>
@@ -249,11 +251,11 @@ Both expectation mismatches and exception-based failures (an example body that `
 
 | Hook | When it fires |
 | ---- | ------------- |
-| `run-summary($result, :$aborted, :$fail-fast, :$order, :$seed)` | Per-suite summary: failures, counts, aborted line, seed announcement. |
+| `run-summary($result, :$aborted, :$fail-fast, :$order, :$seed, :$show-seed)` | Per-suite summary: failures, counts, aborted line, seed announcement. The seed line is shown only when `$show-seed` is set or the run had failures. |
 | `profile-summary(@records, :$limit)` | "Top N slowest" section when `--profile` is enabled. |
 | `memory-profile-summary(@records, :$limit)` | "Top N memory-heaviest" section when `--memory-profile` is enabled. |
 | `benchmark-summary-section(@summaries, @regressions, :$threshold, :$format, :$output, :$runner)` | Per-suite benchmark section when `--benchmark` is enabled. |
-| `multi-file-overall($result, :$order, :$seed)` | The `Overall:` block printed when running more than one spec file. |
+| `multi-file-overall($result, :$order, :$seed, :$show-seed)` | The `Overall:` block printed when running more than one spec file. Same seed-line gating as `run-summary`. |
 | `multi-file-profile`, `multi-file-memory-profile`, `multi-file-benchmark` | Multi-file counterparts of the per-suite summary hooks. |
 | `load-errors(@errors)` | Reports spec files that failed to compile. |
 
@@ -293,7 +295,7 @@ $ behave --format dots
 use BDD::Behave::Formatter::Registry;
 
 BDD::Behave::Formatter::Registry.names;
-# → (documentation html json junit progress tap tree)
+# → (documentation html json json-events junit progress tap tree)
 
 BDD::Behave::Formatter::Registry.register('dots', DotsFormatter);
 BDD::Behave::Formatter::Registry.registered('dots');   # True

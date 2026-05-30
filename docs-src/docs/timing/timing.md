@@ -2,7 +2,7 @@
 
 Behave records how long each example takes to run. Timing data lives on the
 `Example` node itself, so any consumer that walks the spec tree after a run
-(formatters, reporters, future `--profile` output) can read it directly.
+(formatters, reporters) can read it directly.
 
 ## What is captured
 

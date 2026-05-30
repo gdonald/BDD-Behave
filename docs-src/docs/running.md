@@ -40,7 +40,8 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `-e PATTERN`                                               | Alias for `--example`.                                                                                                                                                                                                                                                                                                                                                                     |
 | `--aggregate-failures` / `--aggregate-failures=LABEL`      | Wrap every example in `aggregate-failures` semantics; converts uncaught example exceptions into recorded failures. With `=LABEL` the label tags each failure. Per-example/group `:aggregate-failures` metadata overrides this. See [Aggregate failures](expectations/aggregate-failures.md#automatic-aggregation).                                                                         |
 | `--order ORDER`                                            | Example execution order: `random` (default) or `defined`. Random order shuffles the children of every group and the suite, surfacing hidden order dependencies. See [Order and seed](#order-and-seed).                                                                                                                                                                                     |
-| `--seed N`                                                 | Seed the random-order RNG for reproducible runs. Ignored when `--order=defined`. Auto-generated when omitted and `--order=random`. See [Order and seed](#order-and-seed).                                                                                                                                                                                                                  |
+| `--seed N`                                                 | Seed the random-order RNG for reproducible runs. Ignored when `--order=defined`. Auto-generated when omitted and `--order=random`. The seed is printed at the end of a run only when an example fails (or with `--show-seed`). See [Order and seed](#order-and-seed).                                                                                                                       |
+| `--show-seed` / `--no-show-seed`                           | Always (or never) print `Randomized with seed N` at the end of a random-order run. The default prints it only when a spec fails, so a green run stays quiet. See [Order and seed](#order-and-seed).                                                                                                                                                                                         |
 | `--fail-fast`                                              | Stop after the first failed example. Equivalent to `--fail-fast=1`. See [Fail-fast](#fail-fast).                                                                                                                                                                                                                                                                                           |
 | `--fail-fast=N`                                            | Stop after `N` failed examples (`N` must be a positive integer). See [Fail-fast](#fail-fast).                                                                                                                                                                                                                                                                                              |
 | `--retry N`                                                | Retry failing examples up to `N` additional times (a total of `N+1` attempts). Per-example `:retry(M)` metadata overrides this default. See [Retry and Only-Failures](retry/retry.md).                                                                                                                                                                                                     |
@@ -56,9 +57,9 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--format NAME`                                            | Select the output formatter for the run. `NAME` is the name of a registered formatter (`default` is built in). See [Formatters](formatter/formatter.md).                                                                                                                                                                                                                                   |
 | `--config PATH`                                            | Load Raku-based config from `PATH`. Skips the default `~/.behave` and `./.behave` lookups. See [Configuration](configuration/configuration.md).                                                                                                                                                                                                                                            |
 | `--no-config` / `--no-user-config` / `--no-project-config` | Skip all / user / project config files for this run. `BEHAVE_DISABLE_CONFIG=1` is equivalent to `--no-config`. See [Configuration](configuration/configuration.md).                                                                                                                                                                                                                        |
-| `--parallel N`                                             | Run specs across `N` worker subprocesses with group-affinity LPT distribution. Mutually exclusive with `--bisect` / `--bisect-data`. Aggregates coverage across workers when combined with `--coverage` (see [Coverage under --parallel](parallel/parallel.md#coverage)). Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md).                                           |
+| `--parallel N`                                             | Run specs across `N` worker subprocesses (the default mode runs one subprocess per spec file, up to `N` in flight; see `--parallel-mode`). Mutually exclusive with `--bisect` / `--bisect-data`. Aggregates coverage across workers when combined with `--coverage` (see [Coverage under --parallel](parallel/parallel.md#coverage)). Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md).                                           |
 | `--seed-mode MODE`                                         | How `--seed` combines with `--parallel N`. `xor` (default) derives per-worker seeds as `seed XOR worker-index` and uses LPT distribution. `stable` keeps the global execution order identical regardless of `N` via hash-based bucket assignment. See [Seed mode](parallel/parallel.md#seed-mode-seed-mode).                                                                               |
-| `--parallel-mode MODE`                                     | Bucket distribution strategy under `--parallel N`. `lpt` (default) uses static longest-processing-time-first assignment by example count. `queue` uses dynamic work-stealing: workers pull buckets from a parent-managed queue, useful when bucket runtimes are wildly uneven. Forces `--order=defined` per worker. See [Parallel mode](parallel/parallel.md#parallel-mode-parallel-mode). |
+| `--parallel-mode MODE`                                     | Execution model under `--parallel N`. `isolated` (default) runs one subprocess per spec file. `lpt` uses a fixed pool of `N` workers with static longest-processing-time-first assignment by example count. `queue` uses a fixed pool with dynamic work-stealing, useful when bucket runtimes are wildly uneven. See [Parallel mode](parallel/parallel.md#parallel-mode-parallel-mode). |
 | `--parallel-retry N`                                       | When a worker subprocess crashes (exits with code > 1: signal, OOM, uncaught exception in the runner itself — **not** test failures), re-spawn it with the same manifest up to `N` additional times. Default 0. Composes with `--retry` (per-example flake retry). LPT mode only; queue-mode crashes remain fatal. See [Per-shard retry](parallel/parallel.md#per-shard-retry-on-worker-crash-parallel-retry). |
 | `--progress-total`                                         | Append a running `(N/TOTAL)` counter after each example char emitted by the `progress` formatter under `--parallel`. No-op without `--parallel`. See [Live progress totals](parallel/parallel.md#live-progress-totals-progress-total).                                                                                                                                                     |
 | `--watch`                                                  | Watch source and spec files; re-run affected specs whenever a file changes. Reads `r`/`a`/`f`/`q` commands from stdin. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage` / `--doc` / `--parallel`. See [Watch Mode](watch/watch.md).                                                                                                                                     |
@@ -71,13 +72,16 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 
 Behave runs examples in **random order by default**. This shuffles the children of every `describe` / `context` group (and the top-level suite) before execution. Random ordering catches accidental order dependencies — examples that pass only because a sibling ran first — and is the recommended default.
 
-When a run finishes, Behave prints the seed used so the order is reproducible:
+When a run **fails**, Behave prints the seed used so the failing order is reproducible:
 
 ```text
 Overall: 1247 examples
-  1236 passed
+  1 failed
+  1246 passed
 Randomized with seed 595739438
 ```
+
+A fully passing run stays quiet — there is nothing to reproduce, so the seed line is omitted to keep green output clean.
 
 Pass `--seed N` to reproduce a specific order:
 
@@ -87,6 +91,22 @@ $ behave --seed 595739438
 
 If random order surfaces a failure, the seed in the summary is all you need to re-run the same permutation.
 
+### `--show-seed`
+
+To print the seed even on a passing run — for instance to record the exact order a green CI run used — pass `--show-seed`:
+
+```shell
+$ behave --show-seed
+```
+
+```text
+Overall: 1247 examples
+  1247 passed
+Randomized with seed 595739438
+```
+
+`--no-show-seed` restores the default (print the seed only when a spec fails). The seed line is never printed under `--order defined` regardless of `--show-seed`, since defined order has no seed to reproduce.
+
 ### `--order defined`
 
 For tests that intentionally depend on declaration order across sibling examples (cross-example accumulation, side-effect testing, hook-cascade verification), pass `--order defined`:
@@ -95,7 +115,7 @@ For tests that intentionally depend on declaration order across sibling examples
 $ behave --order defined
 ```
 
-No seed is auto-generated and no seed line is printed under defined order.
+No seed is auto-generated and no seed line is printed under defined order (even with `--show-seed`).
 
 ### Per-group order override
 

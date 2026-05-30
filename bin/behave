@@ -66,8 +66,14 @@ sub usage() {
                              shuffles children of every group and the suite.
     --seed N                 Seed for the random-order RNG. Ignored when
                              --order=defined. Auto-generated when omitted
-                             and --order=random; the seed is printed at the
-                             end of the run for reproduction.
+                             and --order=random. The seed is printed at the
+                             end of the run only when an example fails (so a
+                             green run stays quiet); pass --show-seed to print
+                             it regardless.
+    --show-seed              Always print "Randomized with seed N" at the end
+                             of a random-order run, even when nothing failed.
+                             Use --no-show-seed to restore the default of
+                             printing the seed only when a spec fails.
     --fail-fast              Stop after the first failed example.
     --fail-fast=N            Stop after N failed examples (N must be >= 1).
     --retry N                Retry failing examples up to N additional times
@@ -182,12 +188,14 @@ sub usage() {
     --coverage-branch        Also track branch coverage (if/unless/given/
                              when/while/until). Reported alongside line
                              coverage. Implies --coverage.
-    --parallel N             Run specs across N worker subprocesses
-                             (group-affinity LPT distribution). N must be
-                             a positive integer. Default (omitted) keeps
-                             single-process serial execution. Mutually
-                             exclusive with --bisect / --bisect-data /
-                             --coverage. Ignored under --doc.
+    --parallel N             Run specs across N worker subprocesses. N
+                             must be a positive integer. The default mode
+                             runs one subprocess per spec file, up to N in
+                             flight (see --parallel-mode). Default
+                             (omitted) keeps single-process serial
+                             execution. Mutually exclusive with --bisect /
+                             --bisect-data / --coverage. Ignored under
+                             --doc.
     --progress-total         Append a running ` (N/TOTAL)` counter after
                              each example char emitted by the `progress`
                              formatter under --parallel. TOTAL is the
@@ -204,15 +212,17 @@ sub usage() {
                              seed) mod N, and the global hash-sorted
                              order is identical regardless of N. Forces
                              --order=defined per worker.
-    --parallel-mode MODE     Bucket distribution strategy under
-                             --parallel N. 'lpt' (default): static
+    --parallel-mode MODE     Execution model under --parallel N.
+                             'isolated' (default): one subprocess per
+                             spec file, up to N in flight. 'lpt': a
+                             fixed pool of N workers with static
                              longest-processing-time-first assignment
-                             based on example count. 'queue': workers
-                             dynamically pull buckets from a parent-
-                             managed queue, useful when bucket
-                             runtimes are wildly uneven and example
-                             count is a poor cost proxy. Queue mode
-                             forces --order=defined per worker; the
+                             based on example count. 'queue': a fixed
+                             pool whose workers dynamically pull buckets
+                             from a parent-managed queue, useful when
+                             bucket runtimes are wildly uneven and
+                             example count is a poor cost proxy. Queue
+                             mode forces --order=defined per worker; the
                              dispatch order is cost-desc.
     --parallel-retry N       When a worker subprocess crashes (exits
                              with code > 1: signal, OOM, uncaught
@@ -345,6 +355,10 @@ while @args {
     $cli-config.seed-mode = @args.shift;
   } elsif $arg.starts-with('--seed-mode=') {
     $cli-config.seed-mode = $arg.substr('--seed-mode='.chars);
+  } elsif $arg eq '--show-seed' {
+    $cli-config.show-seed = True;
+  } elsif $arg eq '--no-show-seed' {
+    $cli-config.show-seed = False;
   } elsif $arg eq '--progress-total' {
     $cli-config.progress-total = True;
   } elsif $arg eq '--no-progress-total' {
@@ -672,6 +686,7 @@ my $final-config = BDD::Behave::Configuration::defaults()
 my $format               = $final-config.format;
 my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
+my $show-seed            = ?$final-config.show-seed;
 my $seed-mode            = $final-config.seed-mode // 'xor';
 my $parallel-mode        = $final-config.parallel-mode // 'isolated';
 my $parallel-retry       = $final-config.parallel-retry // 0;
@@ -1133,6 +1148,7 @@ if $watch-mode {
   @forward-args.push: '--format', $format if $format ne 'progress';
   @forward-args.push: '--order', $order   if $order ne 'random';
   @forward-args.push: '--seed',  $seed.Str if $seed.defined && $order eq 'random';
+  @forward-args.push: '--show-seed' if $show-seed;
   @forward-args.push: '--verbose' if $verbose;
   @forward-args.push: '--retry', $retry-default.Str if $retry-default > 0;
   for @include-tags     -> $t { @forward-args.append: '--tag', $t }
@@ -1281,9 +1297,9 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   my $aborted = $fail-fast > 0 && $par-result.failed >= $fail-fast;
 
   if @files.elems > 1 {
-    $parent-formatter.multi-file-overall($rr, :$order, :$seed);
+    $parent-formatter.multi-file-overall($rr, :$order, :$seed, :$show-seed);
   } else {
-    $parent-formatter.run-summary($rr, :$order, :$seed, :$aborted, :$fail-fast);
+    $parent-formatter.run-summary($rr, :$order, :$seed, :$show-seed, :$aborted, :$fail-fast);
   }
 
   if $par-result.load-errors.elems {
@@ -1603,6 +1619,7 @@ for @files -> $file {
     :aggregate-failures($aggregate-failures),
     :$order,
     :$seed,
+    :$show-seed,
     :fail-fast($remaining-fail-fast),
     :retry($retry-default),
     :profile-limit($runner-profile-limit),
@@ -1670,7 +1687,7 @@ if $bisect-data {
 }
 
 if $multi {
-  $formatter.multi-file-overall($total-result, :$order, :$seed);
+  $formatter.multi-file-overall($total-result, :$order, :$seed, :$show-seed);
 
   $formatter.retry-summary(@all-retry-records) if @all-retry-records.elems;
 

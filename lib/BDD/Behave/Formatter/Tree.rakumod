@@ -102,6 +102,7 @@ method run-summary(
   Int  :$fail-fast = 0,
   Str  :$order     = 'defined',
   Int  :$seed,
+  Bool :$show-seed = False,
 ) {
   say '';
 
@@ -122,7 +123,7 @@ method run-summary(
     say red("Aborted after $fail-fast $word (--fail-fast)");
   }
 
-  if $order eq 'random' && $seed.defined {
+  if $order eq 'random' && $seed.defined && ($show-seed || $result.failed > 0) {
     say "Randomized with seed $seed";
   }
 }
@@ -209,6 +210,7 @@ method multi-file-overall(
   $result,
   Str :$order = 'defined',
   Int :$seed,
+  Bool :$show-seed = False,
 ) {
   say "\n" ~ "=" x 60;
   say "Overall: {$result.total} example" ~ ($result.total == 1 ?? '' !! 's');
@@ -216,7 +218,8 @@ method multi-file-overall(
   say light-blue("  {$result.pending} pending")  if $result.pending > 0;
   say light-blue("  {$result.skipped} skipped")  if $result.skipped > 0;
   say green("  {$result.passed} passed")         if $result.passed  > 0;
-  say "Randomized with seed $seed" if $order eq 'random';
+  say "Randomized with seed $seed"
+    if $order eq 'random' && $seed.defined && ($show-seed || $result.failed > 0);
 }
 
 method multi-file-profile($runner, @records, Int :$limit) {

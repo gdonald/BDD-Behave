@@ -62,6 +62,7 @@ Unknown input prints a warning and re-prints the prompt.
 - `--format NAME` (unless the default `progress`)
 - `--order ORDER` (unless `random`)
 - `--seed N` (when `--order=random` and a seed was set)
+- `--show-seed` (when set)
 - `--verbose`
 - `--retry N` (when N > 0)
 - `--tag NAME` (repeatable)
@@ -82,5 +83,5 @@ Each subprocess inherits a `BEHAVE_DISABLE_CONFIG=1` environment so it does not 
 - New file detection requires a poll tick after the file lands on disk — saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.
 - File renames register as one `removed` plus one `added`. Smart selection treats only the `added` half.
 - Watch mode does not surface profile / memory / benchmark summaries across runs — each subprocess emits its own. Aggregation across runs is out of scope for v1.
-- `--coverage` is incompatible: each subprocess would need its own MoarVM coverage log path and merge step, which is tracked under roadmap 9.8.4 for the parallel-mode case and would need similar work here.
+- `--coverage` is incompatible: each subprocess would need its own MoarVM coverage log path and merge step.
 - Smart selection is a substring search; if a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use `--watch-path` and the `a`/`r` commands to cover that case.

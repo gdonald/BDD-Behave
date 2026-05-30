@@ -74,6 +74,7 @@ method run-summary(
   Int  :$fail-fast = 0,
   Str  :$order     = 'defined',
   Int  :$seed,
+  Bool :$show-seed = False,
 ) {
   return if $!multi-file;
   callsame;
@@ -83,6 +84,7 @@ method multi-file-overall(
   $result,
   Str :$order = 'defined',
   Int :$seed,
+  Bool :$show-seed = False,
 ) {
   say '';
   Failures.say;
