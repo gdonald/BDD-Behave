@@ -8,6 +8,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [prove6, behave]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,5 +26,5 @@ jobs:
         run: zef install --/test App::Prove6
       - name: Install DBIish
         run: zef install --/test DBIish
-      - name: Run Tests and Specs
-        run: ./test.raku
+      - name: Run ${{ matrix.stage }}
+        run: ./test.raku ${{ matrix.stage }}

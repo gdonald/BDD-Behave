@@ -10,7 +10,7 @@ chdir $*PROGRAM.parent;
 
 my $jobs = max(2, ($*KERNEL.cpu-cores // 2) - 2);
 
-my @stages = (
+my @all-stages = (
   { :name<prove6>, :cmd[
       'prove6',
       "-j$jobs",
@@ -26,6 +26,17 @@ my @stages = (
   ] },
 );
 
+my $only = @*ARGS[0];
+
+my @stages = $only.defined
+  ?? @all-stages.grep({ .<name> eq $only })
+  !! @all-stages;
+
+unless @stages {
+  note "Unknown stage '$only'. Available: @all-stages.map(*<name>).join(', ')";
+  exit 2;
+}
+
 my %durations;
 my $total-start = now;
 
@@ -37,13 +48,15 @@ sub format-ts(--> Str) {
 }
 
 END {
-  say '';
-  say '==> Runtimes';
-  for @stages -> $s {
-    next unless %durations{$s<name>}:exists;
-    printf "  %-9s %7.2fs\n", $s<name>, %durations{$s<name>};
+  if %durations {
+    say '';
+    say '==> Runtimes';
+    for @stages -> $s {
+      next unless %durations{$s<name>}:exists;
+      printf "  %-9s %7.2fs\n", $s<name>, %durations{$s<name>};
+    }
+    printf "  %-9s %7.2fs\n", 'total', (now - $total-start).Num;
   }
-  printf "  %-9s %7.2fs\n", 'total', (now - $total-start).Num;
 }
 
 for @stages -> $s {
