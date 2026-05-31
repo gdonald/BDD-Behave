@@ -1650,7 +1650,8 @@ for @files -> $file {
 
   @all-execution-order.append: $runner.execution-order;
   for $runner.result.errors -> $err {
-    @all-failures.push("{$err<file>}:{$err<line>}");
+    my $id-line = $err<example-line> // $err<line>;
+    @all-failures.push("{$err<file>}:{$id-line}");
   }
   for $runner.result.retry-records.list -> $rec {
     @all-retry-records.push($rec);

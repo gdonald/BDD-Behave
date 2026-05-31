@@ -95,6 +95,7 @@ method !push-case($example, Str $status, %extras = %()) {
       when 'failure-message' { $tc.failure-message = $v.Str }
       when 'failure-body'    { $tc.failure-body    = $v.Str }
       when 'skip-message'    { $tc.skip-message    = $v.Str }
+      when 'line'            { $tc.line            = $v.Int }
     }
   }
   $!current-suite.cases.push: $tc;
@@ -128,18 +129,23 @@ method example-fail($example, :$failure-info) {
   my $body = $is-error
     ?? $failure-info<exception>.gist
     !! self!format-expectations;
+  my $fail-line = $failure-info.defined && $failure-info<line>.defined
+    ?? $failure-info<line>
+    !! $example.line;
   if $is-error {
     $!errors++;
     self!push-case($example, 'error',
       %( failure-type => $msg-type,
          failure-message => $msg,
-         failure-body => $body ));
+         failure-body => $body,
+         line => $fail-line ));
   } else {
     $!failures++;
     self!push-case($example, 'failed',
       %( failure-type => $msg-type,
          failure-message => $msg,
-         failure-body => $body ));
+         failure-body => $body,
+         line => $fail-line ));
   }
   $!pending-auto-description = Str;
 }

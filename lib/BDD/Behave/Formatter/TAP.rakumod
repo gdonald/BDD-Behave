@@ -73,11 +73,11 @@ method example-fail($example, :$failure-info) {
     @diag.push: 'severity' => 'error';
     @diag.push: 'message'  => $failure-info<exception>.message;
     @diag.push: 'file'     => $example.file.Str;
-    @diag.push: 'line'     => $example.line;
+    @diag.push: 'line'     => ($failure-info<line> // $example.line);
   } else {
     @diag.push: 'severity' => 'fail';
     @diag.push: 'file'     => $example.file.Str;
-    @diag.push: 'line'     => $example.line;
+    @diag.push: 'line'     => ($failure-info<line> // $example.line);
     my $count = Failures.list.elems;
     if $count > $!failure-watermark {
       my $first = Failures.list[$!failure-watermark];

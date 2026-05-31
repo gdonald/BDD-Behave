@@ -4,6 +4,8 @@ plan 8;
 
 # The fixture deliberately keeps known line numbers so the test can assert each
 # formatter surfaces them. Don't reformat without updating the constants below.
+# A die is reported at the example's `it` line; an expectation is reported at
+# the `expect` call line.
 #
 #   line 1: use BDD::Behave;
 #   line 2: (blank)
@@ -16,13 +18,15 @@ plan 8;
 #   line 9:     expect('BEHAVE_GIVEN_VALUE_42').to.be('BEHAVE_EXPECTED_VALUE_99');
 #   line 10:  }
 #   line 11: }
-constant DIE-DESC     = 'dies with a unique die-failure marker';
-constant DIE-IT-LINE  = 4;
-constant EXPECT-DESC  = 'fails with a unique expect-failure marker';
-constant EXPECT-LINE  = 9;
+constant DIE-DESC    = 'dies with a unique die-failure marker';
+constant DIE-IT-LINE = 4;
+constant EXPECT-DESC = 'fails with a unique expect-failure marker';
+constant EXPECT-LINE = 9;
 
 sub run-fixture(Str $fmt --> List) {
-  my $tmp = $*TMPDIR.add("behave-fmt-render-t-{$*PID}-{(now*1e6).Int}-spec.raku");
+  # Digit-free, formatter-unique name: a timestamp/PID here would leak digits
+  # into the output and spuriously satisfy the line-number contains() check.
+  my $tmp = $*TMPDIR.add("behave-fmt-render-{$fmt}-spec.raku");
 
   $tmp.spurt(q:to/RAKU/);
     use BDD::Behave;

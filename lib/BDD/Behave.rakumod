@@ -3,7 +3,6 @@ use v6.d;
 
 use BDD::Behave::Slang;
 
-# Engage the bareword `let` slang in the consuming spec's compilation scope.
 sub EXPORT(|) {
   engage-let-slang();
   Map.new;

@@ -928,10 +928,11 @@ our class Runner {
     if $error.defined {
       $result.outcome = 'fail';
       $result.failure-info = %(
-        description => self.full-description($example),
-        file        => $example.file,
-        line        => $example.line,
-        exception   => $error,
+        description  => self.full-description($example),
+        file         => $example.file,
+        line         => $example.line,
+        example-line => $example.line,
+        exception    => $error,
       );
 
       # Only the top-level Runner (bin/behave sets $*BEHAVE-TOP-LEVEL-RUN
@@ -955,10 +956,12 @@ our class Runner {
 
     if $result.new-failures > 0 {
       $result.outcome = 'fail';
+      my $primary-failure = Failures.list[$initial-failure-count];
       $result.failure-info = %(
-        description => self.full-description($example),
-        file        => $example.file,
-        line        => $example.line,
+        description  => self.full-description($example),
+        file         => $example.file,
+        line         => ($primary-failure.defined ?? $primary-failure.line !! $example.line),
+        example-line => $example.line,
       );
     } else {
       $result.outcome = 'pass';

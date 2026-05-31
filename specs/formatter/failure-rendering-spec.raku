@@ -21,7 +21,9 @@ constant EXPECT-DESC   = 'fails with a unique expect-failure marker';
 constant EXPECT-LINE   = 9;
 
 sub run-fixture(Str $fmt --> List) {
-  my $tmp = $*TMPDIR.add("behave-fmt-render-{$*PID}-{(now*1e6).Int}-spec.raku");
+  # Digit-free, formatter-unique name: a timestamp/PID here would leak digits
+  # into the output and spuriously satisfy the line-number contains() check.
+  my $tmp = $*TMPDIR.add("behave-fmt-render-{$fmt}-spec.raku");
 
   $tmp.spurt(q:to/RAKU/);
     use BDD::Behave;
