@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/">
+        <link rel="canonical" href="https://docs.behave.dev/">
       
       
       
@@ -1491,8 +1491,9 @@
 
 
 <h1 id="bddbehave">BDD::Behave<a class="headerlink" href="#bddbehave" title="Permanent link">&para;</a></h1>
-<p>The latest version of this documentation lives at <a href="https://gdonald.github.io/BDD-Behave/">https://gdonald.github.io/BDD-Behave/</a>.</p>
-<p>The homepage for BDD::Behave is <a href="https://github.com/gdonald/BDD-Behave">https://github.com/gdonald/BDD-Behave</a>.</p>
+<p>The project URL for BDD::Behave is <a href="https://github.com/gdonald/BDD-Behave">https://github.com/gdonald/BDD-Behave</a>.</p>
+<p>The latest version of this documentation lives at <a href="https://docs.behave.dev">https://docs.behave.dev</a>.</p>
+<p>The homepage for BDD::Behave is <a href="https://behave.dev">https://behave.dev</a>.</p>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
 <p>BDD::Behave is a behavior-driven development framework for <a href="https://raku.org/">Raku</a>. Specs are ordinary Raku files that <code>use BDD::Behave;</code> and call exported DSL helpers (<code>describe</code>, <code>context</code>, <code>it</code>, <code>let</code>, <code>before-each</code>, <code>expect</code>, …) to build and run a tree of examples.</p>
 <p>Currently developed against Raku <code>v6.d</code>.</p>
@@ -1520,7 +1521,7 @@
   <span class="k">let</span>(:<span class="n">answer</span>, { <span class="mi">42</span> });
 
   <span class="n">it</span> <span class="s">&#39;passes&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
+    <span class="n">expect</span>(<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
   }
 }
 
@@ -1528,7 +1529,7 @@
   <span class="k">let</span>(:<span class="n">answer</span>, { <span class="mi">42</span> });
 
   <span class="n">it</span> <span class="s">&#39;fails at line 15&#39;</span>, {
-    <span class="n">expect</span>(:<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">41</span>);
+    <span class="n">expect</span>(<span class="n">answer</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">41</span>);
   }
 }
 </code></pre></div></td></tr></table></div>

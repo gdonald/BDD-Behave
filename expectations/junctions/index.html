@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/expectations/junctions/">
+        <link rel="canonical" href="https://docs.behave.dev/expectations/junctions/">
       
       
         <link rel="prev" href="../composable-matchers/">
@@ -1605,7 +1605,7 @@
 
 
 <h1 id="junctions">Junctions<a class="headerlink" href="#junctions" title="Permanent link">&para;</a></h1>
-<p><code>expect(actual).to.be(expected)</code> uses Raku smartmatch (<code>~~</code>) through the built-in <code>BeMatcher</code>. Junctions on the right-hand side of a smartmatch are first-class, so every junction form composes with <code>expect</code> without any extra DSL.</p>
+<p><code>expect(actual).to.be(expected)</code> uses Raku smartmatch (<code>~~</code>) through the built-in <code>BeMatcher</code>. Junctions on the right-hand side of a smartmatch auto-thread, so every junction form composes with <code>expect</code> without any extra DSL.</p>
 <h2 id="any-match-any-one-alternative"><code>any</code> — match any one alternative<a class="headerlink" href="#any-match-any-one-alternative" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/classes/classes/">
+        <link rel="canonical" href="https://docs.behave.dev/classes/classes/">
       
       
         <link rel="prev" href="../../timing/time-mocking/">
@@ -1570,8 +1570,7 @@
 <span class="normal">12</span>
 <span class="normal">13</span>
 <span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
+<span class="normal">15</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;Widget&#39;</span>, {
   <span class="k">my</span> <span class="k">class</span> <span class="n">Widget</span> {
     <span class="k">has</span> <span class="nv">$.bar</span>;
   }
@@ -1582,9 +1581,8 @@
     <span class="n">expect</span>(.<span class="n">widget</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
   }
 
-  <span class="n">it</span> <span class="s">&#39;reads via the binding form&#39;</span>, {
-    <span class="k">my</span> <span class="nv">$w</span> := <span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
-    <span class="n">expect</span>(<span class="nv">$w</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
+  <span class="n">it</span> <span class="s">&#39;reads via the bareword&#39;</span>, {
+    <span class="n">expect</span>(<span class="n">widget</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
   }
 }
 </code></pre></div></td></tr></table></div>

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://gdonald.github.io/BDD-Behave/let/let/">
+        <link rel="canonical" href="https://docs.behave.dev/let/let/">
       
       
         <link rel="prev" href="../../core/pending/">
@@ -573,10 +573,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-named-argument-form-in-expect" class="md-nav__link">
+  <a href="#1-bareword" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Named-argument form in expect
+        1. Bareword
       
     </span>
   </a>
@@ -584,10 +584,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-binding-syntax-to-a-normal-variable" class="md-nav__link">
+  <a href="#2-context-parameter-form" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Binding syntax — := to a normal variable
+        2. Context-parameter form
       
     </span>
   </a>
@@ -595,10 +595,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-context-parameter-form" class="md-nav__link">
+  <a href="#3-named-argument-form-in-expect" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Context-parameter form
+        3. Named-argument form in expect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering
       
     </span>
   </a>
@@ -607,6 +618,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fetch-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fetch form
+      
+    </span>
+  </a>
   
 </li>
       
@@ -667,7 +689,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ordering" class="md-nav__link">
+  <a href="#ordering_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Ordering
@@ -1587,10 +1609,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-named-argument-form-in-expect" class="md-nav__link">
+  <a href="#1-bareword" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Named-argument form in expect
+        1. Bareword
       
     </span>
   </a>
@@ -1598,10 +1620,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-binding-syntax-to-a-normal-variable" class="md-nav__link">
+  <a href="#2-context-parameter-form" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Binding syntax — := to a normal variable
+        2. Context-parameter form
       
     </span>
   </a>
@@ -1609,10 +1631,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#3-context-parameter-form" class="md-nav__link">
+  <a href="#3-named-argument-form-in-expect" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Context-parameter form
+        3. Named-argument form in expect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ordering
       
     </span>
   </a>
@@ -1621,6 +1654,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fetch-form" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fetch form
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1681,7 +1725,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#ordering" class="md-nav__link">
+  <a href="#ordering_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Ordering
@@ -1748,8 +1792,49 @@
 </code></pre></div></td></tr></table></div>
 <p>A <code>let</code> declared in a <code>describe</code> or <code>context</code> is visible to every example in that group and its nested groups.</p>
 <h2 id="reading-a-let">Reading a let<a class="headerlink" href="#reading-a-let" title="Permanent link">&para;</a></h2>
-<p>There are three ways to read a let value:</p>
-<h3 id="1-named-argument-form-in-expect">1. Named-argument form in <code>expect</code><a class="headerlink" href="#1-named-argument-form-in-expect" title="Permanent link">&para;</a></h3>
+<p>There are three ways to read a let value. The bareword is the default; the other
+two cover cases the bareword can't.</p>
+<h3 id="1-bareword">1. Bareword<a class="headerlink" href="#1-bareword" title="Permanent link">&para;</a></h3>
+<p>A <code>let</code> name is available as a bareword inside the group that defined it —
+no sigil, no <code>expect</code> wrapper. It works in any
+position: method calls, arguments, and data structures.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span>
+<span class="normal">6</span>
+<span class="normal">7</span>
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;pages&#39;</span>, {
+  <span class="k">let</span>(:<span class="n">owner</span>, { <span class="n">User</span>.<span class="n">create</span>(<span class="nb">name</span> =&gt; <span class="s">&#39;Alice&#39;</span>) });
+
+  <span class="n">it</span> <span class="s">&#39;reads the bareword anywhere&#39;</span>, {
+    <span class="n">Page</span>.<span class="n">create</span>({<span class="n">user</span> =&gt; <span class="n">owner</span>, <span class="nb">name</span> =&gt; <span class="s">&#39;Home&#39;</span>});
+
+    <span class="n">expect</span>(<span class="n">User</span>.<span class="n">find</span>(<span class="n">owner</span>.<span class="nb">id</span>).<span class="n">pages</span>.<span class="nb">elems</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">1</span>);
+  }
+}
+</code></pre></div></td></tr></table></div>
+<p>Barewords also work for <code>let-bang</code> and <code>subject</code> names.</p>
+<h3 id="2-context-parameter-form">2. Context-parameter form<a class="headerlink" href="#2-context-parameter-form" title="Permanent link">&para;</a></h3>
+<p>If the example block takes a positional parameter, the context object exposes lets as methods:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">88</span>)) });
+
+<span class="n">it</span> <span class="s">&#39;reads via the context parameter&#39;</span>, -&gt; <span class="nv">$_</span> {
+  <span class="n">expect</span>(.<span class="n">widget</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">88</span>);
+}
+</code></pre></div></td></tr></table></div>
+<h3 id="3-named-argument-form-in-expect">3. Named-argument form in <code>expect</code><a class="headerlink" href="#3-named-argument-form-in-expect" title="Permanent link">&para;</a></h3>
+<p>Pass the let name as a colonpair. Unlike the bareword, this form does not rely on
+a lexical name, so it works where a bareword can't: a let name that collides with
+an existing routine, or a let injected at include time by a <a href="../../shared-contexts/shared-contexts/">shared
+context</a> or <a href="../../shared-examples/shared-examples/">shared
+example</a>.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1764,8 +1849,16 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-<h3 id="2-binding-syntax-to-a-normal-variable">2. Binding syntax — <code>:=</code> to a normal variable<a class="headerlink" href="#2-binding-syntax-to-a-normal-variable" title="Permanent link">&para;</a></h3>
-<p>This is the most flexible form: bind once, then use the variable like any other.</p>
+<h3 id="ordering">Ordering<a class="headerlink" href="#ordering" title="Permanent link">&para;</a></h3>
+<p>A <code>let</code> must be <strong>defined before it is used</strong>, whichever form you read it with.
+A bareword referenced earlier in the file than its <code>let</code> line will not compile —
+an undeclared-routine error that also catches typos. The named-argument form is
+resolved at runtime, so reading a let before it is defined raises <code>Unknown let</code>
+when the example runs.</p>
+<h2 id="fetch-form">Fetch form<a class="headerlink" href="#fetch-form" title="Permanent link">&para;</a></h2>
+<p>Calling <code>let</code> with a name and no block returns the value directly. Both name
+spellings work — <code>let(:answer)</code> and <code>let('answer')</code> — and it can be used in any
+position:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1773,27 +1866,19 @@
 <span class="normal">5</span>
 <span class="normal">6</span>
 <span class="normal">7</span>
-<span class="normal">8</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;widget&#39;</span>, {
-  <span class="n">it</span> <span class="s">&#39;has the expected fields&#39;</span>, {
-    <span class="k">my</span> <span class="nv">$w</span> := <span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">99</span>)) });
+<span class="normal">8</span>
+<span class="normal">9</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;fetch form&#39;</span>, {
+  <span class="k">let</span>(:<span class="n">user</span>, { <span class="n">User</span>.<span class="n">create</span>(<span class="nb">name</span> =&gt; <span class="s">&#39;Alice&#39;</span>) });
 
-    <span class="n">expect</span>(<span class="nv">$w</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">99</span>);
-    <span class="n">expect</span>(<span class="nv">$w</span>.<span class="n">baz</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">42</span>);
+  <span class="n">it</span> <span class="s">&#39;reads the value in any position&#39;</span>, {
+    <span class="n">Page</span>.<span class="n">create</span>({<span class="n">user</span> =&gt; <span class="k">let</span>(:<span class="n">user</span>), <span class="nb">name</span> =&gt; <span class="s">&#39;Home&#39;</span>});
+
+    <span class="n">expect</span>(<span class="n">User</span>.<span class="n">find</span>(<span class="k">let</span>(:<span class="n">user</span>).<span class="nb">id</span>).<span class="n">pages</span>.<span class="nb">elems</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="mi">1</span>);
   }
 }
 </code></pre></div></td></tr></table></div>
-<h3 id="3-context-parameter-form">3. Context-parameter form<a class="headerlink" href="#3-context-parameter-form" title="Permanent link">&para;</a></h3>
-<p>If the example block takes a positional parameter, the context object exposes lets as methods:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">let</span>(:<span class="n">widget</span>, { <span class="n">Widget</span>.<span class="nb">new</span>(:<span class="n">bar</span>(<span class="mi">88</span>)) });
-
-<span class="n">it</span> <span class="s">&#39;reads via the context parameter&#39;</span>, -&gt; <span class="nv">$_</span> {
-  <span class="n">expect</span>(.<span class="n">widget</span>.<span class="n">bar</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">88</span>);
-}
-</code></pre></div></td></tr></table></div>
+<p>The fetch form shares the same memoization as the definition, must be called
+while an example is running, and raises for an unknown name.</p>
 <h2 id="memoization">Memoization<a class="headerlink" href="#memoization" title="Permanent link">&para;</a></h2>
 <p>Within a single example, calling a let multiple times returns the same value:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1831,6 +1916,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
+<p>Shadowing one <code>let</code> with another of the same name is normal and silent. But if
+a <code>let</code> name shadows an existing non-let symbol in the same scope (a <code>sub</code> or
+variable), a warning is printed at compile time so the collision is not silent.</p>
 <h2 id="let-bang-eager-evaluation"><code>let-bang</code> (eager evaluation)<a class="headerlink" href="#let-bang-eager-evaluation" title="Permanent link">&para;</a></h2>
 <p><code>let-bang</code> is the Raku-friendly spelling of RSpec's <code>let!</code>. It defines the same kind of memoized value as <code>let</code>, but it is <strong>forced before every example body</strong> so any side effects in the block run whether or not the example reads the value.</p>
 <p><code>let-bang</code> is sugar for:</p>
@@ -1872,7 +1960,7 @@
 }
 </code></pre></div></td></tr></table></div>
 <p>Between examples the cache is reset, so the block runs once per example.</p>
-<h3 id="ordering">Ordering<a class="headerlink" href="#ordering" title="Permanent link">&para;</a></h3>
+<h3 id="ordering_1">Ordering<a class="headerlink" href="#ordering_1" title="Permanent link">&para;</a></h3>
 <p><code>let-bang</code> registers a real <code>before-each</code> hook on the surrounding group, so it composes with <code>before-each</code> in <strong>declaration order</strong>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1926,7 +2014,7 @@
 <h3 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>let-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope) only plain <code>let</code> is supported.</li>
-<li>Inside an <code>it</code> block, use plain <code>let</code> with binding (<code>my $x := let(:name, { ... })</code>); eager forcing is meaningless once you're already in the example body.</li>
+<li>Inside an <code>it</code> block, use plain <code>let</code>; eager forcing is meaningless once you're already in the example body.</li>
 </ul>
 
 
