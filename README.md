@@ -97,7 +97,7 @@ Documentation: [https://docs.behave.dev](https://docs.behave.dev)
 
 See also the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/main/specs).
 
-#### Website
+#### Homepage
 
 [https://behave.dev](https://behave.dev)
 

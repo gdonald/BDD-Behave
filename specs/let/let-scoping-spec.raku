@@ -100,3 +100,11 @@ describe 'back to using top-level', {
     expect(:top).to.be('top-level');
   }
 }
+
+describe 'colon form requires define-before-use', {
+  it 'raises for a let declared later in the same group', {
+    expect({ let(:later) }).to.raise;
+  }
+
+  let(:later, { 'defined-after' });
+}

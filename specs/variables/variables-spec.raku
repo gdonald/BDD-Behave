@@ -125,7 +125,7 @@ describe 'interaction between let and regular variables', {
   my $regular-var = 'from-regular';
 
   it 'can access both let and regular variables', {
-    expect(:let-var).to.be('from-let');
+    expect(let-var).to.be('from-let');
     expect($regular-var).to.be('from-regular');
   }
 
@@ -151,8 +151,8 @@ describe 'interaction between let and regular variables', {
     my $nested-var = 'nested-regular';
 
     it 'can access all four variables', {
-      expect(:let-var).to.be('from-let');
-      expect(:nested-let).to.be('nested-let');
+      expect(let-var).to.be('from-let');
+      expect(nested-let).to.be('nested-let');
       expect($regular-var).to.be('from-regular');
       expect($nested-var).to.be('nested-regular');
     }

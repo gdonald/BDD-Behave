@@ -15,51 +15,13 @@ A `let` declared in a `describe` or `context` is visible to every example in tha
 
 ## Reading a let
 
-There are three ways to read a let value:
+There are three ways to read a let value. The bareword is the default; the other
+two cover cases the bareword can't.
 
-### 1. Named-argument form in `expect`
+### 1. Bareword
 
-```raku
-describe 'answer', {
-  let(:answer, { 42 });
-
-  it 'is 42', {
-    expect(:answer).to.be(42);
-  }
-}
-```
-
-### 2. Binding syntax — `:=` to a normal variable
-
-This is the most flexible form: bind once, then use the variable like any other.
-
-```raku
-describe 'widget', {
-  it 'has the expected fields', {
-    my $w := let(:widget, { Widget.new(:bar(99)) });
-
-    expect($w.bar).to.be(99);
-    expect($w.baz).to.be(42);
-  }
-}
-```
-
-### 3. Context-parameter form
-
-If the example block takes a positional parameter, the context object exposes lets as methods:
-
-```raku
-let(:widget, { Widget.new(:bar(88)) });
-
-it 'reads via the context parameter', -> $_ {
-  expect(.widget.bar).to.be(88);
-}
-```
-
-### 4. Bareword
-
-A `let` name is also available as a bareword inside the group that defined it —
-no sigil, no `expect` wrapper. This is the most direct form and works in any
+A `let` name is available as a bareword inside the group that defined it —
+no sigil, no `expect` wrapper. It works in any
 position: method calls, arguments, and data structures.
 
 ```raku
@@ -76,10 +38,43 @@ describe 'pages', {
 
 Barewords also work for `let-bang` and `subject` names.
 
-A `let` must be **defined before it is used**: a bareword referenced earlier in
-the file than its `let` line will not compile. A bareword that was never
-defined as a `let` is an ordinary undeclared-routine compile error, so typos
-are caught at compile time.
+### 2. Context-parameter form
+
+If the example block takes a positional parameter, the context object exposes lets as methods:
+
+```raku
+let(:widget, { Widget.new(:bar(88)) });
+
+it 'reads via the context parameter', -> $_ {
+  expect(.widget.bar).to.be(88);
+}
+```
+
+### 3. Named-argument form in `expect`
+
+Pass the let name as a colonpair. Unlike the bareword, this form does not rely on
+a lexical name, so it works where a bareword can't: a let name that collides with
+an existing routine, or a let injected at include time by a [shared
+context](../shared-contexts/shared-contexts.md) or [shared
+example](../shared-examples/shared-examples.md).
+
+```raku
+describe 'answer', {
+  let(:answer, { 42 });
+
+  it 'is 42', {
+    expect(:answer).to.be(42);
+  }
+}
+```
+
+### Ordering
+
+A `let` must be **defined before it is used**, whichever form you read it with.
+A bareword referenced earlier in the file than its `let` line will not compile —
+an undeclared-routine error that also catches typos. The named-argument form is
+resolved at runtime, so reading a let before it is defined raises `Unknown let`
+when the example runs.
 
 ## Fetch form
 
@@ -226,4 +221,4 @@ describe 'outer', {
 ### Restrictions
 
 - `let-bang` must be called inside a `describe` or `context`. At the top-level (suite scope) only plain `let` is supported.
-- Inside an `it` block, use plain `let` with binding (`my $x := let(:name, { ... })`); eager forcing is meaningless once you're already in the example body.
+- Inside an `it` block, use plain `let`; eager forcing is meaningless once you're already in the example body.

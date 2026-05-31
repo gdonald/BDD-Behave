@@ -40,7 +40,7 @@ describe 'classes in specs', {
     }
 
     it 'can check type', {
-      expect(:widget).to.be(Widget);
+      expect(widget).to.be(Widget);
     }
   }
 

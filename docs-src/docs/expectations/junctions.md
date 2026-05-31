@@ -1,6 +1,6 @@
 # Junctions
 
-`expect(actual).to.be(expected)` uses Raku smartmatch (`~~`) through the built-in `BeMatcher`. Junctions on the right-hand side of a smartmatch are first-class, so every junction form composes with `expect` without any extra DSL.
+`expect(actual).to.be(expected)` uses Raku smartmatch (`~~`) through the built-in `BeMatcher`. Junctions on the right-hand side of a smartmatch auto-thread, so every junction form composes with `expect` without any extra DSL.
 
 ## `any` — match any one alternative
 

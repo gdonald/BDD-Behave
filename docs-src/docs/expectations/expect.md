@@ -61,7 +61,7 @@ it 'compares two lets', {
 }
 ```
 
-For more flexible let access, prefer the binding syntax shown in [`let`](../let/let.md).
+For other ways to read a let, see [`let`](../let/let.md).
 
 ## Failure output
 

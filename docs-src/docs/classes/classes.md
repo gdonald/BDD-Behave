@@ -43,9 +43,8 @@ describe 'Widget', {
     expect(.widget.bar).to.be(99);
   }
 
-  it 'reads via the binding form', {
-    my $w := let(:widget, { Widget.new(:bar(99)) });
-    expect($w.bar).to.be(99);
+  it 'reads via the bareword', {
+    expect(widget.bar).to.be(99);
   }
 }
 ```

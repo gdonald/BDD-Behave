@@ -70,7 +70,7 @@ The tab separator makes the format easy to parse with `cut -f1` (locations) or `
 
 ### `--list-examples-format=json`
 
-For richer integrations the JSON output exposes the same fields as the programmatic [`SpecRegistry` query API](#programmatic-query-api):
+For tooling integrations the JSON output exposes the same fields as the programmatic [`SpecRegistry` query API](#programmatic-query-api):
 
 ```text
 $ behave --list-examples --list-examples-format=json specs/cart-spec.raku

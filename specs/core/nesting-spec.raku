@@ -5,7 +5,7 @@ describe 'this spec has a let variable', {
     let(:foo, { 42 });
 
     it 'is successful', {
-      expect(:foo).to.be(42);
+      expect(foo).to.be(42);
     }
 
     it 'can use binding syntax', {
@@ -18,7 +18,7 @@ describe 'this spec has a let variable', {
     let(:foo, { 'hello' });
 
     it 'uses string value from this context', {
-      expect(:foo).to.be('hello');
+      expect(foo).to.be('hello');
     }
 
     it 'binding syntax works with strings too', {
@@ -82,7 +82,7 @@ describe 'this spec has an expected variable', {
   let(:foo, { 42 });
 
   it 'is successful', {
-    expect(42).to.be(:foo);
+    expect(42).to.be(foo);
   }
 }
 

@@ -1,8 +1,10 @@
 # BDD::Behave
 
-The latest version of this documentation lives at [https://gdonald.github.io/BDD-Behave/](https://gdonald.github.io/BDD-Behave/).
+The project URL for BDD::Behave is [https://github.com/gdonald/BDD-Behave](https://github.com/gdonald/BDD-Behave).
 
-The homepage for BDD::Behave is [https://github.com/gdonald/BDD-Behave](https://github.com/gdonald/BDD-Behave).
+The latest version of this documentation lives at [https://docs.behave.dev](https://docs.behave.dev).
+
+The homepage for BDD::Behave is [https://behave.dev](https://behave.dev).
 
 ## Synopsis
 
@@ -21,7 +23,7 @@ describe 'this spec', {
   let(:answer, { 42 });
 
   it 'passes', {
-    expect(:answer).to.be(42);
+    expect(answer).to.be(42);
   }
 }
 
@@ -29,7 +31,7 @@ describe 'this final spec', {
   let(:answer, { 42 });
 
   it 'fails at line 15', {
-    expect(:answer).to.be(41);
+    expect(answer).to.be(41);
   }
 }
 ```

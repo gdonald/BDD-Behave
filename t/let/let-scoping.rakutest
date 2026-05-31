@@ -159,4 +159,25 @@ sub capture-run($suite) {
   is $hits, 2, 'each example invokes the let block once (fresh runtime per example)';
 }
 
+# Colon form requires define-before-use: a let declared after the it is not in its snapshot
+{
+  registry().clear;
+
+  describe 'let after the example', {
+    it 'reads later', { True }
+
+    let(:later, { 'defined-after' });
+  }
+
+  my $example = registry().suites[0].groups[0].examples[0];
+  my @lets    = $example.get-metadata('lets').flat;
+
+  is @lets.grep(*.name eq 'later').elems, 0,
+    'a let declared after the it is not captured in the example snapshot';
+
+  my $runtime = BDD::Behave::LetRuntime::LetRuntime.new(:definitions(@lets));
+  dies-ok { $runtime.value('later') },
+    'colon form raises for a let declared after the it that reads it';
+}
+
 done-testing;

@@ -1,5 +1,5 @@
 site_name: BDD::Behave
-site_url: https://gdonald.github.io/BDD-Behave/
+site_url: https://docs.behave.dev/
 repo_url: https://github.com/gdonald/BDD-Behave
 nav:
   - Home: index.md
