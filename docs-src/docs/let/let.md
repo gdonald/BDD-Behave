@@ -15,12 +15,12 @@ A `let` declared in a `describe` or `context` is visible to every example in tha
 
 ## Reading a let
 
-There are three ways to read a let value. The bareword is the default; the other
+There are three ways to read a let value. The bareword is the default. The other
 two cover cases the bareword can't.
 
 ### 1. Bareword
 
-A `let` name is available as a bareword inside the group that defined it —
+A `let` name is available as a bareword inside the group that defined it,
 no sigil, no `expect` wrapper. It works in any
 position: method calls, arguments, and data structures.
 
@@ -71,7 +71,7 @@ describe 'answer', {
 ### Ordering
 
 A `let` must be **defined before it is used**, whichever form you read it with.
-A bareword referenced earlier in the file than its `let` line will not compile —
+A bareword referenced earlier in the file than its `let` line will not compile:
 an undeclared-routine error that also catches typos. The named-argument form is
 resolved at runtime, so reading a let before it is defined raises `Unknown let`
 when the example runs.
@@ -79,7 +79,7 @@ when the example runs.
 ## Fetch form
 
 Calling `let` with a name and no block returns the value directly. Both name
-spellings work — `let(:answer)` and `let('answer')` — and it can be used in any
+spellings work (`let(:answer)` and `let('answer')`), and it can be used in any
 position:
 
 ```raku
@@ -153,7 +153,7 @@ let-bang(:user,  { User.create });
 
 ### When to use `let-bang`
 
-Use `let-bang` when the *creation* of a value is itself the test setup — typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain `let` is preferred because it stays cheap when the example doesn't actually read the value.
+Use `let-bang` when the *creation* of a value is itself the test setup: typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain `let` is preferred because it stays cheap when the example doesn't actually read the value.
 
 ```raku
 describe 'invoices index', {
@@ -221,4 +221,4 @@ describe 'outer', {
 ### Restrictions
 
 - `let-bang` must be called inside a `describe` or `context`. At the top-level (suite scope) only plain `let` is supported.
-- Inside an `it` block, use plain `let`; eager forcing is meaningless once you're already in the example body.
+- Inside an `it` block, use plain `let`. Eager forcing is meaningless once you're already in the example body.

@@ -1,6 +1,6 @@
 # Variables in specs
 
-Because Behave specs are plain Raku, `my` and `our` variables work exactly as you'd expect. You don't need a special DSL to declare state — though [`let`](../let/let.md) is usually the right tool when you want **per-example** memoization with automatic reset.
+Because Behave specs are plain Raku, `my` and `our` variables work exactly as you'd expect. You don't need a special DSL to declare state, though [`let`](../let/let.md) is usually the right tool when you want **per-example** memoization with automatic reset.
 
 ## Top-level variables
 
@@ -36,7 +36,7 @@ describe 'shared describe-level state', {
 }
 ```
 
-This is the **opposite** of [`let`](../let/let.md), which resets between examples. Reach for `let` when you want isolation; use a plain `my` when you intentionally want shared state.
+This is the **opposite** of [`let`](../let/let.md), which resets between examples. Reach for `let` when you want isolation. Use a plain `my` when you intentionally want shared state.
 
 ## Shadowing in nested contexts
 
@@ -78,7 +78,7 @@ describe 'it-local vars', {
 | Cheap constants | Expensive setup that should run lazily |
 | Counters, accumulators | Test subjects, fixtures |
 
-`let` works alongside plain variables — you can mix both in the same describe.
+`let` works alongside plain variables: you can mix both in the same describe.
 
 ## Classes, roles, enums
 

@@ -3,12 +3,12 @@
 `expect(...).to.be(...)` is built on top of a small `Matcher` role. The expected
 value passed to `.be(...)` is either:
 
-- **a plain value** — wrapped in the built-in `BeMatcher` (smartmatch), or
-- **a `Matcher`-doing object** — used directly.
+- **a plain value** (wrapped in the built-in `BeMatcher`, smartmatch), or
+- **a `Matcher`-doing object** (used directly).
 
 This is the seam every built-in matcher and every user-defined matcher plugs
 into. If you want to add your own matcher without writing a class by hand, see
-[Custom Matchers](custom-matchers.md) — `define-matcher` produces a matcher
+[Custom Matchers](custom-matchers.md). `define-matcher` produces a matcher
 that conforms to this same role.
 
 ## The Matcher role
@@ -35,9 +35,9 @@ role Matcher is export {
 
 ## Where matcher classes live
 
-Almost all users only ever write `use BDD::Behave;` — that pulls in `expect`, every built-in matcher, and the full DSL through the lazy-loading wrapper. Nothing here changes that.
+Almost all users only ever write `use BDD::Behave;`, which pulls in `expect`, every built-in matcher, and the full DSL through the lazy-loading wrapper. Nothing here changes that.
 
-You only need to know about specific submodules when you want to *instantiate* matcher classes directly — typically to compose them inside a custom matcher, or to unit-test a matcher with `Test`. Each family lives in its own submodule so unit tests can import just one and skip the rest:
+You only need to know about specific submodules when you want to *instantiate* matcher classes directly, typically to compose them inside a custom matcher, or to unit-test a matcher with `Test`. Each family lives in its own submodule so unit tests can import just one and skip the rest:
 
 | Submodule                          | Matcher classes                                                                                                                               |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -76,7 +76,7 @@ keeps the structured `Expected:` / `to be:` block plus the colorized `Diff:`
 section described in [Diff Output](../diff/diff.md).
 
 Because the underlying operator is `~~`, all four Raku junction kinds (`any`,
-`all`, `one`, `none`) compose with `BeMatcher` directly — see
+`all`, `one`, `none`) compose with `BeMatcher` directly. See
 [Junctions](junctions.md).
 
 ## EqMatcher (built-in)
@@ -141,7 +141,7 @@ expect([]).to.contain-exactly();
 Failure messages render as `expected <actual> to contain exactly <items>` (or
 `not to contain exactly` under `.not`).
 
-`match-array` is the array-form alias — it takes a single array argument and
+`match-array` is the array-form alias. It takes a single array argument and
 delegates to the same matcher:
 
 ```raku
@@ -149,7 +149,7 @@ expect([1, 2, 3]).to.match-array([3, 2, 1]);   # passes
 expect([1, 2, 3]).to.match-array([1, 2]);      # fails
 ```
 
-`match-array` requires its argument to be an array / list; passing a scalar
+`match-array` requires its argument to be an array / list. Passing a scalar
 dies with `match-array requires an array argument`.
 
 ## IncludeMatcher (built-in)
@@ -202,7 +202,7 @@ expect('done 🚀').to.include('🚀');            # emoji
 expect('order #42').to.include(42);            # non-Str args are .Str-coerced
 ```
 
-Matching is case sensitive — `expect('Hello').to.include('hello')` fails.
+Matching is case sensitive: `expect('Hello').to.include('hello')` fails.
 For case-insensitive matching, use [`MatchMatcher`](#matchmatcher-built-in)
 with a regex like `rx:i/hello/`.
 
@@ -243,7 +243,7 @@ to start with` under `.not`).
 ### String-specific behavior
 
 When the actual is a `Str`, each prefix is checked via `.starts-with` after
-`.Str` coercion. Multi-prefix calls AND together — every supplied prefix must
+`.Str` coercion. Multi-prefix calls AND together: every supplied prefix must
 independently be a prefix of the string:
 
 ```raku
@@ -256,7 +256,7 @@ expect('🚀 launch').to.start-with('🚀');       # emoji
 expect('42 answers').to.start-with(42);        # non-Str args are .Str-coerced
 ```
 
-Matching is case sensitive and respects leading whitespace —
+Matching is case sensitive and respects leading whitespace:
 `expect('hello').to.start-with(' hello')` fails. Allomorphs (`IntStr`,
 `RatStr`) are accepted as actuals and routed through the `Str` branch.
 
@@ -283,7 +283,7 @@ render as `expected <actual> to end with <items>` (or `not to end with` under
 ### String-specific behavior
 
 When the actual is a `Str`, each suffix is checked via `.ends-with` after
-`.Str` coercion. Multi-suffix calls AND together — every supplied suffix must
+`.Str` coercion. Multi-suffix calls AND together: every supplied suffix must
 independently be a suffix of the string:
 
 ```raku
@@ -296,7 +296,7 @@ expect('moon 🚀').to.end-with('🚀');           # emoji
 expect('answer = 42').to.end-with(42);         # non-Str args are .Str-coerced
 ```
 
-Matching is case sensitive and respects trailing whitespace —
+Matching is case sensitive and respects trailing whitespace:
 `expect('hello').to.end-with('hello ')` fails. Allomorphs (`IntStr`, `RatStr`)
 are accepted as actuals and routed through the `Str` branch.
 
@@ -349,7 +349,7 @@ expect(@rows).to.all(IncludeMatcher.new(:expected([status => 'ok'])));
 
 ### Junctions
 
-Pass junctions through `.all(...)` directly — the method binds its argument
+Pass junctions through `.all(...)` directly. The method binds its argument
 raw so junctions are not autothreaded out:
 
 ```raku
@@ -380,7 +380,7 @@ expect(5).to.be-a(Positive);          # passes
 expect(-1).to.be-a(Positive);         # fails (where clause)
 ```
 
-`be-an` is provided as an alias for English grammar — it behaves identically:
+`be-an` is provided as an alias for English grammar. It behaves identically:
 
 ```raku
 expect(42).to.be-an(Int);
@@ -440,7 +440,7 @@ expect('hello').to.respond-to('uc', 'lc', 'chars');         # built-ins work
 expect([1, 2, 3]).to.respond-to('push', 'pop');             # Arrays too
 ```
 
-Multiple method names are AND-combined — every name must be present for
+Multiple method names are AND-combined: every name must be present for
 the expectation to pass. When the expectation fails, the failure message
 lists the missing methods:
 
@@ -462,7 +462,7 @@ Failure messages render as `expected <actual> to respond to <names>`
 `have-attributes` checks several attributes of an object in one call.
 Each named pair maps an attribute name to an expected value (or to
 another `Matcher`). For each pair, the matcher calls the accessor on
-the actual value and compares — values are compared with `eqv`, and
+the actual value and compares. Values are compared with `eqv`, and
 when the expected side is itself a `Matcher` its `matches` method is
 delegated to.
 
@@ -479,7 +479,7 @@ expect($alice).to.have-attributes(:name<Alice>);               # subset OK
 expect($alice).to.have-attributes(:age(31));                   # fails
 ```
 
-Multiple attributes are AND-combined — every pair must match. When the
+Multiple attributes are AND-combined: every pair must match. When the
 expectation fails, the failure message separates *missing* accessors
 (the object does not respond to the name at all) from *mismatched*
 values (accessor exists, but the value disagrees):
@@ -488,7 +488,7 @@ values (accessor exists, but the value disagrees):
 expected Person.new(name => "Alice", age => 30) to have attributes age => 31, nickname => "Al" (missing: "nickname"; mismatched: age: got 30, wanted 31)
 ```
 
-The matcher composes naturally with other matchers — pass a `Matcher`
+The matcher composes naturally with other matchers. Pass a `Matcher`
 instance as the expected value for any attribute:
 
 ```raku
@@ -567,7 +567,7 @@ be …` under `.not`.
 ## BeBetweenMatcher (built-in)
 
 `be-between` checks whether a numeric `actual` falls within a `[min, max]`
-range. The matcher is inclusive by default; chain `.exclusive` (or the
+range. The matcher is inclusive by default. Chain `.exclusive` (or the
 explicit `.inclusive`) to flip the mode:
 
 ```raku
@@ -638,7 +638,7 @@ expect(5.2).to.be-within(0.1).of(5.0);      # fails
 expect(3.14e0).to.be-within(0.01e0).of(3.15e0);  # Num tolerance
 ```
 
-The boundary is inclusive — `abs(actual - expected) <= delta` — so a
+The boundary is inclusive (`abs(actual - expected) <= delta`), so a
 delta of `0` means actual must equal expected exactly:
 
 ```raku
@@ -686,7 +686,7 @@ consumers and alternate formatters can introspect both.
 ## BeTruthyMatcher (built-in)
 
 `be-truthy` checks Raku's boolean coercion of the actual value (`?$actual`).
-Anything that coerces to `True` passes; anything that coerces to `False`
+Anything that coerces to `True` passes. Anything that coerces to `False`
 fails:
 
 ```raku
@@ -725,7 +725,7 @@ be truthy` under `.not`).
 
 ## BeFalsyMatcher (built-in)
 
-`be-falsy` is the inverse of `be-truthy` — it passes when `!$actual` is
+`be-falsy` is the inverse of `be-truthy`. It passes when `!$actual` is
 `True`:
 
 ```raku
@@ -766,7 +766,7 @@ expect(Widget).to.be-nil;       # user-defined type object
 expect(Widget.new).to.not.be-nil; # defined instance
 ```
 
-Defined values — even "empty" or falsy ones — fail `be-nil`:
+Defined values (even "empty" or falsy ones) fail `be-nil`:
 
 ```raku
 expect(0).to.not.be-nil;
@@ -782,7 +782,7 @@ explicit: `Int` (the type) is undefined, but `0` (an instance of
 value", and `be-falsy` when you care about boolean coercion (which
 treats empty collections as false too).
 
-Note that assigning `Nil` to a plain `my $x` reverts `$x` to `Any` —
+Note that assigning `Nil` to a plain `my $x` reverts `$x` to `Any`, and
 both still pass `be-nil`, so the distinction rarely matters in
 practice.
 
@@ -810,7 +810,7 @@ expect('abc').to.not.match(/\d+/);
 expect('cat').to.not.match(/dog/);
 ```
 
-Undefined and non-`Str` actuals fail rather than throw — `expect(Any)`,
+Undefined and non-`Str` actuals fail rather than throw: `expect(Any)`,
 `expect(Str)`, `expect(42)`, and `expect([1, 2, 3])` all record a
 failure when matched against any regex, so a stray nil or wrongly typed
 value produces a normal expectation failure instead of a runtime
@@ -827,14 +827,14 @@ expected "abc123" not to match /\d+/
 carries the `Regex` itself, so programmatic consumers and alternate
 formatters can inspect either side.
 
-`match` is regex-only; for substring checks use `include` (see
+`match` is regex-only. For substring checks use `include` (see
 [Matchers › IncludeMatcher](matchers.md#includematcher-built-in)).
 
 ## RaiseErrorMatcher (built-in)
 
 `raise-error` passes when the actual value is a `Callable` and invoking it
 raises an exception. Because the matcher operates on a `Callable`, the
-block must be passed unevaluated — wrap the code under test in `{ ... }`:
+block must be passed unevaluated. Wrap the code under test in `{ ... }`:
 
 ```raku
 expect({ die "boom" }).to.raise-error;
@@ -842,7 +842,7 @@ expect({ X::AdHoc.new(payload => 'x').throw }).to.raise-error;
 expect({ 1 + 1 }).to.not.raise-error;
 ```
 
-`raise-error` is also available under two aliases — `throw` and `raise` —
+`raise-error` is also available under two aliases (`throw` and `raise`),
 which take the same arguments and behave identically. Pick whichever
 reads best at the call site:
 
@@ -917,8 +917,8 @@ expect({ X::Demo.new.throw }).to.raise-error(X::Demo).with-message('demo');
 ```
 
 `Str` arguments compare with `eq` (the full message must match
-exactly); `Regex` arguments compare with `~~`. The chain may be
-re-applied — only the most recent call's expectation is in effect, and
+exactly). `Regex` arguments compare with `~~`. The chain may be
+re-applied: only the most recent call's expectation is in effect, and
 any failure recorded by an earlier link in the chain is replaced rather
 than appended:
 
@@ -926,7 +926,7 @@ than appended:
 my $exp = expect({ die "boom" }).to.raise-error.with-message('bang');
 # Failures.list has one entry.
 $exp.with-message('boom');
-# Failures.list is now empty — the second call succeeded and cleared
+# Failures.list is now empty. The second call succeeded and cleared
 # the prior failure.
 ```
 
@@ -948,7 +948,7 @@ expect({ die "boom" }).to.not.raise-error.with-message('boom');  # fails
 ### Negation
 
 `.not.raise-error(...)` passes whenever the block fails to match the
-*full* filter — i.e. nothing was raised, or a different type was raised,
+*full* filter: i.e. nothing was raised, or a different type was raised,
 or the message did not match. It only fails when the block raised
 exactly the forbidden exception:
 
@@ -968,7 +968,7 @@ expected block not to raise X::Demo, but one was raised (X::Demo: demo)
 
 ### Non-Callable actuals
 
-Non-`Callable` actuals fail rather than throw — `expect(42).to.raise-error`
+Non-`Callable` actuals fail rather than throw: `expect(42).to.raise-error`
 records a normal expectation failure rather than blowing up. The failure
 message names the unwrapped value so the mistake is obvious:
 
@@ -981,7 +981,7 @@ expected a Callable, but got 42
 `Failure.given` carries the original `Callable`. `Failure.expected`
 carries the expected exception type (when one was supplied), or the
 expected message (regex or `Str`, whichever was supplied via the inline
-form or `with-message`); for the bare no-argument form it remains
+form or `with-message`). For the bare no-argument form it remains
 unset. The matcher itself also exposes `raised-exception` (the captured
 throw) and `miss-reason` (one of `'none'`, `'type'`, `'message'`,
 `'non-callable'`, or `Str` on a pass) for tooling that needs structural
@@ -991,7 +991,7 @@ access.
 
 `change` passes when invoking the actual block changes the value
 returned by an observable block. Both the action and the observable
-are passed unevaluated as `{ ... }` blocks — the matcher invokes the
+are passed unevaluated as `{ ... }` blocks. The matcher invokes the
 observable, runs the action, then invokes the observable again and
 compares the two values via `eqv`:
 
@@ -1006,8 +1006,8 @@ my $counter2 = 5;
 expect({ 1 + 1 }).to.change({ $counter2 });            # fails (unchanged)
 ```
 
-The observable can be any expression — a variable, a method call, a
-derived value — as long as the block returns something comparable. The
+The observable can be any expression (a variable, a method call, a
+derived value) as long as the block returns something comparable. The
 matcher uses `eqv` for the before / after comparison, so deep
 structural equality is respected: mutating an array element to the
 same value (`@items[0] = 1` when it was already `1`) does **not**
@@ -1040,7 +1040,7 @@ expect({ $counter = 9 }).to.not.change({ $counter });
 
 ### Non-Callable actuals
 
-Non-`Callable` actuals fail rather than throw — `expect(42).to.change({ $x })`
+Non-`Callable` actuals fail rather than throw: `expect(42).to.change({ $x })`
 records a normal expectation failure rather than blowing up. The
 failure message names the unwrapped value:
 
@@ -1057,11 +1057,11 @@ expected a Callable for change, but got 42
 my $counter = 0;
 expect({ $counter = 10 }).to.change({ $counter }).from(0).to(10);
 
-# .from alone — must start at 0 *and* change
+# .from alone: must start at 0 *and* change
 my $a = 0;
 expect({ $a++ }).to.change({ $a }).from(0);
 
-# .to alone — must end at 10 *and* differ from the start
+# .to alone: must end at 10 *and* differ from the start
 my $b = 0;
 expect({ $b = 10 }).to.change({ $b }).to(10);
 
@@ -1073,7 +1073,7 @@ expect({ $c = 2 }).to.change({ $c }).to(2).from(1);
 `.from` and `.to` use `eqv` for the comparison, so deep structural
 equality is respected (e.g. `.from([])` matches an empty-array
 snapshot). The action block is run exactly once per `.change(...)`
-call — chaining `.from(...).to(...)` after a `.change(...)` does
+call. Chaining `.from(...).to(...)` after a `.change(...)` does
 not re-run it.
 
 When a chain step fails and a later step passes, the prior failure
@@ -1085,14 +1085,14 @@ always reflects the final state.
 The chain participates in the existing `.not` flow with conjunction
 semantics: `.not.change(...).from(x).to(y)` passes when the joint
 constraint (change AND from match AND to match) does *not* hold.
-This means the block may still have changed the observable — just
+This means the block may still have changed the observable, just
 not in that particular direction. The negated failure message
 includes the clause for clarity:
 
 ```raku
 my $counter = 0;
 expect({ $counter = 7 }).to.not.change({ $counter }).from(0).to(10);
-# passes — the value changed, but not to 10
+# passes: the value changed, but not to 10
 
 expect({ $counter = 10 }).to.not.change({ $counter }).from(0).to(10);
 # fails: expected block not to change observable from 0 to 10,
@@ -1119,14 +1119,14 @@ expect({ $score += 5 }).to.change({ $score })
   .by-at-least(1).by-at-most(10);
 ```
 
-All three accept any `Real` (`Int`, `Rat`, `Num`); the matcher
+All three accept any `Real` (`Int`, `Rat`, `Num`). The matcher
 subtracts `after - before` and compares against the expected delta
 with the usual numeric operators. If the observable returns a
 non-numeric value (e.g. a `Str`), the matcher records a
 `by-non-numeric` failure rather than coercing.
 
 The by-modifiers compose with `.from(...)` and `.to(...)`. From
-and to mismatches still take priority — `.from(0).by(5)` reports
+and to mismatches still take priority: `.from(0).by(5)` reports
 a from-mismatch when the value did not start at 0, even if the
 delta would otherwise be wrong. RSpec parity: when the value did
 not change at all, the no-change miss-reason fires first, so
@@ -1198,7 +1198,7 @@ The matcher exposes `value` (set when the promise was kept),
 `cause` (set when the promise was broken), `timed-out`, and
 `promise-given` for tooling.
 
-`be-kept` accepts a positional `Real` timeout in seconds; pass `0.5`
+`be-kept` accepts a positional `Real` timeout in seconds. Pass `0.5`
 for 500 ms. Non-Promise actuals fail with a Promise-shape message
 (`expected a Promise for be-kept, but got 42`) rather than dying.
 
@@ -1241,8 +1241,8 @@ The matcher exposes `value` (set when the promise was kept), `cause`
 
 ## CompleteWithinMatcher (built-in)
 
-`complete-within` passes when the promise settles — either kept or
-broken — within the given duration. The duration is a `Real`
+`complete-within` passes when the promise settles (either kept or
+broken) within the given duration. The duration is a `Real`
 positional argument in seconds:
 
 ```raku
@@ -1271,7 +1271,7 @@ queryable from tooling. The matcher exposes `final-status` (`Kept`,
 `Broken`, or `Nil` when timed out), `value`, `cause`, `timed-out`,
 and `promise-given`.
 
-Unlike `be-kept` / `be-broken`, the duration is required — there's
+Unlike `be-kept` / `be-broken`, the duration is required. There's
 no useful default for "how long is too long" without it.
 
 ## EmitMatcher (built-in)
@@ -1293,7 +1293,7 @@ expect(Supply.from-list(1, 2)).to.not.emit(1, 2, 3);
 ```
 
 The collection window defaults to 1 second. Pass `:within(seconds)` to
-change it — useful for slow streams or to fail fast on hung supplies:
+change it, useful for slow streams or to fail fast on hung supplies:
 
 ```raku
 expect(Supply.from-list(1, 2)).to.emit(1, 2, :within(0.5));
@@ -1370,7 +1370,7 @@ expected stream to complete within 1s, but it quit (X::AdHoc: boom)
 from tooling.
 
 Unlike Promise's `complete-within`, the `complete` matcher does not
-treat a stream-level error (`QUIT`) as completion — only the `done`
+treat a stream-level error (`QUIT`) as completion. Only the `done`
 signal counts.
 
 ## EventuallyMatcher (built-in)
@@ -1421,7 +1421,7 @@ eventually: block threw X::AdHoc: not yet (after 5 iterations in 0.05s)
 ```
 
 Exceptions raised inside the block are caught per-iteration and treated
-as misses — the polling loop continues so the block has a chance to
+as misses. The polling loop continues so the block has a chance to
 recover (e.g., a service warming up).
 
 ### Negation
@@ -1484,16 +1484,16 @@ When the matcher reports a failure:
 ## Negation
 
 `.not` flips the boolean result of `matches` *before* the framework decides
-whether to record a failure. Matchers do not need to special-case negation;
-they only need to return a sensible message from `failure-message-negated` for
+whether to record a failure. Matchers do not need to special-case negation.
+They only need to return a sensible message from `failure-message-negated` for
 when `.not` fails (i.e., the matcher matched but should not have).
 
 Built-in matchers and user-supplied matchers go through the same role, so a
 custom matcher you write integrates with `expect` exactly the way the
 built-ins do.
 
-For the DSL-form alternative — defining matchers as a bundle of callbacks
-without writing a class — see [Custom Matchers](custom-matchers.md).
+For the DSL-form alternative (defining matchers as a bundle of callbacks
+without writing a class), see [Custom Matchers](custom-matchers.md).
 
 ## Composing matchers
 

@@ -24,7 +24,7 @@ The pattern matches when it appears anywhere inside the full nested description.
 
 ## Regex matching
 
-Wrap `PATTERN` in `/.../` to compile it as a Raku regex. Standard Raku regex rules apply, so whitespace is not significant — use `\s` (or quote literal text) for spaces:
+Wrap `PATTERN` in `/.../` to compile it as a Raku regex. Standard Raku regex rules apply, so whitespace is not significant. Use `\s` (or quote literal text) for spaces:
 
 ```shell
 $ behave --example '/\d+/'              # examples whose description has a digit
@@ -43,7 +43,7 @@ An example runs if it matches **any** pattern.
 
 ## Combining with tags
 
-`--example` composes with `--tag`, `--exclude-tag`, and focus mode using AND semantics — an example must satisfy every active filter to run:
+`--example` composes with `--tag`, `--exclude-tag`, and focus mode using AND semantics: an example must satisfy every active filter to run:
 
 ```shell
 $ behave --example 'User signup' --tag fast        # signup AND fast
@@ -67,6 +67,6 @@ This makes it safe to drop `--example` filters into CI matrix builds without wor
 
 ## See also
 
-- [Tags](../tags/tags.md) — tag-based filtering with `--tag` / `--exclude-tag`
-- [Focus and Skip](../focus-skip/focus-skip.md) — `fit` / `xit` / `fdescribe` / `xdescribe`
-- [Running Specs](../running.md) — full CLI reference
+- [Tags](../tags/tags.md): tag-based filtering with `--tag` / `--exclude-tag`
+- [Focus and Skip](../focus-skip/focus-skip.md): `fit` / `xit` / `fdescribe` / `xdescribe`
+- [Running Specs](../running.md): full CLI reference

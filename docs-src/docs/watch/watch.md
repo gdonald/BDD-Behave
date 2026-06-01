@@ -14,13 +14,13 @@ The default watched roots are `./lib` and `./specs` when each one exists. To wat
 $ behave --watch --watch-path app/ --watch-path test/
 ```
 
-When `--watch-path` is given at least once, the default `lib/`/`specs/` roots are replaced by your list — pass them explicitly if you still want them.
+When `--watch-path` is given at least once, the default `lib/`/`specs/` roots are replaced by your list. Pass them explicitly if you still want them.
 
 `--watch` is mutually exclusive with `--bisect`, `--bisect-data`, `--coverage`, `--doc`, and `--parallel`. Combining any of these exits with status `2`.
 
 ## Initial run
 
-When you start `--watch`, Behave does a baseline run of every spec file it can see. The exit code of that run does not terminate watch mode — failures are reported and the loop continues. After the initial run, the watch prompt appears:
+When you start `--watch`, Behave does a baseline run of every spec file it can see. The exit code of that run does not terminate watch mode: failures are reported and the loop continues. After the initial run, the watch prompt appears:
 
 ```text
 [behave watch] press r rerun selection, a rerun all, f failed only, q quit
@@ -48,7 +48,7 @@ While the loop is running, type one of the following on its own line and press E
 | ------- | ------------------------------------------------------------------------------------------------------- |
 | `r`     | Re-run the last selection (the most recent set of specs, whether triggered by a change or by `a`).      |
 | `a`     | Re-run every spec.                                                                                      |
-| `f`     | Re-run only previously-failed examples (uses `.behave-failures`; see [Retry and Only-Failures](../retry/retry.md)). |
+| `f`     | Re-run only previously-failed examples (uses `.behave-failures`, see [Retry and Only-Failures](../retry/retry.md)). |
 | `h` / `?` | Re-print the prompt.                                                                                  |
 | `q`     | Exit watch mode. The Behave process exits with status `0`.                                              |
 | (Enter) | Equivalent to `r`.                                                                                      |
@@ -76,12 +76,12 @@ Each subprocess inherits a `BEHAVE_DISABLE_CONFIG=1` environment so it does not 
 - File detection is **mtime + size polling** at `0.25s` intervals. There is no `inotify` / `kqueue` / `FSEvents` dependency. For typical projects (hundreds to a few thousand files) the polling overhead is negligible.
 - Watched files are filtered by basename to `.rakumod`, `.raku`, `.rakutest`, and `.pm6`. Hidden directories (`.git`, `.precomp`) are skipped during the walk.
 - Each re-run is a **subprocess** (`raku -Ilib bin/behave …`) so user-level `class` / `role` / `enum` declarations from one run cannot collide with the next. This is the same isolation pattern used by `--bisect`, `--coverage`, and `--parallel`.
-- The watch loop itself is a single thread. The interactive reader is a `start { }` block that pushes lines into a `Channel`; the main loop drains it non-blocking with `Channel.poll`.
+- The watch loop itself is a single thread. The interactive reader is a `start { }` block that pushes lines into a `Channel`. The main loop drains it non-blocking with `Channel.poll`.
 
 ## Limitations
 
-- New file detection requires a poll tick after the file lands on disk — saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.
+- New file detection requires a poll tick after the file lands on disk. Saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.
 - File renames register as one `removed` plus one `added`. Smart selection treats only the `added` half.
-- Watch mode does not surface profile / memory / benchmark summaries across runs — each subprocess emits its own. Aggregation across runs is out of scope for v1.
+- Watch mode does not surface profile / memory / benchmark summaries across runs: each subprocess emits its own. Aggregation across runs is out of scope for v1.
 - `--coverage` is incompatible: each subprocess would need its own MoarVM coverage log path and merge step.
-- Smart selection is a substring search; if a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use `--watch-path` and the `a`/`r` commands to cover that case.
+- Smart selection is a substring search. If a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use `--watch-path` and the `a`/`r` commands to cover that case.

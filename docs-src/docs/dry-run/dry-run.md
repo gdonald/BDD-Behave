@@ -25,9 +25,9 @@ Cart
 
 Statuses appear in parentheses after the description:
 
-- `(PENDING)` — declared with `pending`
-- `(SKIPPED)` — declared with `xit` / `xdescribe` (or `:skipped` metadata)
-- `(FOCUSED)` — declared with `fit` / `fdescribe` (or `:focused` metadata)
+- `(PENDING)`: declared with `pending`
+- `(SKIPPED)`: declared with `xit` / `xdescribe` (or `:skipped` metadata)
+- `(FOCUSED)`: declared with `fit` / `fdescribe` (or `:focused` metadata)
 
 The trailing `N example(s)` line reports the count after filters.
 
@@ -47,7 +47,7 @@ Cart
 
 ### Exit code
 
-`--dry-run` exits `0` when every spec file loaded cleanly, and `1` when at least one spec file failed to load. The exit code is independent of whether the filters matched any examples — zero matching examples is still a successful dry run.
+`--dry-run` exits `0` when every spec file loaded cleanly, and `1` when at least one spec file failed to load. The exit code is independent of whether the filters matched any examples. Zero matching examples is still a successful dry run.
 
 ## `--list-examples`
 
@@ -110,11 +110,11 @@ Field reference:
 | `focused`          | boolean         | Effectively focused (own or via an ancestor `fdescribe`).   |
 | `skipped`          | boolean         | Effectively skipped (own or via an ancestor `xdescribe`).   |
 
-Unknown future fields may appear; keep your parser tolerant.
+Unknown future fields may appear, so keep your parser tolerant.
 
 #### Hierarchical `suites` field
 
-Alongside the flat `examples` list, the JSON document also includes a top-level `suites` key with the full discovered tree (suites → groups → examples, with each node carrying `type`, `description`, `file`, `line`, `metadata`, and — for examples — `pending`). Unlike `examples`, the `suites` tree is **unfiltered** — focus mode and tag filters don't prune it. Behave's `--parallel` parent uses this field to rebuild the spec tree without `EVALFILE`-ing user code in the parent process. External tools can use it for the same purpose, or ignore it and read `examples` as before.
+Alongside the flat `examples` list, the JSON document also includes a top-level `suites` key with the full discovered tree (suites → groups → examples, with each node carrying `type`, `description`, `file`, `line`, `metadata`, and, for examples, `pending`). Unlike `examples`, the `suites` tree is **unfiltered**: focus mode and tag filters don't prune it. Behave's `--parallel` parent uses this field to rebuild the spec tree without `EVALFILE`-ing user code in the parent process. External tools can use it for the same purpose, or ignore it and read `examples` as before.
 
 ```json
 {
@@ -166,7 +166,7 @@ my $reg = BDD::Behave::SpecRegistry::registry();
 # Every example across every loaded suite, as ExampleQueryResult records:
 my @all = $reg.all-examples;
 
-# Filtered query — every kwarg below is optional and ANDed:
+# Filtered query: every kwarg below is optional and ANDed:
 my @hits = $reg.query-examples(
   description-pattern => '/^Cart\s/',     # substring or /regex/
   file                => 'cart-spec.raku',# basename, relative, or absolute
@@ -195,4 +195,4 @@ Each `ExampleQueryResult` exposes:
 - `.pending` / `.focused` / `.skipped` (Bool)
 - `.to-hash` for serialization (used by `--list-examples-format=json`)
 
-This API is stable for editor and IDE integrations; the CLI `--list-examples` output is a thin wrapper over it.
+This API is stable for editor and IDE integrations. The CLI `--list-examples` output is a thin wrapper over it.

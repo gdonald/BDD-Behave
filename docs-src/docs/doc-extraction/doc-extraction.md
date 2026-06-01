@@ -1,6 +1,6 @@
 # Documentation extraction
 
-Behave can turn your spec tree into a hierarchical document of behaviors — no execution required. This is useful for living documentation: the descriptions you already wrote on `describe`, `context`, and `it` become a stand-alone document that you can publish, paste into a PR, or hand to a non-engineer stakeholder.
+Behave can turn your spec tree into a hierarchical document of behaviors, no execution required. This is useful for living documentation: the descriptions you already wrote on `describe`, `context`, and `it` become a stand-alone document that you can publish, paste into a PR, or hand to a non-engineer stakeholder.
 
 ## Quick start
 
@@ -20,7 +20,7 @@ $ behave --doc specs/calculator-spec.raku
 - handles negative results
 ```
 
-`--doc` loads each spec file (so `describe` / `context` / `it` register their tree), then walks the tree and prints. Examples are never executed — there are no pass/fail counts, no timing, no formatters.
+`--doc` loads each spec file (so `describe` / `context` / `it` register their tree), then walks the tree and prints. Examples are never executed: there are no pass/fail counts, no timing, no formatters.
 
 ## Output formats
 
@@ -28,7 +28,7 @@ $ behave --doc specs/calculator-spec.raku
 
 | Format     | Use case                                                                        |
 | ---------- | ------------------------------------------------------------------------------- |
-| `markdown` | Default. Human-readable; renders cleanly on GitHub, MkDocs, and most wikis.     |
+| `markdown` | Default. Human-readable. Renders cleanly on GitHub, MkDocs, and most wikis.     |
 | `html`     | Standalone HTML document (`<!DOCTYPE html>` + `<section>` + `<ul>`).            |
 | `json`     | Machine-readable nested tree for downstream tooling.                            |
 
@@ -41,7 +41,7 @@ $ behave --doc specs/calculator-spec.raku
 - <example-description> (PENDING)
 ```
 
-Each `describe` or `context` becomes a Markdown heading; depth maps to the number of `#`s (capped at six). Each `it` / `pending` / `xit` becomes a bullet under its enclosing group. Status suffixes:
+Each `describe` or `context` becomes a Markdown heading. Depth maps to the number of `#`s (capped at six). Each `it` / `pending` / `xit` becomes a bullet under its enclosing group. Status suffixes:
 
 | State    | Suffix      |
 | -------- | ----------- |
@@ -149,7 +149,7 @@ By default `--doc` prints to stdout. Pass `--doc-output PATH` to write to a file
 $ behave --doc --doc-format=html --doc-output build/specs.html specs/
 ```
 
-When `--doc-output` is set, stdout stays clean — useful inside CI pipelines or shell scripts that want to combine multiple Behave runs.
+When `--doc-output` is set, stdout stays clean, useful inside CI pipelines or shell scripts that want to combine multiple Behave runs.
 
 ## Filtering with tags and metadata
 
@@ -169,12 +169,12 @@ $ behave --doc --example '/handles\s\w+/' specs/
 
 Filtering semantics:
 
-- Tag inheritance follows the runner's rules — a tag on a `describe` applies to every `it` inside it.
+- Tag inheritance follows the runner's rules: a tag on a `describe` applies to every `it` inside it.
 - Groups whose examples are all filtered out are dropped from the output entirely, so you don't see hollow `## addition` headings with no bullets underneath.
 - An example must match every active filter (AND across filter families) but a single tag or pattern hit is enough within a family (OR within a family).
 - If nothing matches, the output is empty.
 
-`--example PATTERN` supports two forms: a bare substring (matched against the full nested description, e.g. `Calculator addition adds two positive numbers`), or a `/regex/` form where the body is compiled as a Raku regex. Note: spaces inside the regex are ignored (Raku regex grammar); use `\s` to match whitespace.
+`--example PATTERN` supports two forms: a bare substring (matched against the full nested description, e.g. `Calculator addition adds two positive numbers`), or a `/regex/` form where the body is compiled as a Raku regex. Note: spaces inside the regex are ignored (Raku regex grammar). Use `\s` to match whitespace.
 
 ## What is *not* in the output
 
@@ -183,13 +183,13 @@ Filtering semantics:
 - `before-each` / `after-each` / `around-each` / `before-all` / `after-all` hooks.
 - `let` and `subject` definitions.
 - `include-context` / `include-examples` boilerplate.
-- Example bodies — only descriptions are emitted.
+- Example bodies (only descriptions are emitted).
 
 The goal is a behavior-focused outline that is meaningful to readers who do not (and should not need to) read the test source.
 
 ## Exit code
 
-`--doc` exits `0` on success. If any spec file fails to load (a syntax error, a missing dependency), it prints the error to stderr and exits `1` — but it still tries to emit a document for the files that *did* load, so you can see partial progress.
+`--doc` exits `0` on success. If any spec file fails to load (a syntax error, a missing dependency), it prints the error to stderr and exits `1`, but it still tries to emit a document for the files that *did* load, so you can see partial progress.
 
 ## Programmatic use
 

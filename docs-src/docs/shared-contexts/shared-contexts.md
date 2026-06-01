@@ -1,12 +1,12 @@
 # Shared Contexts
 
-Shared contexts let you package up `let` definitions and hooks under a name, then mix them into any number of `describe` or `context` groups. They're useful when several specs need the same setup — fixtures, logging, an authenticated user — without copy-paste.
+Shared contexts let you package up `let` definitions and hooks under a name, then mix them into any number of `describe` or `context` groups. They're useful when several specs need the same setup (fixtures, logging, an authenticated user) without copy-paste.
 
 `shared-context` and `include-context` are exported from `BDD::Behave`.
 
 ## Defining a shared context
 
-`shared-context` takes a name and a block. The block can call any DSL helper that's legal inside a group — `let`, `before-each`, `after-each`, `before-all`, `after-all`, even other `include-context` calls.
+`shared-context` takes a name and a block. The block can call any DSL helper that's legal inside a group: `let`, `before-each`, `after-each`, `before-all`, `after-all`, even other `include-context` calls.
 
 ```raku
 use BDD::Behave;
@@ -17,7 +17,7 @@ shared-context 'with widgets', {
 };
 ```
 
-A shared context on its own does nothing — it isn't run until a group includes it.
+A shared context on its own does nothing: it isn't run until a group includes it.
 
 ## Including a shared context
 
@@ -77,7 +77,7 @@ describe 'inner let shadows shared-context let', {
 
 ## Parameterized shared contexts
 
-The shared block can take positional parameters; pass them after the name in `include-context`:
+The shared block can take positional parameters. Pass them after the name in `include-context`:
 
 ```raku
 shared-context 'with prefix', -> $prefix {
@@ -125,4 +125,4 @@ describe 'nested groups inherit shared-context contributions', {
 ## Errors
 
 - Calling `include-context` with an unregistered name dies with `Unknown shared context: '<name>'`.
-- Calling `include-context` outside a `describe` or `context` block dies — shared contexts can only be mixed into a group.
+- Calling `include-context` outside a `describe` or `context` block dies: shared contexts can only be mixed into a group.

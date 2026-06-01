@@ -58,7 +58,7 @@ describe 'outer', {
 
 ## `before-all` / `after-all`
 
-These fire exactly once per group — useful for expensive shared setup.
+These fire exactly once per group, useful for expensive shared setup.
 
 ```raku
 describe 'database queries', {
@@ -80,7 +80,7 @@ describe 'database queries', {
 
 ## `around-each` and `around-all`
 
-Around hooks receive a continuation — a `Callable` that runs everything inside
+Around hooks receive a continuation: a `Callable` that runs everything inside
 the wrapper. The hook is responsible for invoking it. This makes around hooks
 the right tool for *paired* setup/teardown that must bracket the example, even
 across exceptions.
@@ -131,7 +131,7 @@ around-each {
 ### Composition order
 
 When a single group registers multiple around hooks, the **first-registered
-hook is outermost** — the second is wrapped by the first, and so on. Across
+hook is outermost**: the second is wrapped by the first, and so on. Across
 nested groups, outer-group around hooks wrap inner-group around hooks:
 
 ```raku
@@ -171,7 +171,7 @@ overwrite the example's already-recorded result.
 
 Exceptions raised inside the example body are still handled by Behave's
 existing `expect` / `Failures` machinery and *do not* propagate up through the
-continuation — wrap the example body with the relevant matcher instead.
+continuation. Wrap the example body with the relevant matcher instead.
 
 ### Metadata filters
 
@@ -187,7 +187,7 @@ around-each :tag<db>, -> &continue {
 ```
 
 For `around-all`, the hook fires only when at least one descendant example
-matches the filter — mirroring `before-all` / `after-all` filter semantics.
+matches the filter, mirroring `before-all` / `after-all` filter semantics.
 
 ## Metadata-keyed hooks
 
@@ -261,8 +261,8 @@ To get OR-style behavior, register multiple hooks.
 
 Filters on `before-all` / `after-all` fire once per group, but only when at
 least one descendant example matches. If a tag-filtered `before-all` has no
-matching descendants — for example because all matching examples were excluded
-by the runner's `--tag` filter — the hook is skipped entirely along with its
+matching descendants (for example because all matching examples were excluded
+by the runner's `--tag` filter), the hook is skipped entirely along with its
 paired `after-all`.
 
 ```raku

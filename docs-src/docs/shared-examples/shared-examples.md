@@ -1,10 +1,10 @@
 # Shared Examples
 
-Shared examples let you package up a set of `it` blocks under a name and reuse them across any number of `describe` or `context` groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the `it`s into every spec.
+Shared examples let you package up a set of `it` blocks under a name and reuse them across any number of `describe` or `context` groups. They're useful when several types or implementations should satisfy the same behavior contract (a "counter," a "comparable," a "queue") without copy-pasting the `it`s into every spec.
 
 `shared-examples`, `include-examples`, and `it-behaves-like` are exported from `BDD::Behave`.
 
-Shared examples are a complement to [Shared Contexts](../shared-contexts/shared-contexts.md): a shared *context* contributes setup (lets and hooks); shared *examples* contribute the assertions themselves.
+Shared examples are a complement to [Shared Contexts](../shared-contexts/shared-contexts.md): a shared *context* contributes setup (lets and hooks), while shared *examples* contribute the assertions themselves.
 
 ## Defining shared examples
 
@@ -24,7 +24,7 @@ shared-examples 'a counter', {
 };
 ```
 
-The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.
+The block does nothing on its own: it's stored under the given name and only runs when a group asks for it.
 
 ## `it-behaves-like`: wrap shared examples in a nested group
 
@@ -50,7 +50,7 @@ Output:
       ⮑  SUCCESS
 ```
 
-The shared examples see `let` definitions, hooks, and shared-context contributions from every ancestor group — including the `describe` they're invoked from — exactly the same way ordinary nested examples do.
+The shared examples see `let` definitions, hooks, and shared-context contributions from every ancestor group (including the `describe` they're invoked from) exactly the same way ordinary nested examples do.
 
 ## `include-examples`: merge shared examples into the current group
 
@@ -69,11 +69,11 @@ describe 'an integer counter', {
 }
 ```
 
-Use `it-behaves-like` when you want the contract to show up as its own labeled subgroup in the output; use `include-examples` when the shared `it`s are conceptually part of the surrounding group.
+Use `it-behaves-like` when you want the contract to show up as its own labeled subgroup in the output. Use `include-examples` when the shared `it`s are conceptually part of the surrounding group.
 
 ## Parameterizing shared examples
 
-The shared block can take positional parameters; pass them after the name:
+The shared block can take positional parameters. Pass them after the name:
 
 ```raku
 shared-examples 'a sized collection', -> $expected {
@@ -118,4 +118,4 @@ describe 'a fractional counter', {
 ## Errors
 
 - Calling `it-behaves-like` or `include-examples` with an unregistered name dies with `Unknown shared examples: '<name>'`.
-- Calling `it-behaves-like` or `include-examples` outside a `describe` or `context` block dies — shared examples can only be instantiated inside a group.
+- Calling `it-behaves-like` or `include-examples` outside a `describe` or `context` block dies: shared examples can only be instantiated inside a group.

@@ -20,7 +20,7 @@ tracked. Use `--coverage-include` / `--coverage-exclude` to change the scope.
 | ----------- | ------------------------------------------------------------ |
 | `html`      | Browsable per-file report with green/red line highlighting (default). |
 | `text`      | Colored per-file coverage summary printed to the terminal.   |
-| `json`      | Machine-readable; also the baseline format for `--coverage-baseline`. |
+| `json`      | Machine-readable. Also the baseline format for `--coverage-baseline`. |
 | `lcov`      | `genhtml`, Codecov, Coveralls.                               |
 | `cobertura` | Jenkins, GitLab CI, Azure DevOps.                            |
 
@@ -34,19 +34,19 @@ behave --coverage --coverage-format=lcov --coverage-output=coverage.lcov specs/
 `--coverage-output=PATH` writes the report to PATH instead of stdout.
 **`html` is special**: PATH is a *directory* (default `./coverage/`) that
 Behave fills with `index.html`, `style.css`, and one HTML page per source
-file. The index is the entry point — open `coverage/index.html`.
+file. The index is the entry point: open `coverage/index.html`.
 
 ## Filtering tracked files
 
 `--coverage-include=PATH` restricts the report to files whose path **starts
-with** PATH. Repeatable; multiple includes combine with OR. The prefix
-semantics are deliberate — they mean a default of `lib/` matches the relative
+with** PATH. Repeatable. Multiple includes combine with OR. The prefix
+semantics are deliberate: they mean a default of `lib/` matches the relative
 paths your specs load via `-Ilib` while excluding Rakudo/NQP internals
 (`/Users/.../rakudo/share/nqp/lib/...`) that happen to contain `lib/` in the
 middle of an absolute path.
 
 `--coverage-exclude=PATH` removes files whose path **contains** PATH
-(substring match). Repeatable; an exclude match wins over an include match.
+(substring match). Repeatable. An exclude match wins over an include match.
 
 ```bash
 behave --coverage --coverage-include=lib/BDD --coverage-exclude=lib/BDD/Vendor specs/
@@ -111,7 +111,7 @@ configure-behave -> $c {
 }
 ```
 
-CLI flags override config-file values; list-style options
+CLI flags override config-file values. List-style options
 (`coverage-include-path`, `coverage-exclude-path`) accumulate across config
 layers and the CLI.
 
@@ -128,7 +128,7 @@ worker its own `MVM_COVERAGE_LOG` path
 (`$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/worker-N.raw`), and after
 the workers exit it merges every per-worker log into a single hit map (set
 union, since coverage records *whether* a line was hit). The same report
-pipeline then renders one combined report against the merged data;
+pipeline then renders one combined report against the merged data.
 `--coverage-minimum` is gated on the merged percentage. See
 [Coverage under --parallel](../parallel/parallel.md#coverage) in the parallel
 guide for the full description.
@@ -142,7 +142,7 @@ blank lines, comments, lines that contain only closing punctuation (`}`,
 - macOS and Linux only. Relies on `grep` in `PATH`.
 - Coverage runs are slower than ordinary runs because MoarVM logs every
   executed line in user code (including Rakudo's startup path). The raw
-  log can reach several GB under `$TMPDIR` for a full-suite run; it is
+  log can reach several GB under `$TMPDIR` for a full-suite run. It is
   unlinked once the report is generated.
 - Branch coverage is line-based: a single `if` line that contains both
   branches inline counts as one branch.

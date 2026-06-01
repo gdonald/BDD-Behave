@@ -6,8 +6,8 @@ This guide covers what you need to know to hack on Behave itself. If you're just
 
 Behave has two test surfaces, and a change is not considered done until **both** pass:
 
-1. **Specs in `specs/`** — Behave's own behavioral test suite, written with the `behave` DSL and run by the `behave` runner. New features should land with specs that demonstrate the user-facing behavior.
-2. **Unit tests in `t/`** — `Test`-module tests that exercise individual classes (Runner, SpecTree, DSL helpers, etc.), run with `prove6`. Use these for tight, focused checks of internal invariants.
+1. **Specs in `specs/`**: Behave's own behavioral test suite, written with the `behave` DSL and run by the `behave` runner. New features should land with specs that demonstrate the user-facing behavior.
+2. **Unit tests in `t/`**: `Test`-module tests that exercise individual classes (Runner, SpecTree, DSL helpers, etc.), run with `prove6`. Use these for tight, focused checks of internal invariants.
 
 The two layers mirror each other folder-for-folder: every spec at `specs/X/Y-spec.raku` has a counterpart at `t/X/Y.rakutest`. Adding a new spec? Add the matching unit test in `t/`. Adding a new unit test? Add the matching spec.
 
@@ -51,7 +51,7 @@ $ prove6 -Ilib t && raku -Ilib bin/behave
 Documentation lives in `docs-src/`:
 
 - Per-feature pages live under `docs-src/docs/<topic>/<topic>.md`, mirroring the `specs/` folder layout.
-- After modifying anything under `docs-src/`, run `docs-src/build.sh` to regenerate the published HTML in `docs/`. The build step is local; CI does not regenerate docs.
+- After modifying anything under `docs-src/`, run `docs-src/build.sh` to regenerate the published HTML in `docs/`. The build step is local. CI does not regenerate docs.
 
 ## Continuous integration
 

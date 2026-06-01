@@ -9,13 +9,13 @@ Behave records how long each example takes to run. Timing data lives on the
 For every example that the runner actually executes, three values are
 recorded:
 
-- `started-at` — an `Instant` taken immediately before the example body runs.
-- `finished-at` — an `Instant` taken immediately after the body completes,
+- `started-at`: an `Instant` taken immediately before the example body runs.
+- `finished-at`: an `Instant` taken immediately after the body completes,
   whether it passed or raised an exception.
-- `duration` — `finished-at - started-at`, expressed as a `Real` in seconds.
+- `duration`: `finished-at - started-at`, expressed as a `Real` in seconds.
 
 The capture is scoped to the example body. Hooks (`before-each`,
-`after-each`, `around-each`) run outside this window — their cost is not
+`after-each`, `around-each`) run outside this window, so their cost is not
 counted toward the example duration.
 
 ## What is not captured
@@ -56,13 +56,13 @@ walk-examples $suite, -> $ex {
 };
 ```
 
-Failures are still timed — a `die` inside an example body produces a
+Failures are still timed. A `die` inside an example body produces a
 `duration` reflecting the wall time spent before the exception propagated.
 
 ## --profile
 
 `behave --profile` prints a "Top N slowest examples" section at the end of
-the run. The default is `N=10`; pass `--profile=N` to choose a different
+the run. The default is `N=10`. Pass `--profile=N` to choose a different
 size. Examples are sorted by `duration` (descending) and the section's
 total is the sum of the listed examples' durations.
 
@@ -79,7 +79,7 @@ Top 3 slowest examples (0.187s total):
 When multiple spec files run, `--profile` aggregates timings across all
 files and prints a single global section after the `Overall:` counts.
 
-Pending and skipped examples are not eligible for the profile — only
+Pending and skipped examples are not eligible for the profile. Only
 examples whose body actually ran are listed.
 
 ## --slow-threshold
@@ -94,18 +94,18 @@ Ys)` line under each example whose duration meets or exceeds `SECONDS`.
   ⮑  SLOW (0.121s, threshold 0.010s)
 ```
 
-The threshold is opt-in — without `--slow-threshold` no `SLOW` lines are
+The threshold is opt-in: without `--slow-threshold` no `SLOW` lines are
 printed. The flag composes with `--profile`: `--slow-threshold` flags slow
-examples inline as the run progresses; `--profile` lists the top N at the
+examples inline as the run progresses. `--profile` lists the top N at the
 end.
 
 Construction-time validation: `Runner.new(:profile-limit(-1))` and
-`Runner.new(:slow-threshold(-1))` both die — both knobs require a
+`Runner.new(:slow-threshold(-1))` both die. Both knobs require a
 non-negative value, with `0` meaning disabled.
 
 ## Programmatic access
 
-`Runner` exposes `@.timed-examples` — a list of `Hash` records, one per
+`Runner` exposes `@.timed-examples`, a list of `Hash` records, one per
 executed example:
 
 ```raku
@@ -120,7 +120,7 @@ full nested description), and `duration` (a `Real` in seconds). Pending,
 skipped, and around-skipped examples are not added.
 
 The same `print-profile(Int $limit, @records?)` method that `--profile`
-uses is public; callers can pass a custom record list to print a profile
+uses is public. Callers can pass a custom record list to print a profile
 across an aggregated run.
 
 ## Memory profiling
@@ -131,25 +131,25 @@ after each example, which adds a small amount of overhead per example.
 
 `Runner` exposes three knobs:
 
-- `memory-profile` (`Bool`, default `False`) — enables measurement.
-- `memory-profile-limit` (`Int`, default `0`) — print the top-N
-  memory-heaviest examples after the run; implies measurement.
-- `memory-threshold` (`Int` KB, default `0`) — print an inline
+- `memory-profile` (`Bool`, default `False`) enables measurement.
+- `memory-profile-limit` (`Int`, default `0`) prints the top-N
+  memory-heaviest examples after the run. Implies measurement.
+- `memory-threshold` (`Int` KB, default `0`) prints an inline
   `MEMORY (Δ<KB> KB, threshold <KB> KB)` line under every example whose
-  delta meets or exceeds the threshold; implies measurement.
+  delta meets or exceeds the threshold. Implies measurement.
 
 When measurement is on, every executed example writes three slots on its
-`Example` node — `memory-before`, `memory-after`, and `memory-delta`
-(all `Int` KB) — and the runner pushes a record onto `@.memory-records`.
+`Example` node (`memory-before`, `memory-after`, and `memory-delta`,
+all `Int` KB), and the runner pushes a record onto `@.memory-records`.
 
 The measurement window wraps `before-each`, the example body, and
-`after-each` — so the delta is a per-example leak signal as well as a
+`after-each`, so the delta is a per-example leak signal as well as a
 working-set signal.
 
 ### --memory-profile
 
 `behave --memory-profile` prints the 10 memory-heaviest examples after
-the run; `--memory-profile=N` chooses a different size.
+the run. `--memory-profile=N` chooses a different size.
 
 ```text
 Top 3 memory-heaviest examples (3168 KB total Δ):
@@ -176,23 +176,23 @@ every example whose RSS delta meets or exceeds `KB` kilobytes:
   ⮑  MEMORY (Δ864 KB, threshold 200 KB)
 ```
 
-The threshold is opt-in — without `--memory-threshold` no `MEMORY`
+The threshold is opt-in: without `--memory-threshold` no `MEMORY`
 lines are printed. The flag composes with `--memory-profile`:
-`--memory-threshold` flags heavy examples inline as the run progresses;
+`--memory-threshold` flags heavy examples inline as the run progresses.
 `--memory-profile` lists the top N at the end.
 
-Both `--memory-profile=0` and `--memory-threshold=0` are rejected — the
+Both `--memory-profile=0` and `--memory-threshold=0` are rejected. The
 CLI requires positive integers. Construction-time validation:
 `Runner.new(:memory-profile-limit(-1))` and
 `Runner.new(:memory-threshold(-1))` both die.
 
 ### Caveats
 
-- The measurement is RSS-based, not heap-based — it includes pages
+- The measurement is RSS-based, not heap-based. It includes pages
   shared with libraries and the page cache, and noise from other
   processes can show up as small positive or negative deltas.
 - A negative delta means the OS reclaimed pages between the two
-  samples; this is normal under MoarVM's generational GC and does not
+  samples. This is normal under MoarVM's generational GC and does not
   indicate that the example shrank the process below its baseline.
 - The threshold check is `delta >= threshold`, so negative deltas
   never trigger `MEMORY` warnings.
@@ -239,17 +239,17 @@ benchmark :iterations(50), :warmup(10), :label('hashing'), { code }
 benchmark 'hashing', :iterations(50), { code }
 ```
 
-The first positional `Str` (if present) becomes the label; the block is
+The first positional `Str` (if present) becomes the label. The block is
 always the trailing positional argument.
 
 ### Named options
 
-- `iterations` (`Int`, default `100`) — number of timed runs. Must be a
-  positive integer; `0` or negative values raise an exception.
-- `warmup` (`Int`, default `0`) — number of untimed warmup runs to
+- `iterations` (`Int`, default `100`): number of timed runs. Must be a
+  positive integer. `0` or negative values raise an exception.
+- `warmup` (`Int`, default `0`): number of untimed warmup runs to
   execute before measurement begins. Useful for letting JIT, caches, or
   module-level lazy-init settle. Must be `0` or positive.
-- `label` (`Str`, optional) — identifies the benchmark when an example
+- `label` (`Str`, optional): identifies the benchmark when an example
   contains more than one. Equivalent to passing the label as the first
   positional argument.
 
@@ -280,7 +280,7 @@ Pending and skipped examples never enter the body, so their
 still returns a valid result, but nothing is attached.
 
 The example also exposes `started-at`, `finished-at`, and `duration`
-slots (see above); a benchmark's `total` is normally a fraction of
+slots (see above). A benchmark's `total` is normally a fraction of
 `duration`, with the rest accounted for by the test scaffolding and any
 non-benchmarked work the body does.
 
@@ -301,7 +301,7 @@ Benchmarks (3 measurements):
 ```
 
 Each row keys on `(full nested description, label or position)`. A
-labeled `benchmark('foo', { ... })` becomes `label:foo`; an unlabeled
+labeled `benchmark('foo', { ... })` becomes `label:foo`. An unlabeled
 call becomes `pos:N`, where `N` is the call's 0-based order within the
 example body. Position resets per body invocation (so `--benchmark-iterations`
 re-runs do not collide), so prefer labels when an example contains more
@@ -320,8 +320,8 @@ behave --benchmark-iterations=5 specs/
 ```
 
 Each re-run goes through `handle-example`, so `before-each`,
-`after-each`, and `around-each` hooks fire normally (and so do lets);
-this matches the cost profile of the example as it would run in the
+`after-each`, and `around-each` hooks fire normally (and so do lets).
+This matches the cost profile of the example as it would run in the
 suite, which is the right baseline for benchmark measurements.
 
 ### --benchmark-baseline / --benchmark-save
@@ -338,20 +338,20 @@ Benchmark regressions (1, threshold 10.0%):
 ```
 
 A row is flagged `REGRESSION` when `(current.median - baseline.median) /
-baseline.median > threshold`. The default threshold is `0.10` (10%);
-override it with `--benchmark-threshold=PCT` (decimal fraction,
+baseline.median > threshold`. The default threshold is `0.10` (10%).
+Override it with `--benchmark-threshold=PCT` (decimal fraction,
 e.g. `--benchmark-threshold=0.20` for 20%).
 
 The header phrasing depends on whether anything was flagged:
 `Benchmark regressions (N, threshold X%)` (red) when at least one row
 exceeded the threshold, or `Benchmark comparison (no regressions;
 threshold X%)` otherwise. Rows with no matching baseline entry are
-silently dropped; rows whose baseline matched are listed even if they
+silently dropped. Rows whose baseline matched are listed even if they
 did not regress, so you can see the percentage change on every measured
 benchmark.
 
 Both `--benchmark-baseline` and `--benchmark-save` imply `--benchmark`
-on their own — you do not have to pass both flags.
+on their own. You do not have to pass both flags.
 
 #### Baseline file format
 
@@ -373,7 +373,7 @@ with `#` are treated as comments and ignored after the header.
 ### Multi-file runs
 
 When `behave` is given more than one spec file, per-file Runners run
-in benchmark mode silently and accumulate their summaries; the CLI
+in benchmark mode silently and accumulate their summaries. The CLI
 prints **one** combined Benchmarks section after the `Overall:` counts.
 The baseline comparison and `--benchmark-save` likewise run once over
 the combined summary set, so a baseline file captures every benchmark
@@ -405,7 +405,7 @@ for $runner.benchmark-regressions.grep(*<regression>) -> %r {
 `benchmark-regressions` adds `baseline-median`, `baseline-mean`,
 `delta-pct`, and `regression` (Bool). Construction-time validation:
 `benchmark-iterations` must be a positive integer, and
-`benchmark-threshold` must be `>= 0` — both die with a clear message
+`benchmark-threshold` must be `>= 0`. Both die with a clear message
 otherwise.
 
 ### Output formatting
@@ -437,15 +437,15 @@ Benchmark regressions (1, threshold 10.0%):
 
 Arrows mean:
 
-- `↑` — current is slower than baseline. When the delta exceeds
+- `↑`: current is slower than baseline. When the delta exceeds
   `--benchmark-threshold`, the row is also colored red and tagged
   `REGRESSION`.
-- `↓` — current is faster than baseline. When the absolute delta
+- `↓`: current is faster than baseline. When the absolute delta
   exceeds `--benchmark-threshold`, the row is also colored green to
   highlight a real improvement.
-- `→` — exactly zero delta (or extremely close).
+- `→`: exactly zero delta (or extremely close).
 
-The arrow always reflects direction; the color reflects whether the
+The arrow always reflects direction. The color reflects whether the
 delta crossed the threshold in either direction.
 
 #### --benchmark-format
@@ -453,10 +453,10 @@ delta crossed the threshold in either direction.
 `behave --benchmark-format=FORMAT` chooses how the Benchmarks section
 is rendered. Supported values:
 
-- `text` (default) — the pretty tables shown above.
-- `json` — a single JSON object suitable for CI dashboards. Keys are
-  sorted alphabetically for a stable diff; numbers render in their
-  natural Raku string form; strings are JSON-escaped.
+- `text` (default): the pretty tables shown above.
+- `json`: a single JSON object suitable for CI dashboards. Keys are
+  sorted alphabetically for a stable diff. Numbers render in their
+  natural Raku string form. Strings are JSON-escaped.
 
 Setting `--benchmark-format` to anything else exits 2 with a clear
 error. Setting it to `json` (or any non-`text` value) auto-enables
@@ -498,7 +498,7 @@ The JSON shape:
 }
 ```
 
-`benchmarks[]` always has one entry per current measurement;
+`benchmarks[]` always has one entry per current measurement.
 `regressions[]` is empty unless `--benchmark-baseline` is set, in
 which case it has one entry per baseline match (or empty if no entries
 matched).
@@ -525,6 +525,6 @@ callers that want to embed the output somewhere else.
 `Runner.render-bench-summary-table` and
 `Runner.render-bench-comparison-table` are the underlying helpers if
 you only need one of the two tables. The JSON serializer is exposed as
-`BDD::Behave::Benchmark::Format::to-json($value)`; it supports `Bool`,
+`BDD::Behave::Benchmark::Format::to-json($value)`. It supports `Bool`,
 `Numeric`, `Str`, `Positional`, `Associative` (keys sorted), and falls
 back to `null` for undefined values.

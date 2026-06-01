@@ -1,6 +1,6 @@
 # describe / context
 
-`describe` and `context` define a group of related examples. They are aliases — pick whichever reads better in plain English. Groups can be nested arbitrarily.
+`describe` and `context` define a group of related examples. They are aliases: pick whichever reads better in plain English. Groups can be nested arbitrarily.
 
 ## Basic usage
 
@@ -42,7 +42,7 @@ describe 'User#full-name', {
 
 ## Scoping
 
-Plain Raku scoping rules apply inside a group block — `my $foo = 'bar'` declared inside a `describe` is visible to its examples and nested groups, and shadowing works as you'd expect.
+Plain Raku scoping rules apply inside a group block: `my $foo = 'bar'` declared inside a `describe` is visible to its examples and nested groups, and shadowing works as you'd expect.
 
 ```raku
 describe 'shadowing', {

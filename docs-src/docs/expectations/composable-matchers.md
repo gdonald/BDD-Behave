@@ -2,7 +2,7 @@
 
 Combine matchers with `.and` and `.or` to express compound expectations
 without writing a one-off custom matcher. Every type that does the
-[Matcher](matchers.md) role gets these two methods automatically — so they
+[Matcher](matchers.md) role gets these two methods automatically, so they
 work with built-in matchers, hand-rolled `does Matcher` classes, and
 [`define-matcher`](custom-matchers.md) factories alike.
 
@@ -76,7 +76,7 @@ chains build up naturally.
 # (A and B) or C
 $a.and($b).or($c);
 
-# A and (B or C)  — group with an explicit inner composite
+# A and (B or C): group with an explicit inner composite
 $a.and($b.or($c));
 ```
 
@@ -131,6 +131,6 @@ Both composites expose useful state for diagnostics and custom formatters:
 ## Argument validation
 
 `.and` and `.or` accept only objects that do the `Matcher` role. Passing
-anything else dies immediately with a clear message — composition catches
+anything else dies immediately with a clear message: composition catches
 typos at the call site rather than papering over them with surprising
 smartmatch semantics.

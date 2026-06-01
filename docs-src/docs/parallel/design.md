@@ -1,4 +1,4 @@
-# Parallel Execution — Design
+# Parallel Execution: Design
 
 This document describes how `--parallel N` works internally. For the user-facing
 guide, see [Parallel Execution](parallel.md).
@@ -26,8 +26,8 @@ threads:
 
 - Spec files declare top-level `class` / `role` / `enum` / `subset` / `constant`
   symbols. Loading two spec files into the same process can collide on those
-  symbols; loading them concurrently would turn collisions into races.
-- User code commonly uses thread-hostile global state — DB connection objects,
+  symbols. Loading them concurrently would turn collisions into races.
+- User code commonly uses thread-hostile global state: DB connection objects,
   `%*ENV` mutation in `before-each`, `chdir`, signal handlers, framework
   singletons. Most of this is process-safe but not thread-safe.
 - `EVAL` / `EVALFILE` and the surrounding compiler state are not designed to run
@@ -62,11 +62,11 @@ A worker:
 4. Emits one JSON line per spec-tree event on stdout. stderr is forwarded to the
    parent's stderr verbatim.
 5. Exits `0` on a clean run regardless of test failures (failures are reported
-   via events). A non-zero exit means the worker itself crashed — an uncaught
+   via events). A non-zero exit means the worker itself crashed: an uncaught
    exception escaping the runner, OOM, or a signal.
 
 Workers are launched with `--worker-manifest <path>` (static distribution) or
-`--queue-worker` (queue distribution). Both are hidden flags; users never type
+`--queue-worker` (queue distribution). Both are hidden flags. Users never type
 them.
 
 ## Spec discovery
@@ -90,25 +90,29 @@ correctly instead of re-running per example.
 
 `--parallel-mode` selects the execution model:
 
-- **`isolated` (default)** — one subprocess per spec file, with a semaphore
-  capping concurrency at `--parallel N` (or `$*KERNEL.cpu-cores`). A file's
-  examples run together in their own process; there is no cross-file bucket
-  packing and no persistent worker pool. `BEHAVE_WORKER_INDEX` is the file
-  index. This is the strongest isolation and the default.
-- **`lpt`** — a fixed pool of `N` persistent workers. The parent sorts buckets
+- **`isolated` (default)**: one subprocess per spec file, with concurrency
+  capped at `--parallel N` (or `$*KERNEL.cpu-cores`). A file's examples run
+  together in their own process. There is no cross-file bucket packing and no
+  persistent worker pool. Each running file leases a `BEHAVE_WORKER_INDEX` from
+  a recycled pool of `0 .. N-1` slots (returned when the file finishes), so the
+  index is bounded by the concurrency cap and concurrently-running files always
+  hold distinct indices, letting user code key a per-worker resource (e.g. a
+  per-worker database) off the index with only `N` resources to provision. This
+  is the strongest isolation and the default.
+- **`lpt`**: a fixed pool of `N` persistent workers. The parent sorts buckets
   by example count descending (a cost proxy in the absence of historical timing
   data), then greedily assigns each bucket to the worker with the smallest
   current load (longest-processing-time-first). This is a 4/3-approximation of
-  optimal makespan; with `N` much smaller than the bucket count it lands within
+  optimal makespan. With `N` much smaller than the bucket count it lands within
   a few percent of perfect.
-- **`queue`** — a fixed pool of `N` workers pulling buckets from a shared queue,
+- **`queue`**: a fixed pool of `N` workers pulling buckets from a shared queue,
   so a worker that finishes early picks up the next available bucket. This wins
   when bucket costs are uneven and the bucket count comfortably exceeds the
-  worker count; it costs a per-bucket coordination round-trip.
+  worker count. It costs a per-bucket coordination round-trip.
 
 `isolated` is the default for maximal isolation. The `lpt` and `queue` pool
 modes share the group-affinity bucketing above and trade some isolation for
-fewer, longer-lived processes; `queue` further trades LPT's static balance for
+fewer, longer-lived processes. `queue` further trades LPT's static balance for
 dynamic rebalancing.
 
 ## `:serial` phase
@@ -128,7 +132,7 @@ examples and runs them sequentially.
 
 Failures in the serial phase merge into the same `RunResult` as the parallel
 phase, and the summary stays a single line. If `--parallel` is omitted or is
-`1`, `:serial` is a no-op — everything is already serial.
+`1`, `:serial` is a no-op: everything is already serial.
 
 ## IPC: parent ⇆ worker protocol
 
@@ -146,9 +150,9 @@ through a thin adapter, and aggregates counts into a single `RunResult`.
 JSON-lines was chosen over a binary protocol or Raku-native serialization
 because it is:
 
-1. Trivially streamable — line-buffered, no length-prefix framing.
-2. Debuggable — worker stdout can be dumped to a file and read directly.
-3. Robust to stdout flushing edge cases — a half-line is detectable as malformed
+1. Trivially streamable: line-buffered, no length-prefix framing.
+2. Debuggable: worker stdout can be dumped to a file and read directly.
+3. Robust to stdout flushing edge cases: a half-line is detectable as malformed
    and reported, not silently lost.
 
 stderr from workers is forwarded to the parent's stderr unchanged, so user
@@ -156,12 +160,12 @@ stderr from workers is forwarded to the parent's stderr unchanged, so user
 
 ## Output rendering
 
-The parent owns the terminal; workers never write directly to the user's stdout.
+The parent owns the terminal. Workers never write directly to the user's stdout.
 
 For the default `progress` formatter this is direct: the parent prints one
-character per example event as it arrives — `.` for `example-pass`, `F` for
+character per example event as it arrives: `.` for `example-pass`, `F` for
 `example-fail`, `*` for `example-pending`, `S` for `example-skipped`.
-Interleaved order across workers is fine — `progress` makes no per-line ordering
+Interleaved order across workers is fine. `progress` makes no per-line ordering
 promise.
 
 For the verbose and documentation formatters the parent buffers per suite: it
@@ -169,7 +173,7 @@ accumulates events for a `(worker, file)` pair until that worker emits
 `suite-end` for the file, then flushes the whole suite to the formatter as one
 block. This keeps a suite's nested output contiguous. The cost is bounded memory
 per worker (one suite's worth of events). The formatter sees the same call
-sequence it would in serial mode; the parent reorders the worker stream before
+sequence it would in serial mode. The parent reorders the worker stream before
 calling into it.
 
 ## Worker identity API
@@ -196,11 +200,11 @@ the reported identity.
 
 `--seed-mode` controls how `--seed N` combines with `--parallel K`:
 
-- **`xor` (default)** — each worker gets a derived seed `seed XOR worker-index`.
+- **`xor` (default)**: each worker gets a derived seed `seed XOR worker-index`.
   The summary still prints the root seed. Reproducible only when the worker
   count also matches.
-- **`stable`** — every bucket gets a deterministic hash of
-  `(file, group-path, seed)`; buckets are sorted globally by that hash and the
+- **`stable`**: every bucket gets a deterministic hash of
+  `(file, group-path, seed)`. Buckets are sorted globally by that hash and the
   bucket at sorted position `i` is assigned to worker `i mod K`. The global
   hash-sorted order is identical regardless of `K`. Workers run
   `--order=defined` within their buckets. This reproduces a run across different
@@ -210,14 +214,14 @@ the reported identity.
 
 | Flag | Behavior under `--parallel N` |
 | --- | --- |
-| `--fail-fast` / `=N` | Forwarded to each worker; a worker stops at the threshold within its own slice. The parent does not aggregate counts across workers or terminate running workers. |
+| `--fail-fast` / `=N` | Forwarded to each worker, which stops at the threshold within its own slice. The parent does not aggregate counts across workers or terminate running workers. |
 | `--order random` + `--seed` | See [Seed mode](#seed-mode). |
 | `--order defined` | Within each worker, declared order is preserved for that worker's assigned buckets. |
 | `--parallel-retry N` | When a worker crashes, the parent re-runs its buckets (up to `N` times) instead of failing the run. Applies to `--parallel-mode=lpt`. |
-| `--bisect` / `--bisect-data` | Mutually exclusive with `--parallel`; the parent errors with a clear message. |
-| `--coverage` | Compatible. The coverage subprocess wrapper runs outside the parallel layer; each worker writes a per-worker coverage log path, and the parent merges them before reporting. |
-| `--doc` | Ignores `--parallel` — doc mode does not execute, so parallelism is moot. |
-| `--profile` / `--memory-profile` / `--benchmark` | Records stream back via worker events; the parent merges them into the multi-file aggregation it already does. |
+| `--bisect` / `--bisect-data` | Mutually exclusive with `--parallel`. The parent errors with a clear message. |
+| `--coverage` | Compatible. The coverage subprocess wrapper runs outside the parallel layer. Each worker writes a per-worker coverage log path, and the parent merges them before reporting. |
+| `--doc` | Ignores `--parallel` (doc mode does not execute, so parallelism is moot). |
+| `--profile` / `--memory-profile` / `--benchmark` | Records stream back via worker events. The parent merges them into the multi-file aggregation it already does. |
 | `--only-example` / `--example` / `--tag` / `--exclude-tag` / focus | Filters are applied once during discovery and pushed into the worker manifest, so workers see exactly what they need to run. |
 | `--aggregate-failures` | Pure per-example behavior, unchanged. |
 
@@ -227,7 +231,7 @@ the reported identity.
   pays that file's load cost, so a very large suite loads spec files more than
   once across the worker set.
 - **No live progress totals.** The default `progress` formatter does not print
-  "423 / 5000" mid-run; parallel mode keeps that behavior.
+  "423 / 5000" mid-run. Parallel mode keeps that behavior.
 
 ## Non-goals
 

@@ -26,7 +26,7 @@ renders as `⮑  'should be (1, 2, 3)'`. If no matcher runs in the block, Behave
 
 ## Multiple expectations
 
-An example can contain any number of `expect` calls. Each failing expectation is recorded; the example fails if at least one expectation fails or the block raises an unhandled exception.
+An example can contain any number of `expect` calls. Each failing expectation is recorded. The example fails if at least one expectation fails or the block raises an unhandled exception.
 
 ```raku
 it 'a User is valid after construction', {
@@ -59,7 +59,7 @@ See [`let`](../let/let.md) for the various ways to define and consume let values
 
 ## `specify` alias
 
-`specify` is a direct alias for `it`. It reads more naturally when an example description starts with a non-behavioral noun (a fact, a constraint, a state) rather than a verb. Every form `it` accepts — string + block, block-only one-liner, `:tag` / `:tags` / arbitrary `:meta` keys — is also accepted by `specify`.
+`specify` is a direct alias for `it`. It reads more naturally when an example description starts with a non-behavioral noun (a fact, a constraint, a state) rather than a verb. Every form `it` accepts (string + block, block-only one-liner, `:tag` / `:tags` / arbitrary `:meta` keys) is also accepted by `specify`.
 
 ```raku
 describe 'a fresh User', {

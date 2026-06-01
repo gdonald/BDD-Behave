@@ -14,7 +14,7 @@ subject(:widget, { Widget.new(:bar(99)) }); # named, also aliased as :subject
 subject('widget', { Widget.new(:bar(99)) }); # string-name form, also aliased as :subject
 ```
 
-When a name is given, the value is reachable through both the given name and `:subject` — they share a single memoized evaluation per example.
+When a name is given, the value is reachable through both the given name and `:subject`. They share a single memoized evaluation per example.
 
 ## Reading the subject
 
@@ -120,16 +120,16 @@ subject-bang(:user,  { User.create });
 subject-bang('user', { User.create });
 ```
 
-It registers the let definition(s) and a `before-each` hook in the current group that forces `:subject`. Memoization is the same as `subject` — the block runs at most once per example.
+It registers the let definition(s) and a `before-each` hook in the current group that forces `:subject`. Memoization is the same as `subject`: the block runs at most once per example.
 
 ### When to use `subject-bang`
 
-Use `subject-bang` when the *creation* of the subject is itself the test setup — typically for inserting database rows or otherwise mutating state that the example depends on existing before it runs. For pure values, plain `subject` is preferred because it stays cheap when the example doesn't actually read the value.
+Use `subject-bang` when the *creation* of the subject is itself the test setup, typically for inserting database rows or otherwise mutating state that the example depends on existing before it runs. For pure values, plain `subject` is preferred because it stays cheap when the example doesn't actually read the value.
 
 ### Restrictions
 
 - `subject-bang` must be called inside a `describe` or `context`. At the top-level (suite scope), only plain `subject` is supported.
-- Inside an `it` block, use `subject()` or `expect(:subject)` to read the value; eager forcing is meaningless once you're already in the example body.
+- Inside an `it` block, use `subject()` or `expect(:subject)` to read the value. Eager forcing is meaningless once you're already in the example body.
 
 ## `is-expected`
 
@@ -144,7 +144,7 @@ describe 'a Widget', {
 }
 ```
 
-`is-expected` reads the memoized subject value via `$*LET-RUNTIME` and returns an `ExpectationBuilder`, so the same `.to` / `.not.to` chain that you use with `expect` applies. Multiple calls within the same example share the subject's memoization — the subject block runs at most once per example.
+`is-expected` reads the memoized subject value via `$*LET-RUNTIME` and returns an `ExpectationBuilder`, so the same `.to` / `.not.to` chain that you use with `expect` applies. Multiple calls within the same example share the subject's memoization: the subject block runs at most once per example.
 
 ### Restrictions
 
@@ -173,7 +173,7 @@ When `it` is called with only a block, Behave generates the description from the
   ⮑  SUCCESS
 ```
 
-Negation (`expect(...).not.to.be(...)` or `is-expected.not.to.be(...)`) flips the verb to `should not`. If the block runs no matchers — for example, `it { 1 + 1 }` — Behave falls back to a placeholder of the form `example at <basename>:<line>`.
+Negation (`expect(...).not.to.be(...)` or `is-expected.not.to.be(...)`) flips the verb to `should not`. If the block runs no matchers (for example, `it { 1 + 1 }`), Behave falls back to a placeholder of the form `example at <basename>:<line>`.
 
 The block-only form composes with `fit` and `xit`:
 
@@ -188,4 +188,4 @@ xit { is-expected.to.be(99) }   # skipped one-liner
 
 ## Comparison with `let`
 
-`subject` is sugar around `let(:subject, ...)`. The two are interchangeable when reading via `:subject`, but `subject` makes the intent — "this is what I'm testing" — explicit and adds the dual-name alias when you give it a name. Use `subject` for the value under test and `let` for everything else (inputs, fixtures, helpers).
+`subject` is sugar around `let(:subject, ...)`. The two are interchangeable when reading via `:subject`, but `subject` makes the intent ("this is what I'm testing") explicit and adds the dual-name alias when you give it a name. Use `subject` for the value under test and `let` for everything else (inputs, fixtures, helpers).

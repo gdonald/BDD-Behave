@@ -1,6 +1,6 @@
 # Formatters
 
-Behave's runner is decoupled from its output: every line it prints is emitted through a **formatter**. The default selection (when `--format` is not given) is `progress` — compact dot-stream output. You can swap in any class that composes the `BDD::Behave::Formatter` role to render runs differently — indented tree, hierarchical documentation, JSON, JUnit XML, and so on.
+Behave's runner is decoupled from its output: every line it prints is emitted through a **formatter**. The default selection (when `--format` is not given) is `progress` (compact dot-stream output). You can swap in any class that composes the `BDD::Behave::Formatter` role to render runs differently: indented tree, hierarchical documentation, JSON, JUnit XML, and so on.
 
 ## Selecting a formatter
 
@@ -10,7 +10,7 @@ Pass `--format NAME` to `behave`:
 $ behave --format tree specs/users-spec.raku
 ```
 
-`NAME` must be a registered formatter. The built-in formatters are `documentation`, `html`, `json`, `json-events`, `junit`, `progress`, `tap`, and `tree`. (`json-events` is the line-delimited event stream parallel workers use to report back to the parent; it is registered and selectable but rarely useful on its own.) An unknown name fails fast:
+`NAME` must be a registered formatter. The built-in formatters are `documentation`, `html`, `json`, `json-events`, `junit`, `progress`, `tap`, and `tree`. (`json-events` is the line-delimited event stream parallel workers use to report back to the parent. It is registered and selectable but rarely useful on its own.) An unknown name fails fast:
 
 ```text
 $ behave --format nope
@@ -27,21 +27,21 @@ The default. Compact single-line output, one character per example. See the dedi
 
 ### `tree`
 
-Behave's classic indented tree output (formerly called `default`): one line per `describe`/`context`/`it`, a green `SUCCESS` / red `FAILURE` marker per example, and inline `SLOW` / `MEMORY` annotations when `--slow-threshold` / `--memory-threshold` fire. Useful for debugging — you can see exactly which example is running when something hangs or hits a long step.
+Behave's classic indented tree output (formerly called `default`): one line per `describe`/`context`/`it`, a green `SUCCESS` / red `FAILURE` marker per example, and inline `SLOW` / `MEMORY` annotations when `--slow-threshold` / `--memory-threshold` fire. Useful for debugging: you can see exactly which example is running when something hangs or hits a long step.
 
 ### `documentation`
 
-A clean, document-style rendering of the spec tree. Each `describe`/`context` is printed as a heading (no quotes, no arrow markers) and each example is printed as an indented line beneath its enclosing group — non-passing outcomes get a parenthetical suffix:
+A clean, document-style rendering of the spec tree. Each `describe`/`context` is printed as a heading (no quotes, no arrow markers) and each example is printed as an indented line beneath its enclosing group. Non-passing outcomes get a parenthetical suffix:
 
 | Outcome  | Suffix |
 | -------- | ------ |
-| Pass     | *(none — description prints on its own)* |
+| Pass     | *(none: description prints on its own)* |
 | Fail     | `(FAILED)` |
 | Pending  | `(PENDING)` |
 | Skipped  | `(SKIPPED)` |
 | Around-skipped | `(SKIPPED: around-each did not invoke continuation)` |
 
-The `Failures:` block, counts line, profile/memory/benchmark sections, and the multi-file `Overall:` block all print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred — every spec file's tree streams uninterrupted under its own filename heading, and a single `Failures:` block plus the `Overall:` counts print once at the end.
+The `Failures:` block, counts line, profile/memory/benchmark sections, and the multi-file `Overall:` block all print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred. Every spec file's tree streams uninterrupted under its own filename heading, and a single `Failures:` block plus the `Overall:` counts print once at the end.
 
 ```text
 $ behave --format documentation specs/calc-spec.raku
@@ -76,16 +76,16 @@ Structure:
 | Element | Role |
 | ------- | ---- |
 | `<p class="summary">` / `<p class="summary has-failures">` | Counts line at the top, with `has-failures` styling when any example failed. |
-| `<details open class="group">` / `<summary class="group-summary">` | One per `describe`/`context`. Open by default; click to collapse. |
+| `<details open class="group">` / `<summary class="group-summary">` | One per `describe`/`context`. Open by default. Click to collapse. |
 | `<div class="example pass">` / `.fail` / `.pending` / `.skipped` | Per-example row with a marker (`✓`/`✗`/`⏸`/`⊘`), the description, duration, and source location. |
 | `<pre class="failure-detail">` | Failure body for failing examples (also used for pending reason and `around-each` skip reason). |
 | `<div class="load-error">` | One per spec file that failed to compile. |
 
-Inline `<style>` provides the default theme; colors are hard-coded (no external CSS). All user descriptions and file paths are HTML-escaped (`<`, `>`, `&`, `"`). In multi-file mode every spec file gets an `<h2 class="suite-file">` heading and a single HTML document covers the entire run.
+Inline `<style>` provides the default theme. Colors are hard-coded (no external CSS). All user descriptions and file paths are HTML-escaped (`<`, `>`, `&`, `"`). In multi-file mode every spec file gets an `<h2 class="suite-file">` heading and a single HTML document covers the entire run.
 
 ### `json`
 
-Emits a single JSON document on stdout after the run finishes — designed for CI dashboards and tool integration. No per-example or per-group output is printed, so the document is the only thing on stdout (load errors and CLI flag errors are still emitted to stderr as usual).
+Emits a single JSON document on stdout after the run finishes, designed for CI dashboards and tool integration. No per-example or per-group output is printed, so the document is the only thing on stdout (load errors and CLI flag errors are still emitted to stderr as usual).
 
 Top-level shape:
 
@@ -154,13 +154,13 @@ Conventions:
 | Outcome | Child element | Notes |
 | ------- | ------------- | ----- |
 | Pass    | *(self-closing testcase)* | |
-| Failure (expectation) | `<failure type="Expectation" message="..."><![CDATA[...]]></failure>` | Message summarizes the first failed expectation; CDATA body contains all expectations for the example (file:line + given/expected). |
-| Failure (exception)   | `<error type="Exception" message="..."><![CDATA[...]]></error>` | Used when the example body threw; message comes from `Exception.message`. |
+| Failure (expectation) | `<failure type="Expectation" message="..."><![CDATA[...]]></failure>` | Message summarizes the first failed expectation. CDATA body contains all expectations for the example (file:line + given/expected). |
+| Failure (exception)   | `<error type="Exception" message="..."><![CDATA[...]]></error>` | Used when the example body threw. Message comes from `Exception.message`. |
 | Pending | `<skipped message="pending: REASON"/>` | |
 | Skipped | `<skipped message="skipped"/>` | |
 | Around-skipped | `<skipped message="around-each did not invoke continuation"/>` | |
 
-The `classname` attribute joins the enclosing `describe`/`context` chain with ` > ` so CI dashboards that group by class produce a sensible hierarchy. Special characters (`<`, `>`, `&`, `"`, `'`) in attribute values are XML-escaped; CDATA bodies have `]]>` re-encoded as `]]]]><![CDATA[>` so they survive arbitrary payloads. In multi-file mode every spec file produces its own `<testsuite>` element under a single `<testsuites>` root.
+The `classname` attribute joins the enclosing `describe`/`context` chain with ` > ` so CI dashboards that group by class produce a sensible hierarchy. Special characters (`<`, `>`, `&`, `"`, `'`) in attribute values are XML-escaped. CDATA bodies have `]]>` re-encoded as `]]]]><![CDATA[>` so they survive arbitrary payloads. In multi-file mode every spec file produces its own `<testsuite>` element under a single `<testsuites>` root.
 
 ### `tap`
 
@@ -191,7 +191,7 @@ Conventions:
 | Pass    | `ok N - DESCRIPTION` | |
 | Failure (expectation) | `not ok N - DESCRIPTION` + YAML diagnostic block | YAML carries `severity: 'fail'`, `file`, `line`, `message`, `got`, `expected`. |
 | Failure (exception)   | `not ok N - DESCRIPTION` + YAML diagnostic block | YAML carries `severity: 'error'`, `message` (the exception message). |
-| Pending | `ok N - DESCRIPTION # TODO REASON` | TAP TODO directive — TAP consumers treat these as expected-fail, not failures. |
+| Pending | `ok N - DESCRIPTION # TODO REASON` | TAP TODO directive (TAP consumers treat these as expected-fail, not failures). |
 | Skipped | `ok N - DESCRIPTION # SKIP skipped` | |
 | Around-skipped | `ok N - DESCRIPTION # SKIP around-each did not invoke continuation` | |
 
@@ -208,7 +208,7 @@ Compact single-line output, one character per example:
 | `*`       | Pending |
 | `S`       | Skipped (`xit`/`xdescribe`/`xcontext` or `:skipped`, and `around-each`/`around-all` that returned without invoking their continuation) |
 
-Group descriptions, `it` descriptions, and inline slow/memory markers are suppressed; the failures detail block, counts line, profile/memory/benchmark sections, and the multi-file `Overall:` block still print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred — dots stream continuously across every spec file, then a single `Failures:` block plus the `Overall:` counts print once at the end.
+Group descriptions, `it` descriptions, and inline slow/memory markers are suppressed. The failures detail block, counts line, profile/memory/benchmark sections, and the multi-file `Overall:` block still print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred. Dots stream continuously across every spec file, then a single `Failures:` block plus the `Overall:` counts print once at the end.
 
 ```text
 $ behave --format progress specs/
@@ -320,4 +320,4 @@ my $runner = BDD::Behave::Runner::Runner.new(:formatter($f));
 $runner.run($suite);
 ```
 
-When `:formatter` is omitted, a `BDD::Behave::Formatter::Tree` instance is constructed automatically. (Note that the `behave` CLI selects `progress` by default when `--format` is not supplied; the runner constructor's default is `Tree` because tree output is the most useful for embedded/IDE consumers programmatically inspecting events.)
+When `:formatter` is omitted, a `BDD::Behave::Formatter::Tree` instance is constructed automatically. (Note that the `behave` CLI selects `progress` by default when `--format` is not supplied. The runner constructor's default is `Tree` because tree output is the most useful for embedded/IDE consumers programmatically inspecting events.)

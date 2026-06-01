@@ -11,11 +11,11 @@ $ behave --parallel 4 # one subprocess per spec file, up to 4 in flight
 
 Behave's parent process discovers your spec tree, then for each spec file spawns a fresh `raku bin/behave --worker-manifest …` subprocess. Each worker loads exactly one spec file, runs its assigned examples, and streams structured JSON events back to the parent over stdout. A semaphore caps the number of concurrent subprocesses. The parent renders the events into your chosen formatter so your terminal sees a single coherent run, not `N` interleaved transcripts.
 
-Workers are subprocesses, not threads — every worker has its own Raku runtime, its own loaded classes, and its own `%*ENV`. State you mutate in one example never leaks to another worker.
+Workers are subprocesses, not threads. Every worker has its own Raku runtime, its own loaded classes, and its own `%*ENV`. State you mutate in one example never leaks to another worker.
 
 ## The file boundary is the isolation boundary
 
-Because each spec file loads in its own subprocess, **cross-file in-process state cannot be shared via spec files**. If file A declares a `define-matcher`, `shared-examples`, or `shared-contexts` block and file B references it by name, the reference will fail under the default loader — file B's subprocess never loaded file A.
+Because each spec file loads in its own subprocess, **cross-file in-process state cannot be shared via spec files**. If file A declares a `define-matcher`, `shared-examples`, or `shared-contexts` block and file B references it by name, the reference will fail under the default loader: file B's subprocess never loaded file A.
 
 Put anything that needs to be available to multiple spec files in a module under `lib/` and `use` it from each spec:
 
@@ -42,7 +42,7 @@ describe 'order quantity', {
 }
 ```
 
-This is the same pattern that has always worked across `--parallel` workers — making file-as-isolation-boundary the default just makes it universal.
+This is the same pattern that has always worked across `--parallel` workers. Making file-as-isolation-boundary the default just makes it universal.
 
 ## Why subprocess-per-file
 
@@ -56,7 +56,7 @@ Spec discovery itself also runs in a subprocess. Before launching workers, the p
 
 This section and [Seed mode](#seed-mode-seed-mode) describe the `lpt` / `queue` pool modes. Under the default `isolated` mode each spec file already runs in a single subprocess, so every group in a file shares one worker automatically and bucket distribution does not apply.
 
-All examples inside a `describe` / `context` block run on the same worker. This makes `before-all`, `after-all`, and `around-all` amortize correctly — one setup per group per worker, not `N` setups per group. Distribution happens at the top-level `describe` granularity by default.
+All examples inside a `describe` / `context` block run on the same worker. This makes `before-all`, `after-all`, and `around-all` amortize correctly: one setup per group per worker, not `N` setups per group. Distribution happens at the top-level `describe` granularity by default.
 
 If a group is unusually large and would benefit from being split across workers, opt in with `:parallel-split`:
 
@@ -74,12 +74,12 @@ describe 'huge group with 5000 cases', :parallel-split, {
 
 Inside spec code, `BDD::Behave::Worker.id` and `BDD::Behave::Worker.count` give the current worker's zero-based index and the total worker count. Both are also exposed as environment variables:
 
-| Variable              | Meaning                                                         |
-| --------------------- | --------------------------------------------------------------- |
-| `BEHAVE_WORKER_INDEX` | This worker's zero-based index                                  |
-| `BEHAVE_WORKER_COUNT` | The total worker count for this run                             |
+| Variable              | Meaning                             |
+| --------------------- | ----------------------------------- |
+| `BEHAVE_WORKER_INDEX` | This worker's zero-based index      |
+| `BEHAVE_WORKER_COUNT` | The total worker count for this run |
 
-Both are always set — each subprocess sees its index and the concurrency cap. Note the index range depends on the mode: in the default `isolated` mode the index is the spec-file index (so with more files than the `--parallel K` cap it can exceed `K-1`), while in the `lpt` / `queue` pool modes there are exactly `K` workers indexed `0..K-1`. Configuration that interpolates the index into a per-worker resource name works in any concurrency configuration.
+Both are always set. Each subprocess sees its index and the concurrency cap. The index is always in `0..K-1` (where `K` is the concurrency cap). In the `lpt` / `queue` pool modes there are exactly `K` persistent workers indexed `0..K-1`, and in the default `isolated` mode each running file leases a slot from a recycled pool of `K` indices (returned when the file finishes), so concurrently-running files always hold distinct indices. Configuration that interpolates the index into a per-worker resource name (e.g. a database) therefore needs only `K` such resources, in any mode.
 
 ```raku
 # Pick a DB by worker index.
@@ -95,7 +95,7 @@ my $db-name = "myapp_test_{BDD::Behave::Worker.id}";
 | Mode            | Bucket → worker assignment          | Within-worker shuffle seed                                         | K-invariant?                                                             |
 | --------------- | ----------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
 | `xor` (default) | Longest-processing-time-first (LPT) | `parent-seed XOR worker-index`                                     | No: changing `K` reshuffles assignment and per-worker seeds.             |
-| `stable`        | Deterministic hash mod `K`          | Parent seed (same for every worker); workers run `--order=defined` | Yes: the global hash-sorted bucket order is identical regardless of `K`. |
+| `stable`        | Deterministic hash mod `K`          | Parent seed (same for every worker), so workers run `--order=defined` | Yes: the global hash-sorted bucket order is identical regardless of `K`. |
 
 ### `stable`
 
@@ -103,9 +103,9 @@ my $db-name = "myapp_test_{BDD::Behave::Worker.id}";
 $ behave --parallel 4 --seed 12345 --seed-mode stable
 ```
 
-In `stable` mode, every bucket (top-level `describe` / `context`, or top-level `it`) gets a deterministic 32-bit hash derived from its file path, group-path / line, and the run seed. Buckets are sorted globally by that hash, then assigned to `K` workers round-robin: bucket at sorted-position `i` goes to worker `i mod K`. Within each worker, buckets execute in sorted order; within a bucket, examples execute in declared order.
+In `stable` mode, every bucket (top-level `describe` / `context`, or top-level `it`) gets a deterministic 32-bit hash derived from its file path, group-path / line, and the run seed. Buckets are sorted globally by that hash, then assigned to `K` workers round-robin: bucket at sorted-position `i` goes to worker `i mod K`. Within each worker, buckets execute in sorted order. Within a bucket, examples execute in declared order.
 
-The result: rerunning the same suite with the same seed but different `K` always processes examples in the same global hash-sorted order — only the partition across workers changes. Use this when you need reproducibility across machines whose available parallelism differs.
+The result: rerunning the same suite with the same seed but different `K` always processes examples in the same global hash-sorted order. Only the partition across workers changes. Use this when you need reproducibility across machines whose available parallelism differs.
 
 Caveats:
 
@@ -119,13 +119,13 @@ Caveats:
 
 ## Parallel mode (`--parallel-mode`)
 
-`--parallel-mode` selects the execution model under `--parallel K`. The default, `isolated`, runs one subprocess per spec file (the model described at the top of this page). The `lpt` and `queue` modes instead run a fixed pool of `K` persistent workers that each own several buckets — this pool model is what the [Group affinity](#group-affinity) and [Seed mode](#seed-mode-seed-mode) sections describe.
+`--parallel-mode` selects the execution model under `--parallel K`. The default, `isolated`, runs one subprocess per spec file (the model described at the top of this page). The `lpt` and `queue` modes instead run a fixed pool of `K` persistent workers that each own several buckets. This pool model is what the [Group affinity](#group-affinity) and [Seed mode](#seed-mode-seed-mode) sections describe.
 
-| Mode                 | Strategy                                                                          | When to use                                                                          |
-| -------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `isolated` (default) | One subprocess per spec file, up to `K` in flight                                 | Strongest isolation; no cross-file in-process state. The default.                    |
-| `lpt`                | Fixed pool of `K` workers; static longest-processing-time-first by example count  | Fewer, longer-lived processes; group affinity packs each `describe` onto one worker. |
-| `queue`              | Fixed pool of `K` workers pulling buckets one at a time                           | Suites with wildly uneven runtimes where example count poorly predicts wall time.    |
+| Mode                 | Strategy                                                                         | When to use                                                                          |
+| -------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `isolated` (default) | One subprocess per spec file, up to `K` in flight                                | Strongest isolation, with no cross-file in-process state. The default.                    |
+| `lpt`                | Fixed pool of `K` workers, with static longest-processing-time-first by example count | Fewer, longer-lived processes. Group affinity packs each `describe` onto one worker. |
+| `queue`              | Fixed pool of `K` workers pulling buckets one at a time                          | Suites with wildly uneven runtimes where example count poorly predicts wall time.    |
 
 ### `queue`
 
@@ -138,7 +138,7 @@ In `queue` mode the parent maintains a FIFO queue of buckets sorted by cost (exa
 Worker behavior in queue mode:
 
 - Spec files are loaded **lazily** on the first bucket from that file (vs. eagerly at startup in LPT mode). If a worker never receives a bucket from a file, it never loads that file.
-- Each worker forces `--order=defined` for the examples inside its current bucket. Dispatch order between buckets is cost-desc, then arrival order; within a bucket, declared order.
+- Each worker forces `--order=defined` for the examples inside its current bucket. Dispatch order between buckets is cost-desc, then arrival order. Within a bucket, declared order.
 - `:serial` examples are still routed to a single post-parallel serial worker, exactly as in LPT mode.
 
 ### When queue mode helps
@@ -151,9 +151,9 @@ Queue mode wins over LPT when:
 
 Queue mode tends to match LPT (and adds a small per-bucket coordination overhead) when:
 
-- The suite has fewer buckets than workers — neither strategy can prevent idle workers.
+- The suite has fewer buckets than workers, so neither strategy can prevent idle workers.
 - Example counts are well-correlated with runtime.
-- One single bucket dominates total runtime — both strategies bottleneck on it.
+- One single bucket dominates total runtime, so both strategies bottleneck on it.
 
 Queue mode is opt-in. Benchmark your own suite against `lpt` before switching.
 
@@ -187,11 +187,11 @@ Shard retries: 1
   worker 2: crashed after 3 attempts (crash exit codes: 137, 137, 137; final exit: 137)
 ```
 
-`--parallel-retry` composes with `--retry N` (per-example flake retry): a flaky example retries inside one worker incarnation; a crashed worker spawns a fresh incarnation that re-runs its whole manifest. Both counts are independent.
+`--parallel-retry` composes with `--retry N` (per-example flake retry): a flaky example retries inside one worker incarnation, while a crashed worker spawns a fresh incarnation that re-runs its whole manifest. Both counts are independent.
 
 Caveats:
 
-- Under `--parallel-retry N`, the parent **buffers** per-worker events until the worker exits. The transcript no longer streams in real time during the worker's run; instead each worker's events appear as a batch once the worker terminates. This is the price of being able to discard a crashed attempt cleanly. With `--parallel-retry 0` (the default) the streaming behavior is preserved.
+- Under `--parallel-retry N`, the parent **buffers** per-worker events until the worker exits. The transcript no longer streams in real time during the worker's run. Instead each worker's events appear as a batch once the worker terminates. This is the price of being able to discard a crashed attempt cleanly. With `--parallel-retry 0` (the default) the streaming behavior is preserved.
 - `--parallel-retry` only applies under `--parallel-mode=lpt`. The default `isolated` mode and `queue` mode do not re-spawn crashed subprocesses: queue dispatches buckets dynamically, so "re-spawn with the same manifest" has no analogue, and a crashed worker remains fatal in both.
 
 ## Live progress totals (`--progress-total`)
@@ -207,14 +207,14 @@ F (3/247)
 . (247/247)
 ```
 
-Each event prints on its own line so the output is grep-friendly and works in non-TTY contexts (CI logs, captured stdout). Without `--parallel`, `--progress-total` is a no-op — totals are computed by the parallel parent at discovery time.
+Each event prints on its own line so the output is grep-friendly and works in non-TTY contexts (CI logs, captured stdout). Without `--parallel`, `--progress-total` is a no-op: totals are computed by the parallel parent at discovery time.
 
 ## Database-per-worker pattern
 
 This is the canonical pattern for testing against a real database under `--parallel`:
 
-1. **Provision a database per worker index up front.** Outside the test run — typically in your CI setup or a `.behave-setup` script. How many you need depends on the mode: under `--parallel-mode lpt` / `queue` there are exactly `K` workers (indices `0..K-1`), so provision `K`. Under the default `isolated` mode the index is the spec-file index, so either provision one database per spec file, or switch to `--parallel-mode lpt` for a bounded `K`.
-2. **Each worker uses `BDD::Behave::Worker.id`** (or `BEHAVE_WORKER_INDEX`) to pick *its* database. The worker process boots once; its DB handle is created against `myapp_test_${BEHAVE_WORKER_INDEX}` and lives for the whole worker.
+1. **Provision a database per worker index up front.** Outside the test run, typically in your CI setup or a `.behave-setup` script. The index is bounded by the concurrency cap `K` in every mode (`isolated` leases a recycled `0..K-1` slot per running file, while `lpt` / `queue` have exactly `K` persistent workers), so provision `K` databases.
+2. **Each worker uses `BDD::Behave::Worker.id`** (or `BEHAVE_WORKER_INDEX`) to pick *its* database. The worker process boots once. Its DB handle is created against `myapp_test_${BEHAVE_WORKER_INDEX}` and lives for the whole worker.
 3. **Wrap each example in a transaction** (or use the truncation strategy if you can't use transactions because the code under test commits). Roll back at `after-each` so the next example in the same worker sees a clean slate.
 4. **Tag DB-touching examples with `:database`** and define a `before-each :tag<database>` that opens the transaction.
 5. **Use `:no-transaction`** (or your own tag) for examples that genuinely need to verify committed state.
@@ -247,7 +247,7 @@ describe 'User CRUD', :tag<database>, {
 
 ## `:serial` for non-parallelizable examples
 
-Mark examples or groups that mutate global state — `%*ENV`, signal handlers, a shared external resource, a process-wide singleton — with `:serial`:
+Mark examples or groups that mutate global state (`%*ENV`, signal handlers, a shared external resource, a process-wide singleton) with `:serial`:
 
 ```raku
 describe 'global config mutation', :serial, {
@@ -266,12 +266,12 @@ it 'tests the parallel runner itself', :serial, { ... }
 | Flag                                                       | Behavior under `--parallel N`                                                                                                                                                                                                             |
 | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--bisect` / `--bisect-data`                               | Mutually exclusive with `--parallel`. The parent errors with a clear message.                                                                                                                                                             |
-| `--coverage`                                               | Each worker writes its own raw MoarVM coverage log; the parent merges the logs and renders a single coverage report. `--coverage-minimum` is gated on the merged percentage. See [below](#coverage).                                      |
-| `--doc`                                                    | Ignores `--parallel` — doc mode does not execute, so parallelism is moot.                                                                                                                                                                 |
-| `--tag` / `--exclude-tag` / `--example` / `--only-example` | Applied during discovery; each worker sees exactly its filtered slice.                                                                                                                                                                    |
-| `--seed`                                                   | See `--seed-mode` below — `xor` (default) derives a per-worker seed (`seed XOR worker-index`); `stable` keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way. |
+| `--coverage`                                               | Each worker writes its own raw MoarVM coverage log. The parent merges the logs and renders a single coverage report. `--coverage-minimum` is gated on the merged percentage. See [below](#coverage).                                      |
+| `--doc`                                                    | Ignores `--parallel` (doc mode does not execute, so parallelism is moot).                                                                                                                                                                 |
+| `--tag` / `--exclude-tag` / `--example` / `--only-example` | Applied during discovery. Each worker sees exactly its filtered slice.                                                                                                                                                                    |
+| `--seed`                                                   | See `--seed-mode` below. `xor` (default) derives a per-worker seed (`seed XOR worker-index`). `stable` keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way. |
 | `--seed-mode`                                              | `xor` (default) or `stable`. `stable` makes the global execution order K-invariant for a given `--seed`. See [Seed mode](#seed-mode-seed-mode).                                                                                           |
-| `--fail-fast`                                              | Forwarded to each worker, which stops at the threshold within its own slice. The parent does not aggregate failure counts across workers or terminate workers that are still running.                                                      |
+| `--fail-fast`                                              | Forwarded to each worker, which stops at the threshold within its own slice. The parent does not aggregate failure counts across workers or terminate workers that are still running.                                                     |
 
 ## Default-on parallel from `.behave`
 
@@ -287,7 +287,7 @@ configure-behave -> $c {
 }
 ```
 
-After this, `behave` alone runs the suite under 4 workers. The usual precedence applies: CLI > project (`./.behave`) > user (`~/.behave`) > built-in default (serial). A CLI `--parallel N` overrides the config value; pass `--parallel 1` to opt back into single-worker parallel execution from a higher-N config setting, or use `--no-config` to bypass the config entirely for one run.
+After this, `behave` alone runs the suite under 4 workers. The usual precedence applies: CLI > project (`./.behave`) > user (`~/.behave`) > built-in default (serial). A CLI `--parallel N` overrides the config value. Pass `--parallel 1` to opt back into single-worker parallel execution from a higher-N config setting, or use `--no-config` to bypass the config entirely for one run.
 
 ## Known limitations (v1)
 
@@ -299,7 +299,7 @@ After this, `behave` alone runs the suite under 4 workers. The usual precedence 
 
 ## Profile, memory, benchmark {#profile-memory-benchmark}
 
-`--profile`, `--memory-profile`, and `--benchmark` work under `--parallel`. Each worker measures its own slice; the parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.
+`--profile`, `--memory-profile`, and `--benchmark` work under `--parallel`. Each worker measures its own slice. The parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.
 
 ```bash
 behave --parallel 4 --profile=10 specs/
@@ -319,13 +319,13 @@ behave --parallel 4 --benchmark --benchmark-baseline=bench.tsv specs/
 
 Notes:
 
-- Each example runs on exactly one worker, so `--profile` and `--memory-profile` rows are not deduplicated — the parent sees one record per execution.
-- `--benchmark-iterations=N` and `--benchmark-threshold=PCT` are forwarded to every worker; per-example timings collected across iterations are merged in the parent before medians are computed.
-- `--benchmark-baseline` / `--benchmark-save` are not forwarded to workers; only the parent reads / writes baseline files, against the aggregated summary list.
+- Each example runs on exactly one worker, so `--profile` and `--memory-profile` rows are not deduplicated: the parent sees one record per execution.
+- `--benchmark-iterations=N` and `--benchmark-threshold=PCT` are forwarded to every worker. Per-example timings collected across iterations are merged in the parent before medians are computed.
+- `--benchmark-baseline` / `--benchmark-save` are not forwarded to workers. Only the parent reads / writes baseline files, against the aggregated summary list.
 
 ## Coverage {#coverage}
 
-`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path under `$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/` (named `isolated-N.raw` in the default isolated mode, `worker-N.raw` in the `lpt` / `queue` pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union — coverage records whether a line was hit, not how many times — so a line counted only by worker 2 still shows up in the merged report.
+`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path under `$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/` (named `isolated-N.raw` in the default isolated mode, `worker-N.raw` in the `lpt` / `queue` pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union (coverage records whether a line was hit, not how many times), so a line counted only by worker 2 still shows up in the merged report.
 
 ```bash
 behave --parallel 4 --coverage specs/
@@ -333,17 +333,17 @@ behave --parallel 4 --coverage --coverage-format=html --coverage-output=coverage
 behave --parallel 4 --coverage --coverage-minimum=90 specs/
 ```
 
-`--coverage-include` / `--coverage-exclude` apply during the merge — same semantics as serial coverage. `--coverage-minimum` is gated on the *merged* percentage, so a line hit by any single worker contributes. `--coverage-baseline` compares the merged report against the saved baseline, the same as serial mode.
+`--coverage-include` / `--coverage-exclude` apply during the merge, with the same semantics as serial coverage. `--coverage-minimum` is gated on the *merged* percentage, so a line hit by any single worker contributes. `--coverage-baseline` compares the merged report against the saved baseline, the same as serial mode.
 
 Notes:
 
 - The parent process never has `MVM_COVERAGE_LOG` set, so it does not record its own bytecode. Coverage only reflects user code executed inside workers.
-- `:serial` examples run on the post-parallel serial worker, which also writes to a per-worker log (`serial.raw`); its hits merge in with everyone else's.
+- `:serial` examples run on the post-parallel serial worker, which also writes to a per-worker log (`serial.raw`). Its hits merge in with everyone else's.
 - Worker raw logs can be very large (hundreds of megabytes per worker on big suites). The merge uses `grep -ahF | awk '!seen'` over the worker logs, so peak transient disk in `$TMPDIR` is proportional to the *raw* per-worker volume, not the filtered set. Workers' raw logs are deleted as soon as the merged-and-deduped file is written.
 
 ## See also
 
-- [Tags](../tags/tags.md) — the `:tag` / `:exclude-tag` machinery underpinning `:serial` and `:database` patterns.
-- [Hooks](../hooks/hooks.md) — `before-each` / `after-each` filters for transaction wrapping.
-- [Configuration](../configuration/configuration.md) — adding a `--parallel` default to a project `.behave` file.
-- [Coverage](../coverage/coverage.md) — full coverage reference (formats, baseline, branch tracking).
+- [Tags](../tags/tags.md): the `:tag` / `:exclude-tag` machinery underpinning `:serial` and `:database` patterns.
+- [Hooks](../hooks/hooks.md): `before-each` / `after-each` filters for transaction wrapping.
+- [Configuration](../configuration/configuration.md): adding a `--parallel` default to a project `.behave` file.
+- [Coverage](../coverage/coverage.md): coverage reference (formats, baseline, branch tracking).

@@ -68,8 +68,8 @@ Both forms support `--tag=NAME` if you prefer the `=` style.
 
 Each `Example` and `ExampleGroup` exposes:
 
-- `.tags` — tags attached directly to that node.
-- `.effective-tags` — tags from this node and every ancestor, deduplicated.
-- `.has-tag('name')` / `.has-effective-tag('name')` — boolean checks.
+- `.tags`: tags attached directly to that node.
+- `.effective-tags`: tags from this node and every ancestor, deduplicated.
+- `.has-tag('name')` / `.has-effective-tag('name')`: boolean checks.
 
 These helpers are useful for custom reporters or tooling built on top of the runner.

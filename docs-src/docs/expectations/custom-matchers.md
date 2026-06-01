@@ -20,7 +20,7 @@ expect(9).to.be(be-a-multiple-of(3));    # passes
 expect(8).to.not.be(be-a-multiple-of(3)); # passes
 ```
 
-`define-matcher` returns a **factory** — call it with the matcher's expected
+`define-matcher` returns a **factory**: call it with the matcher's expected
 args and you get back a `DefinedMatcher` instance you can pass into
 `expect(...).to.be(...)`. The matcher is also registered globally so other
 files can reach it through [`matcher(...)`](#matchername-args-lookup).
@@ -37,7 +37,7 @@ files can reach it through [`matcher(...)`](#matchername-args-lookup).
 
 `match` is the only required block. Anything else can be omitted and you get a
 sensible default. The factory you receive is just sugar over the
-[registry's `build` method](#the-registry); calling `matcher(...)` directly
+[registry's `build` method](#the-registry). Calling `matcher(...)` directly
 works identically.
 
 ### Argument shape
@@ -92,7 +92,7 @@ expect(-1).to.not.be-positive;       # passes
 
 Existing methods on `ExpectationBuilder` (`be`, `eq`, `include`, ...) take
 precedence over the registry, and unknown names that aren't registered still
-raise `X::Method::NotFound` — so a typo doesn't get silently swallowed.
+raise `X::Method::NotFound`, so a typo doesn't get silently swallowed.
 
 ## How it plugs in
 
@@ -136,8 +136,8 @@ a handful of useful methods:
 | `names()`             | All registered names, sorted.                                        |
 | `clear()`             | Wipe the registry. Useful in tests that re-register a name.          |
 
-Redefining a matcher with the same name *replaces* the previous registration;
-previously returned factory closures pick up the new definition the next time
+Redefining a matcher with the same name *replaces* the previous registration.
+Previously returned factory closures pick up the new definition the next time
 they are called.
 
 ## Putting it together

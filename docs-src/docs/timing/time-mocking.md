@@ -4,7 +4,7 @@
 through time inside an example. They work by wrapping Raku's `now` term,
 `DateTime.now`, and `Date.today` so the wrap consults a
 dynamically-scoped freeze. When no freeze is active, the wrappers fall
-through to the real time source — they have no effect outside a freeze block.
+through to the real time source, so they have no effect outside a freeze block.
 
 ## `freeze-time`
 
@@ -105,7 +105,7 @@ throws. The frozen state never leaks to the next example.
 
 Examples and groups can opt into a freeze via the `:freeze-time` metadata.
 The runner wraps the example body in a freeze around `before-each` /
-`after-each` hooks — wall-clock duration is measured outside the freeze, so
+`after-each` hooks. Wall-clock duration is measured outside the freeze, so
 the example's `started-at` / `finished-at` / `duration` accessors still
 report real time.
 
@@ -133,7 +133,7 @@ inherited group-level freeze).
 
 ## `current-time`
 
-`current-time` returns the current `Instant` — frozen when a freeze is
+`current-time` returns the current `Instant`: frozen when a freeze is
 active, real `now` otherwise. Use it from helpers that want to read "time"
 without bypassing the freeze.
 

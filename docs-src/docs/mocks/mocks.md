@@ -2,7 +2,7 @@
 
 Behave gives you two complementary ways to stand in for collaborators:
 
-- **`double(...)`** creates a *new* stand-in object from scratch — useful when there's no real implementation to lean on.
+- **`double(...)`** creates a *new* stand-in object from scratch, useful when there's no real implementation to lean on.
 - **`allow(obj).to.receive('method')`** *stubs a method on an existing object or class*, so the real type stays in play but specific calls are intercepted.
 
 Both are exported from `BDD::Behave`. Stubs installed via `allow(...)` are automatically uninstalled at the end of each example, so they never leak between specs.
@@ -24,7 +24,7 @@ describe 'order summary', {
 }
 ```
 
-The name is purely cosmetic — it shows up in error messages from the double itself.
+The name is purely cosmetic: it shows up in error messages from the double itself.
 
 `double()` with no arguments produces an *anonymous* double:
 
@@ -114,10 +114,10 @@ describe 'class-based double', {
 
 What you can't do with a class-based double:
 
-- Stub a method the class doesn't define — `double(Greeter, missing => 1)` dies at creation.
-- Call a method the class doesn't define — `$g.bogus` dies at dispatch.
+- Stub a method the class doesn't define: `double(Greeter, missing => 1)` dies at creation.
+- Call a method the class doesn't define: `$g.bogus` dies at dispatch.
 
-The double does *not* invoke the real implementation; the class is only consulted for validation.
+The double does *not* invoke the real implementation. The class is only consulted for validation.
 
 ## Reserved method names
 
@@ -133,13 +133,13 @@ If your real collaborator uses one of these names, stub the method directly on a
 
 The target can be:
 
-- An **instance** — only that one instance gets the stub; sibling instances dispatch normally.
-- A **class** (type object) — affects dispatch through the class's method table, so *every* instance of the class sees the stub. Use `allow-any-instance-of(Class)` for the same effect with clearer intent.
-- A **`Double`** — the stub is wired through the double's stub table.
+- An **instance**: only that one instance gets the stub. Sibling instances dispatch normally.
+- A **class** (type object): affects dispatch through the class's method table, so *every* instance of the class sees the stub. Use `allow-any-instance-of(Class)` for the same effect with clearer intent.
+- A **`Double`**: the stub is wired through the double's stub table.
 
 ## Partial mocking
 
-`allow($obj).to.receive('m')` only replaces `m` — every other method on the same instance keeps its real behavior, including methods that read or mutate state. This is the core of partial mocking: stub the collaborator boundaries, leave the rest of the object alone.
+`allow($obj).to.receive('m')` only replaces `m`. Every other method on the same instance keeps its real behavior, including methods that read or mutate state. This is the core of partial mocking: stub the collaborator boundaries, leave the rest of the object alone.
 
 ```raku
 class Account {
@@ -161,7 +161,7 @@ describe 'partial mock', {
 }
 ```
 
-You can stub multiple methods on the same instance independently — each stub is tracked separately and removed at the end of the example.
+You can stub multiple methods on the same instance independently. Each stub is tracked separately and removed at the end of the example.
 
 ## Return values
 
@@ -181,7 +181,7 @@ describe 'allow + and-return', {
 }
 ```
 
-`.and-return` is optional — calling `allow($g).to.receive('hello')` with no follow-up stubs the method to return `Any`.
+`.and-return` is optional: calling `allow($g).to.receive('hello')` with no follow-up stubs the method to return `Any`.
 
 ## Raising exceptions
 
@@ -207,7 +207,7 @@ allow($g).to.receive('hello').and-call-original;
 expect($g.hello('a')).to.be('hello, a');
 ```
 
-`.and-call-original` is not supported on a `Double` — there is no original implementation to call back to.
+`.and-call-original` is not supported on a `Double`: there is no original implementation to call back to.
 
 ## Dynamic stubs
 
@@ -232,7 +232,7 @@ expect($g.hello('a')).to.be('second');
 
 ## Stubbing across every instance: `allow-any-instance-of`
 
-`allow-any-instance-of(Class).to.receive('m')` stubs an instance method at the class's method-table level, so every instance — existing or future — dispatches into the stub for the rest of the example.
+`allow-any-instance-of(Class).to.receive('m')` stubs an instance method at the class's method-table level, so every instance (existing or future) dispatches into the stub for the rest of the example.
 
 ```raku
 class Repo {
@@ -249,9 +249,9 @@ describe 'stub on every instance', {
 }
 ```
 
-A per-instance `allow($obj).to.receive('m')` for the same method takes precedence over `allow-any-instance-of(Class)`; only that one instance sees the instance-specific stub, and other instances continue to see the class-wide one.
+A per-instance `allow($obj).to.receive('m')` for the same method takes precedence over `allow-any-instance-of(Class)`. Only that one instance sees the instance-specific stub, and other instances continue to see the class-wide one.
 
-`allow-any-instance-of` requires a type object — passing an instance dies with a clear error. The same method-existence validation as `allow(...)` applies: stubbing a method the class doesn't define dies before any wrap is installed. The full `.and-return` / `.and-raise` / `.and-call-original` / `.and-do` chain works the same way as on `allow(...)`.
+`allow-any-instance-of` requires a type object: passing an instance dies with a clear error. The same method-existence validation as `allow(...)` applies: stubbing a method the class doesn't define dies before any wrap is installed. The full `.and-return` / `.and-raise` / `.and-call-original` / `.and-do` chain works the same way as on `allow(...)`.
 
 ## Stubs in `before-all` vs `before-each`
 
@@ -273,8 +273,8 @@ describe 'group-wide stub', {
 `allow($t).to.receive('m')` rejects method names that don't exist on the target's class. This catches typos and stubs that drift out of sync with the real implementation:
 
 ```raku
-allow($g).to.receive('imaginary');   # dies — no such method on Greeter
-allow(Greeter).to.receive('also-no'); # dies — same check on the class
+allow($g).to.receive('imaginary');   # dies: no such method on Greeter
+allow(Greeter).to.receive('also-no'); # dies: same check on the class
 ```
 
 For a class-based `Double`, the stubbed method must exist on the wrapped class.
@@ -283,7 +283,7 @@ For a class-based `Double`, the stubbed method must exist on the wrapped class.
 
 Doubles record their calls automatically. To record calls on a *real* object, install an `allow(...).to.receive(...)` stub or use `spy(...)`. Then verify with `expect(obj).to.have-received('method')`.
 
-## `spy(...)` — pass-through recorder
+## `spy(...)`: pass-through recorder
 
 `spy()` has three forms:
 
@@ -307,7 +307,7 @@ describe 'spying on a real object', {
 }
 ```
 
-A spy on a real instance only affects that one instance — sibling instances dispatch normally. Stubs installed by `spy(...)` are auto-cleaned at end of example, like `allow(...)` stubs.
+A spy on a real instance only affects that one instance. Sibling instances dispatch normally. Stubs installed by `spy(...)` are auto-cleaned at end of example, like `allow(...)` stubs.
 
 ## `expect(obj).to.have-received('method')`
 
@@ -406,4 +406,4 @@ expect($log).to.have-received('info').with(
 
 ## Limits
 
-- `spy($real-instance)` wraps user-defined methods; methods inherited from `Mu`/`Any` and submethods (e.g. `BUILD`, `POPULATE`) are not wrapped.
+- `spy($real-instance)` wraps user-defined methods. Methods inherited from `Mu`/`Any` and submethods (e.g. `BUILD`, `POPULATE`) are not wrapped.

@@ -1,10 +1,10 @@
 # Retry and only-failures
 
-Flaky examples — those that fail intermittently because of timing, network jitter, ordering of external services, or other non-determinism — can be retried automatically. Behave also persists the list of failing examples after every run so you can re-run just those failures next time.
+Flaky examples (those that fail intermittently because of timing, network jitter, ordering of external services, or other non-determinism) can be retried automatically. Behave also persists the list of failing examples after every run so you can re-run just those failures next time.
 
 ## `--retry N`
 
-`--retry N` runs each failing example up to `N` additional times. A total of `N+1` attempts will be made. The first attempt that passes wins; the example is marked passing in the final summary. If every attempt fails, the example is marked failing and the final attempt's failures are the ones reported.
+`--retry N` runs each failing example up to `N` additional times. A total of `N+1` attempts will be made. The first attempt that passes wins. The example is marked passing in the final summary. If every attempt fails, the example is marked failing and the final attempt's failures are the ones reported.
 
 ```shell
 $ behave --retry 2
@@ -36,13 +36,13 @@ describe 'flaky API tests', :retry(2), {
 
 ### What re-runs between attempts
 
-A retry re-runs the example body and the example's `before-each` / `after-each` / `around-each` hooks. Group-level `before-all` / `after-all` and `around-all` run once per group as usual — they are not re-executed on retry.
+A retry re-runs the example body and the example's `before-each` / `after-each` / `around-each` hooks. Group-level `before-all` / `after-all` and `around-all` run once per group as usual: they are not re-executed on retry.
 
 Other per-attempt state:
 
 - **`let` memoization** is reset between attempts, so lazy `let { ... }` bodies re-evaluate.
 - **Stubs installed via `allow(...)`** are cleaned up between attempts via the same `StubRegistry` snapshot-and-restore mechanism that wraps every example. Stubs installed in `before-all` survive across attempts.
-- **`Failures.list`** is snapshotted at the start of each attempt. If the attempt fails and we are going to retry, the intermediate failures are spliced back out — they never make it into the final summary or into `.behave-failures`.
+- **`Failures.list`** is snapshotted at the start of each attempt. If the attempt fails and we are going to retry, the intermediate failures are spliced back out: they never make it into the final summary or into `.behave-failures`.
 
 Pending (`pending` or `it 'todo'`) and skipped (`:skipped`, `xit`, `xdescribe`) examples are never retried.
 
@@ -63,7 +63,7 @@ Retried 2 examples:
          /Users/me/repo/specs/api-spec.raku:12
 ```
 
-`[PASS]` means the example eventually succeeded after `N` retries; `[FAIL]` means every attempt failed. `N/M attempts` is the actual number of attempts used over the maximum allowed. When no retries occurred, the section is omitted entirely.
+`[PASS]` means the example eventually succeeded after `N` retries. `[FAIL]` means every attempt failed. `N/M attempts` is the actual number of attempts used over the maximum allowed. When no retries occurred, the section is omitted entirely.
 
 ### Programmatic use
 
@@ -100,7 +100,7 @@ After every run, Behave merges the new failure list with the existing file:
 - Examples that ran and still fail are kept (or added).
 - Examples that did NOT run this time (filtered out, in a spec file you did not select, etc.) are preserved as-is.
 
-A filtered run like `behave specs/auth-spec.raku --only-failures` will only update entries belonging to `auth-spec.raku`; failing entries for other spec files stay in the list until you re-run them.
+A filtered run like `behave specs/auth-spec.raku --only-failures` will only update entries belonging to `auth-spec.raku`. Failing entries for other spec files stay in the list until you re-run them.
 
 ### `--failures-path PATH`
 
@@ -113,6 +113,6 @@ $ behave --only-failures --failures-path /tmp/behave-failures-feature-x.txt
 
 ### Modes that do not write `.behave-failures`
 
-`--bisect` and `--bisect-data` use their own machine-readable output protocol and do not write the failures file. All other modes — including `--parallel`, `--coverage`, and `--doc` — write the file at the end of the run.
+`--bisect` and `--bisect-data` use their own machine-readable output protocol and do not write the failures file. All other modes (including `--parallel`, `--coverage`, and `--doc`) write the file at the end of the run.
 
 `.behave-failures` is plain text (one location per line, blank lines and `#` comments ignored on read) so it is safe to edit by hand or to consume from other tooling.

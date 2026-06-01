@@ -1,12 +1,12 @@
 # aggregate-failures
 
-By default in BDD::Behave, the **first failing expectation inside an `it` body throws and aborts the rest of that example** — matching RSpec semantics. Ideally each `it` block contains exactly one `expect`. When you genuinely need multiple expectations in one `it` body, wrap them in `aggregate-failures { ... }`:
+By default in BDD::Behave, the **first failing expectation inside an `it` body throws and aborts the rest of that example**, matching RSpec semantics. Ideally each `it` block contains exactly one `expect`. When you genuinely need multiple expectations in one `it` body, wrap them in `aggregate-failures { ... }`:
 
 - All expectations inside the block run to completion (a failure earlier in the block does not skip the rest).
 - The N inner failures are **rolled up into a single `Failure` row** at the line where the `aggregate-failures` block opens.
 - That single row carries the block's label (when one is given) and renders the inner failures as a bulleted summary under its header.
 
-This means the progress stream's `F` count and the number of rows in the `Failures:` section stay aligned — one failed `it` produces one `F` and one row, regardless of how many `expect`s misfired inside.
+This means the progress stream's `F` count and the number of rows in the `Failures:` section stay aligned: one failed `it` produces one `F` and one row, regardless of how many `expect`s misfired inside.
 
 Exceptions thrown inside the block are also captured into the same rollup rather than propagating.
 
@@ -62,7 +62,7 @@ The captured exception is rendered as `exception in aggregate-failures: <message
 
 ## Nesting
 
-Blocks may nest. Inner labels win for failures recorded inside the inner block; an unlabeled inner block inherits the outer label.
+Blocks may nest. Inner labels win for failures recorded inside the inner block. An unlabeled inner block inherits the outer label.
 
 ```raku
 aggregate-failures 'outer', {
@@ -103,7 +103,7 @@ Use it when writing a spec for a matcher's failure behavior. Use `aggregate-fail
 
 ## Automatic aggregation
 
-Three configuration options ask the runner to wrap each example's body in `aggregate-failures` semantics automatically — labeling its failures and converting an uncaught exception inside the example into a labeled failure rather than letting it short-circuit into the runner's error track.
+Three configuration options ask the runner to wrap each example's body in `aggregate-failures` semantics automatically, labeling its failures and converting an uncaught exception inside the example into a labeled failure rather than letting it short-circuit into the runner's error track.
 
 ### Per-example metadata
 
@@ -135,7 +135,7 @@ describe 'API responses', :aggregate-failures<api>, {
 }
 ```
 
-A leaf `it` may override an outer group with its own metadata — including `:aggregate-failures(False)` to opt out:
+A leaf `it` may override an outer group with its own metadata, including `:aggregate-failures(False)` to opt out:
 
 ```raku
 describe 'API responses', :aggregate-failures, {
@@ -165,7 +165,7 @@ When deciding whether to auto-aggregate an example, the runner walks the ancestr
 
 ### Interaction with explicit `aggregate-failures` blocks
 
-An explicit `aggregate-failures 'inner', { ... }` block inside an auto-aggregated example takes precedence inside the block — its label tags failures recorded there, and unlabeled inner blocks inherit the auto label. Failures recorded before or after the inner block continue to use the example's auto label.
+An explicit `aggregate-failures 'inner', { ... }` block inside an auto-aggregated example takes precedence inside the block: its label tags failures recorded there, and unlabeled inner blocks inherit the auto label. Failures recorded before or after the inner block continue to use the example's auto label.
 
 ### Exception handling
 

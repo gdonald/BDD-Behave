@@ -1,6 +1,6 @@
 # Diff Output
 
-When an expectation fails, BDD::Behave produces a structured, colorized diff between the actual and expected values whenever both are of a "diffable" shape. The diff is shape-aware: strings are compared character-by-character (single line) or line-by-line (multi line); arrays, hashes, sets, bags, and mixes are rendered as multi-line JSON-style structures and compared with a longest-common-subsequence algorithm.
+When an expectation fails, BDD::Behave produces a structured, colorized diff between the actual and expected values whenever both are of a "diffable" shape. The diff is shape-aware: strings are compared character-by-character (single line) or line-by-line (multi line). Arrays, hashes, sets, bags, and mixes are rendered as multi-line JSON-style structures and compared with a longest-common-subsequence algorithm.
 
 ## Conventions
 
@@ -89,24 +89,24 @@ When the expected value is a `Junction`, the diff collapses it to its constituen
     ✗ 3
 ```
 
-The summary line is tailored per junction kind (`any` / `all` / `one` / `none`) and reflects the negation state when `.not` is in play. Type-object alternatives (`Int | Rat`) render by name; values render via `.raku`. See [Junctions](../expectations/junctions.md) for the full set of summaries and an example under each kind.
+The summary line is tailored per junction kind (`any` / `all` / `one` / `none`) and reflects the negation state when `.not` is in play. Type-object alternatives (`Int | Rat`) render by name. Values render via `.raku`. See [Junctions](../expectations/junctions.md) for the full set of summaries and an example under each kind.
 
 Junction diffs are emitted even under negation (unlike scalar diffs), because the failed-negation case for a junction is still informative: the reader wants to see *which* alternative the given value collided with.
 
 ## Negated expectations
 
-`expect(...).not.to.be(...)` failures don't render a diff: when the comparison was supposed to *fail* and didn't, both values match exactly, so a diff would be empty. The standard `Expected:` / `not to be:` lines are sufficient. The exception is junction expectations under negation — see [Junction diffs](#junction-diffs) above.
+`expect(...).not.to.be(...)` failures don't render a diff: when the comparison was supposed to *fail* and didn't, both values match exactly, so a diff would be empty. The standard `Expected:` / `not to be:` lines are sufficient. The exception is junction expectations under negation (see [Junction diffs](#junction-diffs) above).
 
 ## Module surface
 
 The diff machinery lives in `BDD::Behave::Diff`. The exported functions are:
 
-* `diff-shape($value --> Str)` — `'Str'`, `'Array'`, `'Hash'`, `'Set'`, `'Bag'`, `'Mix'`, `'Scalar'`, or `'Undef'`.
-* `diffable($given, $expected --> Bool)` — `True` when both values share a structural shape worth diffing or `$expected` is a `Junction`.
-* `render-diff($given, $expected, Bool :$negated --> Str)` — produces the colorized diff string. Always returns a single string (multi-line for structural and junction diffs). `:negated` only affects junction summaries.
-* `pretty-lines($value, :$indent --> List)` — exposes the underlying pretty-printer for advanced use.
-* `is-junction($value --> Bool)` — `True` for any `Junction` (uses a typed multi to avoid autothreading).
-* `junction-kind(Junction:D --> Str)` — `'any'`, `'all'`, `'one'`, or `'none'`.
-* `junction-eigenstates(Junction:D --> List)` — the alternatives the junction was built from.
+* `diff-shape($value --> Str)`: `'Str'`, `'Array'`, `'Hash'`, `'Set'`, `'Bag'`, `'Mix'`, `'Scalar'`, or `'Undef'`.
+* `diffable($given, $expected --> Bool)`: `True` when both values share a structural shape worth diffing or `$expected` is a `Junction`.
+* `render-diff($given, $expected, Bool :$negated --> Str)`: produces the colorized diff string. Always returns a single string (multi-line for structural and junction diffs). `:negated` only affects junction summaries.
+* `pretty-lines($value, :$indent --> List)`: exposes the underlying pretty-printer for advanced use.
+* `is-junction($value --> Bool)`: `True` for any `Junction` (uses a typed multi to avoid autothreading).
+* `junction-kind(Junction:D --> Str)`: `'any'`, `'all'`, `'one'`, or `'none'`.
+* `junction-eigenstates(Junction:D --> List)`: the alternatives the junction was built from.
 
-You normally don't need to call these directly; failure output uses them automatically.
+You normally don't need to call these directly. Failure output uses them automatically.

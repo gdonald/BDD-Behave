@@ -32,13 +32,13 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | Option                                                     | Effect                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `--help`                                                   | Display usage                                                                                                                                                                                                                                                                                                                                                                              |
-| `--version`, `-V`                                          | Print the installed `BDD::Behave` version and exit. Reads the version from the loaded distribution's metadata; falls back to walking up from the script to find `META6.json` when running from a source checkout.                                                                                                                                                                          |
+| `--version`, `-V`                                          | Print the installed `BDD::Behave` version and exit. Reads the version from the loaded distribution's metadata, and falls back to walking up from the script to find `META6.json` when running from a source checkout.                                                                                                                                                                          |
 | `--verbose`                                                | Print each spec file as it is loaded                                                                                                                                                                                                                                                                                                                                                       |
-| `--tag NAME`                                               | Run only examples tagged `NAME` (repeatable; OR semantics). See [Tags](tags/tags.md).                                                                                                                                                                                                                                                                                                      |
+| `--tag NAME`                                               | Run only examples tagged `NAME` (repeatable, OR semantics). See [Tags](tags/tags.md).                                                                                                                                                                                                                                                                                                      |
 | `--exclude-tag NAME`                                       | Skip examples tagged `NAME` (repeatable).                                                                                                                                                                                                                                                                                                                                                  |
-| `--example PATTERN`                                        | Run only examples whose full nested description matches `PATTERN` (substring; or `/regex/`). Repeatable; OR semantics.                                                                                                                                                                                                                                                                     |
+| `--example PATTERN`                                        | Run only examples whose full nested description matches `PATTERN` (substring, or `/regex/`). Repeatable, OR semantics.                                                                                                                                                                                                                                                                     |
 | `-e PATTERN`                                               | Alias for `--example`.                                                                                                                                                                                                                                                                                                                                                                     |
-| `--aggregate-failures` / `--aggregate-failures=LABEL`      | Wrap every example in `aggregate-failures` semantics; converts uncaught example exceptions into recorded failures. With `=LABEL` the label tags each failure. Per-example/group `:aggregate-failures` metadata overrides this. See [Aggregate failures](expectations/aggregate-failures.md#automatic-aggregation).                                                                         |
+| `--aggregate-failures` / `--aggregate-failures=LABEL`      | Wrap every example in `aggregate-failures` semantics, converting uncaught example exceptions into recorded failures. With `=LABEL` the label tags each failure. Per-example/group `:aggregate-failures` metadata overrides this. See [Aggregate failures](expectations/aggregate-failures.md#automatic-aggregation).                                                                         |
 | `--order ORDER`                                            | Example execution order: `random` (default) or `defined`. Random order shuffles the children of every group and the suite, surfacing hidden order dependencies. See [Order and seed](#order-and-seed).                                                                                                                                                                                     |
 | `--seed N`                                                 | Seed the random-order RNG for reproducible runs. Ignored when `--order=defined`. Auto-generated when omitted and `--order=random`. The seed is printed at the end of a run only when an example fails (or with `--show-seed`). See [Order and seed](#order-and-seed).                                                                                                                       |
 | `--show-seed` / `--no-show-seed`                           | Always (or never) print `Randomized with seed N` at the end of a random-order run. The default prints it only when a spec fails, so a green run stays quiet. See [Order and seed](#order-and-seed).                                                                                                                                                                                         |
@@ -47,30 +47,30 @@ $ raku -Ilib bin/behave specs/some-spec.raku
 | `--retry N`                                                | Retry failing examples up to `N` additional times (a total of `N+1` attempts). Per-example `:retry(M)` metadata overrides this default. See [Retry and Only-Failures](retry/retry.md).                                                                                                                                                                                                     |
 | `--only-failures`                                          | Run only examples that failed in the previous run (read from `.behave-failures`). See [Retry and Only-Failures](retry/retry.md).                                                                                                                                                                                                                                                           |
 | `--failures-path=PATH`                                     | Override the path used to persist (and read, with `--only-failures`) the list of failing examples. Defaults to `./.behave-failures`. See [Retry and Only-Failures](retry/retry.md).                                                                                                                                                                                                        |
-| `--only-example LOC`                                       | Run only examples whose `file:line` matches `LOC` (repeatable; OR semantics). `LOC` is `FILE:LINE` — `FILE` may be absolute, relative, or a basename. See [Bisect](#bisect).                                                                                                                                                                                                               |
+| `--only-example LOC`                                       | Run only examples whose `file:line` matches `LOC` (repeatable, OR semantics). `LOC` is `FILE:LINE` (`FILE` may be absolute, relative, or a basename). See [Bisect](#bisect).                                                                                                                                                                                                               |
 | `--bisect`                                                 | Find the minimal set of examples that, run in declared order before each failing example, reproduce the failure. See [Bisect](#bisect).                                                                                                                                                                                                                                                    |
 | `--bisect-data`                                            | Machine-readable output for use by `--bisect`. Suppresses normal output and emits `behave-executed:` / `behave-failed:` lines. See [Bisect](#bisect).                                                                                                                                                                                                                                      |
-| `--profile` / `--profile=N`                                | Print the top N slowest examples after the run (default `N=10`). Across multiple spec files — and across `--parallel` workers — the profile is a single global section after the `Overall:` counts. See [Timing](timing/timing.md#-profile).                                                                                                                                               |
+| `--profile` / `--profile=N`                                | Print the top N slowest examples after the run (default `N=10`). Across multiple spec files (and across `--parallel` workers) the profile is a single global section after the `Overall:` counts. See [Timing](timing/timing.md#-profile).                                                                                                                                               |
 | `--slow-threshold=SECONDS`                                 | Print an inline `SLOW` line under any example whose body takes at least `SECONDS` seconds. `SECONDS` may be fractional. See [Timing](timing/timing.md#-slow-threshold).                                                                                                                                                                                                                    |
 | `--memory-profile` / `--memory-profile=N`                  | Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default `N=10`). Aggregated across `--parallel` workers. See [Memory profiling](timing/timing.md#memory-profiling).                                                                                                                                                                               |
 | `--memory-threshold=KB`                                    | Print an inline `MEMORY` line under any example whose RSS delta meets or exceeds `KB` kilobytes. Enables measurement on its own. See [Memory profiling](timing/timing.md#memory-profiling).                                                                                                                                                                                                |
 | `--format NAME`                                            | Select the output formatter for the run. `NAME` is the name of a registered formatter (`default` is built in). See [Formatters](formatter/formatter.md).                                                                                                                                                                                                                                   |
 | `--config PATH`                                            | Load Raku-based config from `PATH`. Skips the default `~/.behave` and `./.behave` lookups. See [Configuration](configuration/configuration.md).                                                                                                                                                                                                                                            |
 | `--no-config` / `--no-user-config` / `--no-project-config` | Skip all / user / project config files for this run. `BEHAVE_DISABLE_CONFIG=1` is equivalent to `--no-config`. See [Configuration](configuration/configuration.md).                                                                                                                                                                                                                        |
-| `--parallel N`                                             | Run specs across `N` worker subprocesses (the default mode runs one subprocess per spec file, up to `N` in flight; see `--parallel-mode`). Mutually exclusive with `--bisect` / `--bisect-data`. Aggregates coverage across workers when combined with `--coverage` (see [Coverage under --parallel](parallel/parallel.md#coverage)). Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md).                                           |
+| `--parallel N`                                             | Run specs across `N` worker subprocesses (the default mode runs one subprocess per spec file, up to `N` in flight, see `--parallel-mode`). Mutually exclusive with `--bisect` / `--bisect-data`. Aggregates coverage across workers when combined with `--coverage` (see [Coverage under --parallel](parallel/parallel.md#coverage)). Ignored under `--doc`. See [Parallel Execution](parallel/parallel.md).                                           |
 | `--seed-mode MODE`                                         | How `--seed` combines with `--parallel N`. `xor` (default) derives per-worker seeds as `seed XOR worker-index` and uses LPT distribution. `stable` keeps the global execution order identical regardless of `N` via hash-based bucket assignment. See [Seed mode](parallel/parallel.md#seed-mode-seed-mode).                                                                               |
 | `--parallel-mode MODE`                                     | Execution model under `--parallel N`. `isolated` (default) runs one subprocess per spec file. `lpt` uses a fixed pool of `N` workers with static longest-processing-time-first assignment by example count. `queue` uses a fixed pool with dynamic work-stealing, useful when bucket runtimes are wildly uneven. See [Parallel mode](parallel/parallel.md#parallel-mode-parallel-mode). |
-| `--parallel-retry N`                                       | When a worker subprocess crashes (exits with code > 1: signal, OOM, uncaught exception in the runner itself — **not** test failures), re-spawn it with the same manifest up to `N` additional times. Default 0. Composes with `--retry` (per-example flake retry). LPT mode only; queue-mode crashes remain fatal. See [Per-shard retry](parallel/parallel.md#per-shard-retry-on-worker-crash-parallel-retry). |
+| `--parallel-retry N`                                       | When a worker subprocess crashes (exits with code > 1: signal, OOM, uncaught exception in the runner itself, **not** test failures), re-spawn it with the same manifest up to `N` additional times. Default 0. Composes with `--retry` (per-example flake retry). LPT mode only. Queue-mode crashes remain fatal. See [Per-shard retry](parallel/parallel.md#per-shard-retry-on-worker-crash-parallel-retry). |
 | `--progress-total`                                         | Append a running `(N/TOTAL)` counter after each example char emitted by the `progress` formatter under `--parallel`. No-op without `--parallel`. See [Live progress totals](parallel/parallel.md#live-progress-totals-progress-total).                                                                                                                                                     |
-| `--watch`                                                  | Watch source and spec files; re-run affected specs whenever a file changes. Reads `r`/`a`/`f`/`q` commands from stdin. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage` / `--doc` / `--parallel`. See [Watch Mode](watch/watch.md).                                                                                                                                     |
+| `--watch`                                                  | Watch source and spec files, and re-run affected specs whenever a file changes. Reads `r`/`a`/`f`/`q` commands from stdin. Mutually exclusive with `--bisect` / `--bisect-data` / `--coverage` / `--doc` / `--parallel`. See [Watch Mode](watch/watch.md).                                                                                                                                     |
 | `--watch-path PATH`                                        | Add `PATH` to the watched roots (repeatable). Defaults to `./lib` and `./specs` when omitted. See [Watch Mode](watch/watch.md).                                                                                                                                                                                                                                                            |
-| `--dry-run`                                                | Load specs but skip execution; print the hierarchical example list and a count. Honors `--tag`, `--exclude-tag`, `--example`, `--only-example`, focus mode, and skipped examples. Combine with `--verbose` to show each example's `file:line` and effective tags. See [Dry run and listing](dry-run/dry-run.md).                                                                           |
-| `--list-examples`                                          | Emit the metadata query result one line per example — `FILE:LINE\t<full description>` by default. Designed for editor integrations (run-this-test, jump-to-failure). See [Dry run and listing](dry-run/dry-run.md).                                                                                                                                                                        |
+| `--dry-run`                                                | Load specs but skip execution, printing the hierarchical example list and a count. Honors `--tag`, `--exclude-tag`, `--example`, `--only-example`, focus mode, and skipped examples. Combine with `--verbose` to show each example's `file:line` and effective tags. See [Dry run and listing](dry-run/dry-run.md).                                                                           |
+| `--list-examples`                                          | Emit the metadata query result one line per example (`FILE:LINE\t<full description>` by default). Designed for editor integrations (run-this-test, jump-to-failure). See [Dry run and listing](dry-run/dry-run.md).                                                                                                                                                                        |
 | `--list-examples-format=FORMAT`                            | Output format for `--list-examples`: `text` (default) or `json`. The JSON document is `{version, count, examples: [...]}` with every example's tags, metadata, and status. See [Dry run and listing](dry-run/dry-run.md).                                                                                                                                                                  |
 
 ## Order and seed
 
-Behave runs examples in **random order by default**. This shuffles the children of every `describe` / `context` group (and the top-level suite) before execution. Random ordering catches accidental order dependencies — examples that pass only because a sibling ran first — and is the recommended default.
+Behave runs examples in **random order by default**. This shuffles the children of every `describe` / `context` group (and the top-level suite) before execution. Random ordering catches accidental order dependencies (examples that pass only because a sibling ran first) and is the recommended default.
 
 When a run **fails**, Behave prints the seed used so the failing order is reproducible:
 
@@ -81,7 +81,7 @@ Overall: 1247 examples
 Randomized with seed 595739438
 ```
 
-A fully passing run stays quiet — there is nothing to reproduce, so the seed line is omitted to keep green output clean.
+A fully passing run stays quiet: there is nothing to reproduce, so the seed line is omitted to keep green output clean.
 
 Pass `--seed N` to reproduce a specific order:
 
@@ -93,7 +93,7 @@ If random order surfaces a failure, the seed in the summary is all you need to r
 
 ### `--show-seed`
 
-To print the seed even on a passing run — for instance to record the exact order a green CI run used — pass `--show-seed`:
+To print the seed even on a passing run (for instance to record the exact order a green CI run used) pass `--show-seed`:
 
 ```shell
 $ behave --show-seed
@@ -150,7 +150,7 @@ my $runner = BDD::Behave::Runner::Runner.new(:order<random>, :seed(42));
 
 ## Fail-fast
 
-By default, Behave runs every example in the suite even after a failure, so the run produces a complete picture of what is broken. When iterating on a single problem — or when you want a faster signal in CI — pass `--fail-fast` to stop as soon as the first failure occurs:
+By default, Behave runs every example in the suite even after a failure, so the run produces a complete picture of what is broken. When iterating on a single problem (or when you want a faster signal in CI) pass `--fail-fast` to stop as soon as the first failure occurs:
 
 ```shell
 $ behave --fail-fast
@@ -168,9 +168,9 @@ Pass `--fail-fast=N` to keep running until `N` failures have accumulated:
 $ behave --fail-fast=3
 ```
 
-`N` must be a positive integer; `--fail-fast=0` and non-numeric values exit with a non-zero status and a helpful error on stderr.
+`N` must be a positive integer. `--fail-fast=0` and non-numeric values exit with a non-zero status and a helpful error on stderr.
 
-When multiple spec files are passed on the command line, the threshold is shared across them — once it is reached, the remaining suites are not loaded. Skipped and pending examples do not count toward the threshold.
+When multiple spec files are passed on the command line, the threshold is shared across them: once it is reached, the remaining suites are not loaded. Skipped and pending examples do not count toward the threshold.
 
 ### Programmatic use
 
@@ -190,7 +190,7 @@ Flaky examples can be retried automatically via `--retry N` (or per-example `:re
 
 ## Bisect
 
-When a failure shows up only when a specific other example ran first — classic order-dependent test pollution — `--bisect` finds the minimal set of preceding examples needed to reproduce the failure.
+When a failure shows up only when a specific other example ran first (classic order-dependent test pollution) `--bisect` finds the minimal set of preceding examples needed to reproduce the failure.
 
 ```shell
 $ behave --bisect
@@ -198,7 +198,7 @@ $ behave --bisect
 
 ### What it does
 
-1. **Initial pass** in declared order (`--order defined`); records which examples ran and which failed.
+1. **Initial pass** in declared order (`--order defined`), recording which examples ran and which failed.
 2. For each failing example, replays subsets of the prior examples in a fresh subprocess and shrinks the prior set until further pruning loses the failure.
 3. Prints the minimal prior set and a ready-to-run reproduction command.
 
@@ -227,7 +227,7 @@ Bisect: 1 failing example(s) found across 5 executed
 Bisect complete: 6 iteration(s)
 ```
 
-If the failing example reproduces alone (no prior needed), Bisect reports `Failure reproduces in isolation — not order-dependent`. If the initial pass has no failures, Bisect exits 0 with `no failing examples`.
+If the failing example reproduces alone (no prior needed), Bisect reports that the failure reproduces in isolation and is not order-dependent. If the initial pass has no failures, Bisect exits 0 with `no failing examples`.
 
 ### `--only-example FILE:LINE`
 
@@ -238,11 +238,11 @@ $ behave --only-example specs/users-spec.raku:42
 $ behave --only-example users-spec.raku:42 specs/users-spec.raku  # basename match
 ```
 
-`FILE` matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, `path/to/file.raku` suffix match, or basename equality. `LINE` must equal the line of the `it` block. Repeating `--only-example` is OR semantics; the runner runs every example matching any pattern.
+`FILE` matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, `path/to/file.raku` suffix match, or basename equality. `LINE` must equal the line of the `it` block. Repeating `--only-example` is OR semantics. The runner runs every example matching any pattern.
 
 #### Positional `FILE:LINE` shorthand
 
-A positional argument of the form `FILE:LINE` is shorthand for "load `FILE`, then run only the example at `LINE`" — equivalent to passing `FILE` plus `--only-example FILE:LINE`. The shorthand only triggers when `FILE` exists on disk; an arg matching the `:N` pattern but pointing at a non-existent file is left alone (and will surface as a normal "could not load" error).
+A positional argument of the form `FILE:LINE` is shorthand for "load `FILE`, then run only the example at `LINE`", equivalent to passing `FILE` plus `--only-example FILE:LINE`. The shorthand only triggers when `FILE` exists on disk. An arg matching the `:N` pattern but pointing at a non-existent file is left alone (and will surface as a normal "could not load" error).
 
 ```shell
 $ behave specs/users-spec.raku:42                       # single example
@@ -250,7 +250,7 @@ $ behave specs/users-spec.raku:42 specs/users-spec.raku:88   # both run
 $ behave specs/users-spec.raku:42 --tag focus           # AND with --tag
 ```
 
-The shorthand and explicit `--only-example` compose freely; both append to the same internal list, so all matching examples run.
+The shorthand and explicit `--only-example` compose freely. Both append to the same internal list, so all matching examples run.
 
 #### Line snapping (editor integration)
 
@@ -276,12 +276,12 @@ describe 'outer', {            # line 1
 | `:2`     | `:2`     | Runs `alpha` (exact `it` line).                                         |
 | `:4`     | `:2`     | Runs `alpha` (cursor inside its body).                                  |
 | `:5`     | `:2`     | Runs `alpha` (between body close and next).                             |
-| `:7`     | `:7`     | Runs `beta` only (exact `context` line; descends into the inner group). |
+| `:7`     | `:7`     | Runs `beta` only (exact `context` line, descends into the inner group). |
 | `:1`     | `:1`     | Runs every example (exact `describe` line).                             |
 
 When the snapped line is a `describe` or `context`, every example whose ancestry includes that group runs. This is what makes editor integrations work: bind your "run example at cursor" key to `behave $FILE:$LINENO` and it does the right thing whether the cursor is on the `it` line, inside the body, or inside an enclosing `describe`.
 
-The snap is purely text-based and only looks at the start of each line, so it will not be confused by `it` appearing in a comment or string inside an `it` body. It will not snap into a closing brace; a line that has no preceding keyword in the file (e.g. `:1` when the file starts with `use BDD::Behave;`) is left unchanged and matches nothing.
+The snap is purely text-based and only looks at the start of each line, so it will not be confused by `it` appearing in a comment or string inside an `it` body. It will not snap into a closing brace. A line that has no preceding keyword in the file (e.g. `:1` when the file starts with `use BDD::Behave;`) is left unchanged and matches nothing.
 
 ### `--bisect-data`
 
@@ -297,7 +297,7 @@ behave-failed: specs/users-spec.raku:24
 
 ### Limits
 
-- Bisect uses `--order defined` for sub-runs. Failures that only reproduce under a specific random `--seed` need to be diagnosed differently — re-run with the failing seed and `--order defined` after locking in the order.
+- Bisect uses `--order defined` for sub-runs. Failures that only reproduce under a specific random `--seed` need to be diagnosed differently: re-run with the failing seed and `--order defined` after locking in the order.
 - Sub-runs use the same `--tag`, `--exclude-tag`, `--example`, and `--aggregate-failures` you passed to `bin/behave --bisect`.
 - The shrink uses binary halving first, then one-at-a-time minimization when halving stalls. Iteration count grows roughly with `log(prior) + minimal-prior-count`.
 

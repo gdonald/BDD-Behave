@@ -26,7 +26,7 @@ xdescribe 'Email delivery', {
 
 ## Focusing examples
 
-Use `fit` to mark a single example as focused, and `fdescribe` (or `fcontext`) to focus an entire group. When any focused example or group exists in a suite, **only focused examples run**; non-focused examples are silently filtered out.
+Use `fit` to mark a single example as focused, and `fdescribe` (or `fcontext`) to focus an entire group. When any focused example or group exists in a suite, **only focused examples run**. Non-focused examples are silently filtered out.
 
 ```raku
 describe 'User', {
@@ -53,7 +53,7 @@ Focus mode is detected per suite (per spec file). Files without any `fit`/`fdesc
 
 ## Combining focus and skip
 
-Skipped examples are still reported as `SKIPPED` even when focus mode is on. A `fit` inside an `xdescribe` stays skipped — skip wins over focus.
+Skipped examples are still reported as `SKIPPED` even when focus mode is on. A `fit` inside an `xdescribe` stays skipped: skip wins over focus.
 
 ```raku
 fdescribe 'Account', {
@@ -62,7 +62,7 @@ fdescribe 'Account', {
 }
 
 xdescribe 'Legacy importer', {
-  fit 'imports a CSV', { ... }   # still SKIPPED — skip wins over focus
+  fit 'imports a CSV', { ... }   # still SKIPPED: skip wins over focus
 }
 ```
 
@@ -83,15 +83,15 @@ Skipped examples display in light blue with a `SKIPPED` marker. The summary line
 9 examples, 6 skipped, 3 passed
 ```
 
-Exit code stays `0` when only skips are present; only failures cause a non-zero exit.
+Exit code stays `0` when only skips are present. Only failures cause a non-zero exit.
 
 ## Inspecting focus / skip programmatically
 
 Each `Example` and `ExampleGroup` exposes:
 
-- `.focused` — `True` if the node was registered with `fit` / `fdescribe` / `:focused`.
-- `.skipped` — `True` if the node was registered with `xit` / `xdescribe` / `:skipped`.
-- `.effective-focused` — `True` if the node or any ancestor is focused.
-- `.effective-skipped` — `True` if the node or any ancestor is skipped.
+- `.focused`: `True` if the node was registered with `fit` / `fdescribe` / `:focused`.
+- `.skipped`: `True` if the node was registered with `xit` / `xdescribe` / `:skipped`.
+- `.effective-focused`: `True` if the node or any ancestor is focused.
+- `.effective-skipped`: `True` if the node or any ancestor is skipped.
 
 These mirror the `tags` / `effective-tags` helpers and are useful for custom reporters or tooling.

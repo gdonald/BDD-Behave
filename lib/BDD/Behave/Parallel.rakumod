@@ -430,9 +430,17 @@ sub run-parallel-isolated-impl(
   }
 
   my Lock $event-lock .= new;
-  my $sem = Semaphore.new($opts.worker-count);
 
-  my @promises;
+  # Build one job per spec file (manifest + argv + env), then feed them through
+  # a closed Channel to a fixed pool of exactly worker-count threads. Each
+  # thread owns a stable slot (0 .. N-1) that it exports as BEHAVE_WORKER_INDEX
+  # and pulls one job at a time, so concurrently-running files always hold
+  # distinct indices — user code can key a per-worker resource (e.g. a database
+  # `myapp_test_{Worker.id}`) off the index with only N to provision. Using a
+  # fixed N-thread pool (not one `start` per file) is essential: one start per
+  # file would pile up worker-count-blocked threads and starve the thread pool
+  # that Proc::Async needs to drain worker stdout, deadlocking the run.
+  my $queue = Channel.new;
   my $file-index = 0;
 
   for @file-buckets -> $bucket {
@@ -447,7 +455,6 @@ sub run-parallel-isolated-impl(
     @argv.push: $file;
 
     my %env = |$opts.base-env;
-    %env<BEHAVE_WORKER_INDEX> = $idx.Str;
     %env<BEHAVE_WORKER_COUNT> = $opts.worker-count.Str;
 
     if $opts.coverage-log-dir.defined {
@@ -456,37 +463,51 @@ sub run-parallel-isolated-impl(
       %env<MVM_COVERAGE_CONTROL> = '2';
     }
 
+    $queue.send({ :$idx, :$file, :@argv, :%env });
+  }
+  $queue.close;
+
+  my @promises;
+  for ^$opts.worker-count -> $slot {
     @promises.push: start {
-      $sem.acquire;
+      loop {
+        my %job = $queue.receive;
+        CATCH { when X::Channel::ReceiveOnClosed { last } }
 
-      LEAVE { $sem.release }
+        my @argv = %job<argv>.list;
+        my %env  = %job<env>.hash;
+        my $idx  = %job<idx>;
+        my $file = %job<file>;
 
-      my $proc   = Proc::Async.new(|@argv);
-      my $parser = JsonLineParser.new;
+        %env<BEHAVE_WORKER_INDEX> = $slot.Str;
 
-      $proc.stdout.tap(-> $chunk {
-        for $parser.feed($chunk) -> $event {
+        my $proc   = Proc::Async.new(|@argv);
+        my $parser = JsonLineParser.new;
+
+        $proc.stdout.tap(-> $chunk {
+          for $parser.feed($chunk) -> $event {
+            $event-lock.protect: {
+              handle-event($opts.formatter, $result, $idx, $event, @suites);
+            }
+          }
+        });
+        $proc.stderr.tap(-> $chunk {
+          $event-lock.protect: { $*ERR.print($chunk) }
+        });
+
+        my $proc-result = await $proc.start(:ENV(%env));
+
+        for $parser.flush -> $event {
           $event-lock.protect: {
             handle-event($opts.formatter, $result, $idx, $event, @suites);
           }
         }
-      });
-      $proc.stderr.tap(-> $chunk {
-        $event-lock.protect: { $*ERR.print($chunk) }
-      });
 
-      my $proc-result = await $proc.start(:ENV(%env));
-
-      for $parser.flush -> $event {
-        $event-lock.protect: {
-          handle-event($opts.formatter, $result, $idx, $event, @suites);
-        }
-      }
-
-      if $proc-result.exitcode > 1 {
-        $event-lock.protect: {
-          $result.exit-code = 1;
-          note red("Isolated worker for $file exited with code {$proc-result.exitcode}");
+        if $proc-result.exitcode > 1 {
+          $event-lock.protect: {
+            $result.exit-code = 1;
+            note red("Isolated worker for $file exited with code {$proc-result.exitcode}");
+          }
         }
       }
     };

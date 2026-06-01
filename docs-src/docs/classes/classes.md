@@ -1,6 +1,6 @@
 # Classes inside specs
 
-Behave specs are ordinary Raku files, so any Raku declaration works inside them — including `class`, `role`, and `enum`. Declare fixture types with `my class` / `my role` / `my enum` so they stay lexical to the spec file: they don't pollute the loader's package, they don't collide with same-named declarations in other specs, and their `.^name` reads as the short name you wrote.
+Behave specs are ordinary Raku files, so any Raku declaration works inside them, including `class`, `role`, and `enum`. Declare fixture types with `my class` / `my role` / `my enum` so they stay lexical to the spec file: they don't pollute the loader's package, they don't collide with same-named declarations in other specs, and their `.^name` reads as the short name you wrote.
 
 ## Declaring a class in a describe
 
@@ -49,7 +49,7 @@ describe 'Widget', {
 }
 ```
 
-Each example gets its own memoized instance — the let block runs once per example, never carries over.
+Each example gets its own memoized instance: the let block runs once per example, never carries over.
 
 ## Roles and enums
 
@@ -80,8 +80,8 @@ describe 'Color enum', {
 Classes can also be declared at the top of the spec file, before any `describe`. Pick whichever scope is narrowest for the class's intended use:
 
 - **Top-level** when several `describe` blocks share the type.
-- **Inside `describe`** when the type is only meaningful for one group of examples — keeping it local makes the relationship between the type and the tests obvious.
+- **Inside `describe`** when the type is only meaningful for one group of examples. Keeping it local makes the relationship between the type and the tests obvious.
 
-In both positions, use `my class` (not `class`) for the same reasons given above — file-scope `class Foo { }` is sugar for `our class Foo { }` and installs `Foo` into the spec loader's package, where it can collide with other specs and grow a package-qualified `.^name`.
+In both positions, use `my class` (not `class`) for the same reasons given above. File-scope `class Foo { }` is sugar for `our class Foo { }` and installs `Foo` into the spec loader's package, where it can collide with other specs and grow a package-qualified `.^name`.
 
 See [Variables in specs](../variables/variables.md) for the same scoping rules applied to plain `my`/`our` variables.

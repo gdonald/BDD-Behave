@@ -4,7 +4,7 @@
 
 ```raku
 describe 'PaymentProcessor', {
-  pending 'refunds — needs integration with the new gateway', {
+  pending 'refunds: needs integration with the new gateway', {
     expect(processor.refund(100)).to.be-a(Refund);
   }
 }
