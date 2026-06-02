@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.9.1 — 2026-06-01
+
+### Added
+
+- Bareword slang for `let`, so blocks can reference fixtures as `owner` in
+  addition to `:owner`
+- `raise` and `throw` aliases for the `raise-error` exception matcher
+- `--version` flag on the `behave` CLI
+
+### Removed
+
+- Per-example memory profiling.
+
+### Fixed
+
+- Parallel worker distribution and a `require` failure under `--parallel`
+- Line number rendering in spec failure output
+
 ## v0.9.0 — 2026-05-25
 
 Spec-tree runner with hooks, mocks, custom matchers, and parallel execution.
