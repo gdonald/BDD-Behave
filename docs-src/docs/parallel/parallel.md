@@ -293,17 +293,16 @@ After this, `behave` alone runs the suite under 4 workers. The usual precedence 
 
 - **Reproducibility across worker counts.** Default (`--seed-mode=xor`) reproduces only when `--parallel N` matches. Use `--seed-mode=stable` for a K-invariant execution order.
 - ~~**No live progress totals.**~~ Use `--progress-total` (see above) to print `(N/TOTAL)` after each example char.
-- ~~**Profile / memory / benchmark sections.**~~ `--profile`, `--memory-profile`, and `--benchmark` are now aggregated across workers (see [below](#profile-memory-benchmark)).
+- ~~**Profile / benchmark sections.**~~ `--profile` and `--benchmark` are now aggregated across workers (see [below](#profile-benchmark)).
 - ~~**`--coverage` integration.**~~ `--coverage` is now aggregated across workers (see [below](#coverage)).
 - ~~**Worker crashes are fatal.**~~ Use `--parallel-retry N` (see above) to re-spawn crashed shards. Default behavior with `--parallel-retry 0` keeps the previous fatal semantics. Queue mode still treats a crashed worker as fatal.
 
-## Profile, memory, benchmark {#profile-memory-benchmark}
+## Profile, benchmark {#profile-benchmark}
 
-`--profile`, `--memory-profile`, and `--benchmark` work under `--parallel`. Each worker measures its own slice. The parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.
+`--profile` and `--benchmark` work under `--parallel`. Each worker measures its own slice. The parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.
 
 ```bash
 behave --parallel 4 --profile=10 specs/
-behave --parallel 4 --memory-profile=10 specs/
 behave --parallel 4 --benchmark specs/
 ```
 
@@ -319,7 +318,7 @@ behave --parallel 4 --benchmark --benchmark-baseline=bench.tsv specs/
 
 Notes:
 
-- Each example runs on exactly one worker, so `--profile` and `--memory-profile` rows are not deduplicated: the parent sees one record per execution.
+- Each example runs on exactly one worker, so `--profile` rows are not deduplicated: the parent sees one record per execution.
 - `--benchmark-iterations=N` and `--benchmark-threshold=PCT` are forwarded to every worker. Per-example timings collected across iterations are merged in the parent before medians are computed.
 - `--benchmark-baseline` / `--benchmark-save` are not forwarded to workers. Only the parent reads / writes baseline files, against the aggregated summary list.
 

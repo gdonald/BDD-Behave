@@ -128,7 +128,6 @@ method example-around-skipped($example) {
 }
 
 method example-slow($example, Real :$threshold) { }
-method example-memory-leak($example, Int :$threshold) { }
 
 method run-summary(
   $result,
@@ -142,7 +141,6 @@ method run-summary(
 }
 
 method profile-summary(@records, Int :$limit)        { }
-method memory-profile-summary(@records, Int :$limit) { }
 
 method benchmark-summary-section(
   @summaries, @regressions,
@@ -157,7 +155,6 @@ method multi-file-overall($result, Str :$order = 'defined', Int :$seed) {
 }
 
 method multi-file-profile($runner, @records, Int :$limit)        { }
-method multi-file-memory-profile($runner, @records, Int :$limit) { }
 method multi-file-benchmark(
   $runner,
   @summaries, @regressions,

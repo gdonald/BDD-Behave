@@ -9,7 +9,7 @@ use BDD::Behave::Formatter::Progress;
 use BDD::Behave::SpecTree;
 use Behave::Test::FakeResult;
 
-plan 25;
+plan 24;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -82,10 +82,6 @@ is capture({ $f.example-auto-description($p, :description('d')) }),
 $p.duration = 0.5;
 is capture({ $f.example-slow($p, :threshold(0.1.Rat)) }),
    '',                                                      'example-slow silent';
-
-$p.memory-delta = 9999;
-is capture({ $f.example-memory-leak($p, :threshold(1000)) }),
-   '',                                                      'example-memory-leak silent';
 
 my $result = fake-result(%( total => 4, failed => 1, passed => 3 ));
 my $summary-out = strip-ansi capture({

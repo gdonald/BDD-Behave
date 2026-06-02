@@ -24,8 +24,6 @@ my class RecordingFormatter does BDD::Behave::Formatter {
   method example-around-skipped($e) { @!events.push: ('example-around-skipped', $e.description) }
   method example-slow($e, Real :$threshold)
                                     { @!events.push: ('example-slow', $e.description) }
-  method example-memory-leak($e, Int :$threshold)
-                                    { @!events.push: ('example-memory-leak', $e.description) }
   method example-auto-description($e, Str :$description)
                                     { @!events.push: ('example-auto-description', $description) }
   method run-summary($r, Bool :$aborted = False, Int :$fail-fast = 0,

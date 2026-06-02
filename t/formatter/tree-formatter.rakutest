@@ -8,7 +8,7 @@ use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
 use Behave::Test::FakeResult;
 
-plan 31;
+plan 29;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -155,13 +155,6 @@ my @records = (
 my $prof = strip-ansi capture({ $f.profile-summary(@records, :limit(1)) });
 ok $prof.contains('Top 1 slowest'), 'profile-summary prints the heading';
 ok $prof.contains('slow'),          'profile-summary shows the slowest entry';
-
-my @mem = (
-  %( description => 'big', delta => 500, example => Any ),
-);
-my $mem = strip-ansi capture({ $f.memory-profile-summary(@mem, :limit(1)) });
-ok $mem.contains('Top 1 memory-heaviest'), 'memory-profile-summary heading';
-ok $mem.contains('big'),                   'memory-profile-summary shows the entry';
 
 my @errs = (%( file => '/tmp/a.raku', message => "syntax err" ),);
 my $errs-out = strip-ansi capture({ $f.load-errors(@errs) });

@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave::Formatter;
 
-plan 20;
+plan 19;
 
 class TestFormatter does BDD::Behave::Formatter {
   method name(--> Str) { 'test' }
@@ -31,7 +31,6 @@ lives-ok { $f.example-pending(Any) },                     'example-pending is a 
 lives-ok { $f.example-skipped(Any) },                     'example-skipped is a no-op';
 lives-ok { $f.example-around-skipped(Any) },              'example-around-skipped is a no-op';
 lives-ok { $f.example-slow(Any, :threshold(0.1)) },       'example-slow is a no-op';
-lives-ok { $f.example-memory-leak(Any, :threshold(10)) }, 'example-memory-leak is a no-op';
 lives-ok { $f.run-summary(Any) },                         'run-summary is a no-op';
 lives-ok { $f.profile-summary([], :limit(0)) },           'profile-summary is a no-op';
 lives-ok { $f.load-errors([]) },                          'load-errors is a no-op';

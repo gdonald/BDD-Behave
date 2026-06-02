@@ -164,15 +164,6 @@ describe 'BDD::Behave::Formatter::Progress', {
       expect($out).to.eq('');
     }
 
-    it 'example-memory-leak does not interrupt the dots stream', {
-      my $f  = BDD::Behave::Formatter::Progress.new;
-      my $ex = make-example('leak');
-      $ex.memory-delta = 9999;
-      my $out = capture-formatter-output({
-        $f.example-memory-leak($ex, :threshold(1000));
-      });
-      expect($out).to.eq('');
-    }
   }
 
   describe 'summary and run-end output', {

@@ -200,14 +200,12 @@ describe 'BDD::Behave::Formatter::Documentation', {
       expect($out).to.eq('');
     }
 
-    it 'example-slow and example-memory-leak do not interrupt the document', {
+    it 'example-slow does not interrupt the document', {
       my $f  = BDD::Behave::Formatter::Documentation.new;
       my $ex = make-example('e');
       $ex.duration = 1.0;
-      $ex.memory-delta = 999;
       my $out = capture-formatter-output({
         $f.example-slow($ex, :threshold(0.1.Rat));
-        $f.example-memory-leak($ex, :threshold(100));
       });
       expect($out).to.eq('');
     }

@@ -27,7 +27,7 @@ The default. Compact single-line output, one character per example. See the dedi
 
 ### `tree`
 
-Behave's classic indented tree output (formerly called `default`): one line per `describe`/`context`/`it`, a green `SUCCESS` / red `FAILURE` marker per example, and inline `SLOW` / `MEMORY` annotations when `--slow-threshold` / `--memory-threshold` fire. Useful for debugging: you can see exactly which example is running when something hangs or hits a long step.
+Behave's classic indented tree output (formerly called `default`): one line per `describe`/`context`/`it`, a green `SUCCESS` / red `FAILURE` marker per example, and an inline `SLOW` annotation when `--slow-threshold` fires. Useful for debugging: you can see exactly which example is running when something hangs or hits a long step.
 
 ### `documentation`
 
@@ -41,7 +41,7 @@ A clean, document-style rendering of the spec tree. Each `describe`/`context` is
 | Skipped  | `(SKIPPED)` |
 | Around-skipped | `(SKIPPED: around-each did not invoke continuation)` |
 
-The `Failures:` block, counts line, profile/memory/benchmark sections, and the multi-file `Overall:` block all print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred. Every spec file's tree streams uninterrupted under its own filename heading, and a single `Failures:` block plus the `Overall:` counts print once at the end.
+The `Failures:` block, counts line, profile/benchmark sections, and the multi-file `Overall:` block all print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred. Every spec file's tree streams uninterrupted under its own filename heading, and a single `Failures:` block plus the `Overall:` counts print once at the end.
 
 ```text
 $ behave --format documentation specs/calc-spec.raku
@@ -118,7 +118,6 @@ Each entry in `examples` carries:
 | `status` | `"passed"`, `"failed"`, `"pending"`, or `"skipped"`. |
 | `file`, `line` | Source location. |
 | `duration` | Seconds (or `null` for pending/skipped). |
-| `memory_delta` | KB (or `null` when memory profiling is off). |
 | `tags` | Effective tag list (inherits from enclosing groups). |
 | `failure` | Present only for `status: "failed"`. Carries `type: "exception"` with `message` when the body threw, and/or an `expectations` array with `file`, `line`, `given`, `expected`, `negated`, and an optional `message`/`aggregation_label`. |
 | `pending_reason` | Present only for `status: "pending"`. The reason string passed to `pending`. |
@@ -208,7 +207,7 @@ Compact single-line output, one character per example:
 | `*`       | Pending |
 | `S`       | Skipped (`xit`/`xdescribe`/`xcontext` or `:skipped`, and `around-each`/`around-all` that returned without invoking their continuation) |
 
-Group descriptions, `it` descriptions, and inline slow/memory markers are suppressed. The failures detail block, counts line, profile/memory/benchmark sections, and the multi-file `Overall:` block still print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred. Dots stream continuously across every spec file, then a single `Failures:` block plus the `Overall:` counts print once at the end.
+Group descriptions, `it` descriptions, and inline slow markers are suppressed. The failures detail block, counts line, profile/benchmark sections, and the multi-file `Overall:` block still print exactly as they do under `tree`, except in multi-file mode the per-file `Failures:` + counts line is deferred. Dots stream continuously across every spec file, then a single `Failures:` block plus the `Overall:` counts print once at the end.
 
 ```text
 $ behave --format progress specs/
@@ -245,7 +244,6 @@ Both expectation mismatches and exception-based failures (an example body that `
 | `example-pass($example)` / `example-fail($example, :$failure-info)` / `example-pending($example)` / `example-skipped($example)` | Per-example outcomes. |
 | `example-around-skipped($example)` | When an `around-each` hook returned without invoking its continuation. |
 | `example-slow($example, :$threshold)` | When an example's duration meets or exceeds `--slow-threshold`. |
-| `example-memory-leak($example, :$threshold)` | When an example's RSS delta meets or exceeds `--memory-threshold`. |
 
 ### Summary hooks
 
@@ -253,10 +251,9 @@ Both expectation mismatches and exception-based failures (an example body that `
 | ---- | ------------- |
 | `run-summary($result, :$aborted, :$fail-fast, :$order, :$seed, :$show-seed)` | Per-suite summary: failures, counts, aborted line, seed announcement. The seed line is shown only when `$show-seed` is set or the run had failures. |
 | `profile-summary(@records, :$limit)` | "Top N slowest" section when `--profile` is enabled. |
-| `memory-profile-summary(@records, :$limit)` | "Top N memory-heaviest" section when `--memory-profile` is enabled. |
 | `benchmark-summary-section(@summaries, @regressions, :$threshold, :$format, :$output, :$runner)` | Per-suite benchmark section when `--benchmark` is enabled. |
 | `multi-file-overall($result, :$order, :$seed, :$show-seed)` | The `Overall:` block printed when running more than one spec file. Same seed-line gating as `run-summary`. |
-| `multi-file-profile`, `multi-file-memory-profile`, `multi-file-benchmark` | Multi-file counterparts of the per-suite summary hooks. |
+| `multi-file-profile`, `multi-file-benchmark` | Multi-file counterparts of the per-suite summary hooks. |
 | `load-errors(@errors)` | Reports spec files that failed to compile. |
 
 ## Writing a custom formatter

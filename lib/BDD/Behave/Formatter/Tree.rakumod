@@ -90,12 +90,6 @@ method example-slow($example, Real :$threshold) {
                                                      $example.duration, $threshold);
 }
 
-method example-memory-leak($example, Int :$threshold) {
-  self.print-indent;
-  say "  " ~ light-blue('⮑') ~ "  " ~ yellow(sprintf 'MEMORY (Δ%d KB, threshold %d KB)',
-                                                     $example.memory-delta, $threshold);
-}
-
 method run-summary(
   $result,
   Bool :$aborted   = False,
@@ -164,27 +158,6 @@ method retry-summary(@records) {
   }
 }
 
-method memory-profile-summary(@records, Int :$limit) {
-  return unless $limit > 0;
-  return unless @records.elems;
-
-  my @sorted = @records.sort({ -$^a<delta> });
-  my @top    = @sorted[0 ..^ ($limit min @sorted.elems)];
-
-  my $total = @top.map(*<delta>).sum;
-  my $shown = @top.elems;
-  say '';
-  say "Top $shown memory-heaviest example" ~ ($shown == 1 ?? '' !! 's')
-      ~ " ({$total} KB total Δ):";
-
-  for @top -> $rec {
-    my $ex  = $rec<example>;
-    my $loc = $ex.defined ?? "{$ex.file}:{$ex.line}" !! '';
-    say sprintf '  %+d KB  %s', $rec<delta>, $rec<description>;
-    say "          $loc" if $loc.chars;
-  }
-}
-
 method benchmark-summary-section(
   @summaries, @regressions,
   Real     :$threshold,
@@ -224,10 +197,6 @@ method multi-file-overall(
 
 method multi-file-profile($runner, @records, Int :$limit) {
   self.profile-summary(@records, :$limit);
-}
-
-method multi-file-memory-profile($runner, @records, Int :$limit) {
-  self.memory-profile-summary(@records, :$limit);
 }
 
 method multi-file-benchmark(

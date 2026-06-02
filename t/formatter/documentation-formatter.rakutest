@@ -132,9 +132,7 @@ is capture({
   $f10.example-start(make-example('e'), :auto);
   my $ex = make-example('e');
   $ex.duration = 1.0;
-  $ex.memory-delta = 999;
   $f10.example-slow($ex, :threshold(0.1.Rat));
-  $f10.example-memory-leak($ex, :threshold(100));
 }), '', 'silent hooks emit nothing in single-file mode';
 
 {

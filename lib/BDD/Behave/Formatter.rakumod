@@ -19,7 +19,6 @@ method example-skipped($example)                                 { }
 method example-around-skipped($example)                          { }
 method example-retry($example, Int :$attempt, Int :$max-attempts) { }
 method example-slow($example, Real :$threshold)                  { }
-method example-memory-leak($example, Int :$threshold)            { }
 
 method set-total(Int $total) { }
 
@@ -32,7 +31,6 @@ method run-summary(
 ) { }
 
 method profile-summary(@records, Int :$limit)                    { }
-method memory-profile-summary(@records, Int :$limit)             { }
 method retry-summary(@records)                                   { }
 
 method benchmark-summary-section(
@@ -50,7 +48,6 @@ method multi-file-overall(
 ) { }
 
 method multi-file-profile($runner, @records, Int :$limit)        { }
-method multi-file-memory-profile($runner, @records, Int :$limit) { }
 method multi-file-benchmark(
   $runner,
   @summaries, @regressions,

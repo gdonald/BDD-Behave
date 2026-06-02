@@ -103,10 +103,6 @@ our class Runner {
   has Bool $.aborted = False;
   has Real $.slow-threshold = 0;
   has Int $.profile-limit = 0;
-  has Int $.memory-profile-limit = 0;
-  has Int $.memory-threshold = 0;
-  has Bool $.memory-profile = False;
-  has @.memory-records;
   has Bool     $.benchmark-mode      = False;
   has Bool     $.benchmark-quiet     = False;
   has Int      $.benchmark-iterations = 1;
@@ -139,12 +135,6 @@ our class Runner {
     die "profile-limit must be 0 or positive (got: $!profile-limit)"
       if $!profile-limit < 0;
 
-    die "memory-profile-limit must be 0 or positive (got: $!memory-profile-limit)"
-      if $!memory-profile-limit < 0;
-
-    die "memory-threshold must be 0 or positive (got: $!memory-threshold)"
-      if $!memory-threshold < 0;
-
     die "benchmark-iterations must be a positive integer (got: $!benchmark-iterations)"
       if $!benchmark-iterations < 1;
 
@@ -166,20 +156,6 @@ our class Runner {
 
   method should-abort(--> Bool) {
     $!fail-fast > 0 && $!result.failed >= $!fail-fast;
-  }
-
-  method memory-measurement-enabled(--> Bool) {
-    $!memory-profile || $!memory-profile-limit > 0 || $!memory-threshold > 0;
-  }
-
-  method measure-memory-rss(--> Int) {
-    my $proc = run('ps', '-o', 'rss=', '-p', $*PID.Str, :out, :err);
-    my $raw = $proc.out.slurp(:close);
-    $proc.err.slurp(:close);
-    return Int unless $proc.exitcode == 0;
-    my $trimmed = $raw.trim;
-    return Int unless $trimmed ~~ /^ \d+ $/;
-    $trimmed.Int;
   }
 
   method advance-rng(--> Int) {
@@ -340,12 +316,10 @@ our class Runner {
     my $saved-result          = $!result;
     my @saved-execution-order = @!execution-order;
     my @saved-timed-examples  = @!timed-examples;
-    my @saved-memory-records  = @!memory-records;
 
     $!result          = RunResult.new;
     @!execution-order = [];
     @!timed-examples  = [];
-    @!memory-records  = [];
 
     my $sink = open '/dev/null', :w;
     {
@@ -360,7 +334,6 @@ our class Runner {
     $!result          = $saved-result;
     @!execution-order = @saved-execution-order;
     @!timed-examples  = @saved-timed-examples;
-    @!memory-records  = @saved-memory-records;
   }
 
   method aggregate-benchmark-summaries(@examples --> List) {
@@ -542,11 +515,6 @@ our class Runner {
       return;
     }
 
-    my Bool $measure-memory = self.memory-measurement-enabled && !$example.pending;
-    if $measure-memory {
-      $example.memory-before = self.measure-memory-rss;
-    }
-
     my $max-attempts  = self.resolve-max-attempts($example);
     my Int $attempt-num = 0;
     my AttemptResult $result;
@@ -564,21 +532,6 @@ our class Runner {
     }
 
     self.commit-attempt-result($example, $result, :attempts($attempt-num), :$max-attempts);
-
-    if $measure-memory && $result.continuation-called && !$example.pending {
-      $example.memory-after = self.measure-memory-rss;
-      if $example.memory-before.defined && $example.memory-after.defined {
-        $example.memory-delta = $example.memory-after - $example.memory-before;
-        @!memory-records.push: %(
-          example     => $example,
-          description => self.full-description($example),
-          delta       => $example.memory-delta,
-          before      => $example.memory-before,
-          after       => $example.memory-after,
-        );
-        self.maybe-print-memory-leak($example);
-      }
-    }
   }
 
   method resolve-max-attempts(Example $example --> Int) {
@@ -1038,13 +991,6 @@ our class Runner {
     $!formatter.example-slow($example, :threshold($!slow-threshold));
   }
 
-  method maybe-print-memory-leak(Example $example) {
-    return unless $!memory-threshold > 0;
-    return unless $example.memory-delta.defined;
-    return unless $example.memory-delta >= $!memory-threshold;
-    $!formatter.example-memory-leak($example, :threshold($!memory-threshold));
-  }
-
   method derive-auto-description(@captured) {
     return Nil unless @captured.elems;
     my %first = @captured[0];
@@ -1131,8 +1077,6 @@ our class Runner {
 
     $!formatter.profile-summary(@!timed-examples, :limit($!profile-limit))
       if $!profile-limit > 0;
-    $!formatter.memory-profile-summary(@!memory-records, :limit($!memory-profile-limit))
-      if $!memory-profile-limit > 0;
     $!formatter.benchmark-summary-section(
       @!benchmark-summaries, @!benchmark-regressions,
       :threshold($!benchmark-threshold),
@@ -1260,10 +1204,5 @@ our class Runner {
 
   method print-profile(Int $limit = $!profile-limit, @records = @!timed-examples) {
     $!formatter.profile-summary(@records, :$limit);
-  }
-
-  method print-memory-profile(Int $limit = $!memory-profile-limit,
-                              @records = @!memory-records) {
-    $!formatter.memory-profile-summary(@records, :$limit);
   }
 }

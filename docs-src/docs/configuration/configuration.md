@@ -63,8 +63,6 @@ Every scalar attribute corresponds to its CLI counterpart:
 | `$config.aggregate-failures`   | `--aggregate-failures[=LABEL]` | Bool or Str label. |
 | `$config.profile-limit`        | `--profile[=N]`    | 0 disables, N shows top-N slow examples. |
 | `$config.slow-threshold`       | `--slow-threshold` | Real seconds. |
-| `$config.memory-profile-limit` | `--memory-profile[=N]` | 0 disables. |
-| `$config.memory-threshold`     | `--memory-threshold` | KB. |
 | `$config.benchmark-mode`       | `--benchmark`      | Bool. |
 | `$config.benchmark-iterations` | `--benchmark-iterations` | Positive Int. |
 | `$config.benchmark-baseline`   | `--benchmark-baseline` | `IO::Path`. |

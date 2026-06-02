@@ -32,7 +32,6 @@ method !ex-record($example, Str $status, %extras = %()) {
     file             => $example.file.Str,
     line             => $example.line,
     duration         => $example.duration.defined ?? $example.duration.Real !! Real,
-    memory_delta     => $example.memory-delta.defined ?? $example.memory-delta !! Int,
     tags             => $example.effective-tags.List,
   );
   for %extras.kv -> $k, $v { %record{$k} = $v }
@@ -123,7 +122,6 @@ method example-around-skipped($example) {
 }
 
 method example-slow($example, Real :$threshold) { }
-method example-memory-leak($example, Int :$threshold) { }
 
 method run-summary(
   $result,
@@ -139,7 +137,6 @@ method run-summary(
 }
 
 method profile-summary(@records, Int :$limit)        { }
-method memory-profile-summary(@records, Int :$limit) { }
 
 method benchmark-summary-section(
   @summaries, @regressions,
@@ -160,7 +157,6 @@ method multi-file-overall(
 }
 
 method multi-file-profile($runner, @records, Int :$limit)        { }
-method multi-file-memory-profile($runner, @records, Int :$limit) { }
 method multi-file-benchmark(
   $runner,
   @summaries, @regressions,

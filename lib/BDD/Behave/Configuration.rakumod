@@ -60,8 +60,6 @@ our class Configuration {
   has          $.aggregate-failures   is rw;
   has Int      $.profile-limit        is rw;
   has Real     $.slow-threshold       is rw;
-  has Int      $.memory-profile-limit is rw;
-  has Int      $.memory-threshold     is rw;
   has Bool     $.benchmark-mode       is rw;
   has Int      $.benchmark-iterations is rw;
   has IO::Path $.benchmark-baseline   is rw;
@@ -188,7 +186,7 @@ our class Configuration {
   method merge(Configuration $other --> Configuration) {
     my $result = Configuration.new;
     for <format order seed seed-mode show-seed parallel-mode parallel parallel-retry progress-total fail-fast retry only-failures failures-path verbose aggregate-failures
-         profile-limit slow-threshold memory-profile-limit memory-threshold
+         profile-limit slow-threshold
          benchmark-mode benchmark-iterations benchmark-baseline benchmark-save
          benchmark-threshold benchmark-format benchmark-output
          coverage coverage-minimum coverage-format coverage-output
@@ -242,8 +240,6 @@ our sub defaults(--> Configuration) {
   $c.aggregate-failures   = False;
   $c.profile-limit        = 0;
   $c.slow-threshold       = 0.Real;
-  $c.memory-profile-limit = 0;
-  $c.memory-threshold     = 0;
   $c.benchmark-mode       = False;
   $c.benchmark-iterations = 1;
   $c.benchmark-threshold  = 0.10;

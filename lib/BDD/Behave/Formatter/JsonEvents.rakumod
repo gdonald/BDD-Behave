@@ -208,15 +208,6 @@ method example-slow($example, Real :$threshold) {
   );
 }
 
-method example-memory-leak($example, Int :$threshold) {
-  emit %(
-    :type<example-memory-leak>,
-    :id(self.node-id($example)),
-    :threshold($threshold.Int),
-    :delta($example.memory-delta.defined ?? $example.memory-delta.Int !! 0),
-  );
-}
-
 method retry-summary(@records) {
   for @records -> $rec {
     emit %(
@@ -239,23 +230,6 @@ method profile-summary(@records, Int :$limit) {
       :id($ex.defined ?? self.node-id($ex) !! ''),
       :description(($rec<description> // '').Str),
       :duration(($rec<duration> // 0).Real),
-      :file($ex.defined ?? $ex.file.absolute !! ''),
-      :line($ex.defined ?? $ex.line.Int !! 0),
-    );
-  }
-}
-
-method memory-profile-summary(@records, Int :$limit) {
-  return unless $limit > 0;
-  for @records -> $rec {
-    my $ex = $rec<example>;
-    emit %(
-      :type<memory-record>,
-      :id($ex.defined ?? self.node-id($ex) !! ''),
-      :description(($rec<description> // '').Str),
-      :delta(($rec<delta> // 0).Int),
-      :before(($rec<before> // 0).Int),
-      :after(($rec<after>  // 0).Int),
       :file($ex.defined ?? $ex.file.absolute !! ''),
       :line($ex.defined ?? $ex.line.Int !! 0),
     );

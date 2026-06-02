@@ -107,13 +107,6 @@ sub usage() {
     --slow-threshold=SECONDS Print an inline 'SLOW' warning for any example
                              whose body takes at least SECONDS seconds.
                              SECONDS may be fractional (e.g. 0.075).
-    --memory-profile         Track per-example RSS deltas and print the 10
-                             memory-heaviest examples after the run.
-    --memory-profile=N       Same as above but show the top N. N must be a
-                             positive integer.
-    --memory-threshold=KB    Print an inline 'MEMORY' warning for any
-                             example whose RSS delta meets or exceeds KB
-                             kilobytes. Enables measurement on its own.
     --benchmark              Enable benchmark mode: aggregate per-example
                              `benchmark \{ ... \}` results into a Benchmarks
                              section at the end of the run.
@@ -427,30 +420,6 @@ while @args {
       exit 2;
     }
     $cli-config.slow-threshold = $value.Real;
-  } elsif $arg eq '--memory-profile' {
-    $cli-config.memory-profile-limit = 10;
-  } elsif $arg.starts-with('--memory-profile=') {
-    my $value = $arg.substr('--memory-profile='.chars);
-    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
-      note "Error: --memory-profile=N requires a positive integer (got: '$value')";
-      exit 2;
-    }
-    $cli-config.memory-profile-limit = $value.Int;
-  } elsif $arg eq '--memory-threshold' {
-    die "--memory-threshold requires a value" unless @args;
-    my $value = @args.shift;
-    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
-      note "Error: --memory-threshold requires a positive integer (got: '$value')";
-      exit 2;
-    }
-    $cli-config.memory-threshold = $value.Int;
-  } elsif $arg.starts-with('--memory-threshold=') {
-    my $value = $arg.substr('--memory-threshold='.chars);
-    unless $value ~~ /^ \d+ $/ && $value.Int >= 1 {
-      note "Error: --memory-threshold requires a positive integer (got: '$value')";
-      exit 2;
-    }
-    $cli-config.memory-threshold = $value.Int;
   } elsif $arg eq '--benchmark' {
     $cli-config.benchmark-mode = True;
   } elsif $arg eq '--benchmark-iterations' {
@@ -701,8 +670,6 @@ my $verbose              = ?$final-config.verbose;
 my $aggregate-failures   = $final-config.aggregate-failures;
 my $profile-limit        = $final-config.profile-limit;
 my $slow-threshold       = $final-config.slow-threshold;
-my $memory-profile-limit = $final-config.memory-profile-limit;
-my $memory-threshold     = $final-config.memory-threshold;
 my $benchmark-mode       = ?$final-config.benchmark-mode;
 my $benchmark-iterations = $final-config.benchmark-iterations;
 my $benchmark-baseline   = $final-config.benchmark-baseline;
@@ -1016,9 +983,6 @@ if $queue-worker-mode {
           :fail-fast(0),
           :retry($retry-default),
           :profile-limit($profile-limit),
-          :memory-profile-limit($memory-profile-limit),
-          :$memory-threshold,
-          :memory-profile($memory-profile-limit > 0 || $memory-threshold > 0),
           :$slow-threshold,
           :benchmark-mode($benchmark-mode),
           :benchmark-iterations($benchmark-iterations),
@@ -1209,12 +1173,6 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   if $profile-limit > 0 {
     @worker-argv.push: '--profile=' ~ $profile-limit.Str;
   }
-  if $memory-profile-limit > 0 {
-    @worker-argv.push: '--memory-profile=' ~ $memory-profile-limit.Str;
-  }
-  if $memory-threshold > 0 {
-    @worker-argv.push: '--memory-threshold=' ~ $memory-threshold.Str;
-  }
   if $slow-threshold.defined && $slow-threshold > 0 {
     @worker-argv.push: '--slow-threshold=' ~ $slow-threshold.Str;
   }
@@ -1326,11 +1284,6 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   if $profile-limit > 0 && $par-result.timed-examples.elems {
     $parent-formatter.multi-file-profile(
       Nil, $par-result.timed-examples.list, :limit($profile-limit));
-  }
-
-  if $memory-profile-limit > 0 && $par-result.memory-records.elems {
-    $parent-formatter.multi-file-memory-profile(
-      Nil, $par-result.memory-records.list, :limit($memory-profile-limit));
   }
 
   if $benchmark-mode && $par-result.benchmark-summaries.elems {
@@ -1565,7 +1518,6 @@ my @all-execution-order;
 my @all-failures;
 my @all-retry-records;
 my @all-timings;
-my @all-memory-records;
 my @all-benchmark-summaries;
 my $last-runner;
 
@@ -1608,7 +1560,6 @@ for @files -> $file {
   }
 
   my $runner-profile-limit = $multi ?? 0 !! $profile-limit;
-  my $runner-memory-profile-limit = $multi ?? 0 !! $memory-profile-limit;
 
   my $runner = BDD::Behave::Runner::Runner.new(
     :$formatter,
@@ -1623,9 +1574,6 @@ for @files -> $file {
     :fail-fast($remaining-fail-fast),
     :retry($retry-default),
     :profile-limit($runner-profile-limit),
-    :memory-profile-limit($runner-memory-profile-limit),
-    :$memory-threshold,
-    :memory-profile($memory-profile-limit > 0 || $memory-threshold > 0),
     :$slow-threshold,
     :benchmark-mode($benchmark-mode),
     :benchmark-quiet($multi),
@@ -1658,7 +1606,6 @@ for @files -> $file {
   }
 
   @all-timings.append: $runner.timed-examples;
-  @all-memory-records.append: $runner.memory-records;
   @all-benchmark-summaries.append: $runner.benchmark-summaries;
 
   $total-result = BDD::Behave::Runner::RunResult.new(
@@ -1694,11 +1641,6 @@ if $multi {
 
   if $profile-limit > 0 && $last-runner.defined && !$bisect-data {
     $formatter.multi-file-profile($last-runner, @all-timings, :limit($profile-limit));
-  }
-
-  if $memory-profile-limit > 0 && $last-runner.defined && !$bisect-data {
-    $formatter.multi-file-memory-profile(
-      $last-runner, @all-memory-records, :limit($memory-profile-limit));
   }
 
   if $benchmark-mode && $last-runner.defined && !$bisect-data {

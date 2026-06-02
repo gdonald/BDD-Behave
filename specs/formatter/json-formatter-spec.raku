@@ -231,24 +231,21 @@ describe 'BDD::Behave::Formatter::JSON', {
       expect($out).to.eq('');
     }
 
-    it 'profile/memory/benchmark hooks emit nothing', {
+    it 'profile/benchmark hooks emit nothing', {
       my $f = BDD::Behave::Formatter::JSON.new;
       my $out = capture-formatter-output({
         $f.profile-summary([], :limit(5));
-        $f.memory-profile-summary([], :limit(5));
         $f.benchmark-summary-section([], [], :threshold(0.1), :format('text'));
       });
       expect($out).to.eq('');
     }
 
-    it 'example-slow and example-memory-leak emit nothing', {
+    it 'example-slow emits nothing', {
       my $f = BDD::Behave::Formatter::JSON.new;
       my $ex = make-example('e');
       $ex.duration = 1.0;
-      $ex.memory-delta = 999;
       my $out = capture-formatter-output({
         $f.example-slow($ex, :threshold(0.1.Rat));
-        $f.example-memory-leak($ex, :threshold(100));
       });
       expect($out).to.eq('');
     }

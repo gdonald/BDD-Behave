@@ -63,7 +63,6 @@ method example-around-skipped($example) {
 }
 
 method example-slow($example, Real :$threshold) { }
-method example-memory-leak($example, Int :$threshold) { }
 
 method run-summary(
   $result,

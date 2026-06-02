@@ -389,7 +389,6 @@ class ParallelRunResult is export {
   has @.executed-locations;
   has @.failed-locations;
   has @.timed-examples;
-  has @.memory-records;
   has @.benchmark-summaries;
   has Int $.exit-code is rw = 0;
 
@@ -936,27 +935,12 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       $formatter.example-slow($example, :threshold((%event<threshold> // 0).Real))
         if $example.defined;
     }
-    when 'example-memory-leak' {
-      my $example = resolve-example(@suites, %event);
-      $formatter.example-memory-leak($example, :threshold((%event<threshold> // 0).Int))
-        if $example.defined;
-    }
     when 'profile-record' {
       my $example = resolve-example(@suites, %event);
       $result.timed-examples.push: %(
         example     => $example,
         description => (%event<description> // '').Str,
         duration    => (%event<duration> // 0).Real,
-      );
-    }
-    when 'memory-record' {
-      my $example = resolve-example(@suites, %event);
-      $result.memory-records.push: %(
-        example     => $example,
-        description => (%event<description> // '').Str,
-        delta       => (%event<delta>  // 0).Int,
-        before      => (%event<before> // 0).Int,
-        after       => (%event<after>  // 0).Int,
       );
     }
     when 'benchmark-record' {

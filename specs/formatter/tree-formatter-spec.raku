@@ -218,7 +218,7 @@ describe 'BDD::Behave::Formatter::Tree', {
     }
   }
 
-  describe 'profile and memory profile sections', {
+  describe 'profile section', {
     it 'profile-summary stays silent when limit is zero', {
       my $f   = BDD::Behave::Formatter::Tree.new;
       my $out = capture-formatter-output({ $f.profile-summary([], :limit(0)) });
@@ -245,20 +245,6 @@ describe 'BDD::Behave::Formatter::Tree', {
       expect($out).to.include('slow');
       expect($out).to.include('mid');
       expect($out.contains('fast')).to.be-falsy;
-    }
-
-    it 'memory-profile-summary prints the top N memory-heaviest examples', {
-      my $f = BDD::Behave::Formatter::Tree.new;
-      my @records = (
-        %( description => 'small', delta => 10, example => Any ),
-        %( description => 'big',   delta => 500, example => Any ),
-      );
-      my $out = strip-ansi capture-formatter-output({
-        $f.memory-profile-summary(@records, :limit(2));
-      });
-      expect($out).to.include('Top 2 memory-heaviest');
-      expect($out).to.include('big');
-      expect($out).to.include('small');
     }
   }
 

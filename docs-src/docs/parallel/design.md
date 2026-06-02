@@ -13,7 +13,7 @@ The design holds to four properties:
 
 - A suite that takes `T` seconds serially takes roughly `T / N` seconds on `N`
   cores, modulo per-worker startup overhead and load imbalance.
-- Failure output, summary counts, profile/memory/benchmark sections, exit code,
+- Failure output, summary counts, profile/benchmark sections, exit code,
   and seed reporting stay meaningful and reproducible.
 - User code that assumes a fresh process per worker (DB connection per worker,
   file per worker, port per worker) can discover its worker identity.
@@ -141,7 +141,7 @@ lifecycle (`suite-start`, `group-start`, `example-start`, `example-pass`,
 `example-fail`, `example-pending`, `example-skipped`, `group-end`, `suite-end`,
 `run-summary`), worker bookkeeping (`worker-ready`, `bucket-done`,
 `load-error`), and the optional reporting streams (`profile-record`,
-`memory-record`, `benchmark-record`, `retry-record`) when their flags are
+`benchmark-record`, `retry-record`) when their flags are
 requested.
 
 The parent reads these line by line, feeds them to the existing formatter
@@ -221,7 +221,7 @@ the reported identity.
 | `--bisect` / `--bisect-data` | Mutually exclusive with `--parallel`. The parent errors with a clear message. |
 | `--coverage` | Compatible. The coverage subprocess wrapper runs outside the parallel layer. Each worker writes a per-worker coverage log path, and the parent merges them before reporting. |
 | `--doc` | Ignores `--parallel` (doc mode does not execute, so parallelism is moot). |
-| `--profile` / `--memory-profile` / `--benchmark` | Records stream back via worker events. The parent merges them into the multi-file aggregation it already does. |
+| `--profile` / `--benchmark` | Records stream back via worker events. The parent merges them into the multi-file aggregation it already does. |
 | `--only-example` / `--example` / `--tag` / `--exclude-tag` / focus | Filters are applied once during discovery and pushed into the worker manifest, so workers see exactly what they need to run. |
 | `--aggregate-failures` | Pure per-example behavior, unchanged. |
 
