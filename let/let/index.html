@@ -1792,10 +1792,10 @@
 </code></pre></div></td></tr></table></div>
 <p>A <code>let</code> declared in a <code>describe</code> or <code>context</code> is visible to every example in that group and its nested groups.</p>
 <h2 id="reading-a-let">Reading a let<a class="headerlink" href="#reading-a-let" title="Permanent link">&para;</a></h2>
-<p>There are three ways to read a let value. The bareword is the default; the other
+<p>There are three ways to read a let value. The bareword is the default. The other
 two cover cases the bareword can't.</p>
 <h3 id="1-bareword">1. Bareword<a class="headerlink" href="#1-bareword" title="Permanent link">&para;</a></h3>
-<p>A <code>let</code> name is available as a bareword inside the group that defined it —
+<p>A <code>let</code> name is available as a bareword inside the group that defined it,
 no sigil, no <code>expect</code> wrapper. It works in any
 position: method calls, arguments, and data structures.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1851,13 +1851,13 @@ example</a>.</p>
 </code></pre></div></td></tr></table></div>
 <h3 id="ordering">Ordering<a class="headerlink" href="#ordering" title="Permanent link">&para;</a></h3>
 <p>A <code>let</code> must be <strong>defined before it is used</strong>, whichever form you read it with.
-A bareword referenced earlier in the file than its <code>let</code> line will not compile —
+A bareword referenced earlier in the file than its <code>let</code> line will not compile:
 an undeclared-routine error that also catches typos. The named-argument form is
 resolved at runtime, so reading a let before it is defined raises <code>Unknown let</code>
 when the example runs.</p>
 <h2 id="fetch-form">Fetch form<a class="headerlink" href="#fetch-form" title="Permanent link">&para;</a></h2>
 <p>Calling <code>let</code> with a name and no block returns the value directly. Both name
-spellings work — <code>let(:answer)</code> and <code>let('answer')</code> — and it can be used in any
+spellings work (<code>let(:answer)</code> and <code>let('answer')</code>), and it can be used in any
 position:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -1932,7 +1932,7 @@ variable), a warning is printed at compile time so the collision is not silent.<
 <span class="n">let-bang</span>(:<span class="n">user</span>,  { <span class="n">User</span>.<span class="n">create</span> });
 </code></pre></div></td></tr></table></div>
 <h3 id="when-to-use-let-bang">When to use <code>let-bang</code><a class="headerlink" href="#when-to-use-let-bang" title="Permanent link">&para;</a></h3>
-<p>Use <code>let-bang</code> when the <em>creation</em> of a value is itself the test setup — typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain <code>let</code> is preferred because it stays cheap when the example doesn't actually read the value.</p>
+<p>Use <code>let-bang</code> when the <em>creation</em> of a value is itself the test setup: typically for inserting database rows, recording fixtures, or otherwise mutating state that the example depends on existing before it runs. For pure values, plain <code>let</code> is preferred because it stays cheap when the example doesn't actually read the value.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -2014,7 +2014,7 @@ variable), a warning is printed at compile time so the collision is not silent.<
 <h3 id="restrictions">Restrictions<a class="headerlink" href="#restrictions" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>let-bang</code> must be called inside a <code>describe</code> or <code>context</code>. At the top-level (suite scope) only plain <code>let</code> is supported.</li>
-<li>Inside an <code>it</code> block, use plain <code>let</code>; eager forcing is meaningless once you're already in the example body.</li>
+<li>Inside an <code>it</code> block, use plain <code>let</code>. Eager forcing is meaningless once you're already in the example body.</li>
 </ul>
 
 

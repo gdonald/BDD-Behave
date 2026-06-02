@@ -1559,7 +1559,7 @@
 
 
 <h1 id="variables-in-specs">Variables in specs<a class="headerlink" href="#variables-in-specs" title="Permanent link">&para;</a></h1>
-<p>Because Behave specs are plain Raku, <code>my</code> and <code>our</code> variables work exactly as you'd expect. You don't need a special DSL to declare state — though <a href="../../let/let/"><code>let</code></a> is usually the right tool when you want <strong>per-example</strong> memoization with automatic reset.</p>
+<p>Because Behave specs are plain Raku, <code>my</code> and <code>our</code> variables work exactly as you'd expect. You don't need a special DSL to declare state, though <a href="../../let/let/"><code>let</code></a> is usually the right tool when you want <strong>per-example</strong> memoization with automatic reset.</p>
 <h2 id="top-level-variables">Top-level variables<a class="headerlink" href="#top-level-variables" title="Permanent link">&para;</a></h2>
 <p>Declared at the top of the spec file, visible to every <code>describe</code> and <code>it</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1604,7 +1604,7 @@
   <span class="n">it</span> <span class="s">&#39;c&#39;</span>, { <span class="n">expect</span>(++<span class="nv">$counter</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">3</span>); }
 }
 </code></pre></div></td></tr></table></div>
-<p>This is the <strong>opposite</strong> of <a href="../../let/let/"><code>let</code></a>, which resets between examples. Reach for <code>let</code> when you want isolation; use a plain <code>my</code> when you intentionally want shared state.</p>
+<p>This is the <strong>opposite</strong> of <a href="../../let/let/"><code>let</code></a>, which resets between examples. Reach for <code>let</code> when you want isolation. Use a plain <code>my</code> when you intentionally want shared state.</p>
 <h2 id="shadowing-in-nested-contexts">Shadowing in nested contexts<a class="headerlink" href="#shadowing-in-nested-contexts" title="Permanent link">&para;</a></h2>
 <p>Inner <code>my</code> declarations shadow outer ones the same way they would in any Raku block:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1668,7 +1668,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>let</code> works alongside plain variables — you can mix both in the same describe.</p>
+<p><code>let</code> works alongside plain variables: you can mix both in the same describe.</p>
 <h2 id="classes-roles-enums">Classes, roles, enums<a class="headerlink" href="#classes-roles-enums" title="Permanent link">&para;</a></h2>
 <p>Type declarations follow the same scoping rules. See <a href="../../classes/classes/">Classes inside specs</a>.</p>
 

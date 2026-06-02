@@ -1331,67 +1331,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#memory-profiling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Memory profiling
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Memory profiling">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#-memory-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --memory-profile
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-memory-threshold" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --memory-threshold
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#caveats" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Caveats
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#programmatic-access_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Programmatic access
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#benchmarking" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1509,7 +1448,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#programmatic-access_2" class="md-nav__link">
+  <a href="#programmatic-access_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Programmatic access
@@ -1554,7 +1493,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#programmatic-access_3" class="md-nav__link">
+  <a href="#programmatic-access_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Programmatic access
@@ -1783,67 +1722,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#memory-profiling" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Memory profiling
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Memory profiling">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#-memory-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --memory-profile
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#-memory-threshold" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        --memory-threshold
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#caveats" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Caveats
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#programmatic-access_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Programmatic access
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#benchmarking" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1961,7 +1839,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#programmatic-access_2" class="md-nav__link">
+  <a href="#programmatic-access_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Programmatic access
@@ -2006,7 +1884,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#programmatic-access_3" class="md-nav__link">
+  <a href="#programmatic-access_2" class="md-nav__link">
     <span class="md-ellipsis">
       
         Programmatic access
@@ -2054,13 +1932,13 @@
 <p>For every example that the runner actually executes, three values are
 recorded:</p>
 <ul>
-<li><code>started-at</code> — an <code>Instant</code> taken immediately before the example body runs.</li>
-<li><code>finished-at</code> — an <code>Instant</code> taken immediately after the body completes,
+<li><code>started-at</code>: an <code>Instant</code> taken immediately before the example body runs.</li>
+<li><code>finished-at</code>: an <code>Instant</code> taken immediately after the body completes,
   whether it passed or raised an exception.</li>
-<li><code>duration</code> — <code>finished-at - started-at</code>, expressed as a <code>Real</code> in seconds.</li>
+<li><code>duration</code>: <code>finished-at - started-at</code>, expressed as a <code>Real</code> in seconds.</li>
 </ul>
 <p>The capture is scoped to the example body. Hooks (<code>before-each</code>,
-<code>after-each</code>, <code>around-each</code>) run outside this window — their cost is not
+<code>after-each</code>, <code>around-each</code>) run outside this window, so their cost is not
 counted toward the example duration.</p>
 <h2 id="what-is-not-captured">What is not captured<a class="headerlink" href="#what-is-not-captured" title="Permanent link">&para;</a></h2>
 <p>The timing slots stay undefined for examples that never run:</p>
@@ -2116,11 +1994,11 @@ counted toward the example duration.</p>
     <span class="nb">say</span> <span class="s">&quot;{$ex.description}: {$ex.duration} s&quot;</span>;
 };
 </code></pre></div></td></tr></table></div>
-<p>Failures are still timed — a <code>die</code> inside an example body produces a
+<p>Failures are still timed. A <code>die</code> inside an example body produces a
 <code>duration</code> reflecting the wall time spent before the exception propagated.</p>
 <h2 id="-profile">--profile<a class="headerlink" href="#-profile" title="Permanent link">&para;</a></h2>
 <p><code>behave --profile</code> prints a "Top N slowest examples" section at the end of
-the run. The default is <code>N=10</code>; pass <code>--profile=N</code> to choose a different
+the run. The default is <code>N=10</code>. Pass <code>--profile=N</code> to choose a different
 size. Examples are sorted by <code>duration</code> (descending) and the section's
 total is the sum of the listed examples' durations.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2139,7 +2017,7 @@ total is the sum of the listed examples' durations.</p>
 </code></pre></div></td></tr></table></div>
 <p>When multiple spec files run, <code>--profile</code> aggregates timings across all
 files and prints a single global section after the <code>Overall:</code> counts.</p>
-<p>Pending and skipped examples are not eligible for the profile — only
+<p>Pending and skipped examples are not eligible for the profile. Only
 examples whose body actually ran are listed.</p>
 <h2 id="-slow-threshold">--slow-threshold<a class="headerlink" href="#-slow-threshold" title="Permanent link">&para;</a></h2>
 <p><code>behave --slow-threshold=SECONDS</code> prints an inline <code>SLOW (Xs, threshold
@@ -2151,15 +2029,15 @@ Ys)</code> line under each example whose duration meets or exceeds <code>SECONDS
   ⮑  SUCCESS
   ⮑  SLOW (0.121s, threshold 0.010s)
 </code></pre></div></td></tr></table></div>
-<p>The threshold is opt-in — without <code>--slow-threshold</code> no <code>SLOW</code> lines are
+<p>The threshold is opt-in: without <code>--slow-threshold</code> no <code>SLOW</code> lines are
 printed. The flag composes with <code>--profile</code>: <code>--slow-threshold</code> flags slow
-examples inline as the run progresses; <code>--profile</code> lists the top N at the
+examples inline as the run progresses. <code>--profile</code> lists the top N at the
 end.</p>
 <p>Construction-time validation: <code>Runner.new(:profile-limit(-1))</code> and
-<code>Runner.new(:slow-threshold(-1))</code> both die — both knobs require a
+<code>Runner.new(:slow-threshold(-1))</code> both die. Both knobs require a
 non-negative value, with <code>0</code> meaning disabled.</p>
 <h2 id="programmatic-access">Programmatic access<a class="headerlink" href="#programmatic-access" title="Permanent link">&para;</a></h2>
-<p><code>Runner</code> exposes <code>@.timed-examples</code> — a list of <code>Hash</code> records, one per
+<p><code>Runner</code> exposes <code>@.timed-examples</code>, a list of <code>Hash</code> records, one per
 executed example:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -2173,88 +2051,8 @@ executed example:</p>
 full nested description), and <code>duration</code> (a <code>Real</code> in seconds). Pending,
 skipped, and around-skipped examples are not added.</p>
 <p>The same <code>print-profile(Int $limit, @records?)</code> method that <code>--profile</code>
-uses is public; callers can pass a custom record list to print a profile
+uses is public. Callers can pass a custom record list to print a profile
 across an aggregated run.</p>
-<h2 id="memory-profiling">Memory profiling<a class="headerlink" href="#memory-profiling" title="Permanent link">&para;</a></h2>
-<p>Behave can also track per-example RSS (resident set size) deltas. Memory
-measurement is opt-in because it shells out to <code>ps</code> once before and once
-after each example, which adds a small amount of overhead per example.</p>
-<p><code>Runner</code> exposes three knobs:</p>
-<ul>
-<li><code>memory-profile</code> (<code>Bool</code>, default <code>False</code>) — enables measurement.</li>
-<li><code>memory-profile-limit</code> (<code>Int</code>, default <code>0</code>) — print the top-N
-  memory-heaviest examples after the run; implies measurement.</li>
-<li><code>memory-threshold</code> (<code>Int</code> KB, default <code>0</code>) — print an inline
-  <code>MEMORY (Δ&lt;KB&gt; KB, threshold &lt;KB&gt; KB)</code> line under every example whose
-  delta meets or exceeds the threshold; implies measurement.</li>
-</ul>
-<p>When measurement is on, every executed example writes three slots on its
-<code>Example</code> node — <code>memory-before</code>, <code>memory-after</code>, and <code>memory-delta</code>
-(all <code>Int</code> KB) — and the runner pushes a record onto <code>@.memory-records</code>.</p>
-<p>The measurement window wraps <code>before-each</code>, the example body, and
-<code>after-each</code> — so the delta is a per-example leak signal as well as a
-working-set signal.</p>
-<h3 id="-memory-profile">--memory-profile<a class="headerlink" href="#-memory-profile" title="Permanent link">&para;</a></h3>
-<p><code>behave --memory-profile</code> prints the 10 memory-heaviest examples after
-the run; <code>--memory-profile=N</code> chooses a different size.</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span>
-<span class="normal">5</span>
-<span class="normal">6</span>
-<span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code>Top 3 memory-heaviest examples (3168 KB total Δ):
-  +2192 KB  memory-fixture a allocates a chunk
-            t/fixtures/memory-fixture-spec.raku:4
-  +864 KB   memory-fixture b allocates a bigger chunk
-            t/fixtures/memory-fixture-spec.raku:9
-  +112 KB   memory-fixture c small example
-            t/fixtures/memory-fixture-spec.raku:14
-</code></pre></div></td></tr></table></div>
-<p>When multiple spec files run, <code>--memory-profile</code> aggregates records
-across all files and prints a single global section after the
-<code>Overall:</code> counts.</p>
-<h3 id="-memory-threshold">--memory-threshold<a class="headerlink" href="#-memory-threshold" title="Permanent link">&para;</a></h3>
-<p><code>behave --memory-threshold=KB</code> prints an inline <code>MEMORY</code> warning under
-every example whose RSS delta meets or exceeds <code>KB</code> kilobytes:</p>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>⮑  &#39;b allocates a bigger chunk&#39;
-  ⮑  SUCCESS
-  ⮑  MEMORY (Δ864 KB, threshold 200 KB)
-</code></pre></div></td></tr></table></div>
-<p>The threshold is opt-in — without <code>--memory-threshold</code> no <code>MEMORY</code>
-lines are printed. The flag composes with <code>--memory-profile</code>:
-<code>--memory-threshold</code> flags heavy examples inline as the run progresses;
-<code>--memory-profile</code> lists the top N at the end.</p>
-<p>Both <code>--memory-profile=0</code> and <code>--memory-threshold=0</code> are rejected — the
-CLI requires positive integers. Construction-time validation:
-<code>Runner.new(:memory-profile-limit(-1))</code> and
-<code>Runner.new(:memory-threshold(-1))</code> both die.</p>
-<h3 id="caveats">Caveats<a class="headerlink" href="#caveats" title="Permanent link">&para;</a></h3>
-<ul>
-<li>The measurement is RSS-based, not heap-based — it includes pages
-  shared with libraries and the page cache, and noise from other
-  processes can show up as small positive or negative deltas.</li>
-<li>A negative delta means the OS reclaimed pages between the two
-  samples; this is normal under MoarVM's generational GC and does not
-  indicate that the example shrank the process below its baseline.</li>
-<li>The threshold check is <code>delta &gt;= threshold</code>, so negative deltas
-  never trigger <code>MEMORY</code> warnings.</li>
-<li>Pending and skipped examples are not measured.</li>
-</ul>
-<h3 id="programmatic-access_1">Programmatic access<a class="headerlink" href="#programmatic-access_1" title="Permanent link">&para;</a></h3>
-<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span>
-<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
-<span class="k">for</span> <span class="nv">$runner</span>.<span class="n">memory-records</span> -&gt; <span class="nv">%rec</span> {
-    <span class="nb">say</span> <span class="s">&quot;{%rec&lt;delta&gt;} KB  {%rec&lt;description&gt;}&quot;</span>;
-}
-</code></pre></div></td></tr></table></div>
-<p>Each record carries <code>example</code>, <code>description</code>, <code>before</code>, <code>after</code>, and
-<code>delta</code>. The matching <code>print-memory-profile(Int $limit, @records?)</code>
-method is public.</p>
 <h2 id="benchmarking">Benchmarking<a class="headerlink" href="#benchmarking" title="Permanent link">&para;</a></h2>
 <p><code>benchmark { ... }</code> runs a block N times inside an example body and
 captures min, max, mean, median, and total timings across the
@@ -2284,16 +2082,16 @@ the example's <code>benchmarks</code> slot for later inspection by reporters.</p
 <span class="n">benchmark</span> :<span class="n">iterations</span>(<span class="mi">50</span>), :<span class="n">warmup</span>(<span class="mi">10</span>), :<span class="n">label</span>(<span class="s">&#39;hashing&#39;</span>), { <span class="nb">code</span> }
 <span class="n">benchmark</span> <span class="s">&#39;hashing&#39;</span>, :<span class="n">iterations</span>(<span class="mi">50</span>), { <span class="nb">code</span> }
 </code></pre></div></td></tr></table></div>
-<p>The first positional <code>Str</code> (if present) becomes the label; the block is
+<p>The first positional <code>Str</code> (if present) becomes the label. The block is
 always the trailing positional argument.</p>
 <h3 id="named-options">Named options<a class="headerlink" href="#named-options" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>iterations</code> (<code>Int</code>, default <code>100</code>) — number of timed runs. Must be a
-  positive integer; <code>0</code> or negative values raise an exception.</li>
-<li><code>warmup</code> (<code>Int</code>, default <code>0</code>) — number of untimed warmup runs to
+<li><code>iterations</code> (<code>Int</code>, default <code>100</code>): number of timed runs. Must be a
+  positive integer. <code>0</code> or negative values raise an exception.</li>
+<li><code>warmup</code> (<code>Int</code>, default <code>0</code>): number of untimed warmup runs to
   execute before measurement begins. Useful for letting JIT, caches, or
   module-level lazy-init settle. Must be <code>0</code> or positive.</li>
-<li><code>label</code> (<code>Str</code>, optional) — identifies the benchmark when an example
+<li><code>label</code> (<code>Str</code>, optional): identifies the benchmark when an example
   contains more than one. Equivalent to passing the label as the first
   positional argument.</li>
 </ul>
@@ -2359,7 +2157,7 @@ single example accumulate in declaration order, so a reporter can walk
 <code>benchmarks</code> slot stays empty. Calling <code>benchmark</code> outside an example
 still returns a valid result, but nothing is attached.</p>
 <p>The example also exposes <code>started-at</code>, <code>finished-at</code>, and <code>duration</code>
-slots (see above); a benchmark's <code>total</code> is normally a fraction of
+slots (see above). A benchmark's <code>total</code> is normally a fraction of
 <code>duration</code>, with the rest accounted for by the test scaffolding and any
 non-benchmarked work the body does.</p>
 <h3 id="-benchmark-mode">--benchmark mode<a class="headerlink" href="#-benchmark-mode" title="Permanent link">&para;</a></h3>
@@ -2381,7 +2179,7 @@ non-benchmarked work the body does.</p>
     iterations=2  min=0.000002s  max=0.000003s  mean=0.000002s  median=0.000002s
 </code></pre></div></td></tr></table></div>
 <p>Each row keys on <code>(full nested description, label or position)</code>. A
-labeled <code>benchmark('foo', { ... })</code> becomes <code>label:foo</code>; an unlabeled
+labeled <code>benchmark('foo', { ... })</code> becomes <code>label:foo</code>. An unlabeled
 call becomes <code>pos:N</code>, where <code>N</code> is the call's 0-based order within the
 example body. Position resets per body invocation (so <code>--benchmark-iterations</code>
 re-runs do not collide), so prefer labels when an example contains more
@@ -2395,8 +2193,8 @@ passed / failed / skipped counts.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave --benchmark-iterations=5 specs/
 </code></pre></div></td></tr></table></div>
 <p>Each re-run goes through <code>handle-example</code>, so <code>before-each</code>,
-<code>after-each</code>, and <code>around-each</code> hooks fire normally (and so do lets);
-this matches the cost profile of the example as it would run in the
+<code>after-each</code>, and <code>around-each</code> hooks fire normally (and so do lets).
+This matches the cost profile of the example as it would run in the
 suite, which is the right baseline for benchmark measurements.</p>
 <h3 id="-benchmark-baseline-benchmark-save">--benchmark-baseline / --benchmark-save<a class="headerlink" href="#-benchmark-baseline-benchmark-save" title="Permanent link">&para;</a></h3>
 <p><code>behave --benchmark-save=PATH</code> writes the current run's benchmark
@@ -2411,18 +2209,18 @@ back and adds a comparison block under the Benchmarks section:</p>
   ... [label:b]     median 0.000002s (baseline 0.000002s)   +7.1%
 </code></pre></div></td></tr></table></div>
 <p>A row is flagged <code>REGRESSION</code> when <code>(current.median - baseline.median) /
-baseline.median &gt; threshold</code>. The default threshold is <code>0.10</code> (10%);
-override it with <code>--benchmark-threshold=PCT</code> (decimal fraction,
+baseline.median &gt; threshold</code>. The default threshold is <code>0.10</code> (10%).
+Override it with <code>--benchmark-threshold=PCT</code> (decimal fraction,
 e.g. <code>--benchmark-threshold=0.20</code> for 20%).</p>
 <p>The header phrasing depends on whether anything was flagged:
 <code>Benchmark regressions (N, threshold X%)</code> (red) when at least one row
 exceeded the threshold, or <code>Benchmark comparison (no regressions;
 threshold X%)</code> otherwise. Rows with no matching baseline entry are
-silently dropped; rows whose baseline matched are listed even if they
+silently dropped. Rows whose baseline matched are listed even if they
 did not regress, so you can see the percentage change on every measured
 benchmark.</p>
 <p>Both <code>--benchmark-baseline</code> and <code>--benchmark-save</code> imply <code>--benchmark</code>
-on their own — you do not have to pass both flags.</p>
+on their own. You do not have to pass both flags.</p>
 <h4 id="baseline-file-format">Baseline file format<a class="headerlink" href="#baseline-file-format" title="Permanent link">&para;</a></h4>
 <p>The baseline is a plain-text, tab-separated file with two header lines:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2440,12 +2238,12 @@ its baseline entry (which is then silently dropped). Lines starting
 with <code>#</code> are treated as comments and ignored after the header.</p>
 <h3 id="multi-file-runs">Multi-file runs<a class="headerlink" href="#multi-file-runs" title="Permanent link">&para;</a></h3>
 <p>When <code>behave</code> is given more than one spec file, per-file Runners run
-in benchmark mode silently and accumulate their summaries; the CLI
+in benchmark mode silently and accumulate their summaries. The CLI
 prints <strong>one</strong> combined Benchmarks section after the <code>Overall:</code> counts.
 The baseline comparison and <code>--benchmark-save</code> likewise run once over
 the combined summary set, so a baseline file captures every benchmark
 in the run, not just those from the last file.</p>
-<h3 id="programmatic-access_2">Programmatic access<a class="headerlink" href="#programmatic-access_2" title="Permanent link">&para;</a></h3>
+<h3 id="programmatic-access_1">Programmatic access<a class="headerlink" href="#programmatic-access_1" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -2482,7 +2280,7 @@ in the run, not just those from the last file.</p>
 <code>benchmark-regressions</code> adds <code>baseline-median</code>, <code>baseline-mean</code>,
 <code>delta-pct</code>, and <code>regression</code> (Bool). Construction-time validation:
 <code>benchmark-iterations</code> must be a positive integer, and
-<code>benchmark-threshold</code> must be <code>&gt;= 0</code> — both die with a clear message
+<code>benchmark-threshold</code> must be <code>&gt;= 0</code>. Both die with a clear message
 otherwise.</p>
 <h3 id="output-formatting">Output formatting<a class="headerlink" href="#output-formatting" title="Permanent link">&para;</a></h3>
 <p>The Benchmarks section renders as a pretty table by default with
@@ -2516,24 +2314,24 @@ with comparison arrows:</p>
 </code></pre></div></td></tr></table></div>
 <p>Arrows mean:</p>
 <ul>
-<li><code>↑</code> — current is slower than baseline. When the delta exceeds
+<li><code>↑</code>: current is slower than baseline. When the delta exceeds
   <code>--benchmark-threshold</code>, the row is also colored red and tagged
   <code>REGRESSION</code>.</li>
-<li><code>↓</code> — current is faster than baseline. When the absolute delta
+<li><code>↓</code>: current is faster than baseline. When the absolute delta
   exceeds <code>--benchmark-threshold</code>, the row is also colored green to
   highlight a real improvement.</li>
-<li><code>→</code> — exactly zero delta (or extremely close).</li>
+<li><code>→</code>: exactly zero delta (or extremely close).</li>
 </ul>
-<p>The arrow always reflects direction; the color reflects whether the
+<p>The arrow always reflects direction. The color reflects whether the
 delta crossed the threshold in either direction.</p>
 <h4 id="-benchmark-format">--benchmark-format<a class="headerlink" href="#-benchmark-format" title="Permanent link">&para;</a></h4>
 <p><code>behave --benchmark-format=FORMAT</code> chooses how the Benchmarks section
 is rendered. Supported values:</p>
 <ul>
-<li><code>text</code> (default) — the pretty tables shown above.</li>
-<li><code>json</code> — a single JSON object suitable for CI dashboards. Keys are
-  sorted alphabetically for a stable diff; numbers render in their
-  natural Raku string form; strings are JSON-escaped.</li>
+<li><code>text</code> (default): the pretty tables shown above.</li>
+<li><code>json</code>: a single JSON object suitable for CI dashboards. Keys are
+  sorted alphabetically for a stable diff. Numbers render in their
+  natural Raku string form. Strings are JSON-escaped.</li>
 </ul>
 <p>Setting <code>--benchmark-format</code> to anything else exits 2 with a clear
 error. Setting it to <code>json</code> (or any non-<code>text</code> value) auto-enables
@@ -2601,7 +2399,7 @@ error. Setting it to <code>json</code> (or any non-<code>text</code> value) auto
 <span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
 <span class="p">}</span>
 </code></pre></div></td></tr></table></div>
-<p><code>benchmarks[]</code> always has one entry per current measurement;
+<p><code>benchmarks[]</code> always has one entry per current measurement.
 <code>regressions[]</code> is empty unless <code>--benchmark-baseline</code> is set, in
 which case it has one entry per baseline match (or empty if no entries
 matched).</p>
@@ -2615,14 +2413,14 @@ pipeline can ingest the JSON without parsing it out of test output:</p>
 </code></pre></div></td></tr></table></div>
 <p><code>--benchmark-output</code> works with text format too, and on its own
 auto-enables <code>--benchmark</code>. The stdout test output is unaffected.</p>
-<h4 id="programmatic-access_3">Programmatic access<a class="headerlink" href="#programmatic-access_3" title="Permanent link">&para;</a></h4>
+<h4 id="programmatic-access_2">Programmatic access<a class="headerlink" href="#programmatic-access_2" title="Permanent link">&para;</a></h4>
 <p><code>Runner.render-benchmark-output(@summaries, @regressions, :$threshold,
 :$format)</code> returns the formatted string without printing it, for
 callers that want to embed the output somewhere else.
 <code>Runner.render-bench-summary-table</code> and
 <code>Runner.render-bench-comparison-table</code> are the underlying helpers if
 you only need one of the two tables. The JSON serializer is exposed as
-<code>BDD::Behave::Benchmark::Format::to-json($value)</code>; it supports <code>Bool</code>,
+<code>BDD::Behave::Benchmark::Format::to-json($value)</code>. It supports <code>Bool</code>,
 <code>Numeric</code>, <code>Str</code>, <code>Positional</code>, <code>Associative</code> (keys sorted), and falls
 back to <code>null</code> for undefined values.</p>
 

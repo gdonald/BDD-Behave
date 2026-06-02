@@ -1583,8 +1583,8 @@
 <h2 id="test-surfaces">Test surfaces<a class="headerlink" href="#test-surfaces" title="Permanent link">&para;</a></h2>
 <p>Behave has two test surfaces, and a change is not considered done until <strong>both</strong> pass:</p>
 <ol>
-<li><strong>Specs in <code>specs/</code></strong> — Behave's own behavioral test suite, written with the <code>behave</code> DSL and run by the <code>behave</code> runner. New features should land with specs that demonstrate the user-facing behavior.</li>
-<li><strong>Unit tests in <code>t/</code></strong> — <code>Test</code>-module tests that exercise individual classes (Runner, SpecTree, DSL helpers, etc.), run with <code>prove6</code>. Use these for tight, focused checks of internal invariants.</li>
+<li><strong>Specs in <code>specs/</code></strong>: Behave's own behavioral test suite, written with the <code>behave</code> DSL and run by the <code>behave</code> runner. New features should land with specs that demonstrate the user-facing behavior.</li>
+<li><strong>Unit tests in <code>t/</code></strong>: <code>Test</code>-module tests that exercise individual classes (Runner, SpecTree, DSL helpers, etc.), run with <code>prove6</code>. Use these for tight, focused checks of internal invariants.</li>
 </ol>
 <p>The two layers mirror each other folder-for-folder: every spec at <code>specs/X/Y-spec.raku</code> has a counterpart at <code>t/X/Y.rakutest</code>. Adding a new spec? Add the matching unit test in <code>t/</code>. Adding a new unit test? Add the matching spec.</p>
 <h2 id="running-the-specs">Running the specs<a class="headerlink" href="#running-the-specs" title="Permanent link">&para;</a></h2>
@@ -1611,7 +1611,7 @@
 <p>Documentation lives in <code>docs-src/</code>:</p>
 <ul>
 <li>Per-feature pages live under <code>docs-src/docs/&lt;topic&gt;/&lt;topic&gt;.md</code>, mirroring the <code>specs/</code> folder layout.</li>
-<li>After modifying anything under <code>docs-src/</code>, run <code>docs-src/build.sh</code> to regenerate the published HTML in <code>docs/</code>. The build step is local; CI does not regenerate docs.</li>
+<li>After modifying anything under <code>docs-src/</code>, run <code>docs-src/build.sh</code> to regenerate the published HTML in <code>docs/</code>. The build step is local. CI does not regenerate docs.</li>
 </ul>
 <h2 id="continuous-integration">Continuous integration<a class="headerlink" href="#continuous-integration" title="Permanent link">&para;</a></h2>
 <p>Pushes and pull requests run the full suite via the <a href="https://github.com/gdonald/BDD-Behave/blob/main/.github/workflows/ci.yml">GitHub Actions workflow</a>. The same workflow publishes this documentation site to GitHub Pages on every push to <code>main</code>, serving the committed <code>docs/</code> directory.</p>

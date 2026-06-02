@@ -1648,9 +1648,9 @@ Cart
 </code></pre></div></td></tr></table></div>
 <p>Statuses appear in parentheses after the description:</p>
 <ul>
-<li><code>(PENDING)</code> — declared with <code>pending</code></li>
-<li><code>(SKIPPED)</code> — declared with <code>xit</code> / <code>xdescribe</code> (or <code>:skipped</code> metadata)</li>
-<li><code>(FOCUSED)</code> — declared with <code>fit</code> / <code>fdescribe</code> (or <code>:focused</code> metadata)</li>
+<li><code>(PENDING)</code>: declared with <code>pending</code></li>
+<li><code>(SKIPPED)</code>: declared with <code>xit</code> / <code>xdescribe</code> (or <code>:skipped</code> metadata)</li>
+<li><code>(FOCUSED)</code>: declared with <code>fit</code> / <code>fdescribe</code> (or <code>:focused</code> metadata)</li>
 </ul>
 <p>The trailing <code>N example(s)</code> line reports the count after filters.</p>
 <h3 id="-dry-run-verbose"><code>--dry-run --verbose</code><a class="headerlink" href="#-dry-run-verbose" title="Permanent link">&para;</a></h3>
@@ -1670,7 +1670,7 @@ Cart
       /path/to/cart-spec.raku:6
 </code></pre></div></td></tr></table></div>
 <h3 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h3>
-<p><code>--dry-run</code> exits <code>0</code> when every spec file loaded cleanly, and <code>1</code> when at least one spec file failed to load. The exit code is independent of whether the filters matched any examples — zero matching examples is still a successful dry run.</p>
+<p><code>--dry-run</code> exits <code>0</code> when every spec file loaded cleanly, and <code>1</code> when at least one spec file failed to load. The exit code is independent of whether the filters matched any examples. Zero matching examples is still a successful dry run.</p>
 <h2 id="-list-examples"><code>--list-examples</code><a class="headerlink" href="#-list-examples" title="Permanent link">&para;</a></h2>
 <p>Plain-text mode prints one line per matching example. Each line is:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>&lt;absolute spec file&gt;:&lt;line&gt;&lt;TAB&gt;&lt;full nested description&gt;
@@ -1783,9 +1783,9 @@ Cart
 </tr>
 </tbody>
 </table>
-<p>Unknown future fields may appear; keep your parser tolerant.</p>
+<p>Unknown future fields may appear, so keep your parser tolerant.</p>
 <h4 id="hierarchical-suites-field">Hierarchical <code>suites</code> field<a class="headerlink" href="#hierarchical-suites-field" title="Permanent link">&para;</a></h4>
-<p>Alongside the flat <code>examples</code> list, the JSON document also includes a top-level <code>suites</code> key with the full discovered tree (suites → groups → examples, with each node carrying <code>type</code>, <code>description</code>, <code>file</code>, <code>line</code>, <code>metadata</code>, and — for examples — <code>pending</code>). Unlike <code>examples</code>, the <code>suites</code> tree is <strong>unfiltered</strong> — focus mode and tag filters don't prune it. Behave's <code>--parallel</code> parent uses this field to rebuild the spec tree without <code>EVALFILE</code>-ing user code in the parent process. External tools can use it for the same purpose, or ignore it and read <code>examples</code> as before.</p>
+<p>Alongside the flat <code>examples</code> list, the JSON document also includes a top-level <code>suites</code> key with the full discovered tree (suites → groups → examples, with each node carrying <code>type</code>, <code>description</code>, <code>file</code>, <code>line</code>, <code>metadata</code>, and, for examples, <code>pending</code>). Unlike <code>examples</code>, the <code>suites</code> tree is <strong>unfiltered</strong>: focus mode and tag filters don't prune it. Behave's <code>--parallel</code> parent uses this field to rebuild the spec tree without <code>EVALFILE</code>-ing user code in the parent process. External tools can use it for the same purpose, or ignore it and read <code>examples</code> as before.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1887,7 +1887,7 @@ Cart
 <span class="c1"># Every example across every loaded suite, as ExampleQueryResult records:</span>
 <span class="k">my</span> <span class="nv">@all</span> = <span class="nv">$reg</span>.<span class="n">all-examples</span>;
 
-<span class="c1"># Filtered query — every kwarg below is optional and ANDed:</span>
+<span class="c1"># Filtered query: every kwarg below is optional and ANDed:</span>
 <span class="k">my</span> <span class="nv">@hits</span> = <span class="nv">$reg</span>.<span class="n">query-examples</span>(
   <span class="n">description-pattern</span> =&gt; <span class="s">&#39;/^Cart\s/&#39;</span>,     <span class="c1"># substring or /regex/</span>
   <span class="nb">file</span>                =&gt; <span class="s">&#39;cart-spec.raku&#39;</span>,<span class="c1"># basename, relative, or absolute</span>
@@ -1915,7 +1915,7 @@ Cart
 <li><code>.pending</code> / <code>.focused</code> / <code>.skipped</code> (Bool)</li>
 <li><code>.to-hash</code> for serialization (used by <code>--list-examples-format=json</code>)</li>
 </ul>
-<p>This API is stable for editor and IDE integrations; the CLI <code>--list-examples</code> output is a thin wrapper over it.</p>
+<p>This API is stable for editor and IDE integrations. The CLI <code>--list-examples</code> output is a thin wrapper over it.</p>
 
 
 

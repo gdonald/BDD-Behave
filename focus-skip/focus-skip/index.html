@@ -1581,7 +1581,7 @@
 </code></pre></div></td></tr></table></div>
 <p><code>before-all</code>, <code>after-all</code>, <code>before-each</code>, and <code>after-each</code> hooks are not run for examples inside a skipped group.</p>
 <h2 id="focusing-examples">Focusing examples<a class="headerlink" href="#focusing-examples" title="Permanent link">&para;</a></h2>
-<p>Use <code>fit</code> to mark a single example as focused, and <code>fdescribe</code> (or <code>fcontext</code>) to focus an entire group. When any focused example or group exists in a suite, <strong>only focused examples run</strong>; non-focused examples are silently filtered out.</p>
+<p>Use <code>fit</code> to mark a single example as focused, and <code>fdescribe</code> (or <code>fcontext</code>) to focus an entire group. When any focused example or group exists in a suite, <strong>only focused examples run</strong>. Non-focused examples are silently filtered out.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1611,7 +1611,7 @@
 </code></pre></div></td></tr></table></div>
 <p>Focus mode is detected per suite (per spec file). Files without any <code>fit</code>/<code>fdescribe</code> continue to run every example as usual.</p>
 <h2 id="combining-focus-and-skip">Combining focus and skip<a class="headerlink" href="#combining-focus-and-skip" title="Permanent link">&para;</a></h2>
-<p>Skipped examples are still reported as <code>SKIPPED</code> even when focus mode is on. A <code>fit</code> inside an <code>xdescribe</code> stays skipped — skip wins over focus.</p>
+<p>Skipped examples are still reported as <code>SKIPPED</code> even when focus mode is on. A <code>fit</code> inside an <code>xdescribe</code> stays skipped: skip wins over focus.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1625,7 +1625,7 @@
 }
 
 <span class="n">xdescribe</span> <span class="s">&#39;Legacy importer&#39;</span>, {
-  <span class="n">fit</span> <span class="s">&#39;imports a CSV&#39;</span>, { ... }   <span class="c1"># still SKIPPED — skip wins over focus</span>
+  <span class="n">fit</span> <span class="s">&#39;imports a CSV&#39;</span>, { ... }   <span class="c1"># still SKIPPED: skip wins over focus</span>
 }
 </code></pre></div></td></tr></table></div>
 <h2 id="combining-with-tag-filters">Combining with tag filters<a class="headerlink" href="#combining-with-tag-filters" title="Permanent link">&para;</a></h2>
@@ -1638,14 +1638,14 @@ $<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku<spa
 <p>Skipped examples display in light blue with a <code>SKIPPED</code> marker. The summary line includes a <code>skipped</code> count alongside <code>passed</code>, <code>failed</code>, and <code>pending</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>9 examples, 6 skipped, 3 passed
 </code></pre></div></td></tr></table></div>
-<p>Exit code stays <code>0</code> when only skips are present; only failures cause a non-zero exit.</p>
+<p>Exit code stays <code>0</code> when only skips are present. Only failures cause a non-zero exit.</p>
 <h2 id="inspecting-focus-skip-programmatically">Inspecting focus / skip programmatically<a class="headerlink" href="#inspecting-focus-skip-programmatically" title="Permanent link">&para;</a></h2>
 <p>Each <code>Example</code> and <code>ExampleGroup</code> exposes:</p>
 <ul>
-<li><code>.focused</code> — <code>True</code> if the node was registered with <code>fit</code> / <code>fdescribe</code> / <code>:focused</code>.</li>
-<li><code>.skipped</code> — <code>True</code> if the node was registered with <code>xit</code> / <code>xdescribe</code> / <code>:skipped</code>.</li>
-<li><code>.effective-focused</code> — <code>True</code> if the node or any ancestor is focused.</li>
-<li><code>.effective-skipped</code> — <code>True</code> if the node or any ancestor is skipped.</li>
+<li><code>.focused</code>: <code>True</code> if the node was registered with <code>fit</code> / <code>fdescribe</code> / <code>:focused</code>.</li>
+<li><code>.skipped</code>: <code>True</code> if the node was registered with <code>xit</code> / <code>xdescribe</code> / <code>:skipped</code>.</li>
+<li><code>.effective-focused</code>: <code>True</code> if the node or any ancestor is focused.</li>
+<li><code>.effective-skipped</code>: <code>True</code> if the node or any ancestor is skipped.</li>
 </ul>
 <p>These mirror the <code>tags</code> / <code>effective-tags</code> helpers and are useful for custom reporters or tooling.</p>
 

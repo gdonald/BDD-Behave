@@ -2704,12 +2704,12 @@
 <p><code>expect(...).to.be(...)</code> is built on top of a small <code>Matcher</code> role. The expected
 value passed to <code>.be(...)</code> is either:</p>
 <ul>
-<li><strong>a plain value</strong> — wrapped in the built-in <code>BeMatcher</code> (smartmatch), or</li>
-<li><strong>a <code>Matcher</code>-doing object</strong> — used directly.</li>
+<li><strong>a plain value</strong> (wrapped in the built-in <code>BeMatcher</code>, smartmatch), or</li>
+<li><strong>a <code>Matcher</code>-doing object</strong> (used directly).</li>
 </ul>
 <p>This is the seam every built-in matcher and every user-defined matcher plugs
 into. If you want to add your own matcher without writing a class by hand, see
-<a href="../custom-matchers/">Custom Matchers</a> — <code>define-matcher</code> produces a matcher
+<a href="../custom-matchers/">Custom Matchers</a>. <code>define-matcher</code> produces a matcher
 that conforms to this same role.</p>
 <h2 id="the-matcher-role">The Matcher role<a class="headerlink" href="#the-matcher-role" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2767,8 +2767,8 @@ that conforms to this same role.</p>
 </tbody>
 </table>
 <h2 id="where-matcher-classes-live">Where matcher classes live<a class="headerlink" href="#where-matcher-classes-live" title="Permanent link">&para;</a></h2>
-<p>Almost all users only ever write <code>use BDD::Behave;</code> — that pulls in <code>expect</code>, every built-in matcher, and the full DSL through the lazy-loading wrapper. Nothing here changes that.</p>
-<p>You only need to know about specific submodules when you want to <em>instantiate</em> matcher classes directly — typically to compose them inside a custom matcher, or to unit-test a matcher with <code>Test</code>. Each family lives in its own submodule so unit tests can import just one and skip the rest:</p>
+<p>Almost all users only ever write <code>use BDD::Behave;</code>, which pulls in <code>expect</code>, every built-in matcher, and the full DSL through the lazy-loading wrapper. Nothing here changes that.</p>
+<p>You only need to know about specific submodules when you want to <em>instantiate</em> matcher classes directly, typically to compose them inside a custom matcher, or to unit-test a matcher with <code>Test</code>. Each family lives in its own submodule so unit tests can import just one and skip the rest:</p>
 <table>
 <thead>
 <tr>
@@ -2839,7 +2839,7 @@ that conforms to this same role.</p>
 keeps the structured <code>Expected:</code> / <code>to be:</code> block plus the colorized <code>Diff:</code>
 section described in <a href="../../diff/diff/">Diff Output</a>.</p>
 <p>Because the underlying operator is <code>~~</code>, all four Raku junction kinds (<code>any</code>,
-<code>all</code>, <code>one</code>, <code>none</code>) compose with <code>BeMatcher</code> directly — see
+<code>all</code>, <code>one</code>, <code>none</code>) compose with <code>BeMatcher</code> directly. See
 <a href="../junctions/">Junctions</a>.</p>
 <h2 id="eqmatcher-built-in">EqMatcher (built-in)<a class="headerlink" href="#eqmatcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>eq</code> checks order-dependent structural equality using Raku's <code>eqv</code> operator.
@@ -2890,13 +2890,13 @@ that array as one element. To spread an existing array, use <code>|@arr</code>:<
 </code></pre></div></td></tr></table></div>
 <p>Failure messages render as <code>expected &lt;actual&gt; to contain exactly &lt;items&gt;</code> (or
 <code>not to contain exactly</code> under <code>.not</code>).</p>
-<p><code>match-array</code> is the array-form alias — it takes a single array argument and
+<p><code>match-array</code> is the array-form alias. It takes a single array argument and
 delegates to the same matcher:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">3</span>, <span class="mi">2</span>, <span class="mi">1</span>]);   <span class="c1"># passes</span>
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">match-array</span>([<span class="mi">1</span>, <span class="mi">2</span>]);      <span class="c1"># fails</span>
 </code></pre></div></td></tr></table></div>
-<p><code>match-array</code> requires its argument to be an array / list; passing a scalar
+<p><code>match-array</code> requires its argument to be an array / list. Passing a scalar
 dies with <code>match-array requires an array argument</code>.</p>
 <h2 id="includematcher-built-in">IncludeMatcher (built-in)<a class="headerlink" href="#includematcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>include</code> checks membership across arrays, hashes, sets, bags, ranges, and
@@ -2953,7 +2953,7 @@ to include</code> under <code>.not</code>).</p>
 <span class="n">expect</span>(<span class="s">&#39;done 🚀&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="s">&#39;🚀&#39;</span>);            <span class="c1"># emoji</span>
 <span class="n">expect</span>(<span class="s">&#39;order #42&#39;</span>).<span class="nb">to</span>.<span class="n">include</span>(<span class="mi">42</span>);            <span class="c1"># non-Str args are .Str-coerced</span>
 </code></pre></div></td></tr></table></div>
-<p>Matching is case sensitive — <code>expect('Hello').to.include('hello')</code> fails.
+<p>Matching is case sensitive: <code>expect('Hello').to.include('hello')</code> fails.
 For case-insensitive matching, use <a href="#matchmatcher-built-in"><code>MatchMatcher</code></a>
 with a regex like <code>rx:i/hello/</code>.</p>
 <p>Allomorphs (<code>IntStr</code>, <code>RatStr</code>, <code>&lt;42&gt;</code>) are accepted as actuals and routed
@@ -2991,7 +2991,7 @@ lists die with <code>start-with requires at least one item</code>.</p>
 to start with</code> under <code>.not</code>).</p>
 <h3 id="string-specific-behavior_1">String-specific behavior<a class="headerlink" href="#string-specific-behavior_1" title="Permanent link">&para;</a></h3>
 <p>When the actual is a <code>Str</code>, each prefix is checked via <code>.starts-with</code> after
-<code>.Str</code> coercion. Multi-prefix calls AND together — every supplied prefix must
+<code>.Str</code> coercion. Multi-prefix calls AND together: every supplied prefix must
 independently be a prefix of the string:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -3007,7 +3007,7 @@ independently be a prefix of the string:</p>
 <span class="n">expect</span>(<span class="s">&#39;🚀 launch&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="s">&#39;🚀&#39;</span>);       <span class="c1"># emoji</span>
 <span class="n">expect</span>(<span class="s">&#39;42 answers&#39;</span>).<span class="nb">to</span>.<span class="n">start-with</span>(<span class="mi">42</span>);        <span class="c1"># non-Str args are .Str-coerced</span>
 </code></pre></div></td></tr></table></div>
-<p>Matching is case sensitive and respects leading whitespace —
+<p>Matching is case sensitive and respects leading whitespace:
 <code>expect('hello').to.start-with(' hello')</code> fails. Allomorphs (<code>IntStr</code>,
 <code>RatStr</code>) are accepted as actuals and routed through the <code>Str</code> branch.</p>
 <h2 id="endwithmatcher-built-in">EndWithMatcher (built-in)<a class="headerlink" href="#endwithmatcher-built-in" title="Permanent link">&para;</a></h2>
@@ -3035,7 +3035,7 @@ render as <code>expected &lt;actual&gt; to end with &lt;items&gt;</code> (or <co
 <code>.not</code>).</p>
 <h3 id="string-specific-behavior_2">String-specific behavior<a class="headerlink" href="#string-specific-behavior_2" title="Permanent link">&para;</a></h3>
 <p>When the actual is a <code>Str</code>, each suffix is checked via <code>.ends-with</code> after
-<code>.Str</code> coercion. Multi-suffix calls AND together — every supplied suffix must
+<code>.Str</code> coercion. Multi-suffix calls AND together: every supplied suffix must
 independently be a suffix of the string:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -3051,7 +3051,7 @@ independently be a suffix of the string:</p>
 <span class="n">expect</span>(<span class="s">&#39;moon 🚀&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="s">&#39;🚀&#39;</span>);           <span class="c1"># emoji</span>
 <span class="n">expect</span>(<span class="s">&#39;answer = 42&#39;</span>).<span class="nb">to</span>.<span class="n">end-with</span>(<span class="mi">42</span>);         <span class="c1"># non-Str args are .Str-coerced</span>
 </code></pre></div></td></tr></table></div>
-<p>Matching is case sensitive and respects trailing whitespace —
+<p>Matching is case sensitive and respects trailing whitespace:
 <code>expect('hello').to.end-with('hello ')</code> fails. Allomorphs (<code>IntStr</code>, <code>RatStr</code>)
 are accepted as actuals and routed through the <code>Str</code> branch.</p>
 <h2 id="allmatcher-built-in">AllMatcher (built-in)<a class="headerlink" href="#allmatcher-built-in" title="Permanent link">&para;</a></h2>
@@ -3103,7 +3103,7 @@ pointing at the <strong>first</strong> failing element. Negation renders as
 <span class="n">expect</span>(<span class="nv">@rows</span>).<span class="nb">to</span>.<span class="nb">all</span>(<span class="n">IncludeMatcher</span>.<span class="nb">new</span>(:<span class="n">expected</span>([<span class="nb">status</span> =&gt; <span class="s">&#39;ok&#39;</span>])));
 </code></pre></div></td></tr></table></div>
 <h3 id="junctions">Junctions<a class="headerlink" href="#junctions" title="Permanent link">&para;</a></h3>
-<p>Pass junctions through <code>.all(...)</code> directly — the method binds its argument
+<p>Pass junctions through <code>.all(...)</code> directly. The method binds its argument
 raw so junctions are not autothreaded out:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="nb">all</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
 </code></pre></div></td></tr></table></div>
@@ -3141,7 +3141,7 @@ the actual value against the type (<code>$actual ~~ $type</code>):</p>
 <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Positive</span>);          <span class="c1"># passes</span>
 <span class="n">expect</span>(-<span class="mi">1</span>).<span class="nb">to</span>.<span class="n">be-a</span>(<span class="n">Positive</span>);         <span class="c1"># fails (where clause)</span>
 </code></pre></div></td></tr></table></div>
-<p><code>be-an</code> is provided as an alias for English grammar — it behaves identically:</p>
+<p><code>be-an</code> is provided as an alias for English grammar. It behaves identically:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">42</span>).<span class="nb">to</span>.<span class="n">be-an</span>(<span class="nb">Int</span>);
 </code></pre></div></td></tr></table></div>
 <p>Failure messages render as <code>expected &lt;actual&gt; to be a &lt;type&gt;</code> (or <code>not to be
@@ -3201,7 +3201,7 @@ and recognises methods supplied by composed roles and parent classes.</p>
 <span class="n">expect</span>(<span class="s">&#39;hello&#39;</span>).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;uc&#39;</span>, <span class="s">&#39;lc&#39;</span>, <span class="s">&#39;chars&#39;</span>);         <span class="c1"># built-ins work</span>
 <span class="n">expect</span>([<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>]).<span class="nb">to</span>.<span class="n">respond-to</span>(<span class="s">&#39;push&#39;</span>, <span class="s">&#39;pop&#39;</span>);             <span class="c1"># Arrays too</span>
 </code></pre></div></td></tr></table></div>
-<p>Multiple method names are AND-combined — every name must be present for
+<p>Multiple method names are AND-combined: every name must be present for
 the expectation to pass. When the expectation fails, the failure message
 lists the missing methods:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected Dog.new to respond to &quot;bark&quot;, &quot;meow&quot;, &quot;purr&quot; (missing: &quot;meow&quot;, &quot;purr&quot;)
@@ -3215,7 +3215,7 @@ lists the missing methods:</p>
 <p><code>have-attributes</code> checks several attributes of an object in one call.
 Each named pair maps an attribute name to an expected value (or to
 another <code>Matcher</code>). For each pair, the matcher calls the accessor on
-the actual value and compares — values are compared with <code>eqv</code>, and
+the actual value and compares. Values are compared with <code>eqv</code>, and
 when the expected side is itself a <code>Matcher</code> its <code>matches</code> method is
 delegated to.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -3238,13 +3238,13 @@ delegated to.</p>
 <span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">name</span><span class="s">&lt;Alice&gt;</span>);               <span class="c1"># subset OK</span>
 <span class="n">expect</span>(<span class="nv">$alice</span>).<span class="nb">to</span>.<span class="n">have-attributes</span>(:<span class="n">age</span>(<span class="mi">31</span>));                   <span class="c1"># fails</span>
 </code></pre></div></td></tr></table></div>
-<p>Multiple attributes are AND-combined — every pair must match. When the
+<p>Multiple attributes are AND-combined: every pair must match. When the
 expectation fails, the failure message separates <em>missing</em> accessors
 (the object does not respond to the name at all) from <em>mismatched</em>
 values (accessor exists, but the value disagrees):</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected Person.new(name =&gt; &quot;Alice&quot;, age =&gt; 30) to have attributes age =&gt; 31, nickname =&gt; &quot;Al&quot; (missing: &quot;nickname&quot;; mismatched: age: got 30, wanted 31)
 </code></pre></div></td></tr></table></div>
-<p>The matcher composes naturally with other matchers — pass a <code>Matcher</code>
+<p>The matcher composes naturally with other matchers. Pass a <code>Matcher</code>
 instance as the expected value for any attribute:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -3345,7 +3345,7 @@ recorded failure instead of a runtime error:</p>
 be …</code> under <code>.not</code>.</p>
 <h2 id="bebetweenmatcher-built-in">BeBetweenMatcher (built-in)<a class="headerlink" href="#bebetweenmatcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>be-between</code> checks whether a numeric <code>actual</code> falls within a <code>[min, max]</code>
-range. The matcher is inclusive by default; chain <code>.exclusive</code> (or the
+range. The matcher is inclusive by default. Chain <code>.exclusive</code> (or the
 explicit <code>.inclusive</code>) to flip the mode:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -3412,7 +3412,7 @@ expected target, parameterized by a <code>delta</code>. The call shape uses an
 <span class="n">expect</span>(<span class="mf">5.2</span>).<span class="nb">to</span>.<span class="n">be-within</span>(<span class="mf">0.1</span>).<span class="nb">of</span>(<span class="mf">5.0</span>);      <span class="c1"># fails</span>
 <span class="n">expect</span>(<span class="mf">3.14e0</span>).<span class="nb">to</span>.<span class="n">be-within</span>(<span class="mf">0.01e0</span>).<span class="nb">of</span>(<span class="mf">3.15e0</span>);  <span class="c1"># Num tolerance</span>
 </code></pre></div></td></tr></table></div>
-<p>The boundary is inclusive — <code>abs(actual - expected) &lt;= delta</code> — so a
+<p>The boundary is inclusive (<code>abs(actual - expected) &lt;= delta</code>), so a
 delta of <code>0</code> means actual must equal expected exactly:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be-within</span>(<span class="mi">0</span>).<span class="nb">of</span>(<span class="mi">5</span>);            <span class="c1"># passes</span>
@@ -3449,7 +3449,7 @@ delta), and <code>Failure.given</code> holds the actual value, so programmatic
 consumers and alternate formatters can introspect both.</p>
 <h2 id="betruthymatcher-built-in">BeTruthyMatcher (built-in)<a class="headerlink" href="#betruthymatcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>be-truthy</code> checks Raku's boolean coercion of the actual value (<code>?$actual</code>).
-Anything that coerces to <code>True</code> passes; anything that coerces to <code>False</code>
+Anything that coerces to <code>True</code> passes. Anything that coerces to <code>False</code>
 fails:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -3490,7 +3490,7 @@ is <code>False</code>:</p>
 <p>Failure messages render as <code>expected &lt;actual&gt; to be truthy</code> (or <code>not to
 be truthy</code> under <code>.not</code>).</p>
 <h2 id="befalsymatcher-built-in">BeFalsyMatcher (built-in)<a class="headerlink" href="#befalsymatcher-built-in" title="Permanent link">&para;</a></h2>
-<p><code>be-falsy</code> is the inverse of <code>be-truthy</code> — it passes when <code>!$actual</code> is
+<p><code>be-falsy</code> is the inverse of <code>be-truthy</code>. It passes when <code>!$actual</code> is
 <code>True</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -3542,7 +3542,7 @@ That covers Raku's three flavors of "not a value":</p>
 <span class="n">expect</span>(<span class="n">Widget</span>).<span class="nb">to</span>.<span class="n">be-nil</span>;       <span class="c1"># user-defined type object</span>
 <span class="n">expect</span>(<span class="n">Widget</span>.<span class="nb">new</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be-nil</span>; <span class="c1"># defined instance</span>
 </code></pre></div></td></tr></table></div>
-<p>Defined values — even "empty" or falsy ones — fail <code>be-nil</code>:</p>
+<p>Defined values (even "empty" or falsy ones) fail <code>be-nil</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -3558,7 +3558,7 @@ explicit: <code>Int</code> (the type) is undefined, but <code>0</code> (an insta
 <code>Int</code>) is defined. Use <code>be-nil</code> when you care about "is this a real
 value", and <code>be-falsy</code> when you care about boolean coercion (which
 treats empty collections as false too).</p>
-<p>Note that assigning <code>Nil</code> to a plain <code>my $x</code> reverts <code>$x</code> to <code>Any</code> —
+<p>Note that assigning <code>Nil</code> to a plain <code>my $x</code> reverts <code>$x</code> to <code>Any</code>, and
 both still pass <code>be-nil</code>, so the distinction rarely matters in
 practice.</p>
 <p><code>be-nil</code> takes no arguments. Failure messages render as
@@ -3581,7 +3581,7 @@ and <code>rx//</code>-quoted forms.</p>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="s">&#39;abc&#39;</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="nb">match</span>(<span class="sr">/\d+/</span>);
 <span class="n">expect</span>(<span class="s">&#39;cat&#39;</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="nb">match</span>(<span class="sr">/dog/</span>);
 </code></pre></div></td></tr></table></div>
-<p>Undefined and non-<code>Str</code> actuals fail rather than throw — <code>expect(Any)</code>,
+<p>Undefined and non-<code>Str</code> actuals fail rather than throw: <code>expect(Any)</code>,
 <code>expect(Str)</code>, <code>expect(42)</code>, and <code>expect([1, 2, 3])</code> all record a
 failure when matched against any regex, so a stray nil or wrongly typed
 value produces a normal expectation failure instead of a runtime
@@ -3594,19 +3594,19 @@ expected &quot;abc123&quot; not to match /\d+/
 <p><code>Failure.given</code> carries the original string and <code>Failure.expected</code>
 carries the <code>Regex</code> itself, so programmatic consumers and alternate
 formatters can inspect either side.</p>
-<p><code>match</code> is regex-only; for substring checks use <code>include</code> (see
+<p><code>match</code> is regex-only. For substring checks use <code>include</code> (see
 <a href="./#includematcher-built-in">Matchers › IncludeMatcher</a>).</p>
 <h2 id="raiseerrormatcher-built-in">RaiseErrorMatcher (built-in)<a class="headerlink" href="#raiseerrormatcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>raise-error</code> passes when the actual value is a <code>Callable</code> and invoking it
 raises an exception. Because the matcher operates on a <code>Callable</code>, the
-block must be passed unevaluated — wrap the code under test in <code>{ ... }</code>:</p>
+block must be passed unevaluated. Wrap the code under test in <code>{ ... }</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>({ <span class="nb">die</span> <span class="s">&quot;boom&quot;</span> }).<span class="nb">to</span>.<span class="n">raise-error</span>;
 <span class="n">expect</span>({ <span class="o">X</span>::<span class="n">AdHoc</span>.<span class="nb">new</span>(<span class="nb">payload</span> =&gt; <span class="s">&#39;x&#39;</span>).<span class="nb">throw</span> }).<span class="nb">to</span>.<span class="n">raise-error</span>;
 <span class="n">expect</span>({ <span class="mi">1</span> + <span class="mi">1</span> }).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">raise-error</span>;
 </code></pre></div></td></tr></table></div>
-<p><code>raise-error</code> is also available under two aliases — <code>throw</code> and <code>raise</code> —
+<p><code>raise-error</code> is also available under two aliases (<code>throw</code> and <code>raise</code>),
 which take the same arguments and behave identically. Pick whichever
 reads best at the call site:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -3669,8 +3669,8 @@ constraint is a string:</p>
 <span class="n">expect</span>({ <span class="o">X</span>::<span class="n">Demo</span>.<span class="nb">new</span>.<span class="nb">throw</span> }).<span class="nb">to</span>.<span class="n">raise-error</span>(<span class="o">X</span>::<span class="n">Demo</span>).<span class="n">with-message</span>(<span class="s">&#39;demo&#39;</span>);
 </code></pre></div></td></tr></table></div>
 <p><code>Str</code> arguments compare with <code>eq</code> (the full message must match
-exactly); <code>Regex</code> arguments compare with <code>~~</code>. The chain may be
-re-applied — only the most recent call's expectation is in effect, and
+exactly). <code>Regex</code> arguments compare with <code>~~</code>. The chain may be
+re-applied: only the most recent call's expectation is in effect, and
 any failure recorded by an earlier link in the chain is replaced rather
 than appended:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -3680,7 +3680,7 @@ than appended:</p>
 <span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$exp</span> = <span class="n">expect</span>({ <span class="nb">die</span> <span class="s">&quot;boom&quot;</span> }).<span class="nb">to</span>.<span class="n">raise-error</span>.<span class="n">with-message</span>(<span class="s">&#39;bang&#39;</span>);
 <span class="c1"># Failures.list has one entry.</span>
 <span class="nv">$exp</span>.<span class="n">with-message</span>(<span class="s">&#39;boom&#39;</span>);
-<span class="c1"># Failures.list is now empty — the second call succeeded and cleared</span>
+<span class="c1"># Failures.list is now empty. The second call succeeded and cleared</span>
 <span class="c1"># the prior failure.</span>
 </code></pre></div></td></tr></table></div>
 <p>When the chain ultimately fails, the failure message reflects the
@@ -3696,7 +3696,7 @@ expected block to raise X::Demo with message &quot;demo&quot;, but raised X::AdH
 </code></pre></div></td></tr></table></div>
 <h3 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h3>
 <p><code>.not.raise-error(...)</code> passes whenever the block fails to match the
-<em>full</em> filter — i.e. nothing was raised, or a different type was raised,
+<em>full</em> filter: i.e. nothing was raised, or a different type was raised,
 or the message did not match. It only fails when the block raised
 exactly the forbidden exception:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -3712,7 +3712,7 @@ exception's type and message so you can diagnose without re-running:</p>
 expected block not to raise X::Demo, but one was raised (X::Demo: demo)
 </code></pre></div></td></tr></table></div>
 <h3 id="non-callable-actuals">Non-Callable actuals<a class="headerlink" href="#non-callable-actuals" title="Permanent link">&para;</a></h3>
-<p>Non-<code>Callable</code> actuals fail rather than throw — <code>expect(42).to.raise-error</code>
+<p>Non-<code>Callable</code> actuals fail rather than throw: <code>expect(42).to.raise-error</code>
 records a normal expectation failure rather than blowing up. The failure
 message names the unwrapped value so the mistake is obvious:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected a Callable, but got 42
@@ -3721,7 +3721,7 @@ message names the unwrapped value so the mistake is obvious:</p>
 <p><code>Failure.given</code> carries the original <code>Callable</code>. <code>Failure.expected</code>
 carries the expected exception type (when one was supplied), or the
 expected message (regex or <code>Str</code>, whichever was supplied via the inline
-form or <code>with-message</code>); for the bare no-argument form it remains
+form or <code>with-message</code>). For the bare no-argument form it remains
 unset. The matcher itself also exposes <code>raised-exception</code> (the captured
 throw) and <code>miss-reason</code> (one of <code>'none'</code>, <code>'type'</code>, <code>'message'</code>,
 <code>'non-callable'</code>, or <code>Str</code> on a pass) for tooling that needs structural
@@ -3729,7 +3729,7 @@ access.</p>
 <h2 id="changematcher-built-in">ChangeMatcher (built-in)<a class="headerlink" href="#changematcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>change</code> passes when invoking the actual block changes the value
 returned by an observable block. Both the action and the observable
-are passed unevaluated as <code>{ ... }</code> blocks — the matcher invokes the
+are passed unevaluated as <code>{ ... }</code> blocks. The matcher invokes the
 observable, runs the action, then invokes the observable again and
 compares the two values via <code>eqv</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -3748,8 +3748,8 @@ compares the two values via <code>eqv</code>:</p>
 <span class="k">my</span> <span class="nv">$counter2</span> = <span class="mi">5</span>;
 <span class="n">expect</span>({ <span class="mi">1</span> + <span class="mi">1</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$counter2</span> });            <span class="c1"># fails (unchanged)</span>
 </code></pre></div></td></tr></table></div>
-<p>The observable can be any expression — a variable, a method call, a
-derived value — as long as the block returns something comparable. The
+<p>The observable can be any expression (a variable, a method call, a
+derived value) as long as the block returns something comparable. The
 matcher uses <code>eqv</code> for the before / after comparison, so deep
 structural equality is respected: mutating an array element to the
 same value (<code>@items[0] = 1</code> when it was already <code>1</code>) does <strong>not</strong>
@@ -3778,7 +3778,7 @@ observable, and fails when it does:</p>
 <span class="c1"># fails: expected block not to change observable, but it changed from 5 to 9</span>
 </code></pre></div></td></tr></table></div>
 <h3 id="non-callable-actuals_1">Non-Callable actuals<a class="headerlink" href="#non-callable-actuals_1" title="Permanent link">&para;</a></h3>
-<p>Non-<code>Callable</code> actuals fail rather than throw — <code>expect(42).to.change({ $x })</code>
+<p>Non-<code>Callable</code> actuals fail rather than throw: <code>expect(42).to.change({ $x })</code>
 records a normal expectation failure rather than blowing up. The
 failure message names the unwrapped value:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>expected a Callable for change, but got 42
@@ -3802,11 +3802,11 @@ failure message names the unwrapped value:</p>
 <span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$counter</span> = <span class="mi">0</span>;
 <span class="n">expect</span>({ <span class="nv">$counter</span> = <span class="mi">10</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$counter</span> }).<span class="nb">from</span>(<span class="mi">0</span>).<span class="nb">to</span>(<span class="mi">10</span>);
 
-<span class="c1"># .from alone — must start at 0 *and* change</span>
+<span class="c1"># .from alone: must start at 0 *and* change</span>
 <span class="k">my</span> <span class="nv">$a</span> = <span class="mi">0</span>;
 <span class="n">expect</span>({ <span class="nv">$a</span>++ }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$a</span> }).<span class="nb">from</span>(<span class="mi">0</span>);
 
-<span class="c1"># .to alone — must end at 10 *and* differ from the start</span>
+<span class="c1"># .to alone: must end at 10 *and* differ from the start</span>
 <span class="k">my</span> <span class="nv">$b</span> = <span class="mi">0</span>;
 <span class="n">expect</span>({ <span class="nv">$b</span> = <span class="mi">10</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$b</span> }).<span class="nb">to</span>(<span class="mi">10</span>);
 
@@ -3817,7 +3817,7 @@ failure message names the unwrapped value:</p>
 <p><code>.from</code> and <code>.to</code> use <code>eqv</code> for the comparison, so deep structural
 equality is respected (e.g. <code>.from([])</code> matches an empty-array
 snapshot). The action block is run exactly once per <code>.change(...)</code>
-call — chaining <code>.from(...).to(...)</code> after a <code>.change(...)</code> does
+call. Chaining <code>.from(...).to(...)</code> after a <code>.change(...)</code> does
 not re-run it.</p>
 <p>When a chain step fails and a later step passes, the prior failure
 is replaced (rather than duplicated) so the recorded <code>Failure</code> list
@@ -3826,7 +3826,7 @@ always reflects the final state.</p>
 <p>The chain participates in the existing <code>.not</code> flow with conjunction
 semantics: <code>.not.change(...).from(x).to(y)</code> passes when the joint
 constraint (change AND from match AND to match) does <em>not</em> hold.
-This means the block may still have changed the observable — just
+This means the block may still have changed the observable, just
 not in that particular direction. The negated failure message
 includes the clause for clarity:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -3837,7 +3837,7 @@ includes the clause for clarity:</p>
 <span class="normal">6</span>
 <span class="normal">7</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="nv">$counter</span> = <span class="mi">0</span>;
 <span class="n">expect</span>({ <span class="nv">$counter</span> = <span class="mi">7</span> }).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">change</span>({ <span class="nv">$counter</span> }).<span class="nb">from</span>(<span class="mi">0</span>).<span class="nb">to</span>(<span class="mi">10</span>);
-<span class="c1"># passes — the value changed, but not to 10</span>
+<span class="c1"># passes: the value changed, but not to 10</span>
 
 <span class="n">expect</span>({ <span class="nv">$counter</span> = <span class="mi">10</span> }).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">change</span>({ <span class="nv">$counter</span> }).<span class="nb">from</span>(<span class="mi">0</span>).<span class="nb">to</span>(<span class="mi">10</span>);
 <span class="c1"># fails: expected block not to change observable from 0 to 10,</span>
@@ -3869,13 +3869,13 @@ the change from below and above:</p>
 <span class="n">expect</span>({ <span class="nv">$score</span> += <span class="mi">5</span> }).<span class="nb">to</span>.<span class="n">change</span>({ <span class="nv">$score</span> })
   .<span class="n">by-at-least</span>(<span class="mi">1</span>).<span class="n">by-at-most</span>(<span class="mi">10</span>);
 </code></pre></div></td></tr></table></div>
-<p>All three accept any <code>Real</code> (<code>Int</code>, <code>Rat</code>, <code>Num</code>); the matcher
+<p>All three accept any <code>Real</code> (<code>Int</code>, <code>Rat</code>, <code>Num</code>). The matcher
 subtracts <code>after - before</code> and compares against the expected delta
 with the usual numeric operators. If the observable returns a
 non-numeric value (e.g. a <code>Str</code>), the matcher records a
 <code>by-non-numeric</code> failure rather than coercing.</p>
 <p>The by-modifiers compose with <code>.from(...)</code> and <code>.to(...)</code>. From
-and to mismatches still take priority — <code>.from(0).by(5)</code> reports
+and to mismatches still take priority: <code>.from(0).by(5)</code> reports
 a from-mismatch when the value did not start at 0, even if the
 delta would otherwise be wrong. RSpec parity: when the value did
 not change at all, the no-change miss-reason fires first, so
@@ -3942,7 +3942,7 @@ quotes the timeout:</p>
 <p>The matcher exposes <code>value</code> (set when the promise was kept),
 <code>cause</code> (set when the promise was broken), <code>timed-out</code>, and
 <code>promise-given</code> for tooling.</p>
-<p><code>be-kept</code> accepts a positional <code>Real</code> timeout in seconds; pass <code>0.5</code>
+<p><code>be-kept</code> accepts a positional <code>Real</code> timeout in seconds. Pass <code>0.5</code>
 for 500 ms. Non-Promise actuals fail with a Promise-shape message
 (<code>expected a Promise for be-kept, but got 42</code>) rather than dying.</p>
 <h2 id="bebrokenmatcher-built-in">BeBrokenMatcher (built-in)<a class="headerlink" href="#bebrokenmatcher-built-in" title="Permanent link">&para;</a></h2>
@@ -3972,8 +3972,8 @@ broke when you expected it not to:</p>
 <p>The matcher exposes <code>value</code> (set when the promise was kept), <code>cause</code>
 (set when broken), <code>was-kept</code>, <code>timed-out</code>, and <code>promise-given</code>.</p>
 <h2 id="completewithinmatcher-built-in">CompleteWithinMatcher (built-in)<a class="headerlink" href="#completewithinmatcher-built-in" title="Permanent link">&para;</a></h2>
-<p><code>complete-within</code> passes when the promise settles — either kept or
-broken — within the given duration. The duration is a <code>Real</code>
+<p><code>complete-within</code> passes when the promise settles (either kept or
+broken) within the given duration. The duration is a <code>Real</code>
 positional argument in seconds:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -3997,7 +3997,7 @@ expected Promise not to complete within 1s, but it was broken (X::AdHoc: boom)
 queryable from tooling. The matcher exposes <code>final-status</code> (<code>Kept</code>,
 <code>Broken</code>, or <code>Nil</code> when timed out), <code>value</code>, <code>cause</code>, <code>timed-out</code>,
 and <code>promise-given</code>.</p>
-<p>Unlike <code>be-kept</code> / <code>be-broken</code>, the duration is required — there's
+<p>Unlike <code>be-kept</code> / <code>be-broken</code>, the duration is required. There's
 no useful default for "how long is too long" without it.</p>
 <h2 id="emitmatcher-built-in">EmitMatcher (built-in)<a class="headerlink" href="#emitmatcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>emit</code> taps a <code>Supply</code> or iterates a <code>Channel</code> and passes when the
@@ -4021,7 +4021,7 @@ configurable collection window. Comparison is element-by-element via
 <span class="n">expect</span>(<span class="nb">Supply</span>.<span class="nb">from-list</span>(<span class="mi">1</span>, <span class="mi">2</span>)).<span class="nb">to</span>.<span class="nb">not</span>.<span class="nb">emit</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>);
 </code></pre></div></td></tr></table></div>
 <p>The collection window defaults to 1 second. Pass <code>:within(seconds)</code> to
-change it — useful for slow streams or to fail fast on hung supplies:</p>
+change it, useful for slow streams or to fail fast on hung supplies:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nb">Supply</span>.<span class="nb">from-list</span>(<span class="mi">1</span>, <span class="mi">2</span>)).<span class="nb">to</span>.<span class="nb">emit</span>(<span class="mi">1</span>, <span class="mi">2</span>, :<span class="n">within</span>(<span class="mf">0.5</span>));
 </code></pre></div></td></tr></table></div>
 <p><code>emit</code> uses <code>react</code>/<code>whenever</code> under the hood and stops collecting as
@@ -4078,7 +4078,7 @@ expected stream to complete within 1s, but it quit (X::AdHoc: boom)
 <p><code>Failure.expected</code> carries the window so failure metadata is queryable
 from tooling.</p>
 <p>Unlike Promise's <code>complete-within</code>, the <code>complete</code> matcher does not
-treat a stream-level error (<code>QUIT</code>) as completion — only the <code>done</code>
+treat a stream-level error (<code>QUIT</code>) as completion. Only the <code>done</code>
 signal counts.</p>
 <h2 id="eventuallymatcher-built-in">EventuallyMatcher (built-in)<a class="headerlink" href="#eventuallymatcher-built-in" title="Permanent link">&para;</a></h2>
 <p><code>eventually</code> re-runs a <code>Callable</code> block on a polling loop until the
@@ -4131,7 +4131,7 @@ last exception:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>eventually: block threw X::AdHoc: not yet (after 5 iterations in 0.05s)
 </code></pre></div></td></tr></table></div>
 <p>Exceptions raised inside the block are caught per-iteration and treated
-as misses — the polling loop continues so the block has a chance to
+as misses. The polling loop continues so the block has a chance to
 recover (e.g., a service warming up).</p>
 <h3 id="negation_2">Negation<a class="headerlink" href="#negation_2" title="Permanent link">&para;</a></h3>
 <p>Under <code>.not</code>, <code>eventually</code> passes only when the inner matcher never
@@ -4198,14 +4198,14 @@ block form is required.</p>
 </ul>
 <h2 id="negation_3">Negation<a class="headerlink" href="#negation_3" title="Permanent link">&para;</a></h2>
 <p><code>.not</code> flips the boolean result of <code>matches</code> <em>before</em> the framework decides
-whether to record a failure. Matchers do not need to special-case negation;
-they only need to return a sensible message from <code>failure-message-negated</code> for
+whether to record a failure. Matchers do not need to special-case negation.
+They only need to return a sensible message from <code>failure-message-negated</code> for
 when <code>.not</code> fails (i.e., the matcher matched but should not have).</p>
 <p>Built-in matchers and user-supplied matchers go through the same role, so a
 custom matcher you write integrates with <code>expect</code> exactly the way the
 built-ins do.</p>
-<p>For the DSL-form alternative — defining matchers as a bundle of callbacks
-without writing a class — see <a href="../custom-matchers/">Custom Matchers</a>.</p>
+<p>For the DSL-form alternative (defining matchers as a bundle of callbacks
+without writing a class), see <a href="../custom-matchers/">Custom Matchers</a>.</p>
 <h2 id="composing-matchers">Composing matchers<a class="headerlink" href="#composing-matchers" title="Permanent link">&para;</a></h2>
 <p>Every type that does <code>Matcher</code> automatically gets <code>.and</code> and <code>.or</code> methods
 that build <code>AndMatcher</code> / <code>OrMatcher</code> composites. They short-circuit, flatten

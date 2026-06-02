@@ -1607,7 +1607,7 @@
 <h1 id="composable-matchers">Composable Matchers<a class="headerlink" href="#composable-matchers" title="Permanent link">&para;</a></h1>
 <p>Combine matchers with <code>.and</code> and <code>.or</code> to express compound expectations
 without writing a one-off custom matcher. Every type that does the
-<a href="../matchers/">Matcher</a> role gets these two methods automatically — so they
+<a href="../matchers/">Matcher</a> role gets these two methods automatically, so they
 work with built-in matchers, hand-rolled <code>does Matcher</code> classes, and
 <a href="../custom-matchers/"><code>define-matcher</code></a> factories alike.</p>
 <h2 id="and"><code>.and</code><a class="headerlink" href="#and" title="Permanent link">&para;</a></h2>
@@ -1687,7 +1687,7 @@ chains build up naturally.</p>
 <span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="c1"># (A and B) or C</span>
 <span class="nv">$a</span>.<span class="o">and</span>(<span class="nv">$b</span>).<span class="o">or</span>(<span class="nv">$c</span>);
 
-<span class="c1"># A and (B or C)  — group with an explicit inner composite</span>
+<span class="c1"># A and (B or C): group with an explicit inner composite</span>
 <span class="nv">$a</span>.<span class="o">and</span>(<span class="nv">$b</span>.<span class="o">or</span>(<span class="nv">$c</span>));
 </code></pre></div></td></tr></table></div>
 <p>Reach for an explicit nested matcher when precedence matters.</p>
@@ -1767,7 +1767,7 @@ above with <code>not to …</code>.</p>
 </table>
 <h2 id="argument-validation">Argument validation<a class="headerlink" href="#argument-validation" title="Permanent link">&para;</a></h2>
 <p><code>.and</code> and <code>.or</code> accept only objects that do the <code>Matcher</code> role. Passing
-anything else dies immediately with a clear message — composition catches
+anything else dies immediately with a clear message: composition catches
 typos at the call site rather than papering over them with surprising
 smartmatch semantics.</p>
 

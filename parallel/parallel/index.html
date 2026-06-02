@@ -1011,10 +1011,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#profile-memory-benchmark" class="md-nav__link">
+  <a href="#profile-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profile, memory, benchmark
+        Profile, benchmark
       
     </span>
   </a>
@@ -1916,10 +1916,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#profile-memory-benchmark" class="md-nav__link">
+  <a href="#profile-benchmark" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Profile, memory, benchmark
+        Profile, benchmark
       
     </span>
   </a>
@@ -1976,9 +1976,9 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 </code></pre></div></td></tr></table></div>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <p>Behave's parent process discovers your spec tree, then for each spec file spawns a fresh <code>raku bin/behave --worker-manifest …</code> subprocess. Each worker loads exactly one spec file, runs its assigned examples, and streams structured JSON events back to the parent over stdout. A semaphore caps the number of concurrent subprocesses. The parent renders the events into your chosen formatter so your terminal sees a single coherent run, not <code>N</code> interleaved transcripts.</p>
-<p>Workers are subprocesses, not threads — every worker has its own Raku runtime, its own loaded classes, and its own <code>%*ENV</code>. State you mutate in one example never leaks to another worker.</p>
+<p>Workers are subprocesses, not threads. Every worker has its own Raku runtime, its own loaded classes, and its own <code>%*ENV</code>. State you mutate in one example never leaks to another worker.</p>
 <h2 id="the-file-boundary-is-the-isolation-boundary">The file boundary is the isolation boundary<a class="headerlink" href="#the-file-boundary-is-the-isolation-boundary" title="Permanent link">&para;</a></h2>
-<p>Because each spec file loads in its own subprocess, <strong>cross-file in-process state cannot be shared via spec files</strong>. If file A declares a <code>define-matcher</code>, <code>shared-examples</code>, or <code>shared-contexts</code> block and file B references it by name, the reference will fail under the default loader — file B's subprocess never loaded file A.</p>
+<p>Because each spec file loads in its own subprocess, <strong>cross-file in-process state cannot be shared via spec files</strong>. If file A declares a <code>define-matcher</code>, <code>shared-examples</code>, or <code>shared-contexts</code> block and file B references it by name, the reference will fail under the default loader: file B's subprocess never loaded file A.</p>
 <p>Put anything that needs to be available to multiple spec files in a module under <code>lib/</code> and <code>use</code> it from each spec:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -2014,14 +2014,14 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
   }
 }
 </code></pre></div></td></tr></table></div>
-<p>This is the same pattern that has always worked across <code>--parallel</code> workers — making file-as-isolation-boundary the default just makes it universal.</p>
+<p>This is the same pattern that has always worked across <code>--parallel</code> workers. Making file-as-isolation-boundary the default just makes it universal.</p>
 <h2 id="why-subprocess-per-file">Why subprocess-per-file<a class="headerlink" href="#why-subprocess-per-file" title="Permanent link">&para;</a></h2>
 <p>Loading multiple spec files into one process has hazards that don't exist when each file lives in its own subprocess. The most common is a runtime <code>require ::($name)</code> inside one spec (for example <code>DBIish.connect(...)</code> lazy-loading a driver) mutating the host process's GLOBAL in a way that breaks subsequent <code>X::*</code>-prefixed symbol lookups in other specs that already imported them. Per-file subprocesses sidestep this class of problem entirely.</p>
 <h3 id="discovery-subprocess">Discovery subprocess<a class="headerlink" href="#discovery-subprocess" title="Permanent link">&para;</a></h3>
 <p>Spec discovery itself also runs in a subprocess. Before launching workers, the parent invokes <code>raku bin/behave --no-config --list-examples --list-examples-format=json &lt;spec-files&gt;</code>, parses the emitted JSON tree, and rebuilds a skeleton <code>Suite</code> / <code>ExampleGroup</code> / <code>Example</code> tree used only for bucket distribution and event lookups. The parent itself never <code>EVALFILE</code>s any user spec file, so user-declared <code>class</code> / <code>role</code> definitions and other top-level effects never run in the parent and cannot collide with one another or with Behave's own loaded modules.</p>
 <h2 id="group-affinity">Group affinity<a class="headerlink" href="#group-affinity" title="Permanent link">&para;</a></h2>
 <p>This section and <a href="#seed-mode-seed-mode">Seed mode</a> describe the <code>lpt</code> / <code>queue</code> pool modes. Under the default <code>isolated</code> mode each spec file already runs in a single subprocess, so every group in a file shares one worker automatically and bucket distribution does not apply.</p>
-<p>All examples inside a <code>describe</code> / <code>context</code> block run on the same worker. This makes <code>before-all</code>, <code>after-all</code>, and <code>around-all</code> amortize correctly — one setup per group per worker, not <code>N</code> setups per group. Distribution happens at the top-level <code>describe</code> granularity by default.</p>
+<p>All examples inside a <code>describe</code> / <code>context</code> block run on the same worker. This makes <code>before-all</code>, <code>after-all</code>, and <code>around-all</code> amortize correctly: one setup per group per worker, not <code>N</code> setups per group. Distribution happens at the top-level <code>describe</code> granularity by default.</p>
 <p>If a group is unusually large and would benefit from being split across workers, opt in with <code>:parallel-split</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -2054,7 +2054,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 </tr>
 </tbody>
 </table>
-<p>Both are always set — each subprocess sees its index and the concurrency cap. Note the index range depends on the mode: in the default <code>isolated</code> mode the index is the spec-file index (so with more files than the <code>--parallel K</code> cap it can exceed <code>K-1</code>), while in the <code>lpt</code> / <code>queue</code> pool modes there are exactly <code>K</code> workers indexed <code>0..K-1</code>. Configuration that interpolates the index into a per-worker resource name works in any concurrency configuration.</p>
+<p>Both are always set. Each subprocess sees its index and the concurrency cap. The index is always in <code>0..K-1</code> (where <code>K</code> is the concurrency cap). In the <code>lpt</code> / <code>queue</code> pool modes there are exactly <code>K</code> persistent workers indexed <code>0..K-1</code>, and in the default <code>isolated</code> mode each running file leases a slot from a recycled pool of <code>K</code> indices (returned when the file finishes), so concurrently-running files always hold distinct indices. Configuration that interpolates the index into a per-worker resource name (e.g. a database) therefore needs only <code>K</code> such resources, in any mode.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -2084,7 +2084,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 <tr>
 <td><code>stable</code></td>
 <td>Deterministic hash mod <code>K</code></td>
-<td>Parent seed (same for every worker); workers run <code>--order=defined</code></td>
+<td>Parent seed (same for every worker), so workers run <code>--order=defined</code></td>
 <td>Yes: the global hash-sorted bucket order is identical regardless of <code>K</code>.</td>
 </tr>
 </tbody>
@@ -2092,8 +2092,8 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 <h3 id="stable"><code>stable</code><a class="headerlink" href="#stable" title="Permanent link">&para;</a></h3>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--seed<span class="w"> </span><span class="m">12345</span><span class="w"> </span>--seed-mode<span class="w"> </span>stable
 </code></pre></div></td></tr></table></div>
-<p>In <code>stable</code> mode, every bucket (top-level <code>describe</code> / <code>context</code>, or top-level <code>it</code>) gets a deterministic 32-bit hash derived from its file path, group-path / line, and the run seed. Buckets are sorted globally by that hash, then assigned to <code>K</code> workers round-robin: bucket at sorted-position <code>i</code> goes to worker <code>i mod K</code>. Within each worker, buckets execute in sorted order; within a bucket, examples execute in declared order.</p>
-<p>The result: rerunning the same suite with the same seed but different <code>K</code> always processes examples in the same global hash-sorted order — only the partition across workers changes. Use this when you need reproducibility across machines whose available parallelism differs.</p>
+<p>In <code>stable</code> mode, every bucket (top-level <code>describe</code> / <code>context</code>, or top-level <code>it</code>) gets a deterministic 32-bit hash derived from its file path, group-path / line, and the run seed. Buckets are sorted globally by that hash, then assigned to <code>K</code> workers round-robin: bucket at sorted-position <code>i</code> goes to worker <code>i mod K</code>. Within each worker, buckets execute in sorted order. Within a bucket, examples execute in declared order.</p>
+<p>The result: rerunning the same suite with the same seed but different <code>K</code> always processes examples in the same global hash-sorted order. Only the partition across workers changes. Use this when you need reproducibility across machines whose available parallelism differs.</p>
 <p>Caveats:</p>
 <ul>
 <li>Stable mode forces <code>--order=defined</code> per worker (the global hash-sort handles ordering).</li>
@@ -2103,7 +2103,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 <h3 id="xor-default"><code>xor</code> (default)<a class="headerlink" href="#xor-default" title="Permanent link">&para;</a></h3>
 <p><code>xor</code> mode is the default for unsurprising single-machine behavior: the LPT distributor balances by <code>example-count</code>, and each worker shuffles its slice using <code>parent-seed XOR worker-index</code>. Two runs with the same <code>--seed N --parallel K</code> are reproducible only when <code>K</code> matches.</p>
 <h2 id="parallel-mode-parallel-mode">Parallel mode (<code>--parallel-mode</code>)<a class="headerlink" href="#parallel-mode-parallel-mode" title="Permanent link">&para;</a></h2>
-<p><code>--parallel-mode</code> selects the execution model under <code>--parallel K</code>. The default, <code>isolated</code>, runs one subprocess per spec file (the model described at the top of this page). The <code>lpt</code> and <code>queue</code> modes instead run a fixed pool of <code>K</code> persistent workers that each own several buckets — this pool model is what the <a href="#group-affinity">Group affinity</a> and <a href="#seed-mode-seed-mode">Seed mode</a> sections describe.</p>
+<p><code>--parallel-mode</code> selects the execution model under <code>--parallel K</code>. The default, <code>isolated</code>, runs one subprocess per spec file (the model described at the top of this page). The <code>lpt</code> and <code>queue</code> modes instead run a fixed pool of <code>K</code> persistent workers that each own several buckets. This pool model is what the <a href="#group-affinity">Group affinity</a> and <a href="#seed-mode-seed-mode">Seed mode</a> sections describe.</p>
 <table>
 <thead>
 <tr>
@@ -2116,12 +2116,12 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 <tr>
 <td><code>isolated</code> (default)</td>
 <td>One subprocess per spec file, up to <code>K</code> in flight</td>
-<td>Strongest isolation; no cross-file in-process state. The default.</td>
+<td>Strongest isolation, with no cross-file in-process state. The default.</td>
 </tr>
 <tr>
 <td><code>lpt</code></td>
-<td>Fixed pool of <code>K</code> workers; static longest-processing-time-first by example count</td>
-<td>Fewer, longer-lived processes; group affinity packs each <code>describe</code> onto one worker.</td>
+<td>Fixed pool of <code>K</code> workers, with static longest-processing-time-first by example count</td>
+<td>Fewer, longer-lived processes. Group affinity packs each <code>describe</code> onto one worker.</td>
 </tr>
 <tr>
 <td><code>queue</code></td>
@@ -2137,7 +2137,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 <p>Worker behavior in queue mode:</p>
 <ul>
 <li>Spec files are loaded <strong>lazily</strong> on the first bucket from that file (vs. eagerly at startup in LPT mode). If a worker never receives a bucket from a file, it never loads that file.</li>
-<li>Each worker forces <code>--order=defined</code> for the examples inside its current bucket. Dispatch order between buckets is cost-desc, then arrival order; within a bucket, declared order.</li>
+<li>Each worker forces <code>--order=defined</code> for the examples inside its current bucket. Dispatch order between buckets is cost-desc, then arrival order. Within a bucket, declared order.</li>
 <li><code>:serial</code> examples are still routed to a single post-parallel serial worker, exactly as in LPT mode.</li>
 </ul>
 <h3 id="when-queue-mode-helps">When queue mode helps<a class="headerlink" href="#when-queue-mode-helps" title="Permanent link">&para;</a></h3>
@@ -2149,9 +2149,9 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 </ul>
 <p>Queue mode tends to match LPT (and adds a small per-bucket coordination overhead) when:</p>
 <ul>
-<li>The suite has fewer buckets than workers — neither strategy can prevent idle workers.</li>
+<li>The suite has fewer buckets than workers, so neither strategy can prevent idle workers.</li>
 <li>Example counts are well-correlated with runtime.</li>
-<li>One single bucket dominates total runtime — both strategies bottleneck on it.</li>
+<li>One single bucket dominates total runtime, so both strategies bottleneck on it.</li>
 </ul>
 <p>Queue mode is opt-in. Benchmark your own suite against <code>lpt</code> before switching.</p>
 <h3 id="reproducibility">Reproducibility<a class="headerlink" href="#reproducibility" title="Permanent link">&para;</a></h3>
@@ -2172,10 +2172,10 @@ $<span class="w"> </span>behave<span class="w"> </span>--parallel<span class="w"
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>Shard retries: 1
   worker 2: crashed after 3 attempts (crash exit codes: 137, 137, 137; final exit: 137)
 </code></pre></div></td></tr></table></div>
-<p><code>--parallel-retry</code> composes with <code>--retry N</code> (per-example flake retry): a flaky example retries inside one worker incarnation; a crashed worker spawns a fresh incarnation that re-runs its whole manifest. Both counts are independent.</p>
+<p><code>--parallel-retry</code> composes with <code>--retry N</code> (per-example flake retry): a flaky example retries inside one worker incarnation, while a crashed worker spawns a fresh incarnation that re-runs its whole manifest. Both counts are independent.</p>
 <p>Caveats:</p>
 <ul>
-<li>Under <code>--parallel-retry N</code>, the parent <strong>buffers</strong> per-worker events until the worker exits. The transcript no longer streams in real time during the worker's run; instead each worker's events appear as a batch once the worker terminates. This is the price of being able to discard a crashed attempt cleanly. With <code>--parallel-retry 0</code> (the default) the streaming behavior is preserved.</li>
+<li>Under <code>--parallel-retry N</code>, the parent <strong>buffers</strong> per-worker events until the worker exits. The transcript no longer streams in real time during the worker's run. Instead each worker's events appear as a batch once the worker terminates. This is the price of being able to discard a crashed attempt cleanly. With <code>--parallel-retry 0</code> (the default) the streaming behavior is preserved.</li>
 <li><code>--parallel-retry</code> only applies under <code>--parallel-mode=lpt</code>. The default <code>isolated</code> mode and <code>queue</code> mode do not re-spawn crashed subprocesses: queue dispatches buckets dynamically, so "re-spawn with the same manifest" has no analogue, and a crashed worker remains fatal in both.</li>
 </ul>
 <h2 id="live-progress-totals-progress-total">Live progress totals (<code>--progress-total</code>)<a class="headerlink" href="#live-progress-totals-progress-total" title="Permanent link">&para;</a></h2>
@@ -2192,12 +2192,12 @@ F<span class="w"> </span><span class="o">(</span><span class="m">3</span>/247<sp
 …
 .<span class="w"> </span><span class="o">(</span><span class="m">247</span>/247<span class="o">)</span>
 </code></pre></div></td></tr></table></div>
-<p>Each event prints on its own line so the output is grep-friendly and works in non-TTY contexts (CI logs, captured stdout). Without <code>--parallel</code>, <code>--progress-total</code> is a no-op — totals are computed by the parallel parent at discovery time.</p>
+<p>Each event prints on its own line so the output is grep-friendly and works in non-TTY contexts (CI logs, captured stdout). Without <code>--parallel</code>, <code>--progress-total</code> is a no-op: totals are computed by the parallel parent at discovery time.</p>
 <h2 id="database-per-worker-pattern">Database-per-worker pattern<a class="headerlink" href="#database-per-worker-pattern" title="Permanent link">&para;</a></h2>
 <p>This is the canonical pattern for testing against a real database under <code>--parallel</code>:</p>
 <ol>
-<li><strong>Provision a database per worker index up front.</strong> Outside the test run — typically in your CI setup or a <code>.behave-setup</code> script. How many you need depends on the mode: under <code>--parallel-mode lpt</code> / <code>queue</code> there are exactly <code>K</code> workers (indices <code>0..K-1</code>), so provision <code>K</code>. Under the default <code>isolated</code> mode the index is the spec-file index, so either provision one database per spec file, or switch to <code>--parallel-mode lpt</code> for a bounded <code>K</code>.</li>
-<li><strong>Each worker uses <code>BDD::Behave::Worker.id</code></strong> (or <code>BEHAVE_WORKER_INDEX</code>) to pick <em>its</em> database. The worker process boots once; its DB handle is created against <code>myapp_test_${BEHAVE_WORKER_INDEX}</code> and lives for the whole worker.</li>
+<li><strong>Provision a database per worker index up front.</strong> Outside the test run, typically in your CI setup or a <code>.behave-setup</code> script. The index is bounded by the concurrency cap <code>K</code> in every mode (<code>isolated</code> leases a recycled <code>0..K-1</code> slot per running file, while <code>lpt</code> / <code>queue</code> have exactly <code>K</code> persistent workers), so provision <code>K</code> databases.</li>
+<li><strong>Each worker uses <code>BDD::Behave::Worker.id</code></strong> (or <code>BEHAVE_WORKER_INDEX</code>) to pick <em>its</em> database. The worker process boots once. Its DB handle is created against <code>myapp_test_${BEHAVE_WORKER_INDEX}</code> and lives for the whole worker.</li>
 <li><strong>Wrap each example in a transaction</strong> (or use the truncation strategy if you can't use transactions because the code under test commits). Roll back at <code>after-each</code> so the next example in the same worker sees a clean slate.</li>
 <li><strong>Tag DB-touching examples with <code>:database</code></strong> and define a <code>before-each :tag&lt;database&gt;</code> that opens the transaction.</li>
 <li><strong>Use <code>:no-transaction</code></strong> (or your own tag) for examples that genuinely need to verify committed state.</li>
@@ -2243,7 +2243,7 @@ F<span class="w"> </span><span class="o">(</span><span class="m">3</span>/247<sp
 }
 </code></pre></div></td></tr></table></div>
 <h2 id="serial-for-non-parallelizable-examples"><code>:serial</code> for non-parallelizable examples<a class="headerlink" href="#serial-for-non-parallelizable-examples" title="Permanent link">&para;</a></h2>
-<p>Mark examples or groups that mutate global state — <code>%*ENV</code>, signal handlers, a shared external resource, a process-wide singleton — with <code>:serial</code>:</p>
+<p>Mark examples or groups that mutate global state (<code>%*ENV</code>, signal handlers, a shared external resource, a process-wide singleton) with <code>:serial</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -2271,19 +2271,19 @@ F<span class="w"> </span><span class="o">(</span><span class="m">3</span>/247<sp
 </tr>
 <tr>
 <td><code>--coverage</code></td>
-<td>Each worker writes its own raw MoarVM coverage log; the parent merges the logs and renders a single coverage report. <code>--coverage-minimum</code> is gated on the merged percentage. See <a href="#coverage">below</a>.</td>
+<td>Each worker writes its own raw MoarVM coverage log. The parent merges the logs and renders a single coverage report. <code>--coverage-minimum</code> is gated on the merged percentage. See <a href="#coverage">below</a>.</td>
 </tr>
 <tr>
 <td><code>--doc</code></td>
-<td>Ignores <code>--parallel</code> — doc mode does not execute, so parallelism is moot.</td>
+<td>Ignores <code>--parallel</code> (doc mode does not execute, so parallelism is moot).</td>
 </tr>
 <tr>
 <td><code>--tag</code> / <code>--exclude-tag</code> / <code>--example</code> / <code>--only-example</code></td>
-<td>Applied during discovery; each worker sees exactly its filtered slice.</td>
+<td>Applied during discovery. Each worker sees exactly its filtered slice.</td>
 </tr>
 <tr>
 <td><code>--seed</code></td>
-<td>See <code>--seed-mode</code> below — <code>xor</code> (default) derives a per-worker seed (<code>seed XOR worker-index</code>); <code>stable</code> keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way.</td>
+<td>See <code>--seed-mode</code> below. <code>xor</code> (default) derives a per-worker seed (<code>seed XOR worker-index</code>). <code>stable</code> keeps the seed identical across workers and uses hash-based bucket assignment. The root seed is printed at end of run either way.</td>
 </tr>
 <tr>
 <td><code>--seed-mode</code></td>
@@ -2311,21 +2311,19 @@ F<span class="w"> </span><span class="o">(</span><span class="m">3</span>/247<sp
   <span class="nv">$c</span>.<span class="n">parallel-mode</span> = <span class="s">&#39;queue&#39;</span>;
 }
 </code></pre></div></td></tr></table></div>
-<p>After this, <code>behave</code> alone runs the suite under 4 workers. The usual precedence applies: CLI &gt; project (<code>./.behave</code>) &gt; user (<code>~/.behave</code>) &gt; built-in default (serial). A CLI <code>--parallel N</code> overrides the config value; pass <code>--parallel 1</code> to opt back into single-worker parallel execution from a higher-N config setting, or use <code>--no-config</code> to bypass the config entirely for one run.</p>
+<p>After this, <code>behave</code> alone runs the suite under 4 workers. The usual precedence applies: CLI &gt; project (<code>./.behave</code>) &gt; user (<code>~/.behave</code>) &gt; built-in default (serial). A CLI <code>--parallel N</code> overrides the config value. Pass <code>--parallel 1</code> to opt back into single-worker parallel execution from a higher-N config setting, or use <code>--no-config</code> to bypass the config entirely for one run.</p>
 <h2 id="known-limitations-v1">Known limitations (v1)<a class="headerlink" href="#known-limitations-v1" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Reproducibility across worker counts.</strong> Default (<code>--seed-mode=xor</code>) reproduces only when <code>--parallel N</code> matches. Use <code>--seed-mode=stable</code> for a K-invariant execution order.</li>
 <li>~~<strong>No live progress totals.</strong>~~ Use <code>--progress-total</code> (see above) to print <code>(N/TOTAL)</code> after each example char.</li>
-<li>~~<strong>Profile / memory / benchmark sections.</strong>~~ <code>--profile</code>, <code>--memory-profile</code>, and <code>--benchmark</code> are now aggregated across workers (see <a href="#profile-memory-benchmark">below</a>).</li>
+<li>~~<strong>Profile / benchmark sections.</strong>~~ <code>--profile</code> and <code>--benchmark</code> are now aggregated across workers (see <a href="#profile-benchmark">below</a>).</li>
 <li>~~<strong><code>--coverage</code> integration.</strong>~~ <code>--coverage</code> is now aggregated across workers (see <a href="#coverage">below</a>).</li>
 <li>~~<strong>Worker crashes are fatal.</strong>~~ Use <code>--parallel-retry N</code> (see above) to re-spawn crashed shards. Default behavior with <code>--parallel-retry 0</code> keeps the previous fatal semantics. Queue mode still treats a crashed worker as fatal.</li>
 </ul>
-<h2 id="profile-memory-benchmark">Profile, memory, benchmark<a class="headerlink" href="#profile-memory-benchmark" title="Permanent link">&para;</a></h2>
-<p><code>--profile</code>, <code>--memory-profile</code>, and <code>--benchmark</code> work under <code>--parallel</code>. Each worker measures its own slice; the parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.</p>
+<h2 id="profile-benchmark">Profile, benchmark<a class="headerlink" href="#profile-benchmark" title="Permanent link">&para;</a></h2>
+<p><code>--profile</code> and <code>--benchmark</code> work under <code>--parallel</code>. Each worker measures its own slice. The parent collects every record over the JSON-event stream and renders a single combined section at the end of the run, the same as serial mode.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span>
-<span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--profile<span class="o">=</span><span class="m">10</span><span class="w"> </span>specs/
-behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--memory-profile<span class="o">=</span><span class="m">10</span><span class="w"> </span>specs/
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--profile<span class="o">=</span><span class="m">10</span><span class="w"> </span>specs/
 behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--benchmark<span class="w"> </span>specs/
 </code></pre></div></td></tr></table></div>
 <p><code>--benchmark-baseline</code> and <code>--benchmark-save</code> apply to the aggregated measurements:</p>
@@ -2341,31 +2339,31 @@ behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">
 </code></pre></div></td></tr></table></div>
 <p>Notes:</p>
 <ul>
-<li>Each example runs on exactly one worker, so <code>--profile</code> and <code>--memory-profile</code> rows are not deduplicated — the parent sees one record per execution.</li>
-<li><code>--benchmark-iterations=N</code> and <code>--benchmark-threshold=PCT</code> are forwarded to every worker; per-example timings collected across iterations are merged in the parent before medians are computed.</li>
-<li><code>--benchmark-baseline</code> / <code>--benchmark-save</code> are not forwarded to workers; only the parent reads / writes baseline files, against the aggregated summary list.</li>
+<li>Each example runs on exactly one worker, so <code>--profile</code> rows are not deduplicated: the parent sees one record per execution.</li>
+<li><code>--benchmark-iterations=N</code> and <code>--benchmark-threshold=PCT</code> are forwarded to every worker. Per-example timings collected across iterations are merged in the parent before medians are computed.</li>
+<li><code>--benchmark-baseline</code> / <code>--benchmark-save</code> are not forwarded to workers. Only the parent reads / writes baseline files, against the aggregated summary list.</li>
 </ul>
 <h2 id="coverage">Coverage<a class="headerlink" href="#coverage" title="Permanent link">&para;</a></h2>
-<p><code>--coverage</code> works under <code>--parallel</code>. The parent assigns each worker its own <code>MVM_COVERAGE_LOG</code> path under <code>$TMPDIR/behave-coverage-parallel-&lt;pid&gt;-&lt;stamp&gt;/</code> (named <code>isolated-N.raw</code> in the default isolated mode, <code>worker-N.raw</code> in the <code>lpt</code> / <code>queue</code> pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union — coverage records whether a line was hit, not how many times — so a line counted only by worker 2 still shows up in the merged report.</p>
+<p><code>--coverage</code> works under <code>--parallel</code>. The parent assigns each worker its own <code>MVM_COVERAGE_LOG</code> path under <code>$TMPDIR/behave-coverage-parallel-&lt;pid&gt;-&lt;stamp&gt;/</code> (named <code>isolated-N.raw</code> in the default isolated mode, <code>worker-N.raw</code> in the <code>lpt</code> / <code>queue</code> pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union (coverage records whether a line was hit, not how many times), so a line counted only by worker 2 still shows up in the merged report.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--coverage<span class="w"> </span>specs/
 behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--coverage<span class="w"> </span>--coverage-format<span class="o">=</span>html<span class="w"> </span>--coverage-output<span class="o">=</span>coverage<span class="w"> </span>specs/
 behave<span class="w"> </span>--parallel<span class="w"> </span><span class="m">4</span><span class="w"> </span>--coverage<span class="w"> </span>--coverage-minimum<span class="o">=</span><span class="m">90</span><span class="w"> </span>specs/
 </code></pre></div></td></tr></table></div>
-<p><code>--coverage-include</code> / <code>--coverage-exclude</code> apply during the merge — same semantics as serial coverage. <code>--coverage-minimum</code> is gated on the <em>merged</em> percentage, so a line hit by any single worker contributes. <code>--coverage-baseline</code> compares the merged report against the saved baseline, the same as serial mode.</p>
+<p><code>--coverage-include</code> / <code>--coverage-exclude</code> apply during the merge, with the same semantics as serial coverage. <code>--coverage-minimum</code> is gated on the <em>merged</em> percentage, so a line hit by any single worker contributes. <code>--coverage-baseline</code> compares the merged report against the saved baseline, the same as serial mode.</p>
 <p>Notes:</p>
 <ul>
 <li>The parent process never has <code>MVM_COVERAGE_LOG</code> set, so it does not record its own bytecode. Coverage only reflects user code executed inside workers.</li>
-<li><code>:serial</code> examples run on the post-parallel serial worker, which also writes to a per-worker log (<code>serial.raw</code>); its hits merge in with everyone else's.</li>
+<li><code>:serial</code> examples run on the post-parallel serial worker, which also writes to a per-worker log (<code>serial.raw</code>). Its hits merge in with everyone else's.</li>
 <li>Worker raw logs can be very large (hundreds of megabytes per worker on big suites). The merge uses <code>grep -ahF | awk '!seen'</code> over the worker logs, so peak transient disk in <code>$TMPDIR</code> is proportional to the <em>raw</em> per-worker volume, not the filtered set. Workers' raw logs are deleted as soon as the merged-and-deduped file is written.</li>
 </ul>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../tags/tags/">Tags</a> — the <code>:tag</code> / <code>:exclude-tag</code> machinery underpinning <code>:serial</code> and <code>:database</code> patterns.</li>
-<li><a href="../../hooks/hooks/">Hooks</a> — <code>before-each</code> / <code>after-each</code> filters for transaction wrapping.</li>
-<li><a href="../../configuration/configuration/">Configuration</a> — adding a <code>--parallel</code> default to a project <code>.behave</code> file.</li>
-<li><a href="../../coverage/coverage/">Coverage</a> — full coverage reference (formats, baseline, branch tracking).</li>
+<li><a href="../../tags/tags/">Tags</a>: the <code>:tag</code> / <code>:exclude-tag</code> machinery underpinning <code>:serial</code> and <code>:database</code> patterns.</li>
+<li><a href="../../hooks/hooks/">Hooks</a>: <code>before-each</code> / <code>after-each</code> filters for transaction wrapping.</li>
+<li><a href="../../configuration/configuration/">Configuration</a>: adding a <code>--parallel</code> default to a project <code>.behave</code> file.</li>
+<li><a href="../../coverage/coverage/">Coverage</a>: coverage reference (formats, baseline, branch tracking).</li>
 </ul>
 
 

@@ -1630,7 +1630,7 @@
 <span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span><span class="o">..</span><span class="mi">10</span>);             <span class="c1"># range</span>
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));     <span class="c1"># junction</span>
 </code></pre></div></td></tr></table></div>
-<p>Plain values are wrapped in <code>BeMatcher</code> automatically. To plug in your own logic, pass any object that does the <a href="../matchers/"><code>Matcher</code></a> role — or use <a href="../custom-matchers/"><code>define-matcher</code></a> for the lighter, callback-based form. Combine matchers with <code>.and</code> / <code>.or</code>; see <a href="../composable-matchers/">Composable Matchers</a>. For Raku-native <code>any</code> / <code>all</code> / <code>one</code> / <code>none</code> junctions, see <a href="../junctions/">Junctions</a>.</p>
+<p>Plain values are wrapped in <code>BeMatcher</code> automatically. To plug in your own logic, pass any object that does the <a href="../matchers/"><code>Matcher</code></a> role, or use <a href="../custom-matchers/"><code>define-matcher</code></a> for the lighter, callback-based form. Combine matchers with <code>.and</code> / <code>.or</code>. See <a href="../composable-matchers/">Composable Matchers</a>. For Raku-native <code>any</code> / <code>all</code> / <code>one</code> / <code>none</code> junctions, see <a href="../junctions/">Junctions</a>.</p>
 <h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
 <p><code>.not</code> flips the comparison:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">1</span> + <span class="mi">1</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">3</span>);
@@ -1694,11 +1694,11 @@
 </tr>
 <tr>
 <td><code>start-with</code></td>
-<td>Sequence prefix check for arrays / lists; per-arg prefix check for strings. See <a href="../matchers/#startwithmatcher-built-in">Matchers › StartWithMatcher</a>.</td>
+<td>Sequence prefix check for arrays / lists. Per-arg prefix check for strings. See <a href="../matchers/#startwithmatcher-built-in">Matchers › StartWithMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>end-with</code></td>
-<td>Sequence suffix check for arrays / lists; per-arg suffix check for strings. See <a href="../matchers/#endwithmatcher-built-in">Matchers › EndWithMatcher</a>.</td>
+<td>Sequence suffix check for arrays / lists. Per-arg suffix check for strings. See <a href="../matchers/#endwithmatcher-built-in">Matchers › EndWithMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>all</code></td>
@@ -1722,7 +1722,7 @@
 </tr>
 <tr>
 <td><code>be-greater-than</code> / <code>be-gt</code></td>
-<td>Numeric <code>&gt;</code> comparison; fails (not dies) on undefined or non-<code>Real</code> actuals. See <a href="../matchers/#comparison-matchers-built-in">Matchers › Comparison matchers</a>.</td>
+<td>Numeric <code>&gt;</code> comparison. Fails (not dies) on undefined or non-<code>Real</code> actuals. See <a href="../matchers/#comparison-matchers-built-in">Matchers › Comparison matchers</a>.</td>
 </tr>
 <tr>
 <td><code>be-greater-than-or-equal-to</code> / <code>be-gte</code></td>
@@ -1738,7 +1738,7 @@
 </tr>
 <tr>
 <td><code>be-between</code></td>
-<td>Range check between two <code>Real</code> bounds. Inclusive by default; chain <code>.exclusive</code> or <code>.inclusive</code> to flip the mode. See <a href="../matchers/#bebetweenmatcher-built-in">Matchers › BeBetweenMatcher</a>.</td>
+<td>Range check between two <code>Real</code> bounds. Inclusive by default. Chain <code>.exclusive</code> or <code>.inclusive</code> to flip the mode. See <a href="../matchers/#bebetweenmatcher-built-in">Matchers › BeBetweenMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>be-within</code></td>
@@ -1746,7 +1746,7 @@
 </tr>
 <tr>
 <td><code>be-truthy</code></td>
-<td>Boolean coercion check (<code>?$actual</code>); empty <code>Array</code>/<code>Hash</code>, <code>Nil</code>, and undefined type objects are not truthy. See <a href="../matchers/#betruthymatcher-built-in">Matchers › BeTruthyMatcher</a>.</td>
+<td>Boolean coercion check (<code>?$actual</code>). Empty <code>Array</code>/<code>Hash</code>, <code>Nil</code>, and undefined type objects are not truthy. See <a href="../matchers/#betruthymatcher-built-in">Matchers › BeTruthyMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>be-falsy</code></td>
@@ -1754,11 +1754,11 @@
 </tr>
 <tr>
 <td><code>be-nil</code></td>
-<td>Undefined-value check (<code>!$actual.defined</code>); passes for <code>Nil</code>, <code>Any</code>, and undefined type objects. See <a href="../matchers/#benilmatcher-built-in">Matchers › BeNilMatcher</a>.</td>
+<td>Undefined-value check (<code>!$actual.defined</code>). Passes for <code>Nil</code>, <code>Any</code>, and undefined type objects. See <a href="../matchers/#benilmatcher-built-in">Matchers › BeNilMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>match</code></td>
-<td>Regex match against a <code>Str</code> (<code>$actual ~~ /pattern/</code>); fails (not dies) on undefined or non-<code>Str</code> actuals. See <a href="../matchers/#matchmatcher-built-in">Matchers › MatchMatcher</a>.</td>
+<td>Regex match against a <code>Str</code> (<code>$actual ~~ /pattern/</code>). Fails (not dies) on undefined or non-<code>Str</code> actuals. See <a href="../matchers/#matchmatcher-built-in">Matchers › MatchMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>raise-error</code></td>
@@ -1770,7 +1770,7 @@
 </tr>
 <tr>
 <td><code>be-kept</code></td>
-<td>Passes when a <code>Promise</code> actual settles in the <code>Kept</code> state. Blocks up to a default 5-second timeout; pass <code>be-kept($seconds)</code> for a custom timeout. Surfaces the broken cause in failure messages. See <a href="../matchers/#bekeptmatcher-built-in">Matchers › BeKeptMatcher</a>.</td>
+<td>Passes when a <code>Promise</code> actual settles in the <code>Kept</code> state. Blocks up to a default 5-second timeout. Pass <code>be-kept($seconds)</code> for a custom timeout. Surfaces the broken cause in failure messages. See <a href="../matchers/#bekeptmatcher-built-in">Matchers › BeKeptMatcher</a>.</td>
 </tr>
 <tr>
 <td><code>be-broken</code></td>
@@ -1907,9 +1907,9 @@
 <h2 id="custom-matchers">Custom matchers<a class="headerlink" href="#custom-matchers" title="Permanent link">&para;</a></h2>
 <p><code>be</code> accepts any object that does the <a href="../matchers/"><code>Matcher</code></a> role. The matcher's <code>matches</code>, <code>failure-message</code>, and <code>failure-message-negated</code> methods drive the result and the failure summary, so user-defined matchers plug in the same way as the built-in ones.</p>
 <h2 id="failure-behavior">Failure behavior<a class="headerlink" href="#failure-behavior" title="Permanent link">&para;</a></h2>
-<p>When an <code>expect(...)</code> matcher fails, the failure is recorded on <code>Failures.list</code> and the example body <strong>stops executing</strong> — anything after the failing line is skipped. The example is reported once in the run summary regardless of how many <code>expect</code> statements its body contained.</p>
-<p>This matches RSpec's default. Ideally each <code>it</code> block contains exactly one <code>expect</code> so the first miss is also the last. When you do need multiple expectations in a single example, wrap them in <code>aggregate-failures { ... }</code>; the throw is suppressed inside the block, every expectation runs, and the inner failures are rolled up into a single labeled <code>Failures</code> row at the <code>aggregate-failures</code> line. See <a href="../aggregate-failures/">aggregate-failures</a>.</p>
-<p>If you're writing meta-tests that deliberately trigger a failure and then inspect the recorded <code>Failure</code> records, use <code>capture-failures { ... }</code> instead — it suppresses the throw and returns the captured failures without polluting the surrounding example. See <a href="../aggregate-failures/#capture-failures-for-meta-tests">aggregate-failures § <code>capture-failures</code> for meta-tests</a>.</p>
+<p>When an <code>expect(...)</code> matcher fails, the failure is recorded on <code>Failures.list</code> and the example body <strong>stops executing</strong>: anything after the failing line is skipped. The example is reported once in the run summary regardless of how many <code>expect</code> statements its body contained.</p>
+<p>This matches RSpec's default. Ideally each <code>it</code> block contains exactly one <code>expect</code> so the first miss is also the last. When you do need multiple expectations in a single example, wrap them in <code>aggregate-failures { ... }</code>. The throw is suppressed inside the block, every expectation runs, and the inner failures are rolled up into a single labeled <code>Failures</code> row at the <code>aggregate-failures</code> line. See <a href="../aggregate-failures/">aggregate-failures</a>.</p>
+<p>If you're writing meta-tests that deliberately trigger a failure and then inspect the recorded <code>Failure</code> records, use <code>capture-failures { ... }</code> instead. It suppresses the throw and returns the captured failures without polluting the surrounding example. See <a href="../aggregate-failures/#capture-failures-for-meta-tests">aggregate-failures § <code>capture-failures</code> for meta-tests</a>.</p>
 
 
 

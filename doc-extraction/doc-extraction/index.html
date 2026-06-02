@@ -1659,7 +1659,7 @@
 
 
 <h1 id="documentation-extraction">Documentation extraction<a class="headerlink" href="#documentation-extraction" title="Permanent link">&para;</a></h1>
-<p>Behave can turn your spec tree into a hierarchical document of behaviors — no execution required. This is useful for living documentation: the descriptions you already wrote on <code>describe</code>, <code>context</code>, and <code>it</code> become a stand-alone document that you can publish, paste into a PR, or hand to a non-engineer stakeholder.</p>
+<p>Behave can turn your spec tree into a hierarchical document of behaviors, no execution required. This is useful for living documentation: the descriptions you already wrote on <code>describe</code>, <code>context</code>, and <code>it</code> become a stand-alone document that you can publish, paste into a PR, or hand to a non-engineer stakeholder.</p>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1687,7 +1687,7 @@
 -<span class="w"> </span>subtracts<span class="w"> </span>two<span class="w"> </span>positive<span class="w"> </span>numbers
 -<span class="w"> </span>handles<span class="w"> </span>negative<span class="w"> </span>results
 </code></pre></div></td></tr></table></div>
-<p><code>--doc</code> loads each spec file (so <code>describe</code> / <code>context</code> / <code>it</code> register their tree), then walks the tree and prints. Examples are never executed — there are no pass/fail counts, no timing, no formatters.</p>
+<p><code>--doc</code> loads each spec file (so <code>describe</code> / <code>context</code> / <code>it</code> register their tree), then walks the tree and prints. Examples are never executed: there are no pass/fail counts, no timing, no formatters.</p>
 <h2 id="output-formats">Output formats<a class="headerlink" href="#output-formats" title="Permanent link">&para;</a></h2>
 <p><code>--doc-format=FORMAT</code> chooses the output format. Three formats are built in:</p>
 <table>
@@ -1700,7 +1700,7 @@
 <tbody>
 <tr>
 <td><code>markdown</code></td>
-<td>Default. Human-readable; renders cleanly on GitHub, MkDocs, and most wikis.</td>
+<td>Default. Human-readable. Renders cleanly on GitHub, MkDocs, and most wikis.</td>
 </tr>
 <tr>
 <td><code>html</code></td>
@@ -1721,7 +1721,7 @@
 - &lt;example-description&gt;
 - &lt;example-description&gt; (PENDING)
 </code></pre></div></td></tr></table></div>
-<p>Each <code>describe</code> or <code>context</code> becomes a Markdown heading; depth maps to the number of <code>#</code>s (capped at six). Each <code>it</code> / <code>pending</code> / <code>xit</code> becomes a bullet under its enclosing group. Status suffixes:</p>
+<p>Each <code>describe</code> or <code>context</code> becomes a Markdown heading. Depth maps to the number of <code>#</code>s (capped at six). Each <code>it</code> / <code>pending</code> / <code>xit</code> becomes a bullet under its enclosing group. Status suffixes:</p>
 <table>
 <thead>
 <tr>
@@ -1887,7 +1887,7 @@
 <p>By default <code>--doc</code> prints to stdout. Pass <code>--doc-output PATH</code> to write to a file instead:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--doc<span class="w"> </span>--doc-format<span class="o">=</span>html<span class="w"> </span>--doc-output<span class="w"> </span>build/specs.html<span class="w"> </span>specs/
 </code></pre></div></td></tr></table></div>
-<p>When <code>--doc-output</code> is set, stdout stays clean — useful inside CI pipelines or shell scripts that want to combine multiple Behave runs.</p>
+<p>When <code>--doc-output</code> is set, stdout stays clean, useful inside CI pipelines or shell scripts that want to combine multiple Behave runs.</p>
 <h2 id="filtering-with-tags-and-metadata">Filtering with tags and metadata<a class="headerlink" href="#filtering-with-tags-and-metadata" title="Permanent link">&para;</a></h2>
 <p>Documentation honors the same filtering flags as the runner. Pass <code>--tag</code>, <code>--exclude-tag</code>, or <code>--example</code> together with <code>--doc</code> to emit only a subset of behaviors:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1910,23 +1910,23 @@ $<span class="w"> </span>behave<span class="w"> </span>--doc<span class="w"> </s
 </code></pre></div></td></tr></table></div>
 <p>Filtering semantics:</p>
 <ul>
-<li>Tag inheritance follows the runner's rules — a tag on a <code>describe</code> applies to every <code>it</code> inside it.</li>
+<li>Tag inheritance follows the runner's rules: a tag on a <code>describe</code> applies to every <code>it</code> inside it.</li>
 <li>Groups whose examples are all filtered out are dropped from the output entirely, so you don't see hollow <code>## addition</code> headings with no bullets underneath.</li>
 <li>An example must match every active filter (AND across filter families) but a single tag or pattern hit is enough within a family (OR within a family).</li>
 <li>If nothing matches, the output is empty.</li>
 </ul>
-<p><code>--example PATTERN</code> supports two forms: a bare substring (matched against the full nested description, e.g. <code>Calculator addition adds two positive numbers</code>), or a <code>/regex/</code> form where the body is compiled as a Raku regex. Note: spaces inside the regex are ignored (Raku regex grammar); use <code>\s</code> to match whitespace.</p>
+<p><code>--example PATTERN</code> supports two forms: a bare substring (matched against the full nested description, e.g. <code>Calculator addition adds two positive numbers</code>), or a <code>/regex/</code> form where the body is compiled as a Raku regex. Note: spaces inside the regex are ignored (Raku regex grammar). Use <code>\s</code> to match whitespace.</p>
 <h2 id="what-is-not-in-the-output">What is <em>not</em> in the output<a class="headerlink" href="#what-is-not-in-the-output" title="Permanent link">&para;</a></h2>
 <p><code>--doc</code> describes <strong>behaviors</strong>, not implementation. The following are intentionally omitted:</p>
 <ul>
 <li><code>before-each</code> / <code>after-each</code> / <code>around-each</code> / <code>before-all</code> / <code>after-all</code> hooks.</li>
 <li><code>let</code> and <code>subject</code> definitions.</li>
 <li><code>include-context</code> / <code>include-examples</code> boilerplate.</li>
-<li>Example bodies — only descriptions are emitted.</li>
+<li>Example bodies (only descriptions are emitted).</li>
 </ul>
 <p>The goal is a behavior-focused outline that is meaningful to readers who do not (and should not need to) read the test source.</p>
 <h2 id="exit-code">Exit code<a class="headerlink" href="#exit-code" title="Permanent link">&para;</a></h2>
-<p><code>--doc</code> exits <code>0</code> on success. If any spec file fails to load (a syntax error, a missing dependency), it prints the error to stderr and exits <code>1</code> — but it still tries to emit a document for the files that <em>did</em> load, so you can see partial progress.</p>
+<p><code>--doc</code> exits <code>0</code> on success. If any spec file fails to load (a syntax error, a missing dependency), it prints the error to stderr and exits <code>1</code>, but it still tries to emit a document for the files that <em>did</em> load, so you can see partial progress.</p>
 <h2 id="programmatic-use">Programmatic use<a class="headerlink" href="#programmatic-use" title="Permanent link">&para;</a></h2>
 <p>Under the hood <code>--doc</code> is a thin wrapper around <code>BDD::Behave::DocExtractor</code>, which you can use from your own code:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

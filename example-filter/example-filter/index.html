@@ -1602,7 +1602,7 @@ $<span class="w"> </span>behave<span class="w"> </span>-e<span class="w"> </span
 </code></pre></div></td></tr></table></div>
 <p>The pattern matches when it appears anywhere inside the full nested description.</p>
 <h2 id="regex-matching">Regex matching<a class="headerlink" href="#regex-matching" title="Permanent link">&para;</a></h2>
-<p>Wrap <code>PATTERN</code> in <code>/.../</code> to compile it as a Raku regex. Standard Raku regex rules apply, so whitespace is not significant — use <code>\s</code> (or quote literal text) for spaces:</p>
+<p>Wrap <code>PATTERN</code> in <code>/.../</code> to compile it as a Raku regex. Standard Raku regex rules apply, so whitespace is not significant. Use <code>\s</code> (or quote literal text) for spaces:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;/\d+/&#39;</span><span class="w">              </span><span class="c1"># examples whose description has a digit</span>
 $<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;/User\s+signup/&#39;</span><span class="w">    </span><span class="c1"># User-signup-related examples via regex</span>
@@ -1613,7 +1613,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--example<span class="w">
 </code></pre></div></td></tr></table></div>
 <p>An example runs if it matches <strong>any</strong> pattern.</p>
 <h2 id="combining-with-tags">Combining with tags<a class="headerlink" href="#combining-with-tags" title="Permanent link">&para;</a></h2>
-<p><code>--example</code> composes with <code>--tag</code>, <code>--exclude-tag</code>, and focus mode using AND semantics — an example must satisfy every active filter to run:</p>
+<p><code>--example</code> composes with <code>--tag</code>, <code>--exclude-tag</code>, and focus mode using AND semantics: an example must satisfy every active filter to run:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;User signup&#39;</span><span class="w"> </span>--tag<span class="w"> </span>fast<span class="w">        </span><span class="c1"># signup AND fast</span>
 $<span class="w"> </span>behave<span class="w"> </span>--example<span class="w"> </span><span class="s1">&#39;User signup&#39;</span><span class="w"> </span>--exclude-tag<span class="w"> </span>flaky
@@ -1629,9 +1629,9 @@ $<span class="w"> </span>behave<span class="w"> </span>--example<span class="w">
 <p>This makes it safe to drop <code>--example</code> filters into CI matrix builds without worrying about tripping a "zero tests" failure for legitimately empty selections.</p>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../tags/tags/">Tags</a> — tag-based filtering with <code>--tag</code> / <code>--exclude-tag</code></li>
-<li><a href="../../focus-skip/focus-skip/">Focus and Skip</a> — <code>fit</code> / <code>xit</code> / <code>fdescribe</code> / <code>xdescribe</code></li>
-<li><a href="../../running/">Running Specs</a> — full CLI reference</li>
+<li><a href="../../tags/tags/">Tags</a>: tag-based filtering with <code>--tag</code> / <code>--exclude-tag</code></li>
+<li><a href="../../focus-skip/focus-skip/">Focus and Skip</a>: <code>fit</code> / <code>xit</code> / <code>fdescribe</code> / <code>xdescribe</code></li>
+<li><a href="../../running/">Running Specs</a>: full CLI reference</li>
 </ul>
 
 

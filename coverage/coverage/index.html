@@ -1631,7 +1631,7 @@ tracked. Use <code>--coverage-include</code> / <code>--coverage-exclude</code> t
 </tr>
 <tr>
 <td><code>json</code></td>
-<td>Machine-readable; also the baseline format for <code>--coverage-baseline</code>.</td>
+<td>Machine-readable. Also the baseline format for <code>--coverage-baseline</code>.</td>
 </tr>
 <tr>
 <td><code>lcov</code></td>
@@ -1654,16 +1654,16 @@ behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-forma
 <p><code>--coverage-output=PATH</code> writes the report to PATH instead of stdout.
 <strong><code>html</code> is special</strong>: PATH is a <em>directory</em> (default <code>./coverage/</code>) that
 Behave fills with <code>index.html</code>, <code>style.css</code>, and one HTML page per source
-file. The index is the entry point — open <code>coverage/index.html</code>.</p>
+file. The index is the entry point: open <code>coverage/index.html</code>.</p>
 <h2 id="filtering-tracked-files">Filtering tracked files<a class="headerlink" href="#filtering-tracked-files" title="Permanent link">&para;</a></h2>
 <p><code>--coverage-include=PATH</code> restricts the report to files whose path <strong>starts
-with</strong> PATH. Repeatable; multiple includes combine with OR. The prefix
-semantics are deliberate — they mean a default of <code>lib/</code> matches the relative
+with</strong> PATH. Repeatable. Multiple includes combine with OR. The prefix
+semantics are deliberate: they mean a default of <code>lib/</code> matches the relative
 paths your specs load via <code>-Ilib</code> while excluding Rakudo/NQP internals
 (<code>/Users/.../rakudo/share/nqp/lib/...</code>) that happen to contain <code>lib/</code> in the
 middle of an absolute path.</p>
 <p><code>--coverage-exclude=PATH</code> removes files whose path <strong>contains</strong> PATH
-(substring match). Repeatable; an exclude match wins over an include match.</p>
+(substring match). Repeatable. An exclude match wins over an include match.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-include<span class="o">=</span>lib/BDD<span class="w"> </span>--coverage-exclude<span class="o">=</span>lib/BDD/Vendor<span class="w"> </span>specs/
 </code></pre></div></td></tr></table></div>
 <p>When no <code>--coverage-include</code> is passed, Behave includes <code>lib/</code> by default.</p>
@@ -1719,7 +1719,7 @@ checked in and surface a regression when coverage drops in a PR.</p>
   <span class="nv">$c</span>.<span class="n">coverage-exclude-path</span>(<span class="s">&#39;lib/vendor&#39;</span>);
 }
 </code></pre></div></td></tr></table></div>
-<p>CLI flags override config-file values; list-style options
+<p>CLI flags override config-file values. List-style options
 (<code>coverage-include-path</code>, <code>coverage-exclude-path</code>) accumulate across config
 layers and the CLI.</p>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
@@ -1733,7 +1733,7 @@ worker its own <code>MVM_COVERAGE_LOG</code> path
 (<code>$TMPDIR/behave-coverage-parallel-&lt;pid&gt;-&lt;stamp&gt;/worker-N.raw</code>), and after
 the workers exit it merges every per-worker log into a single hit map (set
 union, since coverage records <em>whether</em> a line was hit). The same report
-pipeline then renders one combined report against the merged data;
+pipeline then renders one combined report against the merged data.
 <code>--coverage-minimum</code> is gated on the merged percentage. See
 <a href="../../parallel/parallel/#coverage">Coverage under --parallel</a> in the parallel
 guide for the full description.</p>
@@ -1745,7 +1745,7 @@ blank lines, comments, lines that contain only closing punctuation (<code>}</cod
 <li>macOS and Linux only. Relies on <code>grep</code> in <code>PATH</code>.</li>
 <li>Coverage runs are slower than ordinary runs because MoarVM logs every
   executed line in user code (including Rakudo's startup path). The raw
-  log can reach several GB under <code>$TMPDIR</code> for a full-suite run; it is
+  log can reach several GB under <code>$TMPDIR</code> for a full-suite run. It is
   unlinked once the report is generated.</li>
 <li>Branch coverage is line-based: a single <code>if</code> line that contains both
   branches inline counts as one branch.</li>

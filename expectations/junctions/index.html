@@ -1072,7 +1072,7 @@
   <a href="#any-match-any-one-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        any — match any one alternative
+        any: match any one alternative
       
     </span>
   </a>
@@ -1083,7 +1083,7 @@
   <a href="#all-match-every-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        all — match every alternative
+        all: match every alternative
       
     </span>
   </a>
@@ -1094,7 +1094,7 @@
   <a href="#one-match-exactly-one-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        one — match exactly one alternative
+        one: match exactly one alternative
       
     </span>
   </a>
@@ -1105,7 +1105,7 @@
   <a href="#none-match-no-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        none — match no alternative
+        none: match no alternative
       
     </span>
   </a>
@@ -1500,7 +1500,7 @@
   <a href="#any-match-any-one-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        any — match any one alternative
+        any: match any one alternative
       
     </span>
   </a>
@@ -1511,7 +1511,7 @@
   <a href="#all-match-every-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        all — match every alternative
+        all: match every alternative
       
     </span>
   </a>
@@ -1522,7 +1522,7 @@
   <a href="#one-match-exactly-one-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        one — match exactly one alternative
+        one: match exactly one alternative
       
     </span>
   </a>
@@ -1533,7 +1533,7 @@
   <a href="#none-match-no-alternative" class="md-nav__link">
     <span class="md-ellipsis">
       
-        none — match no alternative
+        none: match no alternative
       
     </span>
   </a>
@@ -1606,7 +1606,7 @@
 
 <h1 id="junctions">Junctions<a class="headerlink" href="#junctions" title="Permanent link">&para;</a></h1>
 <p><code>expect(actual).to.be(expected)</code> uses Raku smartmatch (<code>~~</code>) through the built-in <code>BeMatcher</code>. Junctions on the right-hand side of a smartmatch auto-thread, so every junction form composes with <code>expect</code> without any extra DSL.</p>
-<h2 id="any-match-any-one-alternative"><code>any</code> — match any one alternative<a class="headerlink" href="#any-match-any-one-alternative" title="Permanent link">&para;</a></h2>
+<h2 id="any-match-any-one-alternative"><code>any</code>: match any one alternative<a class="headerlink" href="#any-match-any-one-alternative" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">any</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));      <span class="c1"># equivalent</span>
@@ -1616,31 +1616,31 @@
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$status</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="s">&#39;green&#39;</span> | <span class="s">&#39;yellow&#39;</span> | <span class="s">&#39;red&#39;</span>);
 <span class="n">expect</span>(<span class="nv">$value</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span> | <span class="nb">Str</span>);     <span class="c1"># type-object alternatives</span>
 </code></pre></div></td></tr></table></div>
-<h2 id="all-match-every-alternative"><code>all</code> — match every alternative<a class="headerlink" href="#all-match-every-alternative" title="Permanent link">&para;</a></h2>
+<h2 id="all-match-every-alternative"><code>all</code>: match every alternative<a class="headerlink" href="#all-match-every-alternative" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span> &amp; <span class="nb">Numeric</span>);
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">all</span>(<span class="nb">Int</span>, <span class="nb">Numeric</span>)); <span class="c1"># equivalent</span>
 </code></pre></div></td></tr></table></div>
-<p>Passes when <code>$x</code> smartmatches every alternative. Mixing distinct literal values (<code>1 &amp; 2</code>) is effectively unsatisfiable because a single value cannot equal two different literals — combine <code>all</code> with type checks, ranges, or predicates instead.</p>
+<p>Passes when <code>$x</code> smartmatches every alternative. Mixing distinct literal values (<code>1 &amp; 2</code>) is effectively unsatisfiable because a single value cannot equal two different literals. Combine <code>all</code> with type checks, ranges, or predicates instead.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">my</span> <span class="k">subset</span> <span class="n">Positive</span> <span class="nb">of</span> <span class="nb">Int</span> <span class="n">where</span> * &gt; <span class="mi">0</span>;
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">Int</span> &amp; <span class="n">Positive</span>);
 </code></pre></div></td></tr></table></div>
-<h2 id="one-match-exactly-one-alternative"><code>one</code> — match exactly one alternative<a class="headerlink" href="#one-match-exactly-one-alternative" title="Permanent link">&para;</a></h2>
+<h2 id="one-match-exactly-one-alternative"><code>one</code>: match exactly one alternative<a class="headerlink" href="#one-match-exactly-one-alternative" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="mi">1</span> ^ <span class="mi">2</span> ^ <span class="mi">3</span>);
 <span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">one</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));      <span class="c1"># equivalent</span>
 </code></pre></div></td></tr></table></div>
 <p>Passes when exactly one alternative matches. Useful for mutually exclusive states.</p>
-<h2 id="none-match-no-alternative"><code>none</code> — match no alternative<a class="headerlink" href="#none-match-no-alternative" title="Permanent link">&para;</a></h2>
+<h2 id="none-match-no-alternative"><code>none</code>: match no alternative<a class="headerlink" href="#none-match-no-alternative" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="nv">$x</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="nb">none</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));
 </code></pre></div></td></tr></table></div>
 <p>Passes when <code>$x</code> matches none of the listed values.</p>
 <h2 id="negation">Negation<a class="headerlink" href="#negation" title="Permanent link">&para;</a></h2>
-<p><code>.not</code> flips the outer result; the junction collapses to a <code>Bool</code> first, then <code>.not</code> negates it:</p>
+<p><code>.not</code> flips the outer result. The junction collapses to a <code>Bool</code> first, then <code>.not</code> negates it:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
-<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);      <span class="c1"># passes — 5 is not in the set</span>
-<span class="n">expect</span>(<span class="mi">2</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="nb">none</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));  <span class="c1"># passes — 2 is in the set</span>
+<span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">expect</span>(<span class="mi">5</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="mi">1</span> | <span class="mi">2</span> | <span class="mi">3</span>);      <span class="c1"># passes: 5 is not in the set</span>
+<span class="n">expect</span>(<span class="mi">2</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="nb">none</span>(<span class="mi">1</span>, <span class="mi">2</span>, <span class="mi">3</span>));  <span class="c1"># passes: 2 is in the set</span>
 </code></pre></div></td></tr></table></div>
 <h2 id="failure-metadata">Failure metadata<a class="headerlink" href="#failure-metadata" title="Permanent link">&para;</a></h2>
 <p>When a junction expectation fails, <code>Failure.expected</code> carries the <code>Junction</code> itself and <code>Failure.given</code> carries the actual value:</p>
@@ -1672,18 +1672,18 @@ Diff:
 </code></pre></div></td></tr></table></div>
 <p>Each junction kind reports its own summary line:</p>
 <ul>
-<li><code>any</code> — <code>none of N matched; expected at least one</code></li>
-<li><code>all</code> — <code>K of N matched; expected all</code></li>
-<li><code>one</code> — <code>K of N matched; expected exactly one</code></li>
-<li><code>none</code> — <code>K of N matched; expected zero</code></li>
+<li><code>any</code>: <code>none of N matched; expected at least one</code></li>
+<li><code>all</code>: <code>K of N matched; expected all</code></li>
+<li><code>one</code>: <code>K of N matched; expected exactly one</code></li>
+<li><code>none</code>: <code>K of N matched; expected zero</code></li>
 </ul>
 <p>Under <code>.not</code>, the summary phrases the inverted intent (e.g. <code>expected none under negation</code> for negated <code>any</code>, <code>expected at least one under negation</code> for negated <code>none</code>), so the diff stays useful when the matcher fires through negation.</p>
-<p>Type-object alternatives (<code>Int | Rat</code>) render by name; values render via <code>.raku</code>.</p>
+<p>Type-object alternatives (<code>Int | Rat</code>) render by name. Values render via <code>.raku</code>.</p>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../matchers/">Matchers</a> — the matcher role and built-ins.</li>
-<li><a href="../../diff/diff/">Diff Output</a> — how the <code>Diff:</code> section is constructed for non-junction shapes.</li>
-<li><a href="../composable-matchers/">Composable Matchers</a> — <code>.and</code> / <code>.or</code> on <code>Matcher</code> objects (object-level alternative to Raku's literal junctions).</li>
+<li><a href="../matchers/">Matchers</a>: the matcher role and built-ins.</li>
+<li><a href="../../diff/diff/">Diff Output</a>: how the <code>Diff:</code> section is constructed for non-junction shapes.</li>
+<li><a href="../composable-matchers/">Composable Matchers</a>: <code>.and</code> / <code>.or</code> on <code>Matcher</code> objects (object-level alternative to Raku's literal junctions).</li>
 </ul>
 
 

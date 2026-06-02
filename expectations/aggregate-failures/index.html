@@ -1727,13 +1727,13 @@
 
 
 <h1 id="aggregate-failures">aggregate-failures<a class="headerlink" href="#aggregate-failures" title="Permanent link">&para;</a></h1>
-<p>By default in BDD::Behave, the <strong>first failing expectation inside an <code>it</code> body throws and aborts the rest of that example</strong> — matching RSpec semantics. Ideally each <code>it</code> block contains exactly one <code>expect</code>. When you genuinely need multiple expectations in one <code>it</code> body, wrap them in <code>aggregate-failures { ... }</code>:</p>
+<p>By default in BDD::Behave, the <strong>first failing expectation inside an <code>it</code> body throws and aborts the rest of that example</strong>, matching RSpec semantics. Ideally each <code>it</code> block contains exactly one <code>expect</code>. When you genuinely need multiple expectations in one <code>it</code> body, wrap them in <code>aggregate-failures { ... }</code>:</p>
 <ul>
 <li>All expectations inside the block run to completion (a failure earlier in the block does not skip the rest).</li>
 <li>The N inner failures are <strong>rolled up into a single <code>Failure</code> row</strong> at the line where the <code>aggregate-failures</code> block opens.</li>
 <li>That single row carries the block's label (when one is given) and renders the inner failures as a bulleted summary under its header.</li>
 </ul>
-<p>This means the progress stream's <code>F</code> count and the number of rows in the <code>Failures:</code> section stay aligned — one failed <code>it</code> produces one <code>F</code> and one row, regardless of how many <code>expect</code>s misfired inside.</p>
+<p>This means the progress stream's <code>F</code> count and the number of rows in the <code>Failures:</code> section stay aligned: one failed <code>it</code> produces one <code>F</code> and one row, regardless of how many <code>expect</code>s misfired inside.</p>
 <p>Exceptions thrown inside the block are also captured into the same rollup rather than propagating.</p>
 <h2 id="basic-form">Basic form<a class="headerlink" href="#basic-form" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1791,7 +1791,7 @@
 </code></pre></div></td></tr></table></div>
 <p>The captured exception is rendered as <code>exception in aggregate-failures: &lt;message&gt;</code> in the failure summary.</p>
 <h2 id="nesting">Nesting<a class="headerlink" href="#nesting" title="Permanent link">&para;</a></h2>
-<p>Blocks may nest. Inner labels win for failures recorded inside the inner block; an unlabeled inner block inherits the outer label.</p>
+<p>Blocks may nest. Inner labels win for failures recorded inside the inner block. An unlabeled inner block inherits the outer label.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1834,7 +1834,7 @@
 <p>Unlike <code>aggregate-failures</code>, <code>capture-failures</code> does <strong>not</strong> roll up. Each inner failure is returned as its own <code>Failure</code> object so the meta-test can assert on individual entries.</p>
 <p>Use it when writing a spec for a matcher's failure behavior. Use <code>aggregate-failures</code> when writing application code where you genuinely want multiple expectations to run in a single example body.</p>
 <h2 id="automatic-aggregation">Automatic aggregation<a class="headerlink" href="#automatic-aggregation" title="Permanent link">&para;</a></h2>
-<p>Three configuration options ask the runner to wrap each example's body in <code>aggregate-failures</code> semantics automatically — labeling its failures and converting an uncaught exception inside the example into a labeled failure rather than letting it short-circuit into the runner's error track.</p>
+<p>Three configuration options ask the runner to wrap each example's body in <code>aggregate-failures</code> semantics automatically, labeling its failures and converting an uncaught exception inside the example into a labeled failure rather than letting it short-circuit into the runner's error track.</p>
 <h3 id="per-example-metadata">Per-example metadata<a class="headerlink" href="#per-example-metadata" title="Permanent link">&para;</a></h3>
 <p>Attach <code>:aggregate-failures</code> to an <code>it</code> (or <code>fit</code>/<code>xit</code>) call:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1868,7 +1868,7 @@
   <span class="n">it</span> <span class="s">&#39;is well-formed&#39;</span>, { <span class="n">expect</span>({ <span class="n">from-json</span>(<span class="nv">$response</span>.<span class="n">body</span>) }).<span class="nb">not</span>.<span class="nb">to</span>.<span class="n">raise-error</span> }
 }
 </code></pre></div></td></tr></table></div>
-<p>A leaf <code>it</code> may override an outer group with its own metadata — including <code>:aggregate-failures(False)</code> to opt out:</p>
+<p>A leaf <code>it</code> may override an outer group with its own metadata, including <code>:aggregate-failures(False)</code> to opt out:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">describe</span> <span class="s">&#39;API responses&#39;</span>, :<span class="n">aggregate-failures</span>, {
@@ -1889,7 +1889,7 @@ behave --aggregate-failures=global        # on, label &#39;global&#39;
 <h3 id="resolution-rules">Resolution rules<a class="headerlink" href="#resolution-rules" title="Permanent link">&para;</a></h3>
 <p>When deciding whether to auto-aggregate an example, the runner walks the ancestry leaf-to-root and uses the first <strong>defined</strong> value of the <code>aggregate-failures</code> metadata, falling back to the runner default. <code>False</code> is a defined value, so an inner <code>:aggregate-failures(False)</code> overrides an outer truthy ancestor. An empty-string label is treated as off.</p>
 <h3 id="interaction-with-explicit-aggregate-failures-blocks">Interaction with explicit <code>aggregate-failures</code> blocks<a class="headerlink" href="#interaction-with-explicit-aggregate-failures-blocks" title="Permanent link">&para;</a></h3>
-<p>An explicit <code>aggregate-failures 'inner', { ... }</code> block inside an auto-aggregated example takes precedence inside the block — its label tags failures recorded there, and unlabeled inner blocks inherit the auto label. Failures recorded before or after the inner block continue to use the example's auto label.</p>
+<p>An explicit <code>aggregate-failures 'inner', { ... }</code> block inside an auto-aggregated example takes precedence inside the block: its label tags failures recorded there, and unlabeled inner blocks inherit the auto label. Failures recorded before or after the inner block continue to use the example's auto label.</p>
 <h3 id="exception-handling">Exception handling<a class="headerlink" href="#exception-handling" title="Permanent link">&para;</a></h3>
 <p>When auto-aggregation is on, an exception raised by the example body is converted into a single labeled <code>Failure</code> whose message begins with <code>exception in &lt;full nested description&gt;:</code> followed by the original exception text. With auto-aggregation off, the existing behavior is preserved: the runner stores the exception in its error track.</p>
 

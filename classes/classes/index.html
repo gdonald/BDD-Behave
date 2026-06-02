@@ -1515,7 +1515,7 @@
 
 
 <h1 id="classes-inside-specs">Classes inside specs<a class="headerlink" href="#classes-inside-specs" title="Permanent link">&para;</a></h1>
-<p>Behave specs are ordinary Raku files, so any Raku declaration works inside them — including <code>class</code>, <code>role</code>, and <code>enum</code>. Declare fixture types with <code>my class</code> / <code>my role</code> / <code>my enum</code> so they stay lexical to the spec file: they don't pollute the loader's package, they don't collide with same-named declarations in other specs, and their <code>.^name</code> reads as the short name you wrote.</p>
+<p>Behave specs are ordinary Raku files, so any Raku declaration works inside them, including <code>class</code>, <code>role</code>, and <code>enum</code>. Declare fixture types with <code>my class</code> / <code>my role</code> / <code>my enum</code> so they stay lexical to the spec file: they don't pollute the loader's package, they don't collide with same-named declarations in other specs, and their <code>.^name</code> reads as the short name you wrote.</p>
 <h2 id="declaring-a-class-in-a-describe">Declaring a class in a describe<a class="headerlink" href="#declaring-a-class-in-a-describe" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1586,7 +1586,7 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-<p>Each example gets its own memoized instance — the let block runs once per example, never carries over.</p>
+<p>Each example gets its own memoized instance: the let block runs once per example, never carries over.</p>
 <h2 id="roles-and-enums">Roles and enums<a class="headerlink" href="#roles-and-enums" title="Permanent link">&para;</a></h2>
 <p>Roles and enums work the same way:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1627,9 +1627,9 @@
 <p>Classes can also be declared at the top of the spec file, before any <code>describe</code>. Pick whichever scope is narrowest for the class's intended use:</p>
 <ul>
 <li><strong>Top-level</strong> when several <code>describe</code> blocks share the type.</li>
-<li><strong>Inside <code>describe</code></strong> when the type is only meaningful for one group of examples — keeping it local makes the relationship between the type and the tests obvious.</li>
+<li><strong>Inside <code>describe</code></strong> when the type is only meaningful for one group of examples. Keeping it local makes the relationship between the type and the tests obvious.</li>
 </ul>
-<p>In both positions, use <code>my class</code> (not <code>class</code>) for the same reasons given above — file-scope <code>class Foo { }</code> is sugar for <code>our class Foo { }</code> and installs <code>Foo</code> into the spec loader's package, where it can collide with other specs and grow a package-qualified <code>.^name</code>.</p>
+<p>In both positions, use <code>my class</code> (not <code>class</code>) for the same reasons given above. File-scope <code>class Foo { }</code> is sugar for <code>our class Foo { }</code> and installs <code>Foo</code> into the spec loader's package, where it can collide with other specs and grow a package-qualified <code>.^name</code>.</p>
 <p>See <a href="../../variables/variables/">Variables in specs</a> for the same scoping rules applied to plain <code>my</code>/<code>our</code> variables.</p>
 
 

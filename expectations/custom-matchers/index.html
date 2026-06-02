@@ -1664,7 +1664,7 @@ optional message/description hooks. It plugs into the same
 <span class="n">expect</span>(<span class="mi">9</span>).<span class="nb">to</span>.<span class="n">be</span>(<span class="n">be-a-multiple-of</span>(<span class="mi">3</span>));    <span class="c1"># passes</span>
 <span class="n">expect</span>(<span class="mi">8</span>).<span class="nb">to</span>.<span class="nb">not</span>.<span class="n">be</span>(<span class="n">be-a-multiple-of</span>(<span class="mi">3</span>)); <span class="c1"># passes</span>
 </code></pre></div></td></tr></table></div>
-<p><code>define-matcher</code> returns a <strong>factory</strong> — call it with the matcher's expected
+<p><code>define-matcher</code> returns a <strong>factory</strong>: call it with the matcher's expected
 args and you get back a <code>DefinedMatcher</code> instance you can pass into
 <code>expect(...).to.be(...)</code>. The matcher is also registered globally so other
 files can reach it through <a href="#matchername-args-lookup"><code>matcher(...)</code></a>.</p>
@@ -1713,7 +1713,7 @@ files can reach it through <a href="#matchername-args-lookup"><code>matcher(...)
 </table>
 <p><code>match</code> is the only required block. Anything else can be omitted and you get a
 sensible default. The factory you receive is just sugar over the
-<a href="#the-registry">registry's <code>build</code> method</a>; calling <code>matcher(...)</code> directly
+<a href="#the-registry">registry's <code>build</code> method</a>. Calling <code>matcher(...)</code> directly
 works identically.</p>
 <h3 id="argument-shape">Argument shape<a class="headerlink" href="#argument-shape" title="Permanent link">&para;</a></h3>
 <p>Every block receives the matcher's arguments after <code>$actual</code>. The shape mirrors
@@ -1765,7 +1765,7 @@ built-in:</p>
 </code></pre></div></td></tr></table></div>
 <p>Existing methods on <code>ExpectationBuilder</code> (<code>be</code>, <code>eq</code>, <code>include</code>, ...) take
 precedence over the registry, and unknown names that aren't registered still
-raise <code>X::Method::NotFound</code> — so a typo doesn't get silently swallowed.</p>
+raise <code>X::Method::NotFound</code>, so a typo doesn't get silently swallowed.</p>
 <h2 id="how-it-plugs-in">How it plugs in<a class="headerlink" href="#how-it-plugs-in" title="Permanent link">&para;</a></h2>
 <p>A <code>DefinedMatcher</code> <code>does Matcher</code>, so it goes through the exact same code path
 as the built-in matchers:</p>
@@ -1843,8 +1843,8 @@ a handful of useful methods:</p>
 </tr>
 </tbody>
 </table>
-<p>Redefining a matcher with the same name <em>replaces</em> the previous registration;
-previously returned factory closures pick up the new definition the next time
+<p>Redefining a matcher with the same name <em>replaces</em> the previous registration.
+Previously returned factory closures pick up the new definition the next time
 they are called.</p>
 <h2 id="putting-it-together">Putting it together<a class="headerlink" href="#putting-it-together" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>

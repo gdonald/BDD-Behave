@@ -2011,7 +2011,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--version</code>, <code>-V</code></td>
-<td>Print the installed <code>BDD::Behave</code> version and exit. Reads the version from the loaded distribution's metadata; falls back to walking up from the script to find <code>META6.json</code> when running from a source checkout.</td>
+<td>Print the installed <code>BDD::Behave</code> version and exit. Reads the version from the loaded distribution's metadata, and falls back to walking up from the script to find <code>META6.json</code> when running from a source checkout.</td>
 </tr>
 <tr>
 <td><code>--verbose</code></td>
@@ -2019,7 +2019,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--tag NAME</code></td>
-<td>Run only examples tagged <code>NAME</code> (repeatable; OR semantics). See <a href="../tags/tags/">Tags</a>.</td>
+<td>Run only examples tagged <code>NAME</code> (repeatable, OR semantics). See <a href="../tags/tags/">Tags</a>.</td>
 </tr>
 <tr>
 <td><code>--exclude-tag NAME</code></td>
@@ -2027,7 +2027,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--example PATTERN</code></td>
-<td>Run only examples whose full nested description matches <code>PATTERN</code> (substring; or <code>/regex/</code>). Repeatable; OR semantics.</td>
+<td>Run only examples whose full nested description matches <code>PATTERN</code> (substring, or <code>/regex/</code>). Repeatable, OR semantics.</td>
 </tr>
 <tr>
 <td><code>-e PATTERN</code></td>
@@ -2035,7 +2035,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--aggregate-failures</code> / <code>--aggregate-failures=LABEL</code></td>
-<td>Wrap every example in <code>aggregate-failures</code> semantics; converts uncaught example exceptions into recorded failures. With <code>=LABEL</code> the label tags each failure. Per-example/group <code>:aggregate-failures</code> metadata overrides this. See <a href="../expectations/aggregate-failures/#automatic-aggregation">Aggregate failures</a>.</td>
+<td>Wrap every example in <code>aggregate-failures</code> semantics, converting uncaught example exceptions into recorded failures. With <code>=LABEL</code> the label tags each failure. Per-example/group <code>:aggregate-failures</code> metadata overrides this. See <a href="../expectations/aggregate-failures/#automatic-aggregation">Aggregate failures</a>.</td>
 </tr>
 <tr>
 <td><code>--order ORDER</code></td>
@@ -2071,7 +2071,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--only-example LOC</code></td>
-<td>Run only examples whose <code>file:line</code> matches <code>LOC</code> (repeatable; OR semantics). <code>LOC</code> is <code>FILE:LINE</code> — <code>FILE</code> may be absolute, relative, or a basename. See <a href="#bisect">Bisect</a>.</td>
+<td>Run only examples whose <code>file:line</code> matches <code>LOC</code> (repeatable, OR semantics). <code>LOC</code> is <code>FILE:LINE</code> (<code>FILE</code> may be absolute, relative, or a basename). See <a href="#bisect">Bisect</a>.</td>
 </tr>
 <tr>
 <td><code>--bisect</code></td>
@@ -2083,19 +2083,11 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--profile</code> / <code>--profile=N</code></td>
-<td>Print the top N slowest examples after the run (default <code>N=10</code>). Across multiple spec files — and across <code>--parallel</code> workers — the profile is a single global section after the <code>Overall:</code> counts. See <a href="../timing/timing/#-profile">Timing</a>.</td>
+<td>Print the top N slowest examples after the run (default <code>N=10</code>). Across multiple spec files (and across <code>--parallel</code> workers) the profile is a single global section after the <code>Overall:</code> counts. See <a href="../timing/timing/#-profile">Timing</a>.</td>
 </tr>
 <tr>
 <td><code>--slow-threshold=SECONDS</code></td>
 <td>Print an inline <code>SLOW</code> line under any example whose body takes at least <code>SECONDS</code> seconds. <code>SECONDS</code> may be fractional. See <a href="../timing/timing/#-slow-threshold">Timing</a>.</td>
-</tr>
-<tr>
-<td><code>--memory-profile</code> / <code>--memory-profile=N</code></td>
-<td>Track per-example RSS deltas and print the top N memory-heaviest examples after the run (default <code>N=10</code>). Aggregated across <code>--parallel</code> workers. See <a href="../timing/timing/#memory-profiling">Memory profiling</a>.</td>
-</tr>
-<tr>
-<td><code>--memory-threshold=KB</code></td>
-<td>Print an inline <code>MEMORY</code> line under any example whose RSS delta meets or exceeds <code>KB</code> kilobytes. Enables measurement on its own. See <a href="../timing/timing/#memory-profiling">Memory profiling</a>.</td>
 </tr>
 <tr>
 <td><code>--format NAME</code></td>
@@ -2111,7 +2103,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--parallel N</code></td>
-<td>Run specs across <code>N</code> worker subprocesses (the default mode runs one subprocess per spec file, up to <code>N</code> in flight; see <code>--parallel-mode</code>). Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code>. Aggregates coverage across workers when combined with <code>--coverage</code> (see <a href="../parallel/parallel/#coverage">Coverage under --parallel</a>). Ignored under <code>--doc</code>. See <a href="../parallel/parallel/">Parallel Execution</a>.</td>
+<td>Run specs across <code>N</code> worker subprocesses (the default mode runs one subprocess per spec file, up to <code>N</code> in flight, see <code>--parallel-mode</code>). Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code>. Aggregates coverage across workers when combined with <code>--coverage</code> (see <a href="../parallel/parallel/#coverage">Coverage under --parallel</a>). Ignored under <code>--doc</code>. See <a href="../parallel/parallel/">Parallel Execution</a>.</td>
 </tr>
 <tr>
 <td><code>--seed-mode MODE</code></td>
@@ -2123,7 +2115,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--parallel-retry N</code></td>
-<td>When a worker subprocess crashes (exits with code &gt; 1: signal, OOM, uncaught exception in the runner itself — <strong>not</strong> test failures), re-spawn it with the same manifest up to <code>N</code> additional times. Default 0. Composes with <code>--retry</code> (per-example flake retry). LPT mode only; queue-mode crashes remain fatal. See <a href="../parallel/parallel/#per-shard-retry-on-worker-crash-parallel-retry">Per-shard retry</a>.</td>
+<td>When a worker subprocess crashes (exits with code &gt; 1: signal, OOM, uncaught exception in the runner itself, <strong>not</strong> test failures), re-spawn it with the same manifest up to <code>N</code> additional times. Default 0. Composes with <code>--retry</code> (per-example flake retry). LPT mode only. Queue-mode crashes remain fatal. See <a href="../parallel/parallel/#per-shard-retry-on-worker-crash-parallel-retry">Per-shard retry</a>.</td>
 </tr>
 <tr>
 <td><code>--progress-total</code></td>
@@ -2131,7 +2123,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--watch</code></td>
-<td>Watch source and spec files; re-run affected specs whenever a file changes. Reads <code>r</code>/<code>a</code>/<code>f</code>/<code>q</code> commands from stdin. Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code> / <code>--coverage</code> / <code>--doc</code> / <code>--parallel</code>. See <a href="../watch/watch/">Watch Mode</a>.</td>
+<td>Watch source and spec files, and re-run affected specs whenever a file changes. Reads <code>r</code>/<code>a</code>/<code>f</code>/<code>q</code> commands from stdin. Mutually exclusive with <code>--bisect</code> / <code>--bisect-data</code> / <code>--coverage</code> / <code>--doc</code> / <code>--parallel</code>. See <a href="../watch/watch/">Watch Mode</a>.</td>
 </tr>
 <tr>
 <td><code>--watch-path PATH</code></td>
@@ -2139,11 +2131,11 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tr>
 <tr>
 <td><code>--dry-run</code></td>
-<td>Load specs but skip execution; print the hierarchical example list and a count. Honors <code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code>, <code>--only-example</code>, focus mode, and skipped examples. Combine with <code>--verbose</code> to show each example's <code>file:line</code> and effective tags. See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
+<td>Load specs but skip execution, printing the hierarchical example list and a count. Honors <code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code>, <code>--only-example</code>, focus mode, and skipped examples. Combine with <code>--verbose</code> to show each example's <code>file:line</code> and effective tags. See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
 </tr>
 <tr>
 <td><code>--list-examples</code></td>
-<td>Emit the metadata query result one line per example — <code>FILE:LINE\t&lt;full description&gt;</code> by default. Designed for editor integrations (run-this-test, jump-to-failure). See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
+<td>Emit the metadata query result one line per example (<code>FILE:LINE\t&lt;full description&gt;</code> by default). Designed for editor integrations (run-this-test, jump-to-failure). See <a href="../dry-run/dry-run/">Dry run and listing</a>.</td>
 </tr>
 <tr>
 <td><code>--list-examples-format=FORMAT</code></td>
@@ -2152,7 +2144,7 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
 </tbody>
 </table>
 <h2 id="order-and-seed">Order and seed<a class="headerlink" href="#order-and-seed" title="Permanent link">&para;</a></h2>
-<p>Behave runs examples in <strong>random order by default</strong>. This shuffles the children of every <code>describe</code> / <code>context</code> group (and the top-level suite) before execution. Random ordering catches accidental order dependencies — examples that pass only because a sibling ran first — and is the recommended default.</p>
+<p>Behave runs examples in <strong>random order by default</strong>. This shuffles the children of every <code>describe</code> / <code>context</code> group (and the top-level suite) before execution. Random ordering catches accidental order dependencies (examples that pass only because a sibling ran first) and is the recommended default.</p>
 <p>When a run <strong>fails</strong>, Behave prints the seed used so the failing order is reproducible:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -2162,13 +2154,13 @@ $<span class="w"> </span>raku<span class="w"> </span>-Ilib<span class="w"> </spa
   1246 passed
 Randomized with seed 595739438
 </code></pre></div></td></tr></table></div>
-<p>A fully passing run stays quiet — there is nothing to reproduce, so the seed line is omitted to keep green output clean.</p>
+<p>A fully passing run stays quiet: there is nothing to reproduce, so the seed line is omitted to keep green output clean.</p>
 <p>Pass <code>--seed N</code> to reproduce a specific order:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--seed<span class="w"> </span><span class="m">595739438</span>
 </code></pre></div></td></tr></table></div>
 <p>If random order surfaces a failure, the seed in the summary is all you need to re-run the same permutation.</p>
 <h3 id="-show-seed"><code>--show-seed</code><a class="headerlink" href="#-show-seed" title="Permanent link">&para;</a></h3>
-<p>To print the seed even on a passing run — for instance to record the exact order a green CI run used — pass <code>--show-seed</code>:</p>
+<p>To print the seed even on a passing run (for instance to record the exact order a green CI run used) pass <code>--show-seed</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--show-seed
 </code></pre></div></td></tr></table></div>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2216,7 +2208,7 @@ Randomized with seed 595739438
 </code></pre></div></td></tr></table></div>
 <p><code>Runner.new(:order&lt;sideways&gt;)</code> (or any value other than <code>'random'</code> / <code>'defined'</code>) dies at construction time.</p>
 <h2 id="fail-fast">Fail-fast<a class="headerlink" href="#fail-fast" title="Permanent link">&para;</a></h2>
-<p>By default, Behave runs every example in the suite even after a failure, so the run produces a complete picture of what is broken. When iterating on a single problem — or when you want a faster signal in CI — pass <code>--fail-fast</code> to stop as soon as the first failure occurs:</p>
+<p>By default, Behave runs every example in the suite even after a failure, so the run produces a complete picture of what is broken. When iterating on a single problem (or when you want a faster signal in CI) pass <code>--fail-fast</code> to stop as soon as the first failure occurs:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--fail-fast
 </code></pre></div></td></tr></table></div>
 <p>After the threshold is hit, Behave prints the normal failure list and counts, plus an abort banner:</p>
@@ -2225,8 +2217,8 @@ Randomized with seed 595739438
 <p>Pass <code>--fail-fast=N</code> to keep running until <code>N</code> failures have accumulated:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--fail-fast<span class="o">=</span><span class="m">3</span>
 </code></pre></div></td></tr></table></div>
-<p><code>N</code> must be a positive integer; <code>--fail-fast=0</code> and non-numeric values exit with a non-zero status and a helpful error on stderr.</p>
-<p>When multiple spec files are passed on the command line, the threshold is shared across them — once it is reached, the remaining suites are not loaded. Skipped and pending examples do not count toward the threshold.</p>
+<p><code>N</code> must be a positive integer. <code>--fail-fast=0</code> and non-numeric values exit with a non-zero status and a helpful error on stderr.</p>
+<p>When multiple spec files are passed on the command line, the threshold is shared across them: once it is reached, the remaining suites are not loaded. Skipped and pending examples do not count toward the threshold.</p>
 <h3 id="programmatic-use_1">Programmatic use<a class="headerlink" href="#programmatic-use_1" title="Permanent link">&para;</a></h3>
 <p><code>BDD::Behave::Runner::Runner.new</code> accepts <code>:fail-fast(N)</code> (default <code>0</code>, meaning unbounded). The runner exposes <code>.aborted</code> (a <code>Bool</code>) after <code>.run</code> returns, so callers can distinguish a clean finish from an early abort:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2239,12 +2231,12 @@ Randomized with seed 595739438
 <h2 id="retry-and-only-failures">Retry and only-failures<a class="headerlink" href="#retry-and-only-failures" title="Permanent link">&para;</a></h2>
 <p>Flaky examples can be retried automatically via <code>--retry N</code> (or per-example <code>:retry(N)</code> metadata). After every non-bisect run, the list of failing examples is persisted to <code>./.behave-failures</code> so the next run can be scoped to just those failures with <code>--only-failures</code>. See <a href="../retry/retry/">Retry and Only-Failures</a> for the full reference.</p>
 <h2 id="bisect">Bisect<a class="headerlink" href="#bisect" title="Permanent link">&para;</a></h2>
-<p>When a failure shows up only when a specific other example ran first — classic order-dependent test pollution — <code>--bisect</code> finds the minimal set of preceding examples needed to reproduce the failure.</p>
+<p>When a failure shows up only when a specific other example ran first (classic order-dependent test pollution) <code>--bisect</code> finds the minimal set of preceding examples needed to reproduce the failure.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--bisect
 </code></pre></div></td></tr></table></div>
 <h3 id="what-it-does">What it does<a class="headerlink" href="#what-it-does" title="Permanent link">&para;</a></h3>
 <ol>
-<li><strong>Initial pass</strong> in declared order (<code>--order defined</code>); records which examples ran and which failed.</li>
+<li><strong>Initial pass</strong> in declared order (<code>--order defined</code>), recording which examples ran and which failed.</li>
 <li>For each failing example, replays subsets of the prior examples in a fresh subprocess and shrinks the prior set until further pruning loses the failure.</li>
 <li>Prints the minimal prior set and a ready-to-run reproduction command.</li>
 </ol>
@@ -2286,23 +2278,23 @@ Bisect: 1 failing example(s) found across 5 executed
 
 Bisect complete: 6 iteration(s)
 </code></pre></div></td></tr></table></div>
-<p>If the failing example reproduces alone (no prior needed), Bisect reports <code>Failure reproduces in isolation — not order-dependent</code>. If the initial pass has no failures, Bisect exits 0 with <code>no failing examples</code>.</p>
+<p>If the failing example reproduces alone (no prior needed), Bisect reports that the failure reproduces in isolation and is not order-dependent. If the initial pass has no failures, Bisect exits 0 with <code>no failing examples</code>.</p>
 <h3 id="-only-example-fileline"><code>--only-example FILE:LINE</code><a class="headerlink" href="#-only-example-fileline" title="Permanent link">&para;</a></h3>
 <p><code>--only-example</code> is the targeting primitive Bisect uses to replay subsets. It is also useful directly:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--only-example<span class="w"> </span>specs/users-spec.raku:42
 $<span class="w"> </span>behave<span class="w"> </span>--only-example<span class="w"> </span>users-spec.raku:42<span class="w"> </span>specs/users-spec.raku<span class="w">  </span><span class="c1"># basename match</span>
 </code></pre></div></td></tr></table></div>
-<p><code>FILE</code> matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, <code>path/to/file.raku</code> suffix match, or basename equality. <code>LINE</code> must equal the line of the <code>it</code> block. Repeating <code>--only-example</code> is OR semantics; the runner runs every example matching any pattern.</p>
+<p><code>FILE</code> matches if any of these hold: exact-string equality with the example's stored path, absolute-path equality, <code>path/to/file.raku</code> suffix match, or basename equality. <code>LINE</code> must equal the line of the <code>it</code> block. Repeating <code>--only-example</code> is OR semantics. The runner runs every example matching any pattern.</p>
 <h4 id="positional-fileline-shorthand">Positional <code>FILE:LINE</code> shorthand<a class="headerlink" href="#positional-fileline-shorthand" title="Permanent link">&para;</a></h4>
-<p>A positional argument of the form <code>FILE:LINE</code> is shorthand for "load <code>FILE</code>, then run only the example at <code>LINE</code>" — equivalent to passing <code>FILE</code> plus <code>--only-example FILE:LINE</code>. The shorthand only triggers when <code>FILE</code> exists on disk; an arg matching the <code>:N</code> pattern but pointing at a non-existent file is left alone (and will surface as a normal "could not load" error).</p>
+<p>A positional argument of the form <code>FILE:LINE</code> is shorthand for "load <code>FILE</code>, then run only the example at <code>LINE</code>", equivalent to passing <code>FILE</code> plus <code>--only-example FILE:LINE</code>. The shorthand only triggers when <code>FILE</code> exists on disk. An arg matching the <code>:N</code> pattern but pointing at a non-existent file is left alone (and will surface as a normal "could not load" error).</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<span class="w">                       </span><span class="c1"># single example</span>
 $<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<span class="w"> </span>specs/users-spec.raku:88<span class="w">   </span><span class="c1"># both run</span>
 $<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<span class="w"> </span>--tag<span class="w"> </span>focus<span class="w">           </span><span class="c1"># AND with --tag</span>
 </code></pre></div></td></tr></table></div>
-<p>The shorthand and explicit <code>--only-example</code> compose freely; both append to the same internal list, so all matching examples run.</p>
+<p>The shorthand and explicit <code>--only-example</code> compose freely. Both append to the same internal list, so all matching examples run.</p>
 <h4 id="line-snapping-editor-integration">Line snapping (editor integration)<a class="headerlink" href="#line-snapping-editor-integration" title="Permanent link">&para;</a></h4>
 <p><code>LINE</code> does not have to land exactly on the <code>it</code> / <code>describe</code> / <code>context</code> keyword. Both the <code>FILE:LINE</code> shorthand and <code>--only-example FILE:LINE</code> apply a <strong>text-based snap</strong>: if <code>LINE</code> does not point at one of those keywords, Behave scans <code>FILE</code> for the nearest preceding line whose first non-whitespace token is <code>describe</code>, <code>context</code>, <code>fdescribe</code>, <code>fcontext</code>, <code>xdescribe</code>, <code>xcontext</code>, <code>it</code>, <code>fit</code>, <code>xit</code>, or <code>pending</code>, and uses that line instead.</p>
 <p>Given this fixture:</p>
@@ -2353,7 +2345,7 @@ $<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<
 <tr>
 <td><code>:7</code></td>
 <td><code>:7</code></td>
-<td>Runs <code>beta</code> only (exact <code>context</code> line; descends into the inner group).</td>
+<td>Runs <code>beta</code> only (exact <code>context</code> line, descends into the inner group).</td>
 </tr>
 <tr>
 <td><code>:1</code></td>
@@ -2363,7 +2355,7 @@ $<span class="w"> </span>behave<span class="w"> </span>specs/users-spec.raku:42<
 </tbody>
 </table>
 <p>When the snapped line is a <code>describe</code> or <code>context</code>, every example whose ancestry includes that group runs. This is what makes editor integrations work: bind your "run example at cursor" key to <code>behave $FILE:$LINENO</code> and it does the right thing whether the cursor is on the <code>it</code> line, inside the body, or inside an enclosing <code>describe</code>.</p>
-<p>The snap is purely text-based and only looks at the start of each line, so it will not be confused by <code>it</code> appearing in a comment or string inside an <code>it</code> body. It will not snap into a closing brace; a line that has no preceding keyword in the file (e.g. <code>:1</code> when the file starts with <code>use BDD::Behave;</code>) is left unchanged and matches nothing.</p>
+<p>The snap is purely text-based and only looks at the start of each line, so it will not be confused by <code>it</code> appearing in a comment or string inside an <code>it</code> body. It will not snap into a closing brace. A line that has no preceding keyword in the file (e.g. <code>:1</code> when the file starts with <code>use BDD::Behave;</code>) is left unchanged and matches nothing.</p>
 <h3 id="-bisect-data"><code>--bisect-data</code><a class="headerlink" href="#-bisect-data" title="Permanent link">&para;</a></h3>
 <p>Used by <code>--bisect</code> for inter-process communication and exposed for editor/tool integrations that want a parseable listing of executed and failed examples:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -2375,7 +2367,7 @@ behave-failed: specs/users-spec.raku:24
 <p><code>--bisect-data</code> suppresses normal output. It is mutually exclusive with <code>--bisect</code>.</p>
 <h3 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h3>
 <ul>
-<li>Bisect uses <code>--order defined</code> for sub-runs. Failures that only reproduce under a specific random <code>--seed</code> need to be diagnosed differently — re-run with the failing seed and <code>--order defined</code> after locking in the order.</li>
+<li>Bisect uses <code>--order defined</code> for sub-runs. Failures that only reproduce under a specific random <code>--seed</code> need to be diagnosed differently: re-run with the failing seed and <code>--order defined</code> after locking in the order.</li>
 <li>Sub-runs use the same <code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code>, and <code>--aggregate-failures</code> you passed to <code>bin/behave --bisect</code>.</li>
 <li>The shrink uses binary halving first, then one-at-a-time minimization when halving stalls. Iteration count grows roughly with <code>log(prior) + minimal-prior-count</code>.</li>
 </ul>

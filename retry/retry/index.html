@@ -1649,9 +1649,9 @@
 
 
 <h1 id="retry-and-only-failures">Retry and only-failures<a class="headerlink" href="#retry-and-only-failures" title="Permanent link">&para;</a></h1>
-<p>Flaky examples — those that fail intermittently because of timing, network jitter, ordering of external services, or other non-determinism — can be retried automatically. Behave also persists the list of failing examples after every run so you can re-run just those failures next time.</p>
+<p>Flaky examples (those that fail intermittently because of timing, network jitter, ordering of external services, or other non-determinism) can be retried automatically. Behave also persists the list of failing examples after every run so you can re-run just those failures next time.</p>
 <h2 id="-retry-n"><code>--retry N</code><a class="headerlink" href="#-retry-n" title="Permanent link">&para;</a></h2>
-<p><code>--retry N</code> runs each failing example up to <code>N</code> additional times. A total of <code>N+1</code> attempts will be made. The first attempt that passes wins; the example is marked passing in the final summary. If every attempt fails, the example is marked failing and the final attempt's failures are the ones reported.</p>
+<p><code>--retry N</code> runs each failing example up to <code>N</code> additional times. A total of <code>N+1</code> attempts will be made. The first attempt that passes wins. The example is marked passing in the final summary. If every attempt fails, the example is marked failing and the final attempt's failures are the ones reported.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--retry<span class="w"> </span><span class="m">2</span>
 </code></pre></div></td></tr></table></div>
 <p>This is the simplest form: every failing example in the run gets up to two retries.</p>
@@ -1685,12 +1685,12 @@
 </code></pre></div></td></tr></table></div>
 <p><code>:retry(N)</code> on a single example overrides any inherited value, including <code>--retry</code> from the command line. <code>:retry(0)</code> is the explicit way to disable retries for an example that would otherwise inherit a higher value.</p>
 <h3 id="what-re-runs-between-attempts">What re-runs between attempts<a class="headerlink" href="#what-re-runs-between-attempts" title="Permanent link">&para;</a></h3>
-<p>A retry re-runs the example body and the example's <code>before-each</code> / <code>after-each</code> / <code>around-each</code> hooks. Group-level <code>before-all</code> / <code>after-all</code> and <code>around-all</code> run once per group as usual — they are not re-executed on retry.</p>
+<p>A retry re-runs the example body and the example's <code>before-each</code> / <code>after-each</code> / <code>around-each</code> hooks. Group-level <code>before-all</code> / <code>after-all</code> and <code>around-all</code> run once per group as usual: they are not re-executed on retry.</p>
 <p>Other per-attempt state:</p>
 <ul>
 <li><strong><code>let</code> memoization</strong> is reset between attempts, so lazy <code>let { ... }</code> bodies re-evaluate.</li>
 <li><strong>Stubs installed via <code>allow(...)</code></strong> are cleaned up between attempts via the same <code>StubRegistry</code> snapshot-and-restore mechanism that wraps every example. Stubs installed in <code>before-all</code> survive across attempts.</li>
-<li><strong><code>Failures.list</code></strong> is snapshotted at the start of each attempt. If the attempt fails and we are going to retry, the intermediate failures are spliced back out — they never make it into the final summary or into <code>.behave-failures</code>.</li>
+<li><strong><code>Failures.list</code></strong> is snapshotted at the start of each attempt. If the attempt fails and we are going to retry, the intermediate failures are spliced back out: they never make it into the final summary or into <code>.behave-failures</code>.</li>
 </ul>
 <p>Pending (<code>pending</code> or <code>it 'todo'</code>) and skipped (<code>:skipped</code>, <code>xit</code>, <code>xdescribe</code>) examples are never retried.</p>
 <h3 id="output-while-retries-happen">Output while retries happen<a class="headerlink" href="#output-while-retries-happen" title="Permanent link">&para;</a></h3>
@@ -1710,7 +1710,7 @@
   [FAIL] flaky API tests pings once with an aggressive timeout (6/6 attempts)
          /Users/me/repo/specs/api-spec.raku:12
 </code></pre></div></td></tr></table></div>
-<p><code>[PASS]</code> means the example eventually succeeded after <code>N</code> retries; <code>[FAIL]</code> means every attempt failed. <code>N/M attempts</code> is the actual number of attempts used over the maximum allowed. When no retries occurred, the section is omitted entirely.</p>
+<p><code>[PASS]</code> means the example eventually succeeded after <code>N</code> retries. <code>[FAIL]</code> means every attempt failed. <code>N/M attempts</code> is the actual number of attempts used over the maximum allowed. When no retries occurred, the section is omitted entirely.</p>
 <h3 id="programmatic-use">Programmatic use<a class="headerlink" href="#programmatic-use" title="Permanent link">&para;</a></h3>
 <p><code>BDD::Behave::Runner::Runner.new</code> accepts <code>:retry(N)</code> (default <code>0</code>, meaning no retries). After the run, <code>$runner.result.retry-records</code> is a list of <code>BDD::Behave::Runner::RetryRecord</code> objects, each with <code>description</code>, <code>location</code>, <code>attempts</code>, <code>max-attempts</code>, and <code>outcome</code> (the string <code>'pass'</code> or <code>'fail'</code>):</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1739,7 +1739,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--only-failures<span clas
 <li>Examples that ran and still fail are kept (or added).</li>
 <li>Examples that did NOT run this time (filtered out, in a spec file you did not select, etc.) are preserved as-is.</li>
 </ul>
-<p>A filtered run like <code>behave specs/auth-spec.raku --only-failures</code> will only update entries belonging to <code>auth-spec.raku</code>; failing entries for other spec files stay in the list until you re-run them.</p>
+<p>A filtered run like <code>behave specs/auth-spec.raku --only-failures</code> will only update entries belonging to <code>auth-spec.raku</code>. Failing entries for other spec files stay in the list until you re-run them.</p>
 <h3 id="-failures-path-path"><code>--failures-path PATH</code><a class="headerlink" href="#-failures-path-path" title="Permanent link">&para;</a></h3>
 <p>Override the default path with <code>--failures-path PATH</code> (or <code>--failures-path=PATH</code>). Useful when running concurrent suites that should not share a failures list, or when persisting failures somewhere outside the working directory:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1747,7 +1747,7 @@ $<span class="w"> </span>behave<span class="w"> </span>--only-failures<span clas
 $<span class="w"> </span>behave<span class="w"> </span>--only-failures<span class="w"> </span>--failures-path<span class="w"> </span>/tmp/behave-failures-feature-x.txt
 </code></pre></div></td></tr></table></div>
 <h3 id="modes-that-do-not-write-behave-failures">Modes that do not write <code>.behave-failures</code><a class="headerlink" href="#modes-that-do-not-write-behave-failures" title="Permanent link">&para;</a></h3>
-<p><code>--bisect</code> and <code>--bisect-data</code> use their own machine-readable output protocol and do not write the failures file. All other modes — including <code>--parallel</code>, <code>--coverage</code>, and <code>--doc</code> — write the file at the end of the run.</p>
+<p><code>--bisect</code> and <code>--bisect-data</code> use their own machine-readable output protocol and do not write the failures file. All other modes (including <code>--parallel</code>, <code>--coverage</code>, and <code>--doc</code>) write the file at the end of the run.</p>
 <p><code>.behave-failures</code> is plain text (one location per line, blank lines and <code>#</code> comments ignored on read) so it is safe to edit by hand or to consume from other tooling.</p>
 
 

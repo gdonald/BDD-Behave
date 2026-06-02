@@ -1803,12 +1803,12 @@
 
 
 <h1 id="formatters">Formatters<a class="headerlink" href="#formatters" title="Permanent link">&para;</a></h1>
-<p>Behave's runner is decoupled from its output: every line it prints is emitted through a <strong>formatter</strong>. The default selection (when <code>--format</code> is not given) is <code>progress</code> — compact dot-stream output. You can swap in any class that composes the <code>BDD::Behave::Formatter</code> role to render runs differently — indented tree, hierarchical documentation, JSON, JUnit XML, and so on.</p>
+<p>Behave's runner is decoupled from its output: every line it prints is emitted through a <strong>formatter</strong>. The default selection (when <code>--format</code> is not given) is <code>progress</code> (compact dot-stream output). You can swap in any class that composes the <code>BDD::Behave::Formatter</code> role to render runs differently: indented tree, hierarchical documentation, JSON, JUnit XML, and so on.</p>
 <h2 id="selecting-a-formatter">Selecting a formatter<a class="headerlink" href="#selecting-a-formatter" title="Permanent link">&para;</a></h2>
 <p>Pass <code>--format NAME</code> to <code>behave</code>:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--format<span class="w"> </span>tree<span class="w"> </span>specs/users-spec.raku
 </code></pre></div></td></tr></table></div>
-<p><code>NAME</code> must be a registered formatter. The built-in formatters are <code>documentation</code>, <code>html</code>, <code>json</code>, <code>json-events</code>, <code>junit</code>, <code>progress</code>, <code>tap</code>, and <code>tree</code>. (<code>json-events</code> is the line-delimited event stream parallel workers use to report back to the parent; it is registered and selectable but rarely useful on its own.) An unknown name fails fast:</p>
+<p><code>NAME</code> must be a registered formatter. The built-in formatters are <code>documentation</code>, <code>html</code>, <code>json</code>, <code>json-events</code>, <code>junit</code>, <code>progress</code>, <code>tap</code>, and <code>tree</code>. (<code>json-events</code> is the line-delimited event stream parallel workers use to report back to the parent. It is registered and selectable but rarely useful on its own.) An unknown name fails fast:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code>$ behave --format nope
 Error: unknown --format &#39;nope&#39; (available: documentation, html, json, json-events, junit, progress, tap, tree)
@@ -1818,9 +1818,9 @@ Error: unknown --format &#39;nope&#39; (available: documentation, html, json, js
 <h3 id="progress"><code>progress</code><a class="headerlink" href="#progress" title="Permanent link">&para;</a></h3>
 <p>The default. Compact single-line output, one character per example. See the dedicated entry below.</p>
 <h3 id="tree"><code>tree</code><a class="headerlink" href="#tree" title="Permanent link">&para;</a></h3>
-<p>Behave's classic indented tree output (formerly called <code>default</code>): one line per <code>describe</code>/<code>context</code>/<code>it</code>, a green <code>SUCCESS</code> / red <code>FAILURE</code> marker per example, and inline <code>SLOW</code> / <code>MEMORY</code> annotations when <code>--slow-threshold</code> / <code>--memory-threshold</code> fire. Useful for debugging — you can see exactly which example is running when something hangs or hits a long step.</p>
+<p>Behave's classic indented tree output (formerly called <code>default</code>): one line per <code>describe</code>/<code>context</code>/<code>it</code>, a green <code>SUCCESS</code> / red <code>FAILURE</code> marker per example, and an inline <code>SLOW</code> annotation when <code>--slow-threshold</code> fires. Useful for debugging: you can see exactly which example is running when something hangs or hits a long step.</p>
 <h3 id="documentation"><code>documentation</code><a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
-<p>A clean, document-style rendering of the spec tree. Each <code>describe</code>/<code>context</code> is printed as a heading (no quotes, no arrow markers) and each example is printed as an indented line beneath its enclosing group — non-passing outcomes get a parenthetical suffix:</p>
+<p>A clean, document-style rendering of the spec tree. Each <code>describe</code>/<code>context</code> is printed as a heading (no quotes, no arrow markers) and each example is printed as an indented line beneath its enclosing group. Non-passing outcomes get a parenthetical suffix:</p>
 <table>
 <thead>
 <tr>
@@ -1831,7 +1831,7 @@ Error: unknown --format &#39;nope&#39; (available: documentation, html, json, js
 <tbody>
 <tr>
 <td>Pass</td>
-<td><em>(none — description prints on its own)</em></td>
+<td><em>(none: description prints on its own)</em></td>
 </tr>
 <tr>
 <td>Fail</td>
@@ -1851,7 +1851,7 @@ Error: unknown --format &#39;nope&#39; (available: documentation, html, json, js
 </tr>
 </tbody>
 </table>
-<p>The <code>Failures:</code> block, counts line, profile/memory/benchmark sections, and the multi-file <code>Overall:</code> block all print exactly as they do under <code>tree</code>, except in multi-file mode the per-file <code>Failures:</code> + counts line is deferred — every spec file's tree streams uninterrupted under its own filename heading, and a single <code>Failures:</code> block plus the <code>Overall:</code> counts print once at the end.</p>
+<p>The <code>Failures:</code> block, counts line, profile/benchmark sections, and the multi-file <code>Overall:</code> block all print exactly as they do under <code>tree</code>, except in multi-file mode the per-file <code>Failures:</code> + counts line is deferred. Every spec file's tree streams uninterrupted under its own filename heading, and a single <code>Failures:</code> block plus the <code>Overall:</code> counts print once at the end.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1905,7 +1905,7 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 </tr>
 <tr>
 <td><code>&lt;details open class="group"&gt;</code> / <code>&lt;summary class="group-summary"&gt;</code></td>
-<td>One per <code>describe</code>/<code>context</code>. Open by default; click to collapse.</td>
+<td>One per <code>describe</code>/<code>context</code>. Open by default. Click to collapse.</td>
 </tr>
 <tr>
 <td><code>&lt;div class="example pass"&gt;</code> / <code>.fail</code> / <code>.pending</code> / <code>.skipped</code></td>
@@ -1921,9 +1921,9 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 </tr>
 </tbody>
 </table>
-<p>Inline <code>&lt;style&gt;</code> provides the default theme; colors are hard-coded (no external CSS). All user descriptions and file paths are HTML-escaped (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, <code>"</code>). In multi-file mode every spec file gets an <code>&lt;h2 class="suite-file"&gt;</code> heading and a single HTML document covers the entire run.</p>
+<p>Inline <code>&lt;style&gt;</code> provides the default theme. Colors are hard-coded (no external CSS). All user descriptions and file paths are HTML-escaped (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, <code>"</code>). In multi-file mode every spec file gets an <code>&lt;h2 class="suite-file"&gt;</code> heading and a single HTML document covers the entire run.</p>
 <h3 id="json"><code>json</code><a class="headerlink" href="#json" title="Permanent link">&para;</a></h3>
-<p>Emits a single JSON document on stdout after the run finishes — designed for CI dashboards and tool integration. No per-example or per-group output is printed, so the document is the only thing on stdout (load errors and CLI flag errors are still emitted to stderr as usual).</p>
+<p>Emits a single JSON document on stdout after the run finishes, designed for CI dashboards and tool integration. No per-example or per-group output is printed, so the document is the only thing on stdout (load errors and CLI flag errors are still emitted to stderr as usual).</p>
 <p>Top-level shape:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1987,10 +1987,6 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 <tr>
 <td><code>duration</code></td>
 <td>Seconds (or <code>null</code> for pending/skipped).</td>
-</tr>
-<tr>
-<td><code>memory_delta</code></td>
-<td>KB (or <code>null</code> when memory profiling is off).</td>
 </tr>
 <tr>
 <td><code>tags</code></td>
@@ -2063,12 +2059,12 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 <tr>
 <td>Failure (expectation)</td>
 <td><code>&lt;failure type="Expectation" message="..."&gt;&lt;![CDATA[...]]&gt;&lt;/failure&gt;</code></td>
-<td>Message summarizes the first failed expectation; CDATA body contains all expectations for the example (file:line + given/expected).</td>
+<td>Message summarizes the first failed expectation. CDATA body contains all expectations for the example (file:line + given/expected).</td>
 </tr>
 <tr>
 <td>Failure (exception)</td>
 <td><code>&lt;error type="Exception" message="..."&gt;&lt;![CDATA[...]]&gt;&lt;/error&gt;</code></td>
-<td>Used when the example body threw; message comes from <code>Exception.message</code>.</td>
+<td>Used when the example body threw. Message comes from <code>Exception.message</code>.</td>
 </tr>
 <tr>
 <td>Pending</td>
@@ -2087,7 +2083,7 @@ $<span class="w"> </span>open<span class="w"> </span>report.html
 </tr>
 </tbody>
 </table>
-<p>The <code>classname</code> attribute joins the enclosing <code>describe</code>/<code>context</code> chain with <code>&gt;</code> so CI dashboards that group by class produce a sensible hierarchy. Special characters (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, <code>"</code>, <code>'</code>) in attribute values are XML-escaped; CDATA bodies have <code>]]&gt;</code> re-encoded as <code>]]]]&gt;&lt;![CDATA[&gt;</code> so they survive arbitrary payloads. In multi-file mode every spec file produces its own <code>&lt;testsuite&gt;</code> element under a single <code>&lt;testsuites&gt;</code> root.</p>
+<p>The <code>classname</code> attribute joins the enclosing <code>describe</code>/<code>context</code> chain with <code>&gt;</code> so CI dashboards that group by class produce a sensible hierarchy. Special characters (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>, <code>"</code>, <code>'</code>) in attribute values are XML-escaped. CDATA bodies have <code>]]&gt;</code> re-encoded as <code>]]]]&gt;&lt;![CDATA[&gt;</code> so they survive arbitrary payloads. In multi-file mode every spec file produces its own <code>&lt;testsuite&gt;</code> element under a single <code>&lt;testsuites&gt;</code> root.</p>
 <h3 id="tap"><code>tap</code><a class="headerlink" href="#tap" title="Permanent link">&para;</a></h3>
 <p><a href="https://testanything.org/">Test Anything Protocol</a> version 13 output for compatibility with TAP consumers (<code>prove</code>, <code>tappy</code>, etc.):</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -2148,7 +2144,7 @@ ok 5 - Calculator subtraction subtracts a positive from a positive
 <tr>
 <td>Pending</td>
 <td><code>ok N - DESCRIPTION # TODO REASON</code></td>
-<td>TAP TODO directive — TAP consumers treat these as expected-fail, not failures.</td>
+<td>TAP TODO directive (TAP consumers treat these as expected-fail, not failures).</td>
 </tr>
 <tr>
 <td>Skipped</td>
@@ -2191,7 +2187,7 @@ ok 5 - Calculator subtraction subtracts a positive from a positive
 </tr>
 </tbody>
 </table>
-<p>Group descriptions, <code>it</code> descriptions, and inline slow/memory markers are suppressed; the failures detail block, counts line, profile/memory/benchmark sections, and the multi-file <code>Overall:</code> block still print exactly as they do under <code>tree</code>, except in multi-file mode the per-file <code>Failures:</code> + counts line is deferred — dots stream continuously across every spec file, then a single <code>Failures:</code> block plus the <code>Overall:</code> counts print once at the end.</p>
+<p>Group descriptions, <code>it</code> descriptions, and inline slow markers are suppressed. The failures detail block, counts line, profile/benchmark sections, and the multi-file <code>Overall:</code> block still print exactly as they do under <code>tree</code>, except in multi-file mode the per-file <code>Failures:</code> + counts line is deferred. Dots stream continuously across every spec file, then a single <code>Failures:</code> block plus the <code>Overall:</code> counts print once at the end.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -2268,10 +2264,6 @@ Failures:
 <td><code>example-slow($example, :$threshold)</code></td>
 <td>When an example's duration meets or exceeds <code>--slow-threshold</code>.</td>
 </tr>
-<tr>
-<td><code>example-memory-leak($example, :$threshold)</code></td>
-<td>When an example's RSS delta meets or exceeds <code>--memory-threshold</code>.</td>
-</tr>
 </tbody>
 </table>
 <h3 id="summary-hooks">Summary hooks<a class="headerlink" href="#summary-hooks" title="Permanent link">&para;</a></h3>
@@ -2292,10 +2284,6 @@ Failures:
 <td>"Top N slowest" section when <code>--profile</code> is enabled.</td>
 </tr>
 <tr>
-<td><code>memory-profile-summary(@records, :$limit)</code></td>
-<td>"Top N memory-heaviest" section when <code>--memory-profile</code> is enabled.</td>
-</tr>
-<tr>
 <td><code>benchmark-summary-section(@summaries, @regressions, :$threshold, :$format, :$output, :$runner)</code></td>
 <td>Per-suite benchmark section when <code>--benchmark</code> is enabled.</td>
 </tr>
@@ -2304,7 +2292,7 @@ Failures:
 <td>The <code>Overall:</code> block printed when running more than one spec file. Same seed-line gating as <code>run-summary</code>.</td>
 </tr>
 <tr>
-<td><code>multi-file-profile</code>, <code>multi-file-memory-profile</code>, <code>multi-file-benchmark</code></td>
+<td><code>multi-file-profile</code>, <code>multi-file-benchmark</code></td>
 <td>Multi-file counterparts of the per-suite summary hooks.</td>
 </tr>
 <tr>
@@ -2390,7 +2378,7 @@ Failures:
 <span class="k">my</span> <span class="nv">$runner</span> = <span class="n">BDD::Behave::Runner::Runner</span>.<span class="nb">new</span>(:<span class="n">formatter</span>(<span class="nv">$f</span>));
 <span class="nv">$runner</span>.<span class="nb">run</span>(<span class="nv">$suite</span>);
 </code></pre></div></td></tr></table></div>
-<p>When <code>:formatter</code> is omitted, a <code>BDD::Behave::Formatter::Tree</code> instance is constructed automatically. (Note that the <code>behave</code> CLI selects <code>progress</code> by default when <code>--format</code> is not supplied; the runner constructor's default is <code>Tree</code> because tree output is the most useful for embedded/IDE consumers programmatically inspecting events.)</p>
+<p>When <code>:formatter</code> is omitted, a <code>BDD::Behave::Formatter::Tree</code> instance is constructed automatically. (Note that the <code>behave</code> CLI selects <code>progress</code> by default when <code>--format</code> is not supplied. The runner constructor's default is <code>Tree</code> because tree output is the most useful for embedded/IDE consumers programmatically inspecting events.)</p>
 
 
 

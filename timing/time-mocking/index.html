@@ -1585,7 +1585,7 @@
 through time inside an example. They work by wrapping Raku's <code>now</code> term,
 <code>DateTime.now</code>, and <code>Date.today</code> so the wrap consults a
 dynamically-scoped freeze. When no freeze is active, the wrappers fall
-through to the real time source — they have no effect outside a freeze block.</p>
+through to the real time source, so they have no effect outside a freeze block.</p>
 <h2 id="freeze-time"><code>freeze-time</code><a class="headerlink" href="#freeze-time" title="Permanent link">&para;</a></h2>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
@@ -1695,7 +1695,7 @@ throws. The frozen state never leaks to the next example.</p>
 <h2 id="freeze-time-metadata"><code>:freeze-time</code> metadata<a class="headerlink" href="#freeze-time-metadata" title="Permanent link">&para;</a></h2>
 <p>Examples and groups can opt into a freeze via the <code>:freeze-time</code> metadata.
 The runner wraps the example body in a freeze around <code>before-each</code> /
-<code>after-each</code> hooks — wall-clock duration is measured outside the freeze, so
+<code>after-each</code> hooks. Wall-clock duration is measured outside the freeze, so
 the example's <code>started-at</code> / <code>finished-at</code> / <code>duration</code> accessors still
 report real time.</p>
 <p>Freeze at the moment the example body begins:</p>
@@ -1721,7 +1721,7 @@ report real time.</p>
 <p>Pass <code>:freeze-time(False)</code> to explicitly opt out (useful when overriding an
 inherited group-level freeze).</p>
 <h2 id="current-time"><code>current-time</code><a class="headerlink" href="#current-time" title="Permanent link">&para;</a></h2>
-<p><code>current-time</code> returns the current <code>Instant</code> — frozen when a freeze is
+<p><code>current-time</code> returns the current <code>Instant</code>: frozen when a freeze is
 active, real <code>now</code> otherwise. Use it from helpers that want to read "time"
 without bypassing the freeze.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>

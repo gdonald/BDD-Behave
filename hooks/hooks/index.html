@@ -1839,7 +1839,7 @@
 }
 </code></pre></div></td></tr></table></div>
 <h2 id="before-all-after-all"><code>before-all</code> / <code>after-all</code><a class="headerlink" href="#before-all-after-all" title="Permanent link">&para;</a></h2>
-<p>These fire exactly once per group — useful for expensive shared setup.</p>
+<p>These fire exactly once per group, useful for expensive shared setup.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1869,7 +1869,7 @@
 <p>Anything <code>before-all</code> mutates is shared across the group's examples. Prefer <code>before-each</code> for per-example isolation.</p>
 </div>
 <h2 id="around-each-and-around-all"><code>around-each</code> and <code>around-all</code><a class="headerlink" href="#around-each-and-around-all" title="Permanent link">&para;</a></h2>
-<p>Around hooks receive a continuation — a <code>Callable</code> that runs everything inside
+<p>Around hooks receive a continuation: a <code>Callable</code> that runs everything inside
 the wrapper. The hook is responsible for invoking it. This makes around hooks
 the right tool for <em>paired</em> setup/teardown that must bracket the example, even
 across exceptions.</p>
@@ -1932,7 +1932,7 @@ implicit <code>$_</code>:</p>
 </code></pre></div></td></tr></table></div>
 <h3 id="composition-order">Composition order<a class="headerlink" href="#composition-order" title="Permanent link">&para;</a></h3>
 <p>When a single group registers multiple around hooks, the <strong>first-registered
-hook is outermost</strong> — the second is wrapped by the first, and so on. Across
+hook is outermost</strong>: the second is wrapped by the first, and so on. Across
 nested groups, outer-group around hooks wrap inner-group around hooks:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
@@ -1977,7 +1977,7 @@ recorded as a failure and the exception is captured. If a hook throws
 overwrite the example's already-recorded result.</p>
 <p>Exceptions raised inside the example body are still handled by Behave's
 existing <code>expect</code> / <code>Failures</code> machinery and <em>do not</em> propagate up through the
-continuation — wrap the example body with the relevant matcher instead.</p>
+continuation. Wrap the example body with the relevant matcher instead.</p>
 <h3 id="metadata-filters">Metadata filters<a class="headerlink" href="#metadata-filters" title="Permanent link">&para;</a></h3>
 <p>Around hooks accept the same metadata filters as the other hook phases (see
 below):</p>
@@ -1992,7 +1992,7 @@ below):</p>
 }
 </code></pre></div></td></tr></table></div>
 <p>For <code>around-all</code>, the hook fires only when at least one descendant example
-matches the filter — mirroring <code>before-all</code> / <code>after-all</code> filter semantics.</p>
+matches the filter, mirroring <code>before-all</code> / <code>after-all</code> filter semantics.</p>
 <h2 id="metadata-keyed-hooks">Metadata-keyed hooks<a class="headerlink" href="#metadata-keyed-hooks" title="Permanent link">&para;</a></h2>
 <p>All six hooks accept metadata filters that gate when the hook fires. Filters
 are passed as named arguments before the block:</p>
@@ -2090,8 +2090,8 @@ example's stored metadata contains any of the listed values.</p>
 <h3 id="before-all-and-after-all-filters"><code>before-all</code> and <code>after-all</code> filters<a class="headerlink" href="#before-all-and-after-all-filters" title="Permanent link">&para;</a></h3>
 <p>Filters on <code>before-all</code> / <code>after-all</code> fire once per group, but only when at
 least one descendant example matches. If a tag-filtered <code>before-all</code> has no
-matching descendants — for example because all matching examples were excluded
-by the runner's <code>--tag</code> filter — the hook is skipped entirely along with its
+matching descendants (for example because all matching examples were excluded
+by the runner's <code>--tag</code> filter), the hook is skipped entirely along with its
 paired <code>after-all</code>.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>

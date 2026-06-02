@@ -1559,9 +1559,9 @@
 
 
 <h1 id="shared-examples">Shared Examples<a class="headerlink" href="#shared-examples" title="Permanent link">&para;</a></h1>
-<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract — a "counter," a "comparable," a "queue" — without copy-pasting the <code>it</code>s into every spec.</p>
+<p>Shared examples let you package up a set of <code>it</code> blocks under a name and reuse them across any number of <code>describe</code> or <code>context</code> groups. They're useful when several types or implementations should satisfy the same behavior contract (a "counter," a "comparable," a "queue") without copy-pasting the <code>it</code>s into every spec.</p>
 <p><code>shared-examples</code>, <code>include-examples</code>, and <code>it-behaves-like</code> are exported from <code>BDD::Behave</code>.</p>
-<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks); shared <em>examples</em> contribute the assertions themselves.</p>
+<p>Shared examples are a complement to <a href="../../shared-contexts/shared-contexts/">Shared Contexts</a>: a shared <em>context</em> contributes setup (lets and hooks), while shared <em>examples</em> contribute the assertions themselves.</p>
 <h2 id="defining-shared-examples">Defining shared examples<a class="headerlink" href="#defining-shared-examples" title="Permanent link">&para;</a></h2>
 <p><code>shared-examples</code> takes a name and a block. The block typically contains one or more <code>it</code> blocks, but it can call any DSL helper that's legal inside a group:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1586,7 +1586,7 @@
   }
 };
 </code></pre></div></td></tr></table></div>
-<p>The block does nothing on its own — it's stored under the given name and only runs when a group asks for it.</p>
+<p>The block does nothing on its own: it's stored under the given name and only runs when a group asks for it.</p>
 <h2 id="it-behaves-like-wrap-shared-examples-in-a-nested-group"><code>it-behaves-like</code>: wrap shared examples in a nested group<a class="headerlink" href="#it-behaves-like-wrap-shared-examples-in-a-nested-group" title="Permanent link">&para;</a></h2>
 <p>The most common form is <code>it-behaves-like 'name'</code>. It creates a nested <code>behaves like 'name'</code> group inside the current <code>describe</code> and runs the shared block there. The wrapper group keeps the shared examples visually grouped in the runner's output:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
@@ -1614,7 +1614,7 @@
     ⮑  &#39;has an increment step&#39;
       ⮑  SUCCESS
 </code></pre></div></td></tr></table></div>
-<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group — including the <code>describe</code> they're invoked from — exactly the same way ordinary nested examples do.</p>
+<p>The shared examples see <code>let</code> definitions, hooks, and shared-context contributions from every ancestor group (including the <code>describe</code> they're invoked from) exactly the same way ordinary nested examples do.</p>
 <h2 id="include-examples-merge-shared-examples-into-the-current-group"><code>include-examples</code>: merge shared examples into the current group<a class="headerlink" href="#include-examples-merge-shared-examples-into-the-current-group" title="Permanent link">&para;</a></h2>
 <p><code>include-examples 'name'</code> is the lower-ceremony form: the shared block runs directly in the current group, so its <code>it</code>s become siblings of any locally-defined <code>it</code>s instead of being wrapped in a new group.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
@@ -1637,9 +1637,9 @@
   }
 }
 </code></pre></div></td></tr></table></div>
-<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output; use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
+<p>Use <code>it-behaves-like</code> when you want the contract to show up as its own labeled subgroup in the output. Use <code>include-examples</code> when the shared <code>it</code>s are conceptually part of the surrounding group.</p>
 <h2 id="parameterizing-shared-examples">Parameterizing shared examples<a class="headerlink" href="#parameterizing-shared-examples" title="Permanent link">&para;</a></h2>
-<p>The shared block can take positional parameters; pass them after the name:</p>
+<p>The shared block can take positional parameters. Pass them after the name:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
@@ -1702,7 +1702,7 @@
 <h2 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Calling <code>it-behaves-like</code> or <code>include-examples</code> with an unregistered name dies with <code>Unknown shared examples: '&lt;name&gt;'</code>.</li>
-<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies — shared examples can only be instantiated inside a group.</li>
+<li>Calling <code>it-behaves-like</code> or <code>include-examples</code> outside a <code>describe</code> or <code>context</code> block dies: shared examples can only be instantiated inside a group.</li>
 </ul>
 
 

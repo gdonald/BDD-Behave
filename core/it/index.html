@@ -1586,7 +1586,7 @@
 </code></pre></div></td></tr></table></div>
 <p>renders as <code>⮑  'should be (1, 2, 3)'</code>. If no matcher runs in the block, Behave falls back to a placeholder of the form <code>example at &lt;basename&gt;:&lt;line&gt;</code>. See <a href="../../let/subject/#one-liner-it-form"><code>subject</code> / <code>is-expected</code></a> for details.</p>
 <h2 id="multiple-expectations">Multiple expectations<a class="headerlink" href="#multiple-expectations" title="Permanent link">&para;</a></h2>
-<p>An example can contain any number of <code>expect</code> calls. Each failing expectation is recorded; the example fails if at least one expectation fails or the block raises an unhandled exception.</p>
+<p>An example can contain any number of <code>expect</code> calls. Each failing expectation is recorded. The example fails if at least one expectation fails or the block raises an unhandled exception.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1619,7 +1619,7 @@
 </code></pre></div></td></tr></table></div>
 <p>See <a href="../../let/let/"><code>let</code></a> for the various ways to define and consume let values.</p>
 <h2 id="specify-alias"><code>specify</code> alias<a class="headerlink" href="#specify-alias" title="Permanent link">&para;</a></h2>
-<p><code>specify</code> is a direct alias for <code>it</code>. It reads more naturally when an example description starts with a non-behavioral noun (a fact, a constraint, a state) rather than a verb. Every form <code>it</code> accepts — string + block, block-only one-liner, <code>:tag</code> / <code>:tags</code> / arbitrary <code>:meta</code> keys — is also accepted by <code>specify</code>.</p>
+<p><code>specify</code> is a direct alias for <code>it</code>. It reads more naturally when an example description starts with a non-behavioral noun (a fact, a constraint, a state) rather than a verb. Every form <code>it</code> accepts (string + block, block-only one-liner, <code>:tag</code> / <code>:tags</code> / arbitrary <code>:meta</code> keys) is also accepted by <code>specify</code>.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>

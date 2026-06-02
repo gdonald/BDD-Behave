@@ -1658,10 +1658,10 @@
 <h2 id="precedence">Precedence<a class="headerlink" href="#precedence" title="Permanent link">&para;</a></h2>
 <p>When more than one source sets the same option, the highest-precedence source wins:</p>
 <ol>
-<li><strong>CLI flags</strong> (highest) — explicit <code>--format</code>, <code>--order</code>, <code>--tag</code>, etc.</li>
-<li><strong>Project config</strong> — <code>.behave</code> in the current working directory.</li>
-<li><strong>User config</strong> — <code>~/.behave</code> in the user's home directory.</li>
-<li><strong>Built-in defaults</strong> (lowest) — what Behave uses when nothing else is set.</li>
+<li><strong>CLI flags</strong> (highest): explicit <code>--format</code>, <code>--order</code>, <code>--tag</code>, etc.</li>
+<li><strong>Project config</strong>: <code>.behave</code> in the current working directory.</li>
+<li><strong>User config</strong>: <code>~/.behave</code> in the user's home directory.</li>
+<li><strong>Built-in defaults</strong> (lowest): what Behave uses when nothing else is set.</li>
 </ol>
 <p>List-style options (<code>include-tag</code>, <code>exclude-tag</code>, <code>example-pattern</code>, <code>only-location</code>, <code>spec-paths</code>, <code>include</code>, hooks) <strong>accumulate</strong> across all four layers: a tag listed in <code>~/.behave</code> and another listed on the CLI both apply. Scalar options like <code>format</code>, <code>order</code>, <code>seed</code>, <code>fail-fast</code>, <code>verbose</code>, and <code>aggregate-failures</code> <strong>override</strong>: the highest-precedence layer that sets them wins.</p>
 <h2 id="disabling-configuration">Disabling configuration<a class="headerlink" href="#disabling-configuration" title="Permanent link">&para;</a></h2>
@@ -1676,7 +1676,7 @@
 <tbody>
 <tr>
 <td><code>--config PATH</code></td>
-<td>Load <code>PATH</code> as the only config; skip <code>~/.behave</code> and <code>./.behave</code>.</td>
+<td>Load <code>PATH</code> as the only config, skipping <code>~/.behave</code> and <code>./.behave</code>.</td>
 </tr>
 <tr>
 <td><code>--no-config</code></td>
@@ -1684,11 +1684,11 @@
 </tr>
 <tr>
 <td><code>--no-user-config</code></td>
-<td>Skip <code>~/.behave</code>; still read <code>./.behave</code>.</td>
+<td>Skip <code>~/.behave</code>, but still read <code>./.behave</code>.</td>
 </tr>
 <tr>
 <td><code>--no-project-config</code></td>
-<td>Skip <code>./.behave</code>; still read <code>~/.behave</code>.</td>
+<td>Skip <code>./.behave</code>, but still read <code>~/.behave</code>.</td>
 </tr>
 <tr>
 <td><code>BEHAVE_DISABLE_CONFIG=1</code></td>
@@ -1749,16 +1749,6 @@
 <td>Real seconds.</td>
 </tr>
 <tr>
-<td><code>$config.memory-profile-limit</code></td>
-<td><code>--memory-profile[=N]</code></td>
-<td>0 disables.</td>
-</tr>
-<tr>
-<td><code>$config.memory-threshold</code></td>
-<td><code>--memory-threshold</code></td>
-<td>KB.</td>
-</tr>
-<tr>
 <td><code>$config.benchmark-mode</code></td>
 <td><code>--benchmark</code></td>
 <td>Bool.</td>
@@ -1796,7 +1786,7 @@
 <tr>
 <td><code>$config.parallel</code></td>
 <td><code>--parallel N</code></td>
-<td>Int &gt;= 1 enables parallel execution with N worker subprocesses; absence (or value 0) keeps single-process serial execution. CLI overrides config.</td>
+<td>Int &gt;= 1 enables parallel execution with N worker subprocesses. Absence (or value 0) keeps single-process serial execution. CLI overrides config.</td>
 </tr>
 <tr>
 <td><code>$config.parallel-mode</code></td>
@@ -1806,7 +1796,7 @@
 <tr>
 <td><code>$config.parallel-retry</code></td>
 <td><code>--parallel-retry</code></td>
-<td>Non-negative Int; per-shard retry budget when a worker crashes (exit &gt; 1). See <a href="../../parallel/parallel/#per-shard-retry-on-worker-crash-parallel-retry">Per-shard retry</a>.</td>
+<td>Non-negative Int. Per-shard retry budget when a worker crashes (exit &gt; 1). See <a href="../../parallel/parallel/#per-shard-retry-on-worker-crash-parallel-retry">Per-shard retry</a>.</td>
 </tr>
 <tr>
 <td><code>$config.seed-mode</code></td>
@@ -1816,12 +1806,12 @@
 <tr>
 <td><code>$config.show-seed</code></td>
 <td><code>--show-seed</code></td>
-<td>Bool; print the seed even on a passing run (default prints it only on failure).</td>
+<td>Bool. Print the seed even on a passing run (default prints it only on failure).</td>
 </tr>
 <tr>
 <td><code>$config.progress-total</code></td>
 <td><code>--progress-total</code></td>
-<td>Bool; append a <code>(N/TOTAL)</code> counter to each progress char under <code>--parallel</code>.</td>
+<td>Bool. Append a <code>(N/TOTAL)</code> counter to each progress char under <code>--parallel</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -1873,7 +1863,7 @@
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$config</span>.<span class="n">include</span>(<span class="n">APIHelpers</span>, :<span class="n">as</span><span class="s">&lt;api&gt;</span>);
 <span class="c1"># $*BEHAVE-HELPERS&lt;api&gt;.as-user(&#39;alice&#39;)</span>
 </code></pre></div></td></tr></table></div>
-<p>One instance is created per class per run (cached in the runner). State stored on a helper persists across all examples in the suite — use it for fixtures and shared connections, not per-example state.</p>
+<p>One instance is created per class per run (cached in the runner). State stored on a helper persists across all examples in the suite, so use it for fixtures and shared connections, not per-example state.</p>
 <h2 id="global-hooks">Global hooks<a class="headerlink" href="#global-hooks" title="Permanent link">&para;</a></h2>
 <p>Per-run hooks let you set up shared infrastructure without repeating it in every spec. Each phase composes with the per-group hooks declared inside spec files:</p>
 <table>
@@ -1937,7 +1927,7 @@
 <span class="normal">2</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nv">$config</span>.<span class="o">before-</span><span class="n">each</span>({ <span class="n">Browser</span>.<span class="n">launch</span> }, :<span class="n">tag</span><span class="s">&lt;feature&gt;</span>);
 <span class="nv">$config</span>.<span class="o">after-</span><span class="n">each</span>({  <span class="n">Browser</span>.<span class="nb">close</span>  }, :<span class="n">tag</span><span class="s">&lt;feature&gt;</span>);
 </code></pre></div></td></tr></table></div>
-<p>Any unrecognised named argument is treated as a metadata filter — the hook only fires for examples whose effective metadata matches.</p>
+<p>Any unrecognised named argument is treated as a metadata filter: the hook only fires for examples whose effective metadata matches.</p>
 <p>A global hook that throws is caught and reported as a warning so the run can continue.</p>
 <h2 id="metadata-filtering">Metadata filtering<a class="headerlink" href="#metadata-filtering" title="Permanent link">&para;</a></h2>
 <p><code>$config.filter(:key&lt;value&gt;)</code> keeps only the examples whose effective metadata (declared via <code>:key&lt;value&gt;</code> on <code>describe</code>, <code>context</code>, or <code>it</code> and inherited down the tree) matches. Pass a <code>Bool</code> true value (<code>$config.filter(:db)</code>) to require the key to be present and truthy.</p>
@@ -1951,9 +1941,9 @@
   <span class="nv">$config</span>.<span class="n">exclude-filter</span>(:<span class="n">flaky</span>);  <span class="c1"># skip every :flaky example</span>
 }
 </code></pre></div></td></tr></table></div>
-<p>Multiple <code>filter</code> calls combine with <code>AND</code>: each pair must match. <code>exclude-filter</code> does the opposite — any matching pair drops the example. Config-level filters also AND with <code>--tag</code>/<code>--exclude-tag</code>/<code>--example</code> on the CLI, and with focus mode.</p>
+<p>Multiple <code>filter</code> calls combine with <code>AND</code>: each pair must match. <code>exclude-filter</code> does the opposite: any matching pair drops the example. Config-level filters also AND with <code>--tag</code>/<code>--exclude-tag</code>/<code>--example</code> on the CLI, and with focus mode.</p>
 <h2 id="filter-run-when-matching"><code>filter-run-when-matching</code><a class="headerlink" href="#filter-run-when-matching" title="Permanent link">&para;</a></h2>
-<p>Inspired by RSpec's <code>config.filter_run_when_matching :focus</code>, this is a "soft" filter: it applies when at least one example matches, and is silently dropped otherwise so the rest of the run proceeds normally. Useful for a <code>focus</code> workflow — when you mark an example <code>:focus</code>, only it runs; when you remove the mark, the whole suite runs.</p>
+<p>Inspired by RSpec's <code>config.filter_run_when_matching :focus</code>, this is a "soft" filter: it applies when at least one example matches, and is silently dropped otherwise so the rest of the run proceeds normally. Useful for a <code>focus</code> workflow: when you mark an example <code>:focus</code>, only it runs. When you remove the mark, the whole suite runs.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
@@ -1962,7 +1952,7 @@
   <span class="nv">$config</span>.<span class="n">filter-run-when-matching</span>(:<span class="n">wip</span>);   <span class="c1"># additional filter (AND with focus)</span>
 }
 </code></pre></div></td></tr></table></div>
-<p>You can pass either a string key (treated as "metadata is truthy") or a pair (<code>key =&gt; value</code>). Multiple registrations stack with <code>AND</code> semantics — but each one is independently checked for the no-match short-circuit: a registration that matches nothing is dropped without affecting the others.</p>
+<p>You can pass either a string key (treated as "metadata is truthy") or a pair (<code>key =&gt; value</code>). Multiple registrations stack with <code>AND</code> semantics, but each one is independently checked for the no-match short-circuit: a registration that matches nothing is dropped without affecting the others.</p>
 <p><code>filter-run-when-matching</code> interacts with the other filters:</p>
 <table>
 <thead>
@@ -1974,15 +1964,15 @@
 <tbody>
 <tr>
 <td>None</td>
-<td>The filter applies if any example matches; otherwise the entire suite runs.</td>
+<td>The filter applies if any example matches. Otherwise the entire suite runs.</td>
 </tr>
 <tr>
 <td><code>--tag</code>, <code>--exclude-tag</code>, <code>--example</code></td>
-<td>The filter is checked against the full spec tree; if it matches, it is added to the AND set with the CLI filters.</td>
+<td>The filter is checked against the full spec tree. If it matches, it is added to the AND set with the CLI filters.</td>
 </tr>
 <tr>
 <td><code>$config.filter</code> (hard)</td>
-<td>Hard filter applies first; if <code>filter-run-when-matching</code> matches under that constraint, both apply.</td>
+<td>Hard filter applies first. If <code>filter-run-when-matching</code> matches under that constraint, both apply.</td>
 </tr>
 </tbody>
 </table>
@@ -2045,7 +2035,7 @@
   <span class="nv">$config</span>.<span class="n">filter-run-when-matching</span>(:<span class="n">focus</span>);
 }
 </code></pre></div></td></tr></table></div>
-<p>With this file in your project root, <code>behave</code> (no arguments) loads it, applies your CLI flags on top, and runs <code>specs/</code> in documentation format with full focus / flaky / DB management — no flags required.</p>
+<p>With this file in your project root, <code>behave</code> (no arguments) loads it, applies your CLI flags on top, and runs <code>specs/</code> in documentation format with full focus / flaky / DB management, no flags required.</p>
 
 
 

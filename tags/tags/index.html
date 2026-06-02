@@ -1618,9 +1618,9 @@ $<span class="w"> </span>behave<span class="w"> </span>--tag<span class="w"> </s
 <h2 id="inspecting-tags-programmatically">Inspecting tags programmatically<a class="headerlink" href="#inspecting-tags-programmatically" title="Permanent link">&para;</a></h2>
 <p>Each <code>Example</code> and <code>ExampleGroup</code> exposes:</p>
 <ul>
-<li><code>.tags</code> — tags attached directly to that node.</li>
-<li><code>.effective-tags</code> — tags from this node and every ancestor, deduplicated.</li>
-<li><code>.has-tag('name')</code> / <code>.has-effective-tag('name')</code> — boolean checks.</li>
+<li><code>.tags</code>: tags attached directly to that node.</li>
+<li><code>.effective-tags</code>: tags from this node and every ancestor, deduplicated.</li>
+<li><code>.has-tag('name')</code> / <code>.has-effective-tag('name')</code>: boolean checks.</li>
 </ul>
 <p>These helpers are useful for custom reporters or tooling built on top of the runner.</p>
 

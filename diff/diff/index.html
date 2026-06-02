@@ -1581,7 +1581,7 @@
 
 
 <h1 id="diff-output">Diff Output<a class="headerlink" href="#diff-output" title="Permanent link">&para;</a></h1>
-<p>When an expectation fails, BDD::Behave produces a structured, colorized diff between the actual and expected values whenever both are of a "diffable" shape. The diff is shape-aware: strings are compared character-by-character (single line) or line-by-line (multi line); arrays, hashes, sets, bags, and mixes are rendered as multi-line JSON-style structures and compared with a longest-common-subsequence algorithm.</p>
+<p>When an expectation fails, BDD::Behave produces a structured, colorized diff between the actual and expected values whenever both are of a "diffable" shape. The diff is shape-aware: strings are compared character-by-character (single line) or line-by-line (multi line). Arrays, hashes, sets, bags, and mixes are rendered as multi-line JSON-style structures and compared with a longest-common-subsequence algorithm.</p>
 <h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Lines marked with red <code>-</code> are values that were <em>expected</em> but not present in the actual.</li>
@@ -1699,22 +1699,22 @@
     ✗ 2
     ✗ 3
 </code></pre></div></td></tr></table></div>
-<p>The summary line is tailored per junction kind (<code>any</code> / <code>all</code> / <code>one</code> / <code>none</code>) and reflects the negation state when <code>.not</code> is in play. Type-object alternatives (<code>Int | Rat</code>) render by name; values render via <code>.raku</code>. See <a href="../../expectations/junctions/">Junctions</a> for the full set of summaries and an example under each kind.</p>
+<p>The summary line is tailored per junction kind (<code>any</code> / <code>all</code> / <code>one</code> / <code>none</code>) and reflects the negation state when <code>.not</code> is in play. Type-object alternatives (<code>Int | Rat</code>) render by name. Values render via <code>.raku</code>. See <a href="../../expectations/junctions/">Junctions</a> for the full set of summaries and an example under each kind.</p>
 <p>Junction diffs are emitted even under negation (unlike scalar diffs), because the failed-negation case for a junction is still informative: the reader wants to see <em>which</em> alternative the given value collided with.</p>
 <h2 id="negated-expectations">Negated expectations<a class="headerlink" href="#negated-expectations" title="Permanent link">&para;</a></h2>
-<p><code>expect(...).not.to.be(...)</code> failures don't render a diff: when the comparison was supposed to <em>fail</em> and didn't, both values match exactly, so a diff would be empty. The standard <code>Expected:</code> / <code>not to be:</code> lines are sufficient. The exception is junction expectations under negation — see <a href="#junction-diffs">Junction diffs</a> above.</p>
+<p><code>expect(...).not.to.be(...)</code> failures don't render a diff: when the comparison was supposed to <em>fail</em> and didn't, both values match exactly, so a diff would be empty. The standard <code>Expected:</code> / <code>not to be:</code> lines are sufficient. The exception is junction expectations under negation (see <a href="#junction-diffs">Junction diffs</a> above).</p>
 <h2 id="module-surface">Module surface<a class="headerlink" href="#module-surface" title="Permanent link">&para;</a></h2>
 <p>The diff machinery lives in <code>BDD::Behave::Diff</code>. The exported functions are:</p>
 <ul>
-<li><code>diff-shape($value --&gt; Str)</code> — <code>'Str'</code>, <code>'Array'</code>, <code>'Hash'</code>, <code>'Set'</code>, <code>'Bag'</code>, <code>'Mix'</code>, <code>'Scalar'</code>, or <code>'Undef'</code>.</li>
-<li><code>diffable($given, $expected --&gt; Bool)</code> — <code>True</code> when both values share a structural shape worth diffing or <code>$expected</code> is a <code>Junction</code>.</li>
-<li><code>render-diff($given, $expected, Bool :$negated --&gt; Str)</code> — produces the colorized diff string. Always returns a single string (multi-line for structural and junction diffs). <code>:negated</code> only affects junction summaries.</li>
-<li><code>pretty-lines($value, :$indent --&gt; List)</code> — exposes the underlying pretty-printer for advanced use.</li>
-<li><code>is-junction($value --&gt; Bool)</code> — <code>True</code> for any <code>Junction</code> (uses a typed multi to avoid autothreading).</li>
-<li><code>junction-kind(Junction:D --&gt; Str)</code> — <code>'any'</code>, <code>'all'</code>, <code>'one'</code>, or <code>'none'</code>.</li>
-<li><code>junction-eigenstates(Junction:D --&gt; List)</code> — the alternatives the junction was built from.</li>
+<li><code>diff-shape($value --&gt; Str)</code>: <code>'Str'</code>, <code>'Array'</code>, <code>'Hash'</code>, <code>'Set'</code>, <code>'Bag'</code>, <code>'Mix'</code>, <code>'Scalar'</code>, or <code>'Undef'</code>.</li>
+<li><code>diffable($given, $expected --&gt; Bool)</code>: <code>True</code> when both values share a structural shape worth diffing or <code>$expected</code> is a <code>Junction</code>.</li>
+<li><code>render-diff($given, $expected, Bool :$negated --&gt; Str)</code>: produces the colorized diff string. Always returns a single string (multi-line for structural and junction diffs). <code>:negated</code> only affects junction summaries.</li>
+<li><code>pretty-lines($value, :$indent --&gt; List)</code>: exposes the underlying pretty-printer for advanced use.</li>
+<li><code>is-junction($value --&gt; Bool)</code>: <code>True</code> for any <code>Junction</code> (uses a typed multi to avoid autothreading).</li>
+<li><code>junction-kind(Junction:D --&gt; Str)</code>: <code>'any'</code>, <code>'all'</code>, <code>'one'</code>, or <code>'none'</code>.</li>
+<li><code>junction-eigenstates(Junction:D --&gt; List)</code>: the alternatives the junction was built from.</li>
 </ul>
-<p>You normally don't need to call these directly; failure output uses them automatically.</p>
+<p>You normally don't need to call these directly. Failure output uses them automatically.</p>
 
 
 

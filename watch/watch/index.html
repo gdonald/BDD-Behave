@@ -1588,10 +1588,10 @@
 <p>The default watched roots are <code>./lib</code> and <code>./specs</code> when each one exists. To watch additional directories or a custom layout, pass <code>--watch-path PATH</code> (repeatable):</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>$<span class="w"> </span>behave<span class="w"> </span>--watch<span class="w"> </span>--watch-path<span class="w"> </span>app/<span class="w"> </span>--watch-path<span class="w"> </span>test/
 </code></pre></div></td></tr></table></div>
-<p>When <code>--watch-path</code> is given at least once, the default <code>lib/</code>/<code>specs/</code> roots are replaced by your list — pass them explicitly if you still want them.</p>
+<p>When <code>--watch-path</code> is given at least once, the default <code>lib/</code>/<code>specs/</code> roots are replaced by your list. Pass them explicitly if you still want them.</p>
 <p><code>--watch</code> is mutually exclusive with <code>--bisect</code>, <code>--bisect-data</code>, <code>--coverage</code>, <code>--doc</code>, and <code>--parallel</code>. Combining any of these exits with status <code>2</code>.</p>
 <h2 id="initial-run">Initial run<a class="headerlink" href="#initial-run" title="Permanent link">&para;</a></h2>
-<p>When you start <code>--watch</code>, Behave does a baseline run of every spec file it can see. The exit code of that run does not terminate watch mode — failures are reported and the loop continues. After the initial run, the watch prompt appears:</p>
+<p>When you start <code>--watch</code>, Behave does a baseline run of every spec file it can see. The exit code of that run does not terminate watch mode: failures are reported and the loop continues. After the initial run, the watch prompt appears:</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>[behave watch] press r rerun selection, a rerun all, f failed only, q quit
 </code></pre></div></td></tr></table></div>
 <h2 id="smart-test-selection">Smart test selection<a class="headerlink" href="#smart-test-selection" title="Permanent link">&para;</a></h2>
@@ -1647,7 +1647,7 @@
 </tr>
 <tr>
 <td><code>f</code></td>
-<td>Re-run only previously-failed examples (uses <code>.behave-failures</code>; see <a href="../../retry/retry/">Retry and Only-Failures</a>).</td>
+<td>Re-run only previously-failed examples (uses <code>.behave-failures</code>, see <a href="../../retry/retry/">Retry and Only-Failures</a>).</td>
 </tr>
 <tr>
 <td><code>h</code> / <code>?</code></td>
@@ -1683,15 +1683,15 @@
 <li>File detection is <strong>mtime + size polling</strong> at <code>0.25s</code> intervals. There is no <code>inotify</code> / <code>kqueue</code> / <code>FSEvents</code> dependency. For typical projects (hundreds to a few thousand files) the polling overhead is negligible.</li>
 <li>Watched files are filtered by basename to <code>.rakumod</code>, <code>.raku</code>, <code>.rakutest</code>, and <code>.pm6</code>. Hidden directories (<code>.git</code>, <code>.precomp</code>) are skipped during the walk.</li>
 <li>Each re-run is a <strong>subprocess</strong> (<code>raku -Ilib bin/behave …</code>) so user-level <code>class</code> / <code>role</code> / <code>enum</code> declarations from one run cannot collide with the next. This is the same isolation pattern used by <code>--bisect</code>, <code>--coverage</code>, and <code>--parallel</code>.</li>
-<li>The watch loop itself is a single thread. The interactive reader is a <code>start { }</code> block that pushes lines into a <code>Channel</code>; the main loop drains it non-blocking with <code>Channel.poll</code>.</li>
+<li>The watch loop itself is a single thread. The interactive reader is a <code>start { }</code> block that pushes lines into a <code>Channel</code>. The main loop drains it non-blocking with <code>Channel.poll</code>.</li>
 </ul>
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
 <ul>
-<li>New file detection requires a poll tick after the file lands on disk — saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.</li>
+<li>New file detection requires a poll tick after the file lands on disk. Saving and immediately exiting before the next 250 ms tick may miss the event. In practice this is invisible.</li>
 <li>File renames register as one <code>removed</code> plus one <code>added</code>. Smart selection treats only the <code>added</code> half.</li>
-<li>Watch mode does not surface profile / memory / benchmark summaries across runs — each subprocess emits its own. Aggregation across runs is out of scope for v1.</li>
+<li>Watch mode does not surface profile / memory / benchmark summaries across runs: each subprocess emits its own. Aggregation across runs is out of scope for v1.</li>
 <li><code>--coverage</code> is incompatible: each subprocess would need its own MoarVM coverage log path and merge step.</li>
-<li>Smart selection is a substring search; if a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use <code>--watch-path</code> and the <code>a</code>/<code>r</code> commands to cover that case.</li>
+<li>Smart selection is a substring search. If a spec references a module only by a name that does not appear in the file (e.g. only through dynamic dispatch), Behave will not pick it up. Use <code>--watch-path</code> and the <code>a</code>/<code>r</code> commands to cover that case.</li>
 </ul>
 
 
