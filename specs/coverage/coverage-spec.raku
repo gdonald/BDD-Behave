@@ -441,6 +441,24 @@ describe 'BDD::Behave::Coverage::build-report-from-hits', {
     expect($report.files[0].total-lines).to.be-greater-than(0);
     expect($report.overall-percentage).to.be-greater-than(0);
   }
+
+  it 'skips a hits key that resolves to a directory instead of a source file', {
+    my $src = tmp-source('sub a() { 1; }');
+
+    my %hits;
+    %hits{$src.Str} = SetHash.new;
+    %hits{$src.Str}{1} = True;
+    %hits{$src.parent.Str} = SetHash.new;
+    %hits{$src.parent.Str}{1} = True;
+
+    my $opts = CoverageOptions.new;
+    $opts.include-path($src.parent.Str);
+
+    my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+    cleanup-tmp-source($src);
+
+    expect($report.files.elems).to.be(1);
+  }
 }
 
 describe 'BDD::Behave::Coverage::render-text', {

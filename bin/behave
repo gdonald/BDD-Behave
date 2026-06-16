@@ -780,6 +780,10 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
   $raw-path.spurt('');
 
   my %child-env = |%*ENV;
+  # behave logs every file and applies --coverage-include at merge time; a
+  # user-set MVM_COVERAGE_FILES would pre-filter logged files and silently
+  # drop included ones.
+  %child-env<MVM_COVERAGE_FILES>:delete;
   %child-env<MVM_COVERAGE_LOG>      = $raw-path.absolute;
   %child-env<MVM_COVERAGE_CONTROL>  = '2';
   %child-env<BEHAVE_COVERAGE_LOG>   = $raw-path.absolute;
@@ -1191,9 +1195,11 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   my %base-env = |%*ENV;
   %base-env<BEHAVE_DISABLE_CONFIG> = '1';
   # Make sure inherited MVM coverage env can't redirect worker hits to a
-  # single shared file or trigger coverage in the parent process.
-  %base-env<MVM_COVERAGE_LOG>:delete;
-  %base-env<MVM_COVERAGE_CONTROL>:delete;
+  # single shared file, trigger coverage in the parent process, or
+  # pre-filter logged files. behave logs every file per worker and applies
+  # --coverage-include at merge time; a user-set MVM_COVERAGE_FILES would
+  # silently drop included files before they reach the merge.
+  %base-env{$_}:delete for %base-env.keys.grep(*.starts-with('MVM_COVERAGE'));
   %base-env<BEHAVE_COVERAGE_LOG>:delete;
 
   my $par-coverage-dir;

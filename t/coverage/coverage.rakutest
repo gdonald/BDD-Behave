@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 86;
+plan 87;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
@@ -274,6 +274,25 @@ sub cleanup-tmp-source(IO::Path $p) {
   is Coverage::compress-line-ranges([1, 2, 3, 5, 7, 8]), '1-3, 5, 7-8',
      'compress-line-ranges collapses runs';
   is Coverage::compress-line-ranges([]), '', 'compress-line-ranges on empty list';
+}
+
+# build-report-from-hits skips a hits key that resolves to a directory
+{
+  my $src = tmp-source('sub a() { 1; }');
+
+  my %hits;
+  %hits{$src.Str} = SetHash.new;
+  %hits{$src.Str}{1} = True;
+  %hits{$src.parent.Str} = SetHash.new;
+  %hits{$src.parent.Str}{1} = True;
+
+  my $opts = CoverageOptions.new;
+  $opts.include-path($src.parent.Str);
+
+  my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+  cleanup-tmp-source($src);
+
+  is $report.files.elems, 1, 'directory hits key is skipped, only the source file is reported';
 }
 
 # valid-format

@@ -108,7 +108,7 @@ our class CoverageReport {
 
 our sub identify-executable-lines(IO::Path $file --> SetHash) {
   my $set = SetHash.new;
-  return $set unless $file.e;
+  return $set unless $file.f;
   my @lines = $file.lines;
   my @continuations = compute-continuation-lines($file);
   my $in-pod = False;
@@ -210,7 +210,7 @@ our sub strip-trailing-comment(Str $line --> Str) {
 # continuations — they are real statements MoarVM emits HITs for.
 our sub compute-continuation-lines(IO::Path $file --> Array) {
   my @result;
-  return @result unless $file.e;
+  return @result unless $file.f;
   my $content = $file.slurp;
   my @stack;
   my $state = 'normal';  # normal | sstr | dstr | line-comment
@@ -317,7 +317,7 @@ our sub is-declarative-line(Str $trimmed --> Bool) {
 
 our sub identify-branch-lines(IO::Path $file --> SetHash) {
   my $set = SetHash.new;
-  return $set unless $file.e;
+  return $set unless $file.f;
   my @lines = $file.lines;
   my $rx = / ^ \h* [
     'if' | 'elsif' | 'unless' | 'with' | 'without'
@@ -456,7 +456,7 @@ our sub build-report-from-hits(
   my %by-abs;
   for %hits.keys -> $path {
     my $io = $path.IO;
-    next unless $io.e;
+    next unless $io.f;
     my $abs = $io.absolute;
     %by-abs{$abs} //= FileCoverage.new(:path($abs));
     my $fc = %by-abs{$abs};

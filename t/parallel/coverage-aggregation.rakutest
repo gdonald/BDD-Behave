@@ -18,6 +18,16 @@ sub run-behave(*@args) {
   my %env = |%*ENV;
   %env<BEHAVE_DISABLE_CONFIG> = '1';
 
+  # When this test itself runs under --coverage, the outer worker exports
+  # MVM coverage env (MVM_COVERAGE_LOG, MVM_COVERAGE_CONTROL, and a
+  # user-supplied MVM_COVERAGE_FILES path filter) that would otherwise
+  # instrument the nested behave's parent process, redirect its hits at the
+  # outer log, and filter out the fixture (which lives under t/, not lib/).
+  # Scrub it so the nested run measures coverage exactly as it would
+  # standalone.
+  %env{$_}:delete for %env.keys.grep(*.starts-with('MVM_COVERAGE'));
+  %env<BEHAVE_COVERAGE_LOG>:delete;
+
   my $proc = Proc::Async.new(
     'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
   );
@@ -27,7 +37,7 @@ sub run-behave(*@args) {
   $proc.stdout.tap(-> $c { $out ~= $c });
   $proc.stderr.tap(-> $c { $err ~= $c });
 
-  my $done = $proc.start(:%env);
+  my $done = $proc.start(:ENV(%env));
   $proc.close-stdin;
   my $result = await $done;
 
