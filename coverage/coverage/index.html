@@ -1233,6 +1233,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#excluding-lines-with-nocov-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Excluding lines with nocov markers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thresholds" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1517,6 +1528,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#excluding-lines-with-nocov-markers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Excluding lines with nocov markers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thresholds" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1667,6 +1689,38 @@ middle of an absolute path.</p>
 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-include<span class="o">=</span>lib/BDD<span class="w"> </span>--coverage-exclude<span class="o">=</span>lib/BDD/Vendor<span class="w"> </span>specs/
 </code></pre></div></td></tr></table></div>
 <p>When no <code>--coverage-include</code> is passed, Behave includes <code>lib/</code> by default.</p>
+<h2 id="excluding-lines-with-nocov-markers">Excluding lines with nocov markers<a class="headerlink" href="#excluding-lines-with-nocov-markers" title="Permanent link">&para;</a></h2>
+<p>To drop a region of a source file from coverage, wrap it in a pair of
+<code># :nocov:</code> comment markers. The marker must be the only content on its line
+(a <code>#</code>, optional whitespace, then <code>:nocov:</code>). Lines between the opening and
+closing marker count as neither covered nor missed, so they do not lower the
+percentage and render neutral in the HTML report.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">sub</span> <span class="n">parse-record</span>(<span class="nv">$line</span>) {
+  <span class="k">my</span> <span class="nv">$parsed</span> = <span class="nb">decode</span>(<span class="nv">$line</span>);
+
+  <span class="c1"># :nocov:</span>
+  <span class="k">unless</span> <span class="nv">$parsed</span>.<span class="nb">defined</span> {
+    <span class="nb">die</span> <span class="s">&quot;unreachable: decode never returns an undefined value&quot;</span>;
+  }
+  <span class="c1"># :nocov:</span>
+
+  <span class="nv">$parsed</span>;
+}
+</code></pre></div></td></tr></table></div>
+<p>An opening marker with no matching closer excludes everything through the end
+of the file. The markers belong in the implementation files being measured,
+not in specs. They apply to both line coverage and <code>--coverage-branch</code>, so a
+branch line inside a nocov block is not counted as a branch.</p>
 <h2 id="thresholds">Thresholds<a class="headerlink" href="#thresholds" title="Permanent link">&para;</a></h2>
 <p><code>--coverage-minimum=PCT</code> fails the run when overall line coverage is below PCT
 (a number between 0 and 100). The behave exit code is non-zero when the
@@ -1739,7 +1793,8 @@ pipeline then renders one combined report against the merged data.
 guide for the full description.</p>
 <p>Executable line counts are derived from a static read of each source file:
 blank lines, comments, lines that contain only closing punctuation (<code>}</code>,
-<code>)</code>, etc.), and lines inside <code>=begin pod</code> / <code>=end pod</code> blocks are ignored.</p>
+<code>)</code>, etc.), lines inside <code>=begin pod</code> / <code>=end pod</code> blocks, and lines between
+<code># :nocov:</code> markers are ignored.</p>
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
 <ul>
 <li>macOS and Linux only. Relies on <code>grep</code> in <code>PATH</code>.</li>
