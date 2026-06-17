@@ -106,12 +106,22 @@ our class CoverageReport {
   }
 }
 
+# A line consisting solely of the comment `# :nocov:` toggles coverage
+# exclusion. Lines between a pair of markers are dropped from the
+# executable set, so they count as neither covered nor missed. An opener
+# with no matching closer excludes through end of file.
+our sub is-nocov-marker(Str $trimmed --> Bool) {
+  return False unless $trimmed.starts-with('#');
+  $trimmed.subst(/^ '#' \h* /, '') eq ':nocov:';
+}
+
 our sub identify-executable-lines(IO::Path $file --> SetHash) {
   my $set = SetHash.new;
   return $set unless $file.f;
   my @lines = $file.lines;
   my @continuations = compute-continuation-lines($file);
   my $in-pod = False;
+  my $in-nocov = False;
   my $prev-ended-cleanly = True;
 
   for @lines.kv -> $idx, $line {
@@ -127,6 +137,12 @@ our sub identify-executable-lines(IO::Path $file --> SetHash) {
       next;
     }
     next if $in-pod;
+
+    if is-nocov-marker($trimmed) {
+      $in-nocov = !$in-nocov;
+      next;
+    }
+    next if $in-nocov;
 
     if $trimmed eq '' || $trimmed.starts-with('#') {
       next;
@@ -327,6 +343,7 @@ our sub identify-branch-lines(IO::Path $file --> SetHash) {
     'if' | 'unless' | 'with' | 'without' | 'while' | 'until'
   ] \h \S /;
   my $in-pod = False;
+  my $in-nocov = False;
   for @lines.kv -> $idx, $line {
     my $lineno = $idx + 1;
     my $trimmed = $line.trim;
@@ -339,6 +356,11 @@ our sub identify-branch-lines(IO::Path $file --> SetHash) {
       next;
     }
     next if $in-pod;
+    if is-nocov-marker($trimmed) {
+      $in-nocov = !$in-nocov;
+      next;
+    }
+    next if $in-nocov;
     next if $trimmed eq '';
     next if $trimmed.starts-with('#');
     if $line ~~ $rx || $line ~~ $rx-postfix {

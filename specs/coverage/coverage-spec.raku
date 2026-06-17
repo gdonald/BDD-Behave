@@ -252,6 +252,61 @@ describe 'BDD::Behave::Coverage::identify-executable-lines', {
     expect(?$set{9}).to.be-truthy;
     expect(?$set{10}).to.be-falsy;
   }
+
+  it 'excludes lines between a pair of nocov markers', {
+    my $body = join("\n",
+      'sub foo() {',                 # 1: executable
+      '  my $x = 1;',                # 2: executable
+      '  # :nocov:',                 # 3: marker
+      '  my $unreachable = 2;',      # 4: excluded
+      '  warn $unreachable;',        # 5: excluded
+      '  # :nocov:',                 # 6: marker
+      '  $x + 1;',                   # 7: executable
+      '}',
+    );
+    my $f = tmp-source($body);
+    my $set = Coverage::identify-executable-lines($f);
+    cleanup-tmp-source($f);
+    expect(?$set{2}).to.be-truthy;
+    expect(?$set{4}).to.be-falsy;
+    expect(?$set{5}).to.be-falsy;
+    expect(?$set{7}).to.be-truthy;
+  }
+
+  it 'excludes through end of file when a nocov opener has no closer', {
+    my $body = join("\n",
+      'sub foo() {',                 # 1: executable
+      '  my $x = 1;',                # 2: executable
+      '  # :nocov:',                 # 3: marker
+      '  my $y = 2;',                # 4: excluded
+      '  $y + 1;',                   # 5: excluded
+      '}',                           # 6: excluded
+    );
+    my $f = tmp-source($body);
+    my $set = Coverage::identify-executable-lines($f);
+    cleanup-tmp-source($f);
+    expect(?$set{2}).to.be-truthy;
+    expect(?$set{4}).to.be-falsy;
+    expect(?$set{5}).to.be-falsy;
+  }
+}
+
+describe 'BDD::Behave::Coverage::is-nocov-marker', {
+  it 'recognizes a bare marker comment regardless of spacing', {
+    expect(Coverage::is-nocov-marker('# :nocov:')).to.be-truthy;
+  }
+
+  it 'recognizes a marker with no space after the hash', {
+    expect(Coverage::is-nocov-marker('#:nocov:')).to.be-truthy;
+  }
+
+  it 'does not treat a line with trailing code as a marker', {
+    expect(Coverage::is-nocov-marker('# :nocov: and more')).to.be-falsy;
+  }
+
+  it 'does not treat an ordinary comment as a marker', {
+    expect(Coverage::is-nocov-marker('# a normal comment')).to.be-falsy;
+  }
 }
 
 describe 'BDD::Behave::Coverage::identify-branch-lines', {
@@ -275,6 +330,20 @@ describe 'BDD::Behave::Coverage::identify-branch-lines', {
     expect(?$set{4}).to.be-truthy;
     expect(?$set{5}).to.be-truthy;
     expect(?$set{8}).to.be-truthy;
+  }
+
+  it 'does not flag a branch line inside a nocov block', {
+    my $body = join("\n",
+      'sub foo($x) {',
+      '  # :nocov:',
+      '  if $x > 0 { say "pos" }',
+      '  # :nocov:',
+      '}',
+    );
+    my $f = tmp-source($body);
+    my $set = Coverage::identify-branch-lines($f);
+    cleanup-tmp-source($f);
+    expect(?$set{3}).to.be-falsy;
   }
 }
 
@@ -458,6 +527,29 @@ describe 'BDD::Behave::Coverage::build-report-from-hits', {
     cleanup-tmp-source($src);
 
     expect($report.files.elems).to.be(1);
+  }
+
+  it 'does not count an uncovered line inside a nocov block as missed', {
+    my $body = join("\n",
+      'sub a() {',         # 1: executable, covered
+      '  my $x = 1;',      # 2: executable, covered
+      '  # :nocov:',       # 3: marker
+      '  warn "bad";',     # 4: excluded, never hit
+      '  # :nocov:',       # 5: marker
+      '}',
+    );
+    my $src = tmp-source($body);
+    my %hits;
+    %hits{$src.Str} = SetHash.new;
+    %hits{$src.Str}{1} = True;
+    %hits{$src.Str}{2} = True;
+
+    my $opts = CoverageOptions.new;
+    $opts.include-path($src.parent.Str);
+    my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+    cleanup-tmp-source($src);
+
+    expect($report.overall-percentage).to.be(100e0);
   }
 }
 

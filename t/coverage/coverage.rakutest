@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 87;
+plan 100;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
@@ -203,6 +203,56 @@ sub cleanup-tmp-source(IO::Path $p) {
   ok  $set{8}, 'method body statement is executable';
 }
 
+# identify-executable-lines excludes lines between nocov markers
+{
+  my $body = join("\n",
+    'sub foo() {', '  my $x = 1;', '  # :nocov:',
+    '  my $unreachable = 2;', '  warn $unreachable;',
+    '  # :nocov:', '  $x + 1;', '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok  $set{2}, 'line before nocov block is executable';
+  nok $set{4}, 'first line inside nocov block is excluded';
+  nok $set{5}, 'second line inside nocov block is excluded';
+  ok  $set{7}, 'line after nocov block is executable';
+}
+
+# identify-executable-lines: an unclosed nocov opener excludes to end of file
+{
+  my $body = join("\n",
+    'sub foo() {', '  my $x = 1;', '  # :nocov:',
+    '  my $y = 2;', '  $y + 1;', '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-executable-lines($f);
+  cleanup-tmp-source($f);
+  ok  $set{2}, 'line before unclosed nocov opener is executable';
+  nok $set{4}, 'line after unclosed nocov opener is excluded';
+  nok $set{5}, 'later line after unclosed nocov opener is excluded';
+}
+
+# is-nocov-marker
+{
+  ok  Coverage::is-nocov-marker('# :nocov:'),          'bare marker recognized';
+  ok  Coverage::is-nocov-marker('#:nocov:'),           'marker without space recognized';
+  nok Coverage::is-nocov-marker('# :nocov: and more'), 'marker with trailing code rejected';
+  nok Coverage::is-nocov-marker('# a normal comment'), 'ordinary comment rejected';
+}
+
+# identify-branch-lines does not flag a branch inside a nocov block
+{
+  my $body = join("\n",
+    'sub foo($x) {', '  # :nocov:', '  if $x > 0 { 1 }',
+    '  # :nocov:', '}',
+  );
+  my $f = tmp-source($body);
+  my $set = Coverage::identify-branch-lines($f);
+  cleanup-tmp-source($f);
+  nok $set{3}, 'branch line inside nocov block is not flagged';
+}
+
 # identify-branch-lines
 {
   my $body = join("\n",
@@ -293,6 +343,26 @@ sub cleanup-tmp-source(IO::Path $p) {
   cleanup-tmp-source($src);
 
   is $report.files.elems, 1, 'directory hits key is skipped, only the source file is reported';
+}
+
+# build-report-from-hits does not count a nocov-excluded line as missed
+{
+  my $body = join("\n",
+    'sub a() {', '  my $x = 1;', '  # :nocov:',
+    '  warn "bad";', '  # :nocov:', '}',
+  );
+  my $src = tmp-source($body);
+  my %hits;
+  %hits{$src.Str} = SetHash.new;
+  %hits{$src.Str}{1} = True;
+  %hits{$src.Str}{2} = True;
+
+  my $opts = CoverageOptions.new;
+  $opts.include-path($src.parent.Str);
+  my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+  cleanup-tmp-source($src);
+
+  is $report.overall-percentage, 100e0, 'uncovered nocov line is not counted as missed';
 }
 
 # valid-format

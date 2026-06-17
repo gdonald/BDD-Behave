@@ -16,13 +16,13 @@ tracked. Use `--coverage-include` / `--coverage-exclude` to change the scope.
 
 `--coverage-format=FORMAT` selects the report format. Available formats:
 
-| Format      | Best for                                                     |
-| ----------- | ------------------------------------------------------------ |
+| Format      | Best for                                                              |
+| ----------- | --------------------------------------------------------------------- |
 | `html`      | Browsable per-file report with green/red line highlighting (default). |
-| `text`      | Colored per-file coverage summary printed to the terminal.   |
+| `text`      | Colored per-file coverage summary printed to the terminal.            |
 | `json`      | Machine-readable. Also the baseline format for `--coverage-baseline`. |
-| `lcov`      | `genhtml`, Codecov, Coveralls.                               |
-| `cobertura` | Jenkins, GitLab CI, Azure DevOps.                            |
+| `lcov`      | `genhtml`, Codecov, Coveralls.                                        |
+| `cobertura` | Jenkins, GitLab CI, Azure DevOps.                                     |
 
 ```bash
 behave --coverage specs/                            # writes ./coverage/ (html)
@@ -53,6 +53,33 @@ behave --coverage --coverage-include=lib/BDD --coverage-exclude=lib/BDD/Vendor s
 ```
 
 When no `--coverage-include` is passed, Behave includes `lib/` by default.
+
+## Excluding lines with nocov markers
+
+To drop a region of a source file from coverage, wrap it in a pair of
+`# :nocov:` comment markers. The marker must be the only content on its line
+(a `#`, optional whitespace, then `:nocov:`). Lines between the opening and
+closing marker count as neither covered nor missed, so they do not lower the
+percentage and render neutral in the HTML report.
+
+```raku
+sub parse-record($line) {
+  my $parsed = decode($line);
+
+  # :nocov:
+  unless $parsed.defined {
+    die "unreachable: decode never returns an undefined value";
+  }
+  # :nocov:
+
+  $parsed;
+}
+```
+
+An opening marker with no matching closer excludes everything through the end
+of the file. The markers belong in the implementation files being measured,
+not in specs. They apply to both line coverage and `--coverage-branch`, so a
+branch line inside a nocov block is not counted as a branch.
 
 ## Thresholds
 
@@ -135,7 +162,8 @@ guide for the full description.
 
 Executable line counts are derived from a static read of each source file:
 blank lines, comments, lines that contain only closing punctuation (`}`,
-`)`, etc.), and lines inside `=begin pod` / `=end pod` blocks are ignored.
+`)`, etc.), lines inside `=begin pod` / `=end pod` blocks, and lines between
+`# :nocov:` markers are ignored.
 
 ## Limitations
 
