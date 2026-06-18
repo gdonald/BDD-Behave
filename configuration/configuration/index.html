@@ -1236,6 +1236,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Helper inclusion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calling-helper-methods-on-the-topic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calling helper methods on the topic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1558,6 +1575,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Helper inclusion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calling-helper-methods-on-the-topic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Calling helper methods on the topic
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1864,6 +1898,31 @@
 <span class="c1"># $*BEHAVE-HELPERS&lt;api&gt;.as-user(&#39;alice&#39;)</span>
 </code></pre></div></td></tr></table></div>
 <p>One instance is created per class per run (cached in the runner). State stored on a helper persists across all examples in the suite, so use it for fixtures and shared connections, not per-example state.</p>
+<h3 id="calling-helper-methods-on-the-topic">Calling helper methods on the topic<a class="headerlink" href="#calling-helper-methods-on-the-topic" title="Permanent link">&para;</a></h3>
+<p>A helper's methods are also callable directly on the example topic. When an example block takes the topic (<code>-&gt; $_ { ... }</code>), an unknown method on it resolves first to a <code>let</code> of that name, then to a method on any included helper:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="n">APIHelpers</span> {
+  <span class="k">method</span> <span class="n">current-user</span>() { ... }
+}
+
+<span class="n">configure-behave</span> -&gt; <span class="nv">$config</span> {
+  <span class="nv">$config</span>.<span class="n">include</span>(<span class="n">APIHelpers</span>);
+}
+
+<span class="n">it</span> <span class="s">&#39;reads the signed-in user&#39;</span>, -&gt; <span class="nv">$_</span> {
+  <span class="n">expect</span>(.<span class="n">current-user</span>).<span class="nb">to</span>.<span class="o">eq</span>(<span class="s">&#39;alice&#39;</span>);
+}
+</code></pre></div></td></tr></table></div>
+<p>A <code>let</code> always shadows a helper method of the same name, so a spec can override helper-provided values locally. Arguments pass straight through: <code>.json-post($payload)</code> calls the helper method with <code>$payload</code>.</p>
 <h2 id="global-hooks">Global hooks<a class="headerlink" href="#global-hooks" title="Permanent link">&para;</a></h2>
 <p>Per-run hooks let you set up shared infrastructure without repeating it in every spec. Each phase composes with the per-group hooks declared inside spec files:</p>
 <table>

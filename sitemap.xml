@@ -2,146 +2,146 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.behave.dev/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/contributing/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/getting-started/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/running/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/classes/classes/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/configuration/configuration/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/core/describe/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/core/it/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/core/pending/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/coverage/coverage/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/diff/diff/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/doc-extraction/doc-extraction/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/dry-run/dry-run/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/example-filter/example-filter/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/expectations/aggregate-failures/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/expectations/composable-matchers/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/expectations/custom-matchers/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/expectations/expect/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/expectations/junctions/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/expectations/matchers/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/focus-skip/focus-skip/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/formatter/formatter/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/hooks/hooks/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/let/let/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/let/subject/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/mocks/mocks/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/parallel/design/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/parallel/parallel/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/retry/retry/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/shared-contexts/shared-contexts/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/shared-examples/shared-examples/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/tags/tags/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/timing/time-mocking/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/timing/timing/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/variables/variables/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
     <url>
          <loc>https://docs.behave.dev/watch/watch/</loc>
-         <lastmod>2026-06-17</lastmod>
+         <lastmod>2026-06-18</lastmod>
     </url>
 </urlset>
