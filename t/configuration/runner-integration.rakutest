@@ -5,6 +5,7 @@ use Test;
 use BDD::Behave::Configuration;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
+use BDD::Behave::LetRuntime;
 use BDD::Behave::Formatter::Tree;
 
 constant Configuration = BDD::Behave::Configuration::Configuration;
@@ -13,7 +14,7 @@ constant Suite         = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
 constant Example       = BDD::Behave::SpecTree::Example;
 
-plan 17;
+plan 22;
 
 class CounterHelper {
   has Int $.count is rw = 0;
@@ -22,6 +23,11 @@ class CounterHelper {
 
 class GreetHelper {
   method hello { 'hello' }
+}
+
+class ShoutHelper {
+  method hello { 'hi-from-helper' }
+  method shout($word) { $word.uc }
 }
 
 sub make-suite($description) {
@@ -251,4 +257,58 @@ sub run-quiet($suite, $cfg, *%runner-args) {
   run-quiet($suite, $cfg);
   is-deeply @order.List, <cfg-ba cfg-be ex cfg-ae cfg-aa>.List,
     'all four config phases fire in the correct order';
+}
+
+# Helper method dispatch through the example topic
+{
+  my $cfg = Configuration.new;
+  $cfg.include(ShoutHelper);
+  my $suite = make-suite('helper-dispatch');
+  my $captured;
+  make-example('calls a helper method on the topic',
+    -> $_ { $captured = .hello }, $suite);
+  run-quiet($suite, $cfg);
+  is $captured, 'hi-from-helper', 'topic dispatches a no-argument helper method';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.include(ShoutHelper);
+  my $suite = make-suite('helper-dispatch-args');
+  my $captured;
+  make-example('forwards arguments to a helper method',
+    -> $_ { $captured = .shout('go') }, $suite);
+  run-quiet($suite, $cfg);
+  is $captured, 'GO', 'topic forwards arguments to a helper method';
+}
+
+{
+  my $cfg = Configuration.new;
+  $cfg.include(ShoutHelper);
+  my $suite = make-suite('let-precedence');
+  my $captured;
+  my $ex = make-example('prefers a let over a helper method',
+    -> $_ { $captured = .hello }, $suite);
+  $ex.set-metadata(lets =>
+    [LetDefinition.new(:name<hello>, :block({ 'let-wins' }))]);
+  run-quiet($suite, $cfg);
+  is $captured, 'let-wins', 'a let shadows a helper method of the same name';
+}
+
+{
+  my $cfg = Configuration.new;
+  my $suite = make-suite('unknown-topic');
+  make-example('reads an unknown topic name',
+    -> $_ { .nope }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.failed, 1, 'an unknown topic name with no helper fails the example';
+}
+
+{
+  my $cfg = Configuration.new;
+  my $suite = make-suite('readonly-topic');
+  make-example('passes arguments to an unknown topic name',
+    -> $_ { .nope('x') }, $suite);
+  my $r = run-quiet($suite, $cfg);
+  is $r.result.failed, 1, 'arguments to an unknown topic name fail the example';
 }

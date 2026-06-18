@@ -8,9 +8,24 @@ constant LetRuntime = BDD::Behave::LetRuntime::LetRuntime;
 
 class LetContext {
   method FALLBACK(Str $name, |c) {
-    if c.elems == 0 {
-      return $*LET-RUNTIME.value($name);
+    my $runtime = $*LET-RUNTIME;
+
+    if c.elems == 0 && $runtime.defined && $runtime.has-name($name) {
+      return $runtime.value($name);
     }
+
+    my $helpers = $*BEHAVE-HELPERS;
+
+    if $helpers.defined {
+      for $helpers.values -> $helper {
+        return $helper."$name"(|c) if $helper.^can($name);
+      }
+    }
+
+    if c.elems == 0 {
+      return $runtime.value($name);
+    }
+
     die "Let values are read-only";
   }
 }

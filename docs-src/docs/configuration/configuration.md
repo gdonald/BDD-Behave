@@ -124,6 +124,26 @@ $config.include(APIHelpers, :as<api>);
 
 One instance is created per class per run (cached in the runner). State stored on a helper persists across all examples in the suite, so use it for fixtures and shared connections, not per-example state.
 
+### Calling helper methods on the topic
+
+A helper's methods are also callable directly on the example topic. When an example block takes the topic (`-> $_ { ... }`), an unknown method on it resolves first to a `let` of that name, then to a method on any included helper:
+
+```raku
+class APIHelpers {
+  method current-user() { ... }
+}
+
+configure-behave -> $config {
+  $config.include(APIHelpers);
+}
+
+it 'reads the signed-in user', -> $_ {
+  expect(.current-user).to.eq('alice');
+}
+```
+
+A `let` always shadows a helper method of the same name, so a spec can override helper-provided values locally. Arguments pass straight through: `.json-post($payload)` calls the helper method with `$payload`.
+
 ## Global hooks
 
 Per-run hooks let you set up shared infrastructure without repeating it in every spec. Each phase composes with the per-group hooks declared inside spec files:

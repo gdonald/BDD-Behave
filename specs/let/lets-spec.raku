@@ -1,4 +1,23 @@
 use BDD::Behave;
+use BDD::Behave::LetRuntime;
+
+describe 'LetRuntime has-name', {
+  let(:runtime, {
+    LetRuntime.new(:definitions([LetDefinition.new(:name<foo>, :block({ 1 }))]));
+  });
+
+  it 'finds a defined let by name', {
+    expect(runtime.has-name('foo')).to.be-truthy;
+  }
+
+  it 'ignores a leading colon on the query', {
+    expect(runtime.has-name(':foo')).to.be-truthy;
+  }
+
+  it 'returns False for an undefined name', {
+    expect(runtime.has-name('bar')).to.be-falsy;
+  }
+}
 
 describe 'foo bar', {
   let(:number, { 42 });

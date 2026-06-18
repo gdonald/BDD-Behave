@@ -6,7 +6,7 @@ use BDD::Behave;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::LetRuntime;
 
-plan 6;
+plan 9;
 
 registry().clear;
 
@@ -35,3 +35,7 @@ is $runtime.value('foo'), 2, 'nearest let wins';
 is $runtime.value('foo'), 2, 'memoizes per example';
 is $inner-called, 1, 'evaluates inner let once';
 is $outer-called, 0, 'does not execute shadowed parent let';
+
+ok $runtime.has-name('foo'), 'has-name finds a defined let';
+ok $runtime.has-name(':foo'), 'has-name ignores a leading colon on the query';
+nok $runtime.has-name('bar'), 'has-name returns False for an undefined name';

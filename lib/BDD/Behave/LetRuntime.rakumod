@@ -36,4 +36,9 @@ class LetRuntime is export {
   method names {
     @!definitions.map(*.name).unique.List;
   }
+
+  method has-name(Str $name --> Bool) {
+    my $key = $name.subst(/^':'/, '');
+    @!definitions.first({ .name.subst(/^':'/, '') eq $key }).defined;
+  }
 }
