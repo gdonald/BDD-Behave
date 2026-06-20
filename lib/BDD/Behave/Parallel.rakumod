@@ -65,7 +65,7 @@ sub discover-suites(@spec-files --> List) is export {
 
 sub current-include-flags(--> List) is export {
   (gather for $*REPO.repo-chain.reverse {
-    take '-I' ~ .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;
+      take '-I' ~ .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;
   }).List;
 }
 
@@ -92,6 +92,8 @@ sub discover-suites-subprocess(
 
   my %env = %base-env.elems ?? %base-env.Hash !! %*ENV.Hash;
   %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_WORKER_INDEX> //= '0';
+  %env<BEHAVE_WORKER_COUNT> //= '1';
   %env<MVM_COVERAGE_LOG>:delete;
   %env<MVM_COVERAGE_CONTROL>:delete;
   %env<BEHAVE_COVERAGE_LOG>:delete;
@@ -227,22 +229,22 @@ sub collect-filtered-buckets(
   }
 
   my @filtered = @all-buckets.map(-> $b {
-    my @kept = $b.examples.grep({
-      example-passes-filters($_, :@include-tags, :@exclude-tags, :@example-patterns, :@only-locations);
-    });
-    if @kept.elems == $b.examples.elems {
-      $b;
-    } elsif @kept.elems == 0 {
-      Nil;
-    } else {
-      my $new = BDD::Behave::Parallel::Distribution::Bucket.new(
-        :id($b.id),
-        :file($b.file),
-      );
-      $new.add($_) for @kept;
-      $new.serial = $b.serial;
-      $new;
-    }
+      my @kept = $b.examples.grep({
+          example-passes-filters($_, :@include-tags, :@exclude-tags, :@example-patterns, :@only-locations);
+      });
+      if @kept.elems == $b.examples.elems {
+        $b;
+      } elsif @kept.elems == 0 {
+        Nil;
+      } else {
+        my $new = BDD::Behave::Parallel::Distribution::Bucket.new(
+          :id($b.id),
+          :file($b.file),
+        );
+        $new.add($_) for @kept;
+        $new.serial = $b.serial;
+        $new;
+      }
   }).grep(*.defined);
 
   @filtered.List;
@@ -270,8 +272,8 @@ sub build-worker-manifests(
   my ($parallel-buckets, $serial-buckets) = split-parallel-and-serial(@filtered);
 
   my @parallel-assignments = $seed-mode eq 'stable'
-    ?? distribute-stable($parallel-buckets, $worker-count, $seed // 0)
-    !! distribute-lpt($parallel-buckets, $worker-count);
+  ?? distribute-stable($parallel-buckets, $worker-count, $seed // 0)
+  !! distribute-lpt($parallel-buckets, $worker-count);
 
   my @parallel-manifests;
   for ^$worker-count -> $i {
@@ -458,7 +460,7 @@ sub run-parallel-isolated-impl(
 
     if $opts.coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
-        = $opts.coverage-log-dir.add("isolated-$idx.raw").absolute;
+      = $opts.coverage-log-dir.add("isolated-$idx.raw").absolute;
       %env<MVM_COVERAGE_CONTROL> = '2';
     }
 
@@ -484,14 +486,14 @@ sub run-parallel-isolated-impl(
         my $parser = JsonLineParser.new;
 
         $proc.stdout.tap(-> $chunk {
-          for $parser.feed($chunk) -> $event {
-            $event-lock.protect: {
-              handle-event($opts.formatter, $result, $idx, $event, @suites);
+            for $parser.feed($chunk) -> $event {
+              $event-lock.protect: {
+                handle-event($opts.formatter, $result, $idx, $event, @suites);
+              }
             }
-          }
         });
         $proc.stderr.tap(-> $chunk {
-          $event-lock.protect: { $*ERR.print($chunk) }
+            $event-lock.protect: { $*ERR.print($chunk) }
         });
 
         my $proc-result = await $proc.start(:ENV(%env));
@@ -572,14 +574,14 @@ sub run-parallel-queue-impl(
       # parent formatter; both are unsynchronized state, so we serialize
       # all per-event work behind a single lock.
       :on-event(sub ($wi, $event) {
-        $event-lock.protect: {
-          handle-event($opts.formatter, $result, $wi, $event, @suites);
-        }
+          $event-lock.protect: {
+            handle-event($opts.formatter, $result, $wi, $event, @suites);
+          }
       }),
       :on-ready(&dispatch-or-shutdown),
       :on-done(sub ($wi, $id) {
-        $dispatch-lock.protect: { $scheduler.mark-complete }
-        dispatch-or-shutdown($wi);
+          $dispatch-lock.protect: { $scheduler.mark-complete }
+          dispatch-or-shutdown($wi);
       }),
     );
 
@@ -619,7 +621,7 @@ sub run-parallel-queue-impl(
 
     if $opts.coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
-        = $opts.coverage-log-dir.add('serial.raw').absolute;
+      = $opts.coverage-log-dir.add('serial.raw').absolute;
       %env<MVM_COVERAGE_CONTROL> = '2';
     }
 
@@ -627,12 +629,12 @@ sub run-parallel-queue-impl(
     my $parser = JsonLineParser.new;
 
     $proc.stdout.tap(-> $chunk {
-      for $parser.feed($chunk) -> $event {
-        handle-event($opts.formatter, $result, -1, $event, @suites);
-      }
+        for $parser.feed($chunk) -> $event {
+          handle-event($opts.formatter, $result, -1, $event, @suites);
+        }
     });
     $proc.stderr.tap(-> $chunk {
-      $*ERR.print($chunk);
+        $*ERR.print($chunk);
     });
 
     my $start = $proc.start(:ENV(%env));
@@ -656,12 +658,12 @@ sub run-parallel(
   my $result = ParallelRunResult.new;
 
   my $disco = $opts.discovery-in-process
-    ?? discover-suites($opts.spec-files)
-    !! discover-suites-subprocess(
-         $opts.spec-files,
-         :discovery-argv($opts.discovery-argv),
-         :base-env(%(|$opts.base-env)),
-       );
+  ?? discover-suites($opts.spec-files)
+  !! discover-suites-subprocess(
+    $opts.spec-files,
+    :discovery-argv($opts.discovery-argv),
+    :base-env(%(|$opts.base-env)),
+  );
   my @suites      = $disco[0].list;
   my @load-errors = $disco[1].list;
   $result.load-errors.append: @load-errors;
@@ -718,14 +720,14 @@ sub run-parallel(
       # concurrently into handle-event, which mutates $result.* and
       # writes to the parent formatter. Serialize both.
       :on-event(sub ($wi, $event) {
-        $event-lock.protect: {
-          handle-event($opts.formatter, $result, $wi, $event, @suites);
-        }
+          $event-lock.protect: {
+            handle-event($opts.formatter, $result, $wi, $event, @suites);
+          }
       }),
       :on-shard-retry(sub ($wi, $attempt, $exit-code) {
-        $event-lock.protect: {
-          note yellow("Worker $wi crashed with exit $exit-code; retrying (attempt $attempt of {$opts.parallel-retry + 1})");
-        }
+          $event-lock.protect: {
+            note yellow("Worker $wi crashed with exit $exit-code; retrying (attempt $attempt of {$opts.parallel-retry + 1})");
+          }
       }),
     );
     $pool.launch(@parallel-manifests);
@@ -762,7 +764,7 @@ sub run-parallel(
 
     if $opts.coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
-        = $opts.coverage-log-dir.add('serial.raw').absolute;
+      = $opts.coverage-log-dir.add('serial.raw').absolute;
       %env<MVM_COVERAGE_CONTROL> = '2';
     }
 
@@ -770,12 +772,12 @@ sub run-parallel(
     my $parser = JsonLineParser.new;
 
     $proc.stdout.tap(-> $chunk {
-      for $parser.feed($chunk) -> $event {
-        handle-event($opts.formatter, $result, -1, $event, @suites);
-      }
+        for $parser.feed($chunk) -> $event {
+          handle-event($opts.formatter, $result, -1, $event, @suites);
+        }
     });
     $proc.stderr.tap(-> $chunk {
-      $*ERR.print($chunk);
+        $*ERR.print($chunk);
     });
 
     my $start = $proc.start(:ENV(%env));
@@ -826,7 +828,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
     when 'example-auto-description' {
       my $example = resolve-example(@suites, %event);
       $formatter.example-auto-description($example, :description(%event<description> // ''))
-        if $example.defined;
+      if $example.defined;
     }
     when 'example-pass' {
       my $example = resolve-example(@suites, %event);
@@ -891,8 +893,8 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       unless @event-failures.elems {
         with %event<exception-message> -> $msg {
           my $prefixed = $desc.chars
-            ?? "exception in $desc: " ~ $msg.Str
-            !! $msg.Str;
+          ?? "exception in $desc: " ~ $msg.Str
+          !! $msg.Str;
 
           Failures.list.push: Failure.new(
             :file(%failure-info<file>.Str),
@@ -933,7 +935,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
     when 'example-slow' {
       my $example = resolve-example(@suites, %event);
       $formatter.example-slow($example, :threshold((%event<threshold> // 0).Real))
-        if $example.defined;
+      if $example.defined;
     }
     when 'profile-record' {
       my $example = resolve-example(@suites, %event);
@@ -951,7 +953,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
         description => (%event<description> // '').Str,
         key         => (%event<key>         // '').Str,
         label       => (%event<label>.defined && (%event<label>).Str.chars
-                          ?? %event<label>.Str !! Str),
+          ?? %event<label>.Str !! Str),
         position    => (%event<position>    // 0).Int,
         runs        => (%event<runs>        // 0).Int,
         iterations  => (%event<iterations>  // 0).Int,

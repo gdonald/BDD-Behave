@@ -12,6 +12,7 @@ my $root    = $?FILE.IO.parent.parent.parent;
 my $fixture = $root.add('t/fixtures/parallel/discovery-fixture-spec.raku');
 my $clean   = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
 my $bad     = $root.add('t/fixtures/parallel-bad-spec.raku');
+my $worker  = $root.add('t/fixtures/parallel/worker-env-fixture-spec.raku');
 
 sub collect-examples($node, @out) {
   given $node {
@@ -176,6 +177,27 @@ describe 'discover-suites-subprocess', :order<defined>, {
     it 'reports a load error when a spec file fails to load', {
       my $r = discover-suites-subprocess(($bad,));
       expect($r[1].elems > 0).to.be(True);
+    }
+  }
+
+  context 'worker environment during discovery', :order<defined>, {
+    let(:descriptions, {
+        my %base = %*ENV.Hash;
+        %base<BEHAVE_WORKER_INDEX>:delete;
+        %base<BEHAVE_WORKER_COUNT>:delete;
+
+        my $r = discover-suites-subprocess(($worker,), :base-env(%base));
+        my @examples;
+        collect-examples($r[0].first, @examples);
+        @examples.map(*.description).List;
+    });
+
+    it 'exports BEHAVE_WORKER_COUNT when the parent env lacks it', {
+      expect(descriptions.first(*.starts-with('count='))).to.eq('count=1');
+    }
+
+    it 'exports BEHAVE_WORKER_INDEX when the parent env lacks it', {
+      expect(descriptions.first(*.starts-with('index='))).to.eq('index=0');
     }
   }
 }

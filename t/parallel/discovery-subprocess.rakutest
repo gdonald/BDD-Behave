@@ -11,7 +11,7 @@ constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example      = BDD::Behave::SpecTree::Example;
 
-plan 19;
+plan 22;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -19,6 +19,7 @@ my $bin     = $root.add('bin/behave');
 my $fixture = $root.add('t/fixtures/parallel/discovery-fixture-spec.raku');
 my $clean   = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
 my $bad     = $root.add('t/fixtures/parallel-bad-spec.raku');
+my $worker  = $root.add('t/fixtures/parallel/worker-env-fixture-spec.raku');
 
 my @discovery-argv = 'raku', "-I{$lib.absolute}", $bin.absolute;
 
@@ -174,6 +175,23 @@ sub summarize-suite($s) {
   is @argv[0], 'raku', 'first arg is the raku interpreter';
   ok @argv[1].starts-with('-I'),
     'second arg is the -I lib path';
+}
+
+{
+  my %base = %*ENV.Hash;
+  %base<BEHAVE_WORKER_INDEX>:delete;
+  %base<BEHAVE_WORKER_COUNT>:delete;
+
+  my $r = discover-suites-subprocess(($worker,), :@discovery-argv, :base-env(%base));
+  my @examples;
+  collect-examples($r[0].first, @examples);
+  my @descriptions = @examples.map(*.description);
+
+  is $r[1].elems, 0, 'worker-env fixture discovers without load errors';
+  is @descriptions.first(*.starts-with('count=')), 'count=1',
+    'discovery exports BEHAVE_WORKER_COUNT when the parent env lacks it';
+  is @descriptions.first(*.starts-with('index=')), 'index=0',
+    'discovery exports BEHAVE_WORKER_INDEX when the parent env lacks it';
 }
 
 done-testing;
