@@ -36,6 +36,19 @@ behave --coverage --coverage-format=lcov --coverage-output=coverage.lcov specs/
 Behave fills with `index.html`, `style.css`, and one HTML page per source
 file. The index is the entry point: open `coverage/index.html`.
 
+## Hit counts
+
+Behave records how many times each line executed, not just whether it ran.
+Every format surfaces this:
+
+- **text** and **html index**: a `Hits` column showing each file's total
+  executions across its covered lines.
+- **html file page**: a per-line count gutter beside the source.
+- **json**: a `total-hits` value per file plus a `line-hits` map of line
+  number to count.
+- **lcov** and **cobertura**: the real execution count in each `DA:` /
+  `<line hits=...>` record, so downstream tools render execution heat.
+
 ## Filtering tracked files
 
 `--coverage-include=PATH` restricts the report to files whose path **starts
@@ -146,15 +159,24 @@ layers and the CLI.
 
 `--coverage` sets `MVM_COVERAGE_LOG` and `MVM_COVERAGE_CONTROL=2` in a child
 process that runs the same `bin/behave` invocation. MoarVM writes one `HIT`
-line per executed source line to a temp file under `$TMPDIR`. When the child
-exits, the parent runs `grep -F` over that file to keep only lines matching
-the include patterns, parses the filtered result, and renders the report.
+line per executed source line to a temp file under `$TMPDIR`. A hot line can
+appear millions of times. When the child exits, the parent runs `grep -F` over
+that file to keep only lines matching the include patterns, then `awk` tallies
+the matches into one row per unique line prefixed with its occurrence count.
+This keeps the filtered log small while preserving the collective hit count.
+The parent parses the tallied result and renders the report.
+
+On a full suite the raw log can take a while to filter. When stderr is a
+terminal, Behave streams the raw bytes through the filter itself and draws a
+single continuously updated progress line with a percent, a bar, and a rough
+ETA based on bytes processed over elapsed time. Off a terminal (CI, piped
+output) the filter reads the files directly and prints nothing.
 
 Under `--parallel`, the wrapper is skipped: the parallel parent gives each
 worker its own `MVM_COVERAGE_LOG` path
 (`$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/worker-N.raw`), and after
-the workers exit it merges every per-worker log into a single hit map (set
-union, since coverage records *whether* a line was hit). The same report
+the workers exit it tallies every per-worker log together in a single `awk`
+pass, summing each line's count across workers. The same report
 pipeline then renders one combined report against the merged data.
 `--coverage-minimum` is gated on the merged percentage. See
 [Coverage under --parallel](../parallel/parallel.md#coverage) in the parallel

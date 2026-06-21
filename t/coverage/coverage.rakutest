@@ -3,11 +3,12 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 100;
+plan 124;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
 constant FileCoverage    = BDD::Behave::Coverage::FileCoverage;
+constant CoverageReport  = BDD::Behave::Coverage::CoverageReport;
 
 sub tmp-source(Str $body --> IO::Path) {
   my $dir = $*TMPDIR.add("behave-cov-t-{$*PID}-{(now * 1e6).Int}");
@@ -306,6 +307,91 @@ sub cleanup-tmp-source(IO::Path $p) {
   is %hits.elems, 0, 'process-hit-line respects include filter';
 }
 
+# process-hit-line accumulates a tab-prefixed occurrence count
+{
+  my %hits;
+  Coverage::process-hit-line(
+    "5\tHIT  /path/file.rakumod  10",
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  Coverage::process-hit-line(
+    "3\tHIT  /path/file.rakumod  10",
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  is %hits</path/file.rakumod>{10}, 8, 'process-hit-line sums tab-prefixed counts';
+}
+
+# FileCoverage hit counts
+{
+  my $fc = FileCoverage.new(:path('/p'));
+  $fc.executable{1} = True;
+  $fc.executable{2} = True;
+  $fc.add-hit(1, 4);
+  $fc.add-hit(1, 6);
+
+  is $fc.hit-count(1), 10, 'hit-count accumulates added counts';
+  is $fc.hit-count(2), 0,  'hit-count is zero for an unhit line';
+  is $fc.total-hits, 10,   'total-hits sums counts over covered executable lines';
+}
+
+# render-text shows a Hits column
+{
+  my $src = tmp-source(join("\n", 'sub foo() {', '  my $x = 1;', '}'));
+
+  my %hits;
+  %hits{$src.Str}{2} += 7;
+
+  my $opts = CoverageOptions.new;
+  $opts.include-path($src.parent.Str);
+
+  my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+  my $text = Coverage::render-text($report, :!color);
+  cleanup-tmp-source($src);
+
+  ok $text.contains('Hits'), 'render-text includes a Hits header';
+}
+
+# render-lcov emits real hit counts in DA records
+{
+  my $fc = FileCoverage.new(:path('/x'));
+  $fc.executable{1} = True;
+  $fc.add-hit(1, 9);
+
+  my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
+  my $lcov = Coverage::render-lcov($report);
+
+  ok $lcov.contains('DA:1,9'), 'render-lcov emits the hit count in DA';
+}
+
+# render-json includes total-hits and line-hits
+{
+  my $fc = FileCoverage.new(:path('/x'));
+  $fc.display-path = 'x';
+  $fc.executable{1} = True;
+  $fc.add-hit(1, 5);
+
+  my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
+  my $json = Coverage::render-json($report);
+
+  ok $json.contains('"total-hits"'), 'render-json includes total-hits';
+  ok $json.contains('"line-hits"'),  'render-json includes line-hits';
+}
+
+# format-progress-bar
+{
+  is Coverage::format-progress-bar(0, 0, 1e0), '',
+     'format-progress-bar is empty when the total is unknown';
+
+  my $half = Coverage::format-progress-bar(50, 100, 10e0, :width(24));
+  ok $half.contains(' 50%'),         'format-progress-bar shows the percent';
+  ok $half.contains('~10s'),         'format-progress-bar estimates remaining seconds';
+  is $half.comb('#').elems, 12,      'format-progress-bar fills the bar proportionally';
+
+  my $done = Coverage::format-progress-bar(100, 100, 5e0, :width(24));
+  ok $done.contains('100%'),         'format-progress-bar reaches 100 percent';
+  nok $done.contains('~'),           'format-progress-bar omits the ETA when complete';
+}
+
 # FileCoverage percentage
 {
   my $fc = FileCoverage.new(:path('/p'));
@@ -436,6 +522,49 @@ sub cleanup-tmp-source(IO::Path $p) {
      'empty input list yields empty merge';
 
   $a.unlink; $b.unlink;
+}
+
+# scrub-managed-coverage-env removes only the coverage env behave assigns
+# itself, leaving a user-supplied MVM_COVERAGE_FILES filter to pass through.
+{
+  my %env =
+    MVM_COVERAGE_LOG     => '/tmp/inherited.raw',
+    MVM_COVERAGE_CONTROL => '1',
+    BEHAVE_COVERAGE_LOG  => '/tmp/inherited.raw',
+    MVM_COVERAGE_FILES   => 'project/lib',
+    PATH                 => '/usr/bin';
+
+  Coverage::scrub-managed-coverage-env(%env);
+
+  nok %env<MVM_COVERAGE_LOG>:exists,     'scrub removes inherited MVM_COVERAGE_LOG';
+  nok %env<MVM_COVERAGE_CONTROL>:exists, 'scrub removes inherited MVM_COVERAGE_CONTROL';
+  nok %env<BEHAVE_COVERAGE_LOG>:exists,  'scrub removes inherited BEHAVE_COVERAGE_LOG';
+  is %env<MVM_COVERAGE_FILES>, 'project/lib',
+     'scrub leaves a user-supplied MVM_COVERAGE_FILES source filter in place';
+  is %env<PATH>, '/usr/bin',  'scrub leaves unrelated env untouched';
+}
+
+# remove-coverage-temp clears the temp a coverage run would otherwise strand:
+# a flat dir of per-worker logs, or a single raw/filtered file.
+{
+  my $dir = $*TMPDIR.add("behave-cov-rm-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+  $dir.add('isolated-0.raw').spurt('HIT  lib/a 1');
+  $dir.add('isolated-1.raw').spurt('HIT  lib/b 2');
+
+  is Coverage::remove-coverage-temp($dir), True,
+     'remove-coverage-temp reports success for a dir of logs';
+  nok $dir.e, 'remove-coverage-temp deletes the dir and its logs';
+
+  my $file = $*TMPDIR.add("behave-cov-rm-{$*PID}-{(now * 1e6).Int}.raw");
+  $file.spurt('HIT  lib/a 1');
+
+  is Coverage::remove-coverage-temp($file), True,
+     'remove-coverage-temp reports success for a single file';
+  nok $file.e, 'remove-coverage-temp deletes the single file';
+
+  is Coverage::remove-coverage-temp($*TMPDIR.add("behave-cov-absent-{$*PID}")), False,
+     'remove-coverage-temp is a no-op for a missing path';
 }
 
 done-testing;

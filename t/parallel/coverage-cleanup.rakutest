@@ -1,0 +1,73 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 3;
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $lib  = $root.add('lib');
+my $bin  = $root.add('bin/behave');
+my $fix  = $root.add('t/fixtures/coverage/slow-fixture-spec.raku');
+
+# Give the nested run its own TMPDIR so its coverage dir is found without
+# guessing a PID and can't collide with other runs.
+my $sandbox = $*TMPDIR.add("behave-cleanup-{$*PID}-{(now * 1e6).Int}");
+$sandbox.mkdir;
+
+# Scrub inherited MVM coverage env so this test running under --coverage can't
+# redirect or filter the nested run's logs.
+my %env = |%*ENV;
+%env<BEHAVE_DISABLE_CONFIG> = '1';
+%env{$_}:delete for %env.keys.grep(*.starts-with('MVM_COVERAGE'));
+%env<BEHAVE_COVERAGE_LOG>:delete;
+%env<TMPDIR> = $sandbox.absolute;
+
+my $proc = Proc::Async.new(
+  'raku', "-I{$lib.absolute}", $bin.absolute,
+  '--parallel', '2', '--coverage', '--coverage-format=text',
+  '--coverage-include', $fix.absolute, $fix.absolute,
+);
+$proc.stdout.tap(-> $ {});
+$proc.stderr.tap(-> $ {});
+
+my $promise = $proc.start(:ENV(%env));
+
+# Wait for the run's coverage temp dir to appear, then interrupt mid-run; the
+# fixture sleeps so the run is still alive when the signal lands.
+my $covdir;
+my $waited = 0;
+until $covdir.defined {
+  $covdir = $sandbox.dir(test => *.starts-with('behave-coverage-parallel-')).first;
+  last if $covdir.defined;
+  die 'coverage temp dir never appeared' if $waited > 100;
+  sleep 0.1;
+  $waited++;
+}
+
+ok $covdir.defined && $covdir.e, 'coverage temp dir is created during the run';
+
+$proc.kill(SIGINT);
+my $result = await $promise;
+
+is $result.exitcode, 130,
+  'the SIGINT handler runs (exit 128 + SIGINT), not a normal exit';
+
+my $gone = False;
+for ^20 {
+  unless $covdir.e { $gone = True; last }
+  sleep 0.1;
+}
+ok $gone, 'the interrupt handler removes the coverage temp dir';
+
+# Best-effort sandbox cleanup.
+if $sandbox.e {
+  for $sandbox.dir -> $entry {
+    if $entry.d {
+      for $entry.dir -> $f { $f.unlink if $f.f }
+      $entry.rmdir;
+    } else {
+      $entry.unlink;
+    }
+  }
+  $sandbox.rmdir;
+}

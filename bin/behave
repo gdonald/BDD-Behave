@@ -767,6 +767,69 @@ if $watch-mode {
 
 my $coverage-running = %*ENV<BEHAVE_COVERAGE_LOG>.defined;
 
+# Catch a SIGINT / SIGTERM (e.g. Ctrl-C) so the given coverage temp paths are
+# removed before the process dies. The default signal action skips END phasers,
+# so this handler does the cleanup itself and then exits.
+sub guard-coverage-temp(*@paths) {
+  signal(SIGINT, SIGTERM).tap(-> $sig {
+    BDD::Behave::Coverage::remove-coverage-temp($_) for @paths;
+    exit 128 + $sig;
+  });
+}
+
+# Filter the raw MoarVM coverage log(s) down to a tallied, include-matched
+# file. Returns the pipeline exit code. When stderr is a terminal, the raw
+# bytes are pumped from Raku into `grep | awk` so a single continuously
+# updated progress line (percent, bar, rough ETA) can be drawn against the
+# known total byte size. Off a terminal (CI, redirected output) the pipeline
+# reads the files directly, which is faster and emits nothing.
+sub run-coverage-filter(@input-paths, @grep-prefixes, $out-path --> Int) {
+  my sub shq(Str $s) {
+    q{'} ~ $s.subst(q{'}, q{'\''}, :g) ~ q{'};
+  }
+  my $awk = q{awk '{c[$0]++} END {for (k in c) print c[k] "\t" k}'};
+  my $grep = 'grep -ahF ' ~ @grep-prefixes.map({ '-e ' ~ shq($_) }).join(' ');
+
+  unless $*ERR.t {
+    my $cmd = $grep
+            ~ ' ' ~ @input-paths.map({ shq(.absolute) }).join(' ')
+            ~ ' | ' ~ $awk ~ ' > ' ~ shq($out-path.absolute);
+    return run('sh', '-c', $cmd, :!out, :!err).exitcode;
+  }
+
+  my $cmd = $grep ~ ' | ' ~ $awk ~ ' > ' ~ shq($out-path.absolute);
+  my $proc = Proc::Async.new('sh', '-c', $cmd, :w);
+  my $promise = $proc.start;
+
+  my $total   = [+] @input-paths.map({ .e ?? .s !! 0 });
+  my $written = 0;
+  my $start   = now;
+  my $last-render = -1e0;
+
+  for @input-paths.grep(*.e) -> $path {
+    my $fh = $path.open(:r, :bin);
+    loop {
+      my $buf = $fh.read(4 * 1024 * 1024);
+      last unless $buf.elems;
+      await $proc.write($buf);
+      $written += $buf.elems;
+      my $elapsed = (now - $start).Real;
+      if $elapsed - $last-render >= 0.1 {
+        $*ERR.print("\r" ~ BDD::Behave::Coverage::format-progress-bar(
+          $written, $total, $elapsed) ~ "\e[K");
+        $last-render = $elapsed;
+      }
+    }
+    $fh.close;
+  }
+  $proc.close-stdin;
+  my $result = await $promise;
+
+  $*ERR.print("\r" ~ BDD::Behave::Coverage::format-progress-bar(
+    $total, $total, (now - $start).Real) ~ "\e[K\n");
+  $result.exitcode;
+}
+
 # Under --parallel, coverage is collected per-worker (each worker gets its
 # own MVM_COVERAGE_LOG) and merged in the parallel branch below, so we skip
 # the outer re-exec wrapper.
@@ -779,11 +842,16 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
   my $filtered-path = $*TMPDIR.add("behave-coverage-$stamp.filtered");
   $raw-path.spurt('');
 
+  guard-coverage-temp($raw-path, $filtered-path);
+  END {
+    BDD::Behave::Coverage::remove-coverage-temp($raw-path);
+    BDD::Behave::Coverage::remove-coverage-temp($filtered-path);
+  }
+
   my %child-env = |%*ENV;
-  # behave logs every file and applies --coverage-include at merge time; a
-  # user-set MVM_COVERAGE_FILES would pre-filter logged files and silently
-  # drop included ones.
-  %child-env<MVM_COVERAGE_FILES>:delete;
+  # An inherited MVM_COVERAGE_FILES passes through: it filters which source
+  # files MoarVM instruments, keeping the raw log small. The merge-time grep
+  # still applies --coverage-include exactly. LOG/CONTROL are set per run here.
   %child-env<MVM_COVERAGE_LOG>      = $raw-path.absolute;
   %child-env<MVM_COVERAGE_CONTROL>  = '2';
   %child-env<BEHAVE_COVERAGE_LOG>   = $raw-path.absolute;
@@ -802,9 +870,6 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
     }
   }
 
-  my sub shq(Str $s) {
-    q{'} ~ $s.subst(q{'}, q{'\''}, :g) ~ q{'};
-  }
   # Anchor each include pattern against the HIT-line prefix so that
   # `lib/` matches `HIT  lib/...` but not `HIT  /Users/.../rakudo/.../lib/...`.
   # Both relative and absolute path forms appear in MVM logs depending on
@@ -816,18 +881,14 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
       @grep-prefixes.push: 'HIT  ' ~ $root.absolute ~ '/' ~ $p;
     }
   }
-  # awk-dedupe the grep output. The raw MVM log writes a fresh HIT line
-  # for every line transition, so a single executed line in a hot loop can
-  # show up millions of times. Without dedup, Raku-side parsing of the
-  # filtered log (often >1 GB on the full spec suite) takes hours; with
-  # dedup it becomes tens of thousands of unique lines and parses in
-  # seconds.
-  my $grep-cmd = 'grep -aF '
-               ~ @grep-prefixes.map({ '-e ' ~ shq($_) }).join(' ')
-               ~ ' ' ~ shq($raw-path.absolute)
-               ~ q{ | awk '!seen[$0]++' }
-               ~ '> ' ~ shq($filtered-path.absolute);
-  my $grep-rc = run('sh', '-c', $grep-cmd, :!out, :!err).exitcode;
+  # Tally the grep output. The raw MVM log writes a fresh HIT line for
+  # every line transition, so a single executed line in a hot loop can show
+  # up millions of times. awk collapses the stream to one row per unique
+  # line, each prefixed with its occurrence count and a tab. This keeps the
+  # filtered log (often >1 GB on the full spec suite) down to tens of
+  # thousands of rows so Raku-side parsing stays fast, while preserving the
+  # collective hit count per line.
+  my $grep-rc = run-coverage-filter([$raw-path], @grep-prefixes, $filtered-path);
   if $grep-rc >= 2 {
     note "Error: coverage filter (grep) exited $grep-rc";
     $raw-path.unlink if $raw-path.e;
@@ -1194,19 +1255,19 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
 
   my %base-env = |%*ENV;
   %base-env<BEHAVE_DISABLE_CONFIG> = '1';
-  # Make sure inherited MVM coverage env can't redirect worker hits to a
-  # single shared file, trigger coverage in the parent process, or
-  # pre-filter logged files. behave logs every file per worker and applies
-  # --coverage-include at merge time; a user-set MVM_COVERAGE_FILES would
-  # silently drop included files before they reach the merge.
-  %base-env{$_}:delete for %base-env.keys.grep(*.starts-with('MVM_COVERAGE'));
-  %base-env<BEHAVE_COVERAGE_LOG>:delete;
+  # Each worker gets its own isolated log below; an inherited MVM_COVERAGE_FILES
+  # passes through to shrink the per-worker logs at instrumentation time. The
+  # merge-time grep still applies --coverage-include exactly.
+  BDD::Behave::Coverage::scrub-managed-coverage-env(%base-env);
 
   my $par-coverage-dir;
   if $coverage-enabled {
     my $stamp = sprintf '%d-%d', $*PID, (now * 1e6).Int;
     $par-coverage-dir = $*TMPDIR.add("behave-coverage-parallel-$stamp");
     $par-coverage-dir.mkdir;
+
+    guard-coverage-temp($par-coverage-dir);
+    END { BDD::Behave::Coverage::remove-coverage-temp($par-coverage-dir) }
   }
 
   my $opts = $par-coverage-dir.defined
@@ -1345,9 +1406,6 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
     my $merged-path = $par-coverage-dir.add('merged.filtered');
 
     if @worker-raw-paths.elems {
-      sub shq(Str $s) {
-        q{'} ~ $s.subst(q{'}, q{'\''}, :g) ~ q{'};
-      }
       my @grep-prefixes;
       for @effective-include -> $p {
         @grep-prefixes.push: 'HIT  ' ~ $p;
@@ -1358,12 +1416,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
       # `grep -h` suppresses the filename prefix that grep adds when
       # searching multiple files; without it, lines come out as
       # `path/worker-0.raw:HIT  …` and parse-coverage-log ignores them.
-      my $grep-cmd = 'grep -ahF '
-                   ~ @grep-prefixes.map({ '-e ' ~ shq($_) }).join(' ')
-                   ~ ' ' ~ @worker-raw-paths.map({ shq(.absolute) }).join(' ')
-                   ~ q{ | awk '!seen[$0]++' }
-                   ~ '> ' ~ shq($merged-path.absolute);
-      my $grep-rc = run('sh', '-c', $grep-cmd, :!out, :!err).exitcode;
+      my $grep-rc = run-coverage-filter(@worker-raw-paths, @grep-prefixes, $merged-path);
       if $grep-rc >= 2 {
         note "Error: coverage filter (grep) exited $grep-rc";
         for @worker-raw-paths -> $p { $p.unlink if $p.e }

@@ -324,7 +324,7 @@ Notes:
 
 ## Coverage {#coverage}
 
-`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path under `$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/` (named `isolated-N.raw` in the default isolated mode, `worker-N.raw` in the `lpt` / `queue` pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge is a set union (coverage records whether a line was hit, not how many times), so a line counted only by worker 2 still shows up in the merged report.
+`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path under `$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/` (named `isolated-N.raw` in the default isolated mode, `worker-N.raw` in the `lpt` / `queue` pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge sums each line's execution count across workers in one `awk` pass, so a line counted only by worker 2 still shows up in the merged report and the reported hit count is the suite-wide total.
 
 ```bash
 behave --parallel 4 --coverage specs/
@@ -338,7 +338,7 @@ Notes:
 
 - The parent process never has `MVM_COVERAGE_LOG` set, so it does not record its own bytecode. Coverage only reflects user code executed inside workers.
 - `:serial` examples run on the post-parallel serial worker, which also writes to a per-worker log (`serial.raw`). Its hits merge in with everyone else's.
-- Worker raw logs can be very large (hundreds of megabytes per worker on big suites). The merge uses `grep -ahF | awk '!seen'` over the worker logs, so peak transient disk in `$TMPDIR` is proportional to the *raw* per-worker volume, not the filtered set. Workers' raw logs are deleted as soon as the merged-and-deduped file is written.
+- Worker raw logs can be very large (hundreds of megabytes per worker on big suites). The merge uses `grep -ahF | awk` to tally the worker logs into one row per unique line with its summed count, so peak transient disk in `$TMPDIR` is proportional to the *raw* per-worker volume, not the tallied set. Workers' raw logs are deleted as soon as the tallied file is written.
 
 ## See also
 

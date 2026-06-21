@@ -384,6 +384,42 @@ describe 'BDD::Behave::Coverage::process-hit-line', {
     );
     expect(%hits.elems).to.be(0);
   }
+
+  it 'sums a tab-prefixed occurrence count across repeated lines', {
+    my %hits;
+    Coverage::process-hit-line(
+      "5\tHIT  /path/to/file.rakumod  10",
+      %hits, :include-paths(()), :exclude-paths(()),
+    );
+    Coverage::process-hit-line(
+      "3\tHIT  /path/to/file.rakumod  10",
+      %hits, :include-paths(()), :exclude-paths(()),
+    );
+    expect(%hits</path/to/file.rakumod>{10}).to.be(8);
+  }
+}
+
+describe 'BDD::Behave::Coverage::FileCoverage hit counts', {
+  let(:file-cov, {
+    my $f = FileCoverage.new(:path('/p'));
+    $f.executable{1} = True;
+    $f.executable{2} = True;
+    $f.add-hit(1, 4);
+    $f.add-hit(1, 6);
+    $f;
+  });
+
+  it 'accumulates added counts for a line', {
+    expect(file-cov.hit-count(1)).to.be(10);
+  }
+
+  it 'reports zero hits for a line that was never hit', {
+    expect(file-cov.hit-count(2)).to.be(0);
+  }
+
+  it 'sums counts over covered executable lines as total-hits', {
+    expect(file-cov.total-hits).to.be(10);
+  }
 }
 
 describe 'BDD::Behave::Coverage::merge-coverage-logs', {
@@ -567,6 +603,18 @@ describe 'BDD::Behave::Coverage::render-text', {
     expect($text).to.include('Coverage report');
     expect($text).to.include('Overall:');
   }
+
+  it 'includes a Hits column header', {
+    my $src = tmp-source(join("\n", 'sub foo() {', '  my $x = 1;', '}'));
+    my %hits;
+    %hits{$src.Str}{2} += 7;
+    my $opts = CoverageOptions.new;
+    $opts.include-path($src.parent.Str);
+    my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
+    my $text = Coverage::render-text($report, :!color);
+    cleanup-tmp-source($src);
+    expect($text).to.include('Hits');
+  }
 }
 
 describe 'BDD::Behave::Coverage::render-json', {
@@ -587,6 +635,19 @@ describe 'BDD::Behave::Coverage::render-json', {
     expect($json).to.include('"covered"');
   }
 
+  it 'includes per-file total-hits and per-line line-hits', {
+    my $fc = FileCoverage.new(:path('/x'));
+    $fc.display-path = 'x';
+    $fc.executable{1} = True;
+    $fc.add-hit(1, 5);
+    my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
+    my $json = Coverage::render-json($report);
+    aggregate-failures {
+      expect($json).to.include('"total-hits"');
+      expect($json).to.include('"line-hits"');
+    }
+  }
+
   it 'round-trips through minimal-json-parse', {
     my $src = tmp-source(q:to/EOF/);
     sub a() { 1; }
@@ -602,6 +663,40 @@ describe 'BDD::Behave::Coverage::render-json', {
     cleanup-tmp-source($src);
     expect(%parsed<summary>:exists).to.be-truthy;
     expect(%parsed<files>:exists).to.be-truthy;
+  }
+}
+
+describe 'BDD::Behave::Coverage::format-progress-bar', {
+  it 'returns an empty string when the total is unknown', {
+    expect(Coverage::format-progress-bar(0, 0, 1e0)).to.eq('');
+  }
+
+  context 'partway through the input', {
+    let(:bar, { Coverage::format-progress-bar(50, 100, 10e0, :width(24)) });
+
+    it 'shows the percent complete', {
+      expect(bar).to.include(' 50%');
+    }
+
+    it 'estimates the remaining seconds from elapsed time', {
+      expect(bar).to.include('~10s');
+    }
+
+    it 'fills the bar proportionally to the fraction done', {
+      expect(bar.comb('#').elems).to.be(12);
+    }
+  }
+
+  context 'once the input is fully processed', {
+    let(:bar, { Coverage::format-progress-bar(100, 100, 5e0, :width(24)) });
+
+    it 'reaches one hundred percent', {
+      expect(bar).to.include('100%');
+    }
+
+    it 'omits the ETA', {
+      expect(bar.contains('~')).to.be-falsy;
+    }
   }
 }
 
@@ -623,6 +718,15 @@ describe 'BDD::Behave::Coverage::render-lcov', {
     expect($lcov).to.include('LF:');
     expect($lcov).to.include('LH:');
     expect($lcov).to.include('end_of_record');
+  }
+
+  it 'emits the real hit count in a DA record', {
+    my $fc = FileCoverage.new(:path('/x'));
+    $fc.executable{1} = True;
+    $fc.add-hit(1, 9);
+    my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
+    my $lcov = Coverage::render-lcov($report);
+    expect($lcov).to.include('DA:1,9');
   }
 }
 
@@ -769,5 +873,82 @@ describe 'BDD::Behave::Coverage::compute-diff', {
 
     expect($diff.newly-covered).to.be-greater-than(0);
     expect($diff.newly-uncovered).to.be(0);
+  }
+}
+
+describe 'scrub-managed-coverage-env', {
+  my %env;
+
+  before-each {
+    %env =
+      MVM_COVERAGE_LOG     => '/tmp/inherited.raw',
+      MVM_COVERAGE_CONTROL => '1',
+      BEHAVE_COVERAGE_LOG  => '/tmp/inherited.raw',
+      MVM_COVERAGE_FILES   => 'project/lib',
+      PATH                 => '/usr/bin';
+
+    Coverage::scrub-managed-coverage-env(%env);
+  }
+
+  it 'removes the inherited MVM_COVERAGE_LOG behave assigns per worker', {
+    expect(%env<MVM_COVERAGE_LOG>:exists).to.be-falsy;
+  }
+
+  it 'removes the inherited MVM_COVERAGE_CONTROL', {
+    expect(%env<MVM_COVERAGE_CONTROL>:exists).to.be-falsy;
+  }
+
+  it 'removes the inherited BEHAVE_COVERAGE_LOG', {
+    expect(%env<BEHAVE_COVERAGE_LOG>:exists).to.be-falsy;
+  }
+
+  it 'leaves a user-supplied MVM_COVERAGE_FILES source filter in place', {
+    expect(%env<MVM_COVERAGE_FILES>).to.eq('project/lib');
+  }
+
+  it 'leaves unrelated environment variables untouched', {
+    expect(%env<PATH>).to.eq('/usr/bin');
+  }
+}
+
+describe 'remove-coverage-temp', {
+  context 'given a dir of per-worker logs', {
+    my $dir;
+
+    before-each {
+      $dir = $*TMPDIR.add("behave-cov-rm-{$*PID}-{(now * 1e6).Int}");
+      $dir.mkdir;
+      $dir.add('isolated-0.raw').spurt('HIT  lib/a 1');
+      $dir.add('isolated-1.raw').spurt('HIT  lib/b 2');
+    }
+
+    it 'reports success', {
+      expect(Coverage::remove-coverage-temp($dir)).to.be(True);
+    }
+
+    it 'deletes the dir and its logs', {
+      Coverage::remove-coverage-temp($dir);
+      expect($dir.e).to.be-falsy;
+    }
+  }
+
+  context 'given a single file', {
+    my $file;
+
+    before-each {
+      $file = $*TMPDIR.add("behave-cov-rm-{$*PID}-{(now * 1e6).Int}.raw");
+      $file.spurt('HIT  lib/a 1');
+    }
+
+    it 'deletes the file', {
+      Coverage::remove-coverage-temp($file);
+      expect($file.e).to.be-falsy;
+    }
+  }
+
+  context 'given a missing path', {
+    it 'is a no-op that reports no removal', {
+      expect(Coverage::remove-coverage-temp($*TMPDIR.add("behave-cov-absent-{$*PID}"))).to.be-falsy;
+    }
   }
 }

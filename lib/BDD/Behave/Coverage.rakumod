@@ -2,6 +2,35 @@ unit module BDD::Behave::Coverage;
 
 use BDD::Behave::Colors;
 
+# Remove the coverage env that behave assigns itself, so an inherited value
+# can't interfere: the log path and control mode are set per worker (parallel)
+# or per run (serial), and BEHAVE_COVERAGE_LOG mirrors the log path. An
+# inherited MVM_COVERAGE_LOG would otherwise point every worker at one shared
+# file. MVM_COVERAGE_FILES is a read-only source-file filter that behave does
+# not manage, so it is left in place and passes through to the workers.
+our sub scrub-managed-coverage-env(%env --> Hash) is export {
+  %env<MVM_COVERAGE_LOG>:delete;
+  %env<MVM_COVERAGE_CONTROL>:delete;
+  %env<BEHAVE_COVERAGE_LOG>:delete;
+  %env;
+}
+
+# Best-effort removal of a coverage temp path: either a flat dir of per-worker
+# logs or a single raw/filtered file. Used so an interrupted run does not
+# strand gigabytes of raw coverage logs. A missing path is a no-op.
+our sub remove-coverage-temp($path --> Bool) is export {
+  return False unless $path.defined && $path.IO.e;
+  try {
+    if $path.IO.d {
+      for $path.IO.dir -> $entry { $entry.unlink if $entry.f }
+      $path.IO.rmdir;
+    } else {
+      $path.IO.unlink;
+    }
+  }
+  !$path.IO.e;
+}
+
 our class CoverageOptions {
   has Bool     $.enabled            is rw = False;
   has Real     $.minimum            is rw = 0.Real;
@@ -30,9 +59,19 @@ our class FileCoverage {
   has SetHash $.executable      = SetHash.new;
   has SetHash $.branch-lines    = SetHash.new;
   has SetHash $.branches-hit    = SetHash.new;
+  has         %.hit-counts;
 
-  method add-hit(Int $line) {
+  method add-hit(Int $line, $count = 1) {
     $!hits{$line} = True;
+    %!hit-counts{$line} += $count;
+  }
+
+  method hit-count(Int $line --> Int) {
+    %!hit-counts{$line} // 0;
+  }
+
+  method total-hits(--> Int) {
+    [+] ($!hits (&) $!executable).keys.map({ %!hit-counts{$_} // 0 });
   }
 
   method total-lines(--> Int) {
@@ -370,6 +409,27 @@ our sub identify-branch-lines(IO::Path $file --> SetHash) {
   $set;
 }
 
+# Render a single progress line for the coverage filtering stage: a percent,
+# a fixed-width bar, and a rough ETA derived from bytes processed so far over
+# elapsed wall time. Returns the line body only; the caller prefixes a
+# carriage return and clears to end of line. An unknown total yields ''.
+our sub format-progress-bar(
+  Int $done, Int $total, Real $elapsed, Int :$width = 24 --> Str
+) {
+  return '' if $total <= 0;
+  my $frac = $done >= $total ?? 1e0 !! ($done / $total).Real;
+  my $pct  = ($frac * 100).floor;
+  my $filled = ($frac * $width).floor;
+  my $bar = ('#' x $filled) ~ ('.' x ($width - $filled));
+
+  my $eta = '';
+  if $done > 0 && $frac < 1e0 && $elapsed > 0 {
+    my $remaining = (($elapsed / $frac) - $elapsed).round;
+    $eta = "  ~{$remaining}s";
+  }
+  sprintf '  filtering coverage: %3d%%  [%s]%s', $pct, $bar, $eta;
+}
+
 our sub matches-path-filter(Str $file, @include, @exclude --> Bool) {
   if @exclude {
     for @exclude -> $pat {
@@ -395,9 +455,16 @@ our sub process-hit-line(
   :@include-paths,
   :@exclude-paths,
 ) {
-  return Nil unless $line.starts-with('HIT');
+  my $count = 1;
+  my $entry = $line;
+  if $line ~~ / ^ (\d+) \t (.*) $ / {
+    $count = +$0;
+    $entry = ~$1;
+  }
 
-  my $rest = $line.substr(4).trim-leading;
+  return Nil unless $entry.starts-with('HIT');
+
+  my $rest = $entry.substr(4).trim-leading;
   my $last-space = $rest.rindex(' ');
   return Nil unless $last-space.defined;
 
@@ -413,8 +480,7 @@ our sub process-hit-line(
 
   return Nil unless matches-path-filter($file-part, @include-paths, @exclude-paths);
 
-  %hits{$file-part} //= SetHash.new;
-  %hits{$file-part}{$line-num} = True;
+  %hits{$file-part}{$line-num} += $count;
   Nil;
 }
 
@@ -487,8 +553,8 @@ our sub build-report-from-hits(
     if $opts.branch && !$fc.branch-lines.elems {
       $fc.branch-lines = identify-branch-lines($io);
     }
-    for %hits{$path}.keys -> $ln {
-      $fc.add-hit($ln.Int);
+    for %hits{$path}.kv -> $ln, $count {
+      $fc.add-hit($ln.Int, $count);
       $fc.branches-hit{$ln.Int} = True if $opts.branch;
     }
   }
@@ -567,15 +633,15 @@ our sub render-text(CoverageReport $report, Bool :$color = True --> Str) {
   @lines.push: '===============';
 
   my $name-width = max(20, |($report.files.map(*.display-path.chars)));
-  my $header = sprintf '%-*s  %8s  %5s',
-  $name-width, 'File', 'Lines', 'Cov%';
+  my $header = sprintf '%-*s  %8s  %5s  %10s',
+  $name-width, 'File', 'Lines', 'Cov%', 'Hits';
   @lines.push: $header;
   @lines.push: '-' x $header.chars;
 
   for $report.files -> $f {
     my $pct = sprintf '%5.1f', $f.percentage;
-    my $row = sprintf '%-*s  %4d/%-3d  %s',
-    $name-width, $f.display-path, $f.covered-lines, $f.total-lines, $pct;
+    my $row = sprintf '%-*s  %4d/%-3d  %s  %10d',
+    $name-width, $f.display-path, $f.covered-lines, $f.total-lines, $pct, $f.total-hits;
     if $color {
       if    $f.percentage >= 90  { $row = green($row) }
       elsif $f.percentage >= 75  { $row = yellow($row) }
@@ -665,6 +731,15 @@ our sub default-html-css(--> Str) {
     margin-right: 1em;
     line-height: 1.3;
   }
+  .src-line .hits {
+    display: inline-block;
+    width: 5em;
+    color: #2a7a2a;
+    user-select: none;
+    text-align: right;
+    margin-right: 1em;
+    line-height: 1.3;
+  }
   th.sortable { cursor: pointer; user-select: none; }
   th.sortable:hover { background: #e8e8ec; }
   .sort-arrow { color: #666; font-size: 0.85em; margin-left: 0.3em; }
@@ -692,6 +767,7 @@ our sub render-html-index(CoverageReport $report --> Str) {
   ~ '<th class="sortable" data-sort-type="text">File</th>'
   ~ '<th class="sortable" data-sort-type="num">Lines</th>'
   ~ '<th class="pct sortable" data-sort-type="num">Coverage</th>'
+  ~ '<th class="pct sortable" data-sort-type="num">Hits</th>'
   ~ '</tr></thead>';
   @parts.push: '<tbody>';
   for $report.files -> $f {
@@ -701,12 +777,14 @@ our sub render-html-index(CoverageReport $report --> Str) {
     @parts.push: sprintf
     '<tr class="%s"><td data-sort="%s"><a href="%s">%s</a></td>'
     ~ '<td data-sort="%d">%d / %d</td>'
-    ~ '<td class="pct" data-sort="%.4f">%.1f%%</td></tr>',
+    ~ '<td class="pct" data-sort="%.4f">%.1f%%</td>'
+    ~ '<td class="pct" data-sort="%d">%d</td></tr>',
     $klass,
     html-escape($f.display-path),
     file-page-name($f.display-path), html-escape($f.display-path),
     $f.total-lines, $f.covered-lines, $f.total-lines,
-    $f.percentage, $f.percentage;
+    $f.percentage, $f.percentage,
+    $f.total-hits, $f.total-hits;
   }
   @parts.push: '</tbody></table>';
   @parts.push: index-sort-script();
@@ -741,8 +819,9 @@ our sub render-html-source(FileCoverage $f --> Str) {
     my $klass = !%exec-set{$ln}
     ?? 'skip'
     !! (%hit-set{$ln} ?? 'hit' !! 'miss');
-    @rows.push: sprintf '<span class="src-line %s"><span class="ln">%d</span>%s</span>',
-    $klass, $ln, html-escape($line);
+    my $count = $klass eq 'hit' ?? $f.hit-count($ln).Str !! '';
+    @rows.push: sprintf '<span class="src-line %s"><span class="ln">%d</span><span class="hits">%s</span>%s</span>',
+    $klass, $ln, $count, html-escape($line);
   }
   '<pre class="source">' ~ @rows.join('') ~ '</pre>';
 }
@@ -850,8 +929,15 @@ our sub render-json(CoverageReport $report --> Str) {
     %row<total-lines>          = $f.total-lines;
     %row<covered-lines>        = $f.covered-lines;
     %row<percentage>           = $f.percentage.Real.round(0.001);
+    %row<total-hits>           = $f.total-hits;
     %row<missing-lines>        = $f.missing-lines;
     %row<covered-line-numbers> = $f.covered-line-numbers;
+
+    my %line-hits;
+    for $f.covered-line-numbers -> $ln {
+      %line-hits{$ln} = $f.hit-count($ln);
+    }
+    %row<line-hits> = %line-hits;
     if $report.branch {
       %row<total-branches>     = $f.total-branches;
       %row<covered-branches>   = $f.covered-branches;
@@ -908,8 +994,7 @@ our sub render-lcov(CoverageReport $report --> Str) {
     @out.push: 'SF:' ~ $f.path;
     my @exec = $f.executable.keys.map(*.Int).sort;
     for @exec -> $ln {
-      my $hit = $f.hits{$ln} ?? 1 !! 0;
-      @out.push: "DA:$ln,$hit";
+      @out.push: "DA:$ln,{$f.hit-count($ln)}";
     }
     @out.push: 'LF:' ~ $f.total-lines;
     @out.push: 'LH:' ~ $f.covered-lines;
@@ -953,9 +1038,8 @@ our sub render-cobertura(CoverageReport $report --> Str) {
     @out.push: '<methods/>';
     @out.push: '<lines>';
     for $f.executable.keys.map(*.Int).sort -> $ln {
-      my $hits = $f.hits{$ln} ?? 1 !! 0;
       my $branch = ($report.branch && $f.branch-lines{$ln}) ?? 'true' !! 'false';
-      @out.push: sprintf '<line number="%d" hits="%d" branch="%s"/>', $ln, $hits, $branch;
+      @out.push: sprintf '<line number="%d" hits="%d" branch="%s"/>', $ln, $f.hit-count($ln), $branch;
     }
     @out.push: '</lines>';
     @out.push: '</class>';
