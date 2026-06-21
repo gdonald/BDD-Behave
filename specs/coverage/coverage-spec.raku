@@ -604,16 +604,28 @@ describe 'BDD::Behave::Coverage::render-text', {
     expect($text).to.include('Overall:');
   }
 
-  it 'includes a Hits column header', {
+  sub text-with-counts(Bool :$counts) {
     my $src = tmp-source(join("\n", 'sub foo() {', '  my $x = 1;', '}'));
     my %hits;
     %hits{$src.Str}{2} += 7;
-    my $opts = CoverageOptions.new;
+    my $opts = CoverageOptions.new(:$counts);
     $opts.include-path($src.parent.Str);
     my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
     my $text = Coverage::render-text($report, :!color);
     cleanup-tmp-source($src);
-    expect($text).to.include('Hits');
+    $text;
+  }
+
+  context 'with per-line counts enabled', {
+    it 'includes a Hits column header', {
+      expect(text-with-counts(:counts)).to.include('Hits');
+    }
+  }
+
+  context 'by default', {
+    it 'omits the Hits column header', {
+      expect(text-with-counts(:!counts).contains('Hits')).to.be-falsy;
+    }
   }
 }
 
@@ -635,16 +647,26 @@ describe 'BDD::Behave::Coverage::render-json', {
     expect($json).to.include('"covered"');
   }
 
-  it 'includes per-file total-hits and per-line line-hits', {
+  sub json-with-counts(Bool :$counts) {
     my $fc = FileCoverage.new(:path('/x'));
     $fc.display-path = 'x';
     $fc.executable{1} = True;
     $fc.add-hit(1, 5);
-    my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
-    my $json = Coverage::render-json($report);
-    aggregate-failures {
-      expect($json).to.include('"total-hits"');
-      expect($json).to.include('"line-hits"');
+    Coverage::render-json(CoverageReport.new(:files([$fc]), :root('/'.IO), :$counts));
+  }
+
+  context 'with per-line counts enabled', {
+    it 'includes per-file total-hits and per-line line-hits', {
+      aggregate-failures {
+        expect(json-with-counts(:counts)).to.include('"total-hits"');
+        expect(json-with-counts(:counts)).to.include('"line-hits"');
+      }
+    }
+  }
+
+  context 'by default', {
+    it 'omits the per-line hit counts', {
+      expect(json-with-counts(:!counts).contains('"total-hits"')).to.be-falsy;
     }
   }
 
@@ -720,13 +742,22 @@ describe 'BDD::Behave::Coverage::render-lcov', {
     expect($lcov).to.include('end_of_record');
   }
 
-  it 'emits the real hit count in a DA record', {
+  it 'emits the real hit count in a DA record when counts are enabled', {
+    my $fc = FileCoverage.new(:path('/x'));
+    $fc.executable{1} = True;
+    $fc.add-hit(1, 9);
+    my $report = CoverageReport.new(:files([$fc]), :root('/'.IO), :counts);
+    my $lcov = Coverage::render-lcov($report);
+    expect($lcov).to.include('DA:1,9');
+  }
+
+  it 'emits a binary 1 in a DA record by default', {
     my $fc = FileCoverage.new(:path('/x'));
     $fc.executable{1} = True;
     $fc.add-hit(1, 9);
     my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
     my $lcov = Coverage::render-lcov($report);
-    expect($lcov).to.include('DA:1,9');
+    expect($lcov).to.include('DA:1,1');
   }
 }
 

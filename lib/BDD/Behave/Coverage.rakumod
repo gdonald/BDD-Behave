@@ -40,6 +40,7 @@ our class CoverageOptions {
   has IO::Path $.output             is rw;
   has IO::Path $.baseline           is rw;
   has Bool     $.branch             is rw = False;
+  has Bool     $.counts             is rw = False;
 
   method include-path(*@paths) {
     @!include-paths.append: @paths.map(*.Str);
@@ -115,6 +116,7 @@ our class CoverageReport {
   has FileCoverage @.files is rw;
   has IO::Path     $.root  is rw;
   has Bool         $.branch is rw = False;
+  has Bool         $.counts is rw = False;
 
   method total-lines(--> Int) {
     [+] @!files.map(*.total-lines);
@@ -575,7 +577,7 @@ our sub build-report-from-hits(
   }
 
   my @files = %by-abs.values.sort(*.display-path).List;
-  CoverageReport.new(:@files, :$root, :branch($opts.branch));
+  CoverageReport.new(:@files, :$root, :branch($opts.branch), :counts($opts.counts));
 }
 
 our sub build-report(
@@ -633,15 +635,19 @@ our sub render-text(CoverageReport $report, Bool :$color = True --> Str) {
   @lines.push: '===============';
 
   my $name-width = max(20, |($report.files.map(*.display-path.chars)));
-  my $header = sprintf '%-*s  %8s  %5s  %10s',
-  $name-width, 'File', 'Lines', 'Cov%', 'Hits';
+  my $header = $report.counts
+  ?? sprintf('%-*s  %8s  %5s  %10s', $name-width, 'File', 'Lines', 'Cov%', 'Hits')
+  !! sprintf('%-*s  %8s  %5s', $name-width, 'File', 'Lines', 'Cov%');
   @lines.push: $header;
   @lines.push: '-' x $header.chars;
 
   for $report.files -> $f {
     my $pct = sprintf '%5.1f', $f.percentage;
-    my $row = sprintf '%-*s  %4d/%-3d  %s  %10d',
-    $name-width, $f.display-path, $f.covered-lines, $f.total-lines, $pct, $f.total-hits;
+    my $row = $report.counts
+    ?? sprintf('%-*s  %4d/%-3d  %s  %10d',
+       $name-width, $f.display-path, $f.covered-lines, $f.total-lines, $pct, $f.total-hits)
+    !! sprintf('%-*s  %4d/%-3d  %s',
+       $name-width, $f.display-path, $f.covered-lines, $f.total-lines, $pct);
     if $color {
       if    $f.percentage >= 90  { $row = green($row) }
       elsif $f.percentage >= 75  { $row = yellow($row) }
@@ -767,24 +773,26 @@ our sub render-html-index(CoverageReport $report --> Str) {
   ~ '<th class="sortable" data-sort-type="text">File</th>'
   ~ '<th class="sortable" data-sort-type="num">Lines</th>'
   ~ '<th class="pct sortable" data-sort-type="num">Coverage</th>'
-  ~ '<th class="pct sortable" data-sort-type="num">Hits</th>'
+  ~ ($report.counts ?? '<th class="pct sortable" data-sort-type="num">Hits</th>' !! '')
   ~ '</tr></thead>';
   @parts.push: '<tbody>';
   for $report.files -> $f {
     my $klass = $f.percentage >= 90 ?? 'high'
     !! $f.percentage >= 75 ?? 'medium'
     !! 'low';
+    my $hits-cell = $report.counts
+    ?? sprintf('<td class="pct" data-sort="%d">%d</td>', $f.total-hits, $f.total-hits)
+    !! '';
     @parts.push: sprintf
     '<tr class="%s"><td data-sort="%s"><a href="%s">%s</a></td>'
     ~ '<td data-sort="%d">%d / %d</td>'
-    ~ '<td class="pct" data-sort="%.4f">%.1f%%</td>'
-    ~ '<td class="pct" data-sort="%d">%d</td></tr>',
+    ~ '<td class="pct" data-sort="%.4f">%.1f%%</td>%s</tr>',
     $klass,
     html-escape($f.display-path),
     file-page-name($f.display-path), html-escape($f.display-path),
     $f.total-lines, $f.covered-lines, $f.total-lines,
     $f.percentage, $f.percentage,
-    $f.total-hits, $f.total-hits;
+    $hits-cell;
   }
   @parts.push: '</tbody></table>';
   @parts.push: index-sort-script();
@@ -792,7 +800,7 @@ our sub render-html-index(CoverageReport $report --> Str) {
   @parts.join("\n") ~ "\n";
 }
 
-our sub render-html-file-page(FileCoverage $f --> Str) {
+our sub render-html-file-page(FileCoverage $f, Bool :$counts = False --> Str) {
   my @parts;
   @parts.push: '<!DOCTYPE html>';
   @parts.push: '<html lang="en"><head><meta charset="utf-8">';
@@ -803,12 +811,12 @@ our sub render-html-file-page(FileCoverage $f --> Str) {
   @parts.push: '<h2>' ~ html-escape($f.display-path) ~ '</h2>';
   @parts.push: sprintf '<p class="summary">%d / %d lines covered (<strong>%.1f%%</strong>)</p>',
   $f.covered-lines, $f.total-lines, $f.percentage;
-  @parts.push: render-html-source($f);
+  @parts.push: render-html-source($f, :$counts);
   @parts.push: '</body></html>';
   @parts.join("\n") ~ "\n";
 }
 
-our sub render-html-source(FileCoverage $f --> Str) {
+our sub render-html-source(FileCoverage $f, Bool :$counts = False --> Str) {
   my $io = $f.path.IO;
   return '<p><em>(source unavailable)</em></p>' unless $io.e;
   my @rows;
@@ -819,9 +827,13 @@ our sub render-html-source(FileCoverage $f --> Str) {
     my $klass = !%exec-set{$ln}
     ?? 'skip'
     !! (%hit-set{$ln} ?? 'hit' !! 'miss');
-    my $count = $klass eq 'hit' ?? $f.hit-count($ln).Str !! '';
-    @rows.push: sprintf '<span class="src-line %s"><span class="ln">%d</span><span class="hits">%s</span>%s</span>',
-    $klass, $ln, $count, html-escape($line);
+    my $gutter = '';
+    if $counts {
+      my $count = $klass eq 'hit' ?? $f.hit-count($ln).Str !! '';
+      $gutter = sprintf '<span class="hits">%s</span>', $count;
+    }
+    @rows.push: sprintf '<span class="src-line %s"><span class="ln">%d</span>%s%s</span>',
+    $klass, $ln, $gutter, html-escape($line);
   }
   '<pre class="source">' ~ @rows.join('') ~ '</pre>';
 }
@@ -891,7 +903,8 @@ our sub write-html-tree(CoverageReport $report, IO::Path $out-dir --> Nil) {
   $out-dir.add('style.css').spurt(default-html-css());
   $out-dir.add('index.html').spurt(render-html-index($report));
   for $report.files -> $f {
-    $out-dir.add(file-page-name($f.display-path)).spurt(render-html-file-page($f));
+    $out-dir.add(file-page-name($f.display-path)).spurt(
+      render-html-file-page($f, :counts($report.counts)));
   }
 }
 
@@ -929,15 +942,18 @@ our sub render-json(CoverageReport $report --> Str) {
     %row<total-lines>          = $f.total-lines;
     %row<covered-lines>        = $f.covered-lines;
     %row<percentage>           = $f.percentage.Real.round(0.001);
-    %row<total-hits>           = $f.total-hits;
     %row<missing-lines>        = $f.missing-lines;
     %row<covered-line-numbers> = $f.covered-line-numbers;
 
-    my %line-hits;
-    for $f.covered-line-numbers -> $ln {
-      %line-hits{$ln} = $f.hit-count($ln);
+    if $report.counts {
+      %row<total-hits> = $f.total-hits;
+
+      my %line-hits;
+      for $f.covered-line-numbers -> $ln {
+        %line-hits{$ln} = $f.hit-count($ln);
+      }
+      %row<line-hits> = %line-hits;
     }
-    %row<line-hits> = %line-hits;
     if $report.branch {
       %row<total-branches>     = $f.total-branches;
       %row<covered-branches>   = $f.covered-branches;
@@ -994,7 +1010,8 @@ our sub render-lcov(CoverageReport $report --> Str) {
     @out.push: 'SF:' ~ $f.path;
     my @exec = $f.executable.keys.map(*.Int).sort;
     for @exec -> $ln {
-      @out.push: "DA:$ln,{$f.hit-count($ln)}";
+      my $hit = $report.counts ?? $f.hit-count($ln) !! ($f.hits{$ln} ?? 1 !! 0);
+      @out.push: "DA:$ln,$hit";
     }
     @out.push: 'LF:' ~ $f.total-lines;
     @out.push: 'LH:' ~ $f.covered-lines;
@@ -1038,8 +1055,9 @@ our sub render-cobertura(CoverageReport $report --> Str) {
     @out.push: '<methods/>';
     @out.push: '<lines>';
     for $f.executable.keys.map(*.Int).sort -> $ln {
+      my $hits = $report.counts ?? $f.hit-count($ln) !! ($f.hits{$ln} ?? 1 !! 0);
       my $branch = ($report.branch && $f.branch-lines{$ln}) ?? 'true' !! 'false';
-      @out.push: sprintf '<line number="%d" hits="%d" branch="%s"/>', $ln, $f.hit-count($ln), $branch;
+      @out.push: sprintf '<line number="%d" hits="%d" branch="%s"/>', $ln, $hits, $branch;
     }
     @out.push: '</lines>';
     @out.push: '</class>';

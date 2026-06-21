@@ -101,6 +101,7 @@ class QueueWorkerPool is export {
   has @.spec-files;
   has %.base-env;
   has IO::Path $.coverage-log-dir;
+  has Bool $.coverage-counts = False;
   has &.on-event   = sub ($wi, $event) { };
   has &.on-ready   = sub ($wi)         { };
   has &.on-done    = sub ($wi, $id)    { };
@@ -121,7 +122,7 @@ class QueueWorkerPool is export {
       if $!coverage-log-dir.defined {
         %env<MVM_COVERAGE_LOG>
           = $!coverage-log-dir.add("worker-$i.raw").absolute;
-        %env<MVM_COVERAGE_CONTROL> = '2';
+        %env<MVM_COVERAGE_CONTROL> = $!coverage-counts ?? '2' !! '0';
       }
 
       my $proc = Proc::Async.new(:w, |@argv);

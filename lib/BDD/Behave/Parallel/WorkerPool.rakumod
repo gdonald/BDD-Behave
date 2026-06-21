@@ -23,6 +23,7 @@ class WorkerPool is export {
   has %.base-env;
   has IO::Path $.manifest-dir is required;
   has IO::Path $.coverage-log-dir;
+  has Bool $.coverage-counts = False;
   has Int $.retry-count = 0;
   has &.on-event = sub ($wi, $event) { };
   has &.on-shard-retry = sub ($wi, $attempt, $exit-code) { };
@@ -68,7 +69,7 @@ class WorkerPool is export {
     if $!coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
         = $!coverage-log-dir.add("worker-{$handle.index}.raw").absolute;
-      %env<MVM_COVERAGE_CONTROL> = '2';
+      %env<MVM_COVERAGE_CONTROL> = $!coverage-counts ?? '2' !! '0';
     }
 
     my $proc = Proc::Async.new(|@argv);

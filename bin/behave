@@ -181,6 +181,9 @@ sub usage() {
     --coverage-branch        Also track branch coverage (if/unless/given/
                              when/while/until). Reported alongside line
                              coverage. Implies --coverage.
+    --coverage-counts        Track per-line execution counts and add a Hits
+                             column to the report. Runs the slower
+                             MVM_COVERAGE_CONTROL=2 mode. Implies --coverage.
     --parallel N             Run specs across N worker subprocesses. N
                              must be a positive integer. The default mode
                              runs one subprocess per spec file, up to N in
@@ -557,6 +560,9 @@ while @args {
   } elsif $arg eq '--coverage-branch' {
     $cli-config.coverage-branch = True;
     $cli-config.coverage = True;
+  } elsif $arg eq '--coverage-counts' {
+    $cli-config.coverage-counts = True;
+    $cli-config.coverage = True;
   } elsif $arg eq '--parallel' {
     die "--parallel requires a value" unless @args;
     my $value = @args.shift;
@@ -702,6 +708,7 @@ my $coverage-format      = $final-config.coverage-format // 'text';
 my $coverage-output      = $final-config.coverage-output;
 my $coverage-baseline    = $final-config.coverage-baseline;
 my $coverage-branch      = ?$final-config.coverage-branch;
+my $coverage-counts      = ?$final-config.coverage-counts;
 my @coverage-include     = $final-config.coverage-include.list;
 my @coverage-exclude     = $final-config.coverage-exclude.list;
 
@@ -853,7 +860,7 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
   # files MoarVM instruments, keeping the raw log small. The merge-time grep
   # still applies --coverage-include exactly. LOG/CONTROL are set per run here.
   %child-env<MVM_COVERAGE_LOG>      = $raw-path.absolute;
-  %child-env<MVM_COVERAGE_CONTROL>  = '2';
+  %child-env<MVM_COVERAGE_CONTROL>  = $coverage-counts ?? '2' !! '0';
   %child-env<BEHAVE_COVERAGE_LOG>   = $raw-path.absolute;
 
   my @child-cmd = 'raku', '-Ilib', $*PROGRAM-NAME, |@*ARGS;
@@ -917,6 +924,7 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
     :output($coverage-output),
     :baseline($coverage-baseline),
     :branch($coverage-branch),
+    :counts($coverage-counts),
   );
   $opts.include-path(|@effective-include);
   $opts.exclude-path(|@coverage-exclude) if @coverage-exclude.elems;
@@ -1289,6 +1297,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
          :example-patterns(@example-patterns),
          :only-locations(@only-locations),
          :coverage-log-dir($par-coverage-dir),
+         :coverage-counts($coverage-counts),
        )
     !! BDD::Behave::Parallel::ParallelRunOptions.new(
          :worker-count($parallel-workers),
@@ -1451,6 +1460,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
       :output($coverage-output),
       :baseline($coverage-baseline),
       :branch($coverage-branch),
+      :counts($coverage-counts),
     );
     $opts.include-path(|@effective-include);
     $opts.exclude-path(|@coverage-exclude) if @coverage-exclude.elems;

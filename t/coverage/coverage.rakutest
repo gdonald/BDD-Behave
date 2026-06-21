@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 124;
+plan 127;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
@@ -334,21 +334,27 @@ sub cleanup-tmp-source(IO::Path $p) {
   is $fc.total-hits, 10,   'total-hits sums counts over covered executable lines';
 }
 
-# render-text shows a Hits column
+# render-text shows a Hits column only when counts are enabled
 {
   my $src = tmp-source(join("\n", 'sub foo() {', '  my $x = 1;', '}'));
 
   my %hits;
   %hits{$src.Str}{2} += 7;
 
-  my $opts = CoverageOptions.new;
-  $opts.include-path($src.parent.Str);
+  my $counts-opts = CoverageOptions.new(:counts);
+  $counts-opts.include-path($src.parent.Str);
+  my $with = Coverage::render-text(
+    Coverage::build-report-from-hits(%hits, $counts-opts, $src.parent), :!color);
 
-  my $report = Coverage::build-report-from-hits(%hits, $opts, $src.parent);
-  my $text = Coverage::render-text($report, :!color);
+  my $plain-opts = CoverageOptions.new;
+  $plain-opts.include-path($src.parent.Str);
+  my $without = Coverage::render-text(
+    Coverage::build-report-from-hits(%hits, $plain-opts, $src.parent), :!color);
+
   cleanup-tmp-source($src);
 
-  ok $text.contains('Hits'), 'render-text includes a Hits header';
+  ok $with.contains('Hits'),    'render-text includes a Hits header with counts enabled';
+  nok $without.contains('Hits'), 'render-text omits the Hits header by default';
 }
 
 # render-lcov emits real hit counts in DA records
@@ -357,24 +363,30 @@ sub cleanup-tmp-source(IO::Path $p) {
   $fc.executable{1} = True;
   $fc.add-hit(1, 9);
 
-  my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
-  my $lcov = Coverage::render-lcov($report);
+  my $with = Coverage::render-lcov(
+    CoverageReport.new(:files([$fc]), :root('/'.IO), :counts));
+  my $without = Coverage::render-lcov(
+    CoverageReport.new(:files([$fc]), :root('/'.IO)));
 
-  ok $lcov.contains('DA:1,9'), 'render-lcov emits the hit count in DA';
+  ok $with.contains('DA:1,9'),    'render-lcov emits the hit count in DA with counts enabled';
+  ok $without.contains('DA:1,1'), 'render-lcov emits a binary 1 in DA by default';
 }
 
-# render-json includes total-hits and line-hits
+# render-json includes total-hits and line-hits only when counts are enabled
 {
   my $fc = FileCoverage.new(:path('/x'));
   $fc.display-path = 'x';
   $fc.executable{1} = True;
   $fc.add-hit(1, 5);
 
-  my $report = CoverageReport.new(:files([$fc]), :root('/'.IO));
-  my $json = Coverage::render-json($report);
+  my $with = Coverage::render-json(
+    CoverageReport.new(:files([$fc]), :root('/'.IO), :counts));
+  my $without = Coverage::render-json(
+    CoverageReport.new(:files([$fc]), :root('/'.IO)));
 
-  ok $json.contains('"total-hits"'), 'render-json includes total-hits';
-  ok $json.contains('"line-hits"'),  'render-json includes line-hits';
+  ok $with.contains('"total-hits"'),     'render-json includes total-hits with counts enabled';
+  ok $with.contains('"line-hits"'),      'render-json includes line-hits with counts enabled';
+  nok $without.contains('"total-hits"'), 'render-json omits total-hits by default';
 }
 
 # format-progress-bar

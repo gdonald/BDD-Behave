@@ -42,6 +42,7 @@ class ParallelRunOptions is export {
   has Str      $.parallel-mode = 'lpt';
   has Int      $.parallel-retry = 0;
   has IO::Path $.coverage-log-dir = IO::Path;
+  has Bool     $.coverage-counts = False;
 }
 
 sub discover-suites(@spec-files --> List) is export {
@@ -461,7 +462,7 @@ sub run-parallel-isolated-impl(
     if $opts.coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
       = $opts.coverage-log-dir.add("isolated-$idx.raw").absolute;
-      %env<MVM_COVERAGE_CONTROL> = '2';
+      %env<MVM_COVERAGE_CONTROL> = $opts.coverage-counts ?? '2' !! '0';
     }
 
     $queue.send({ :$idx, :$file, :@argv, :%env });
@@ -568,6 +569,7 @@ sub run-parallel-queue-impl(
       :spec-files($opts.spec-files.map(*.Str).List),
       :base-env(%(|$opts.base-env)),
       :coverage-log-dir($opts.coverage-log-dir),
+      :coverage-counts($opts.coverage-counts),
       # Tap callbacks for every worker fire on the thread pool, so
       # several can be processing events concurrently. handle-event
       # mutates $result.total / $result.passed / ... and writes to the
@@ -622,7 +624,7 @@ sub run-parallel-queue-impl(
     if $opts.coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
       = $opts.coverage-log-dir.add('serial.raw').absolute;
-      %env<MVM_COVERAGE_CONTROL> = '2';
+      %env<MVM_COVERAGE_CONTROL> = $opts.coverage-counts ?? '2' !! '0';
     }
 
     my $proc = Proc::Async.new(|@argv);
@@ -715,6 +717,7 @@ sub run-parallel(
       :base-env(%(|$opts.base-env)),
       :manifest-dir($manifest-dir),
       :coverage-log-dir($opts.coverage-log-dir),
+      :coverage-counts($opts.coverage-counts),
       :retry-count($opts.parallel-retry),
       # Tap callbacks fire on the thread pool — N workers can dispatch
       # concurrently into handle-event, which mutates $result.* and
@@ -765,7 +768,7 @@ sub run-parallel(
     if $opts.coverage-log-dir.defined {
       %env<MVM_COVERAGE_LOG>
       = $opts.coverage-log-dir.add('serial.raw').absolute;
-      %env<MVM_COVERAGE_CONTROL> = '2';
+      %env<MVM_COVERAGE_CONTROL> = $opts.coverage-counts ?? '2' !! '0';
     }
 
     my $proc = Proc::Async.new(|@argv);

@@ -324,7 +324,7 @@ Notes:
 
 ## Coverage {#coverage}
 
-`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path under `$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/` (named `isolated-N.raw` in the default isolated mode, `worker-N.raw` in the `lpt` / `queue` pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge sums each line's execution count across workers in one `awk` pass, so a line counted only by worker 2 still shows up in the merged report and the reported hit count is the suite-wide total.
+`--coverage` works under `--parallel`. The parent assigns each worker its own `MVM_COVERAGE_LOG` path under `$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/` (named `isolated-N.raw` in the default isolated mode, `worker-N.raw` in the `lpt` / `queue` pool modes), the workers run their slice of the spec tree under MoarVM coverage tracking, and the parent merges every per-worker log into a single hit map before rendering the report. The merge unions each line's hits across workers in one `awk` pass, so a line covered only by worker 2 still shows up in the merged report. With `--coverage-counts` the workers run the heavier `MVM_COVERAGE_CONTROL=2` mode and the merge sums each line's execution count, so the reported hit count is the suite-wide total.
 
 ```bash
 behave --parallel 4 --coverage specs/

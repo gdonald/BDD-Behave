@@ -73,6 +73,7 @@ our class Configuration {
   has IO::Path $.coverage-output      is rw;
   has IO::Path $.coverage-baseline    is rw;
   has Bool     $.coverage-branch      is rw;
+  has Bool     $.coverage-counts      is rw;
 
   has Str @.include-tags;
   has Str @.exclude-tags;
@@ -190,7 +191,7 @@ our class Configuration {
          benchmark-mode benchmark-iterations benchmark-baseline benchmark-save
          benchmark-threshold benchmark-format benchmark-output
          coverage coverage-minimum coverage-format coverage-output
-         coverage-baseline coverage-branch> -> $attr {
+         coverage-baseline coverage-branch coverage-counts> -> $attr {
       my $self-val  = self."$attr"();
       my $other-val = $other."$attr"();
       my $picked = $other-val.defined ?? $other-val !! $self-val;
@@ -248,6 +249,7 @@ our sub defaults(--> Configuration) {
   $c.coverage-minimum     = 0.Real;
   $c.coverage-format      = 'html';
   $c.coverage-branch      = False;
+  $c.coverage-counts      = False;
   $c;
 }
 

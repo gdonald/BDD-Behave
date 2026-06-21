@@ -38,16 +38,25 @@ file. The index is the entry point: open `coverage/index.html`.
 
 ## Hit counts
 
-Behave records how many times each line executed, not just whether it ran.
-Every format surfaces this:
+By default behave records only whether each line ran, using the lighter
+`MVM_COVERAGE_CONTROL=0` mode whose log deduplicates repeated hits at the
+source. Pass `--coverage-counts` to record how many times each line executed
+instead. This runs the heavier `MVM_COVERAGE_CONTROL=2` mode (every execution
+is logged) and adds hit counts to the report:
+
+```bash
+behave --coverage --coverage-counts specs/
+```
 
 - **text** and **html index**: a `Hits` column showing each file's total
   executions across its covered lines.
 - **html file page**: a per-line count gutter beside the source.
 - **json**: a `total-hits` value per file plus a `line-hits` map of line
   number to count.
-- **lcov** and **cobertura**: the real execution count in each `DA:` /
-  `<line hits=...>` record, so downstream tools render execution heat.
+
+`--coverage-counts` is slower than the default because the raw log grows with
+every line transition rather than collapsing to one row per line. Use it when
+you want an execution heatmap, not just covered/uncovered.
 
 ## Filtering tracked files
 
@@ -146,6 +155,7 @@ configure-behave -> $c {
   $c.coverage-minimum = 80;
   $c.coverage-format  = 'text';
   $c.coverage-branch  = True;
+  $c.coverage-counts  = True;
   $c.coverage-include-path('lib/');
   $c.coverage-exclude-path('lib/vendor');
 }
@@ -157,14 +167,16 @@ layers and the CLI.
 
 ## How it works
 
-`--coverage` sets `MVM_COVERAGE_LOG` and `MVM_COVERAGE_CONTROL=2` in a child
-process that runs the same `bin/behave` invocation. MoarVM writes one `HIT`
-line per executed source line to a temp file under `$TMPDIR`. A hot line can
-appear millions of times. When the child exits, the parent runs `grep -F` over
-that file to keep only lines matching the include patterns, then `awk` tallies
-the matches into one row per unique line prefixed with its occurrence count.
-This keeps the filtered log small while preserving the collective hit count.
-The parent parses the tallied result and renders the report.
+`--coverage` sets `MVM_COVERAGE_LOG` and `MVM_COVERAGE_CONTROL` in a child
+process that runs the same `bin/behave` invocation. MoarVM writes a `HIT` line
+to a temp file under `$TMPDIR` for each executed source line. The default
+control mode `0` deduplicates at the source, so each line appears about once;
+`--coverage-counts` switches to mode `2`, which logs every execution (a hot
+line can then appear millions of times). When the child exits, the parent runs
+`grep -F` over that file to keep only lines matching the include patterns, then
+`awk` tallies the matches into one row per unique line prefixed with its
+occurrence count. This keeps the filtered log small. The parent parses the
+tallied result and renders the report.
 
 On a full suite the raw log can take a while to filter. When stderr is a
 terminal, Behave streams the raw bytes through the filter itself and draws a
@@ -176,7 +188,8 @@ Under `--parallel`, the wrapper is skipped: the parallel parent gives each
 worker its own `MVM_COVERAGE_LOG` path
 (`$TMPDIR/behave-coverage-parallel-<pid>-<stamp>/worker-N.raw`), and after
 the workers exit it tallies every per-worker log together in a single `awk`
-pass, summing each line's count across workers. The same report
+pass, unioning each line's hits across workers (and summing the counts when
+`--coverage-counts` is in effect). The same report
 pipeline then renders one combined report against the merged data.
 `--coverage-minimum` is gated on the merged percentage. See
 [Coverage under --parallel](../parallel/parallel.md#coverage) in the parallel
