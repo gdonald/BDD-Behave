@@ -1222,6 +1222,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hit-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hit counts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#filtering-tracked-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1517,6 +1528,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hit-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hit counts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#filtering-tracked-files" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1677,6 +1699,24 @@ behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-forma
 <strong><code>html</code> is special</strong>: PATH is a <em>directory</em> (default <code>./coverage/</code>) that
 Behave fills with <code>index.html</code>, <code>style.css</code>, and one HTML page per source
 file. The index is the entry point: open <code>coverage/index.html</code>.</p>
+<h2 id="hit-counts">Hit counts<a class="headerlink" href="#hit-counts" title="Permanent link">&para;</a></h2>
+<p>By default behave records only whether each line ran, using the lighter
+<code>MVM_COVERAGE_CONTROL=0</code> mode whose log deduplicates repeated hits at the
+source. Pass <code>--coverage-counts</code> to record how many times each line executed
+instead. This runs the heavier <code>MVM_COVERAGE_CONTROL=2</code> mode (every execution
+is logged) and adds hit counts to the report:</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code>behave<span class="w"> </span>--coverage<span class="w"> </span>--coverage-counts<span class="w"> </span>specs/
+</code></pre></div></td></tr></table></div>
+<ul>
+<li><strong>text</strong> and <strong>html index</strong>: a <code>Hits</code> column showing each file's total
+  executions across its covered lines.</li>
+<li><strong>html file page</strong>: a per-line count gutter beside the source.</li>
+<li><strong>json</strong>: a <code>total-hits</code> value per file plus a <code>line-hits</code> map of line
+  number to count.</li>
+</ul>
+<p><code>--coverage-counts</code> is slower than the default because the raw log grows with
+every line transition rather than collapsing to one row per line. Use it when
+you want an execution heatmap, not just covered/uncovered.</p>
 <h2 id="filtering-tracked-files">Filtering tracked files<a class="headerlink" href="#filtering-tracked-files" title="Permanent link">&para;</a></h2>
 <p><code>--coverage-include=PATH</code> restricts the report to files whose path <strong>starts
 with</strong> PATH. Repeatable. Multiple includes combine with OR. The prefix
@@ -1762,13 +1802,15 @@ checked in and surface a regression when coverage drops in a PR.</p>
 <span class="normal"> 7</span>
 <span class="normal"> 8</span>
 <span class="normal"> 9</span>
-<span class="normal">10</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Configuration</span>;
+<span class="normal">10</span>
+<span class="normal">11</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">use</span> <span class="n">BDD::Behave::Configuration</span>;
 
 <span class="n">configure-behave</span> -&gt; <span class="nv">$c</span> {
   <span class="nv">$c</span>.<span class="n">coverage</span>         = <span class="nb">True</span>;
   <span class="nv">$c</span>.<span class="n">coverage-minimum</span> = <span class="mi">80</span>;
   <span class="nv">$c</span>.<span class="n">coverage-format</span>  = <span class="s">&#39;text&#39;</span>;
   <span class="nv">$c</span>.<span class="n">coverage-branch</span>  = <span class="nb">True</span>;
+  <span class="nv">$c</span>.<span class="n">coverage-counts</span>  = <span class="nb">True</span>;
   <span class="nv">$c</span>.<span class="n">coverage-include-path</span>(<span class="s">&#39;lib/&#39;</span>);
   <span class="nv">$c</span>.<span class="n">coverage-exclude-path</span>(<span class="s">&#39;lib/vendor&#39;</span>);
 }
@@ -1777,16 +1819,27 @@ checked in and surface a regression when coverage drops in a PR.</p>
 (<code>coverage-include-path</code>, <code>coverage-exclude-path</code>) accumulate across config
 layers and the CLI.</p>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
-<p><code>--coverage</code> sets <code>MVM_COVERAGE_LOG</code> and <code>MVM_COVERAGE_CONTROL=2</code> in a child
-process that runs the same <code>bin/behave</code> invocation. MoarVM writes one <code>HIT</code>
-line per executed source line to a temp file under <code>$TMPDIR</code>. When the child
-exits, the parent runs <code>grep -F</code> over that file to keep only lines matching
-the include patterns, parses the filtered result, and renders the report.</p>
+<p><code>--coverage</code> sets <code>MVM_COVERAGE_LOG</code> and <code>MVM_COVERAGE_CONTROL</code> in a child
+process that runs the same <code>bin/behave</code> invocation. MoarVM writes a <code>HIT</code> line
+to a temp file under <code>$TMPDIR</code> for each executed source line. The default
+control mode <code>0</code> deduplicates at the source, so each line appears about once;
+<code>--coverage-counts</code> switches to mode <code>2</code>, which logs every execution (a hot
+line can then appear millions of times). When the child exits, the parent runs
+<code>grep -F</code> over that file to keep only lines matching the include patterns, then
+<code>awk</code> tallies the matches into one row per unique line prefixed with its
+occurrence count. This keeps the filtered log small. The parent parses the
+tallied result and renders the report.</p>
+<p>On a full suite the raw log can take a while to filter. When stderr is a
+terminal, Behave streams the raw bytes through the filter itself and draws a
+single continuously updated progress line with a percent, a bar, and a rough
+ETA based on bytes processed over elapsed time. Off a terminal (CI, piped
+output) the filter reads the files directly and prints nothing.</p>
 <p>Under <code>--parallel</code>, the wrapper is skipped: the parallel parent gives each
 worker its own <code>MVM_COVERAGE_LOG</code> path
 (<code>$TMPDIR/behave-coverage-parallel-&lt;pid&gt;-&lt;stamp&gt;/worker-N.raw</code>), and after
-the workers exit it merges every per-worker log into a single hit map (set
-union, since coverage records <em>whether</em> a line was hit). The same report
+the workers exit it tallies every per-worker log together in a single <code>awk</code>
+pass, unioning each line's hits across workers (and summing the counts when
+<code>--coverage-counts</code> is in effect). The same report
 pipeline then renders one combined report against the merged data.
 <code>--coverage-minimum</code> is gated on the merged percentage. See
 <a href="../../parallel/parallel/#coverage">Coverage under --parallel</a> in the parallel
