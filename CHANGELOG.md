@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.9.2 — 2026-06-24
+
+### Added
+
+- Live coverage progress line when filtering the raw log on a terminal, with a
+  percent, a bar, and a rough ETA
+- Fallback content on a coverage HTML file page when the source is unavailable
+
+### Changed
+
+- Coverage now defaults to the lighter `MVM_COVERAGE_CONTROL=0` line-hit mode;
+  pass `--coverage-counts` for the heavier per-line execution counts
+
+### Fixed
+
+- Environment variable propagation to parallel workers
+
 ## v0.9.1 — 2026-06-01
 
 ### Added
