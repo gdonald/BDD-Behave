@@ -886,6 +886,7 @@ our class Runner {
         line         => $example.line,
         example-line => $example.line,
         exception    => $error,
+        message      => $error.message,
       );
 
       # Only the top-level Runner (bin/behave sets $*BEHAVE-TOP-LEVEL-RUN
@@ -909,13 +910,34 @@ our class Runner {
 
     if $result.new-failures > 0 {
       $result.outcome = 'fail';
+
+      my @new = Failures.list[$initial-failure-count .. Failures.list.elems - 1];
+      my @expectation-failures = @new.grep(!*.from-runner-exception);
+      my @runner-exceptions    = @new.grep(*.from-runner-exception);
       my $primary-failure = Failures.list[$initial-failure-count];
+
       $result.failure-info = %(
         description  => self.full-description($example),
         file         => $example.file,
         line         => ($primary-failure.defined ?? $primary-failure.line !! $example.line),
         example-line => $example.line,
+        expectations => @expectation-failures.map(-> $fl {
+          my %rec = (
+            file     => $fl.file,
+            line     => $fl.line,
+            negated  => $fl.negated,
+            given    => ($fl.given.defined    ?? $fl.given.gist    !! Str),
+            expected => ($fl.expected.defined ?? $fl.expected.gist !! Str),
+          );
+          %rec<message>           = $fl.message           if $fl.message.defined;
+          %rec<aggregation_label> = $fl.aggregation-label if $fl.aggregation-label.defined;
+          %rec;
+        }).List,
       );
+
+      if @runner-exceptions.elems {
+        $result.failure-info<message> = @runner-exceptions[0].message;
+      }
     } else {
       $result.outcome = 'pass';
     }

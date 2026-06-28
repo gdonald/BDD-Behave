@@ -13,7 +13,7 @@ use Behave::Test::FakeResult;
 
 my $*BEHAVE-AGGREGATING = True;
 
-plan 27;
+plan 31;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -116,21 +116,57 @@ is $f.name, 'json',              'name is "json"';
 }
 
 {
-  Failures.list = ();
   my $g = make-group('g');
   my $ex = make-example('expects');
   my $f6 = BDD::Behave::Formatter::JSON.new;
   my $out = capture({
     $f6.group-start($g);
     $f6.example-start($ex);
-    Failures.list.push: Failure.new(:file('spec.raku'), :line(11), :given('a'), :expected('b'));
-    $f6.example-fail($ex, :failure-info(%( file => 'spec.raku', line => 11 )));
+    $f6.example-fail($ex, :failure-info(%(
+      file => 'spec.raku', line => 11,
+      expectations => [
+        %( file => 'spec.raku', line => 11, given => 'a', expected => 'b', negated => False ),
+      ],
+    )));
     $f6.run-summary(fake-result(%( total => 1, failed => 1 )));
   });
   ok $out.contains('"expectations":'),  'expectations list emitted';
   ok $out.contains('"given":"a"'),      'given value emitted';
   ok $out.contains('"expected":"b"'),   'expected value emitted';
-  Failures.list = ();
+}
+
+{
+  my $g = make-group('g');
+  my $ex = make-example('boom');
+  my $f6b = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f6b.group-start($g);
+    $f6b.example-start($ex);
+    $f6b.example-fail($ex, :failure-info(%(
+      file => 'spec.raku', line => 9,
+      exception-message => 'kaboom',
+    )));
+    $f6b.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('"type":"exception"'), 'exception type from exception-message';
+  ok $out.contains('"message":"kaboom"'), 'exception message from exception-message';
+}
+
+{
+  my $g = make-group('g');
+  my $ex = make-example('splat');
+  my $f6c = BDD::Behave::Formatter::JSON.new;
+  my $out = capture({
+    $f6c.group-start($g);
+    $f6c.example-start($ex);
+    $f6c.example-fail($ex, :failure-info(%(
+      file => 'spec.raku', line => 7,
+      message => 'splat',
+    )));
+    $f6c.run-summary(fake-result(%( total => 1, failed => 1 )));
+  });
+  ok $out.contains('"type":"exception"'), 'exception type from plain message key';
+  ok $out.contains('"message":"splat"'), 'exception message from plain message key';
 }
 
 {

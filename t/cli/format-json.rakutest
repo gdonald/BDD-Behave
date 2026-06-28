@@ -2,7 +2,7 @@ use v6.d;
 use lib 'lib';
 use Test;
 
-plan 14;
+plan 17;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $bin     = $root.add('bin/behave');
@@ -41,5 +41,8 @@ sub run-behave(*@args) {
   ok %r<out>.contains('"status":"pending"'), 'records pending status';
   ok %r<out>.contains('"status":"skipped"'), 'records skipped status';
   ok %r<out>.contains('"failure":'),         'attaches failure block';
+  ok %r<out>.contains('"expectations":'),    'failure block includes expectations';
+  ok %r<out>.contains('"given":"a"'),        'failure block includes given value';
+  ok %r<out>.contains('"expected":"b"'),     'failure block includes expected value';
   nok %r<out>.contains("⮑"),                'no per-example arrow markers';
 }

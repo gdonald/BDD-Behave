@@ -856,6 +856,20 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       with %event<exception-backtrace> {
         %failure-info<exception-backtrace> = $_;
       }
+
+      my @expectations = (%event<failures> // ()).list.map(-> %f {
+        my %rec = (
+          file     => (%f<file> // '').Str,
+          line     => (%f<line> // 0).Int,
+          negated  => (%f<negated> // False),
+          given    => (%f<given>    // '').Str,
+          expected => (%f<expected> // '').Str,
+        );
+        %rec<message> = %f<message>.Str if (%f<message> // '').Str.chars;
+        %rec;
+      });
+      %failure-info<expectations> = @expectations if @expectations.elems;
+
       if $example.defined {
         $example.duration = (%event<duration> // 0).Real;
         $formatter.example-fail($example, :%failure-info);

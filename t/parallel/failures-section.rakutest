@@ -2,7 +2,7 @@ use v6.d;
 use lib 'lib';
 use Test;
 
-plan 5;
+plan 8;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -39,4 +39,12 @@ sub run-behave(*@args) {
   # Three failures expected from the fixture (three failing examples).
   my $count = +%r<out>.match(/'✗'/, :g).elems;
   is $count, 3, "Failures: section lists exactly three failure rows";
+}
+
+# --parallel --format json carries expectation detail through to the parent.
+{
+  my %r = run-behave('--parallel', '2', '--format', 'json', '--order', 'defined', $failing.absolute);
+  ok %r<out>.contains('"expectations":'), 'parallel JSON output includes expectations';
+  ok %r<out>.contains('"given":"a"'),     'parallel JSON output includes given value';
+  ok %r<out>.contains('"expected":"b"'),  'parallel JSON output includes expected value';
 }

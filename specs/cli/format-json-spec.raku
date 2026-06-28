@@ -51,6 +51,13 @@ describe 'bin/behave --format json', {
     expect(%r<out>).to.include('"failure":');
   }
 
+  it 'includes the expectation detail in the failure block', {
+    my %r = run-behave('--format', 'json', '--order', 'defined', $mixed.absolute);
+    expect(%r<out>).to.include('"expectations":');
+    expect(%r<out>).to.include('"given":"a"');
+    expect(%r<out>).to.include('"expected":"b"');
+  }
+
   it 'emits matching counts in the summary block', {
     my %r = run-behave('--format', 'json', '--order', 'defined', $mixed.absolute);
     expect(%r<out>).to.include('"total":5');

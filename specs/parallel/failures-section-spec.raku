@@ -40,4 +40,22 @@ describe 'bin/behave --parallel failure reporting', {
     my $count = +%r<out>.match(/'✗'/, :g).elems;
     expect($count).to.be(3);
   }
+
+  context 'under --format json', {
+    let(:json-out, {
+      run-behave('--parallel', '2', '--format', 'json', '--order', 'defined', $failing.absolute)<out>;
+    });
+
+    it 'carries the expectations array through the parallel JSON output', {
+      expect(json-out).to.include('"expectations":');
+    }
+
+    it 'carries the given value through the parallel JSON output', {
+      expect(json-out).to.include('"given":"a"');
+    }
+
+    it 'carries the expected value through the parallel JSON output', {
+      expect(json-out).to.include('"expected":"b"');
+    }
+  }
 }

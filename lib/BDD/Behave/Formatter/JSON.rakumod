@@ -1,12 +1,10 @@
 use BDD::Behave::Benchmark::Format;
-use BDD::Behave::Failures;
 use BDD::Behave::Formatter;
 
 unit class BDD::Behave::Formatter::JSON does BDD::Behave::Formatter;
 
 has @!description-stack;
 has @!examples;
-has Int $!failure-watermark = 0;
 has Str $!pending-auto-description;
 has Bool $!multi-file = False;
 has Int $!seed;
@@ -58,7 +56,6 @@ method group-end($group) {
 method group-around-skipped($group) { }
 
 method example-start($example, Bool :$auto = False) {
-  $!failure-watermark = Failures.list.elems;
   $!pending-auto-description = Str;
 }
 
@@ -73,32 +70,29 @@ method example-pass($example) {
 
 method example-fail($example, :$failure-info) {
   my %fail = ();
+
   if $failure-info.defined {
     if $failure-info<exception>.defined {
       %fail<type>    = 'exception';
       %fail<message> = $failure-info<exception>.message;
     }
+    elsif $failure-info<message>.defined {
+      %fail<type>    = 'exception';
+      %fail<message> = $failure-info<message>;
+    }
+    elsif $failure-info<exception-message>.defined {
+      %fail<type>    = 'exception';
+      %fail<message> = $failure-info<exception-message>;
+    }
+
     if $failure-info<file>.defined { %fail<file> = $failure-info<file>.Str }
     if $failure-info<line>.defined { %fail<line> = $failure-info<line> }
-  }
-  my $count = Failures.list.elems;
-  if $count > $!failure-watermark {
-    my @new = Failures.list[$!failure-watermark .. $count - 1].grep(!*.from-runner-exception);
-    if @new.elems {
-      %fail<expectations> = @new.map(-> $fl {
-        my %rec = (
-          file     => $fl.file,
-          line     => $fl.line,
-          negated  => $fl.negated,
-          given    => ($fl.given.defined    ?? $fl.given.gist    !! Str),
-          expected => ($fl.expected.defined ?? $fl.expected.gist !! Str),
-        );
-        %rec<message>           = $fl.message           if $fl.message.defined;
-        %rec<aggregation_label> = $fl.aggregation-label if $fl.aggregation-label.defined;
-        %rec;
-      }).List;
+
+    if $failure-info<expectations>.defined && $failure-info<expectations>.elems {
+      %fail<expectations> = $failure-info<expectations>.List;
     }
   }
+
   @!examples.push: self!ex-record($example, 'failed', %( failure => %fail ));
   $!pending-auto-description = Str;
 }
