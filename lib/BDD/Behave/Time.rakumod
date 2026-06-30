@@ -64,7 +64,11 @@ sub install-wraps() {
         %args<timezone> //= $*TZ;
         DateTime.new($f.instant, |%args).Date;
       } else {
-        callsame;
+        # `callsame` here resolves to VMNull for the wrapped Date.today once
+        # this module is loaded from precompilation ("lang-call cannot invoke
+        # object of type 'VMNull'"). Delegate to the (also wrapped, and working)
+        # DateTime.now, which yields the same current local date.
+        DateTime.now(|%named).Date;
       }
     });
   }

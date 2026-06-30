@@ -63,6 +63,14 @@ describe 'freeze-time at an explicit moment', {
       expect($today.day).to.eq(4);
     };
   }
+
+  it 'returns the real date from Date.today when time is not frozen', {
+    expect(Date.today).to.eq(DateTime.now.Date);
+  }
+
+  it 'passes a timezone through to Date.today when time is not frozen', {
+    expect(Date.today(:timezone(0))).to.eq(DateTime.now(:timezone(0)).Date);
+  }
 }
 
 describe 'travel-to', {

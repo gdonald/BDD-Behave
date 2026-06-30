@@ -6,7 +6,7 @@ use BDD::Behave::Time;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
-plan 33;
+plan 35;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -89,6 +89,19 @@ sub build-suite-with(@examples) {
   is $today.year,  2024, 'Date.today frozen year';
   is $today.month, 7,    'Date.today frozen month';
   is $today.day,   4,    'Date.today frozen day';
+}
+
+# Outside a freeze, the wrapped Date.today must still yield the real current
+# date. The unfrozen branch delegates to DateTime.now rather than `callsame`,
+# whose wrapped lookup resolves to VMNull once this module is precompiled.
+{
+  is Date.today, DateTime.now.Date, 'Date.today returns the real date when time is not frozen';
+}
+
+# A named timezone passed to the unfrozen Date.today must reach DateTime.now.
+{
+  is Date.today(:timezone(0)), DateTime.now(:timezone(0)).Date,
+    'Date.today passes a timezone through when time is not frozen';
 }
 
 # travel-to
