@@ -870,21 +870,14 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       });
       %failure-info<expectations> = @expectations if @expectations.elems;
 
-      if $example.defined {
-        $example.duration = (%event<duration> // 0).Real;
-        $formatter.example-fail($example, :%failure-info);
-        my $loc = "{$example.file.absolute}:{$example.line}";
-        $result.executed-locations.push($loc);
-        $result.failed-locations.push($loc);
-      } else {
-        my $f = %failure-info<file>.Str;
-        my $l = %failure-info<line>.Int;
-        $result.failed-locations.push("$f:$l") if $f.chars && $l;
-      }
       $result.total++;
       $result.failed++;
       $result.failures.push: %failure-info;
 
+      # Record this example's failures on the global list before emitting the
+      # event. A streaming formatter derives an example's failures from the list
+      # since the previous event, so recording after emitting would attribute
+      # them to the next example instead of this one.
       my $desc = %failure-info<description>;
       my @event-failures = (%event<failures> // ()).list;
       for @event-failures -> %f {
@@ -921,6 +914,18 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
             :from-runner-exception,
           );
         }
+      }
+
+      if $example.defined {
+        $example.duration = (%event<duration> // 0).Real;
+        $formatter.example-fail($example, :%failure-info);
+        my $loc = "{$example.file.absolute}:{$example.line}";
+        $result.executed-locations.push($loc);
+        $result.failed-locations.push($loc);
+      } else {
+        my $f = %failure-info<file>.Str;
+        my $l = %failure-info<line>.Int;
+        $result.failed-locations.push("$f:$l") if $f.chars && $l;
       }
     }
     when 'example-retry' {

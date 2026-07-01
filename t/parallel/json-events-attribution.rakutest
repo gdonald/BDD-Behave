@@ -1,0 +1,59 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Parallel::EventStream;
+
+plan 6;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $lib     = $root.add('lib');
+my $bin     = $root.add('bin/behave');
+my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { });
+  my $done = $proc.start(:%env);
+  $proc.close-stdin;
+  my $completed = await $done;
+  $out;
+}
+
+sub failure-message-by-example(*@extra-args --> Hash) {
+  my $out = run-behave('--format', 'json-events', '--order', 'defined', |@extra-args, $failing.absolute);
+
+  my %by-description;
+  for $out.lines -> $line {
+    next unless $line.trim.starts-with('{');
+    my %event = parse-json-event($line);
+    next unless (%event<type> // '') eq 'example-fail';
+    my @failures = (%event<failures> // ()).list;
+    %by-description{%event<description>} = @failures ?? (@failures[0]<message> // '').Str !! '';
+  }
+
+  %by-description;
+}
+
+my %serial = failure-message-by-example();
+
+ok %serial{'first example fails'}.contains('to be: 2'),
+  'serial: first failing example carries its own expected value';
+ok %serial{'second example fails'}.contains('to be: b'),
+  'serial: second failing example carries its own expected value';
+ok %serial{'third example fails'}.contains('to be: False'),
+  'serial: third failing example carries its own expected value';
+
+my %parallel = failure-message-by-example('--parallel', '2');
+
+ok %parallel{'first example fails'}.contains('to be: 2'),
+  'parallel: first failing example carries its own expected value';
+ok %parallel{'second example fails'}.contains('to be: b'),
+  'parallel: second failing example carries its own expected value';
+ok %parallel{'third example fails'}.contains('to be: False'),
+  'parallel: third failing example carries its own expected value';
