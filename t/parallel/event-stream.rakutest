@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave::Parallel::EventStream;
 
-plan 16;
+plan 21;
 
 # Parse simple object
 {
@@ -61,6 +61,38 @@ plan 16;
   my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
   my @ev = $parser.feed("this is not json\n");
   is @ev[0]<type>, 'parse-error', 'malformed input emits parse-error';
+}
+
+# A stray line that parses as a bare JSON number is not a valid event
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  my @ev = $parser.feed("2026-07-05T02:40:57 info: DELETE FROM posts\n");
+  is @ev[0]<type>, 'parse-error', 'bare-number-prefixed stray line emits parse-error';
+}
+
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  my @ev = $parser.feed("42\n");
+  is @ev[0]<type>, 'parse-error', 'bare JSON scalar emits parse-error';
+}
+
+# flush emits the buffered event when no trailing newline arrived
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  $parser.feed('{"type":"example-pass","id":"a:1"}');
+
+  my @ev = $parser.flush;
+  is @ev.elems, 1, 'flush yields the buffered event';
+  is @ev[0]<id>, 'a:1', 'flushed buffer yields full event';
+}
+
+# flush treats a buffered non-object value as a parse-error
+{
+  my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+  $parser.feed('42');
+
+  my @ev = $parser.flush;
+  is @ev[0]<type>, 'parse-error', 'flushed bare JSON scalar emits parse-error';
 }
 
 done-testing;

@@ -164,7 +164,7 @@ class JsonLineParser is export {
       my $trimmed = $line.trim;
       next unless $trimmed.chars;
       my $event = try parse-json-event($trimmed);
-      @events.push: $event.defined ?? $event !! %( :type<parse-error>, :raw($trimmed) );
+      @events.push: $event ~~ Associative ?? $event !! %( :type<parse-error>, :raw($trimmed) );
     }
     @events.List;
   }
@@ -175,7 +175,7 @@ class JsonLineParser is export {
     $!buffer = '';
     if $trimmed.chars {
       my $event = try parse-json-event($trimmed);
-      @events.push: $event.defined ?? $event !! %( :type<parse-error>, :raw($trimmed) );
+      @events.push: $event ~~ Associative ?? $event !! %( :type<parse-error>, :raw($trimmed) );
     }
     @events.List;
   }

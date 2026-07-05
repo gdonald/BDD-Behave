@@ -44,4 +44,36 @@ describe 'JsonLineParser feed/flush', {
     my @ev = $parser.feed("not json\n");
     expect(@ev[0]<type>).to.be('parse-error');
   }
+
+  it 'returns parse-error for a stray line that parses as a bare JSON number', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    my @ev = $parser.feed("2026-07-05T02:40:57 info: DELETE FROM posts\n");
+    expect(@ev[0]<type>).to.be('parse-error');
+  }
+
+  it 'returns parse-error for a stray JSON scalar rather than a raw value', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    my @ev = $parser.feed("42\n");
+    expect(@ev[0]<type>).to.be('parse-error');
+  }
+
+  it 'flushes the buffered event when no trailing newline arrived', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    $parser.feed('{"type":"example-pass","id":"a:1"}');
+
+    my @ev = $parser.flush;
+
+    aggregate-failures {
+      expect(@ev.elems).to.be(1);
+      expect(@ev[0]<id>).to.be('a:1');
+    }
+  }
+
+  it 'flushes a buffered non-object value as a parse-error', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    $parser.feed('42');
+
+    my @ev = $parser.flush;
+    expect(@ev[0]<type>).to.be('parse-error');
+  }
 }
