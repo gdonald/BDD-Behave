@@ -119,6 +119,17 @@ sub discover-suites-subprocess(
     }
   }
 
+  if %*ENV<BEHAVE_DISCO_DEBUG> {
+    my $fh = '/tmp/disc-debug.log'.IO.open(:a);
+    $fh.say("ARGV: " ~ @argv.join(' '));
+    $fh.say("FILES: " ~ @spec-files.map(*.Str).join(', '));
+    $fh.say("EXITCODE: " ~ $result.exitcode);
+    $fh.say("STDOUT-BYTES: " ~ $stdout.chars);
+    $fh.say("STDERR:\n" ~ $stderr);
+    $fh.say("=" x 60);
+    $fh.close;
+  }
+
   if $result.exitcode > 1 {
     my $msg = "discovery subprocess exited with code {$result.exitcode}";
     $msg ~= ": $stderr" if $stderr.chars;

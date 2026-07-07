@@ -847,13 +847,13 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
   my $stamp = sprintf '%d-%d', $*PID, (now * 1e6).Int;
   my $raw-path      = $*TMPDIR.add("behave-coverage-$stamp.raw");
   my $filtered-path = $*TMPDIR.add("behave-coverage-$stamp.filtered");
-  $raw-path.spurt('');
-
   guard-coverage-temp($raw-path, $filtered-path);
   END {
     BDD::Behave::Coverage::remove-coverage-temp($raw-path);
     BDD::Behave::Coverage::remove-coverage-temp($filtered-path);
   }
+
+  $raw-path.spurt('');
 
   my %child-env = |%*ENV;
   # An inherited MVM_COVERAGE_FILES passes through: it filters which source
@@ -1272,10 +1272,11 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   if $coverage-enabled {
     my $stamp = sprintf '%d-%d', $*PID, (now * 1e6).Int;
     $par-coverage-dir = $*TMPDIR.add("behave-coverage-parallel-$stamp");
-    $par-coverage-dir.mkdir;
 
     guard-coverage-temp($par-coverage-dir);
     END { BDD::Behave::Coverage::remove-coverage-temp($par-coverage-dir) }
+
+    $par-coverage-dir.mkdir;
   }
 
   my $opts = $par-coverage-dir.defined
