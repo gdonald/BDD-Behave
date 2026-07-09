@@ -180,6 +180,29 @@ describe 'discover-suites-subprocess', :order<defined>, {
     }
   }
 
+  context 'when a spec hangs while loading', {
+    my $lib  = $root.add('lib');
+    my $bin  = $root.add('bin/behave');
+    my $hang = $root.add('t/fixtures/parallel/hang-load-fixture-spec.raku');
+    my @discovery-argv = 'raku', "-I{$lib.absolute}", $bin.absolute;
+
+    let(:result, {
+      discover-suites-subprocess(($hang,), :discovery-argv(@discovery-argv), :timeout(2));
+    });
+
+    it 'yields no discovered suites', {
+      expect(result()[0].elems).to.be(0);
+    }
+
+    it 'produces one load error', {
+      expect(result()[1].elems).to.be(1);
+    }
+
+    it 'explains that discovery timed out', {
+      expect(result()[1][0]<message>).to.include('timed out');
+    }
+  }
+
   context 'worker environment during discovery', :order<defined>, {
     let(:descriptions, {
         my %base = %*ENV.Hash;

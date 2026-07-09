@@ -11,7 +11,7 @@ constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example      = BDD::Behave::SpecTree::Example;
 
-plan 22;
+plan 25;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -20,6 +20,7 @@ my $fixture = $root.add('t/fixtures/parallel/discovery-fixture-spec.raku');
 my $clean   = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
 my $bad     = $root.add('t/fixtures/parallel-bad-spec.raku');
 my $worker  = $root.add('t/fixtures/parallel/worker-env-fixture-spec.raku');
+my $hang    = $root.add('t/fixtures/parallel/hang-load-fixture-spec.raku');
 
 my @discovery-argv = 'raku', "-I{$lib.absolute}", $bin.absolute;
 
@@ -166,6 +167,15 @@ sub summarize-suite($s) {
 {
   my $r = discover-suites-subprocess(($bad,), :@discovery-argv);
   ok $r[1].elems > 0, 'failed-to-load file produces a load error';
+}
+
+# A spec that hangs while loading is bounded by the discovery timeout.
+{
+  my $r = discover-suites-subprocess(($hang,), :@discovery-argv, :timeout(2));
+  is $r[0].elems, 0, 'a spec that hangs while loading yields no discovered suites';
+  is $r[1].elems, 1, 'a spec that hangs while loading produces one load error';
+  ok $r[1][0]<message>.contains('timed out'),
+    'the load error explains that discovery timed out';
 }
 
 # default-discovery-argv shape.

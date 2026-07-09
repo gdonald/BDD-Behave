@@ -78,6 +78,7 @@ sub discover-suites-subprocess(
   @spec-files,
   :@discovery-argv,
   :%base-env,
+  :$timeout,
   --> List
 ) is export {
   my @suites;
@@ -105,10 +106,27 @@ sub discover-suites-subprocess(
   $proc.stdout.tap(-> $chunk { $stdout ~= $chunk });
   $proc.stderr.tap(-> $chunk { $stderr ~= $chunk });
 
+  my $timeout-secs = $timeout.defined
+    ?? $timeout.Numeric
+    !! (%*ENV<BEHAVE_DISCOVERY_TIMEOUT> // 300).Numeric;
+
   my $result;
   try {
     my $promise = $proc.start(:ENV(%env));
-    $result = await $promise;
+    await Promise.anyof($promise, Promise.in($timeout-secs));
+
+    unless $promise.status ~~ Kept {
+      $proc.kill(SIGKILL);
+      my $reaped = try await $promise;
+      my $msg = "discovery subprocess timed out after {$timeout-secs}s "
+              ~ "(a spec may hang while loading, e.g. a stale precompilation)";
+      for @spec-files -> $f {
+        @load-errors.push: %( file => $f.Str, :message($msg) );
+      }
+      return (@suites.List, @load-errors.List).List;
+    }
+
+    $result = $promise.result;
     CATCH {
       default {
         for @spec-files -> $f {
@@ -117,17 +135,6 @@ sub discover-suites-subprocess(
         return (@suites.List, @load-errors.List).List;
       }
     }
-  }
-
-  if %*ENV<BEHAVE_DISCO_DEBUG> {
-    my $fh = '/tmp/disc-debug.log'.IO.open(:a);
-    $fh.say("ARGV: " ~ @argv.join(' '));
-    $fh.say("FILES: " ~ @spec-files.map(*.Str).join(', '));
-    $fh.say("EXITCODE: " ~ $result.exitcode);
-    $fh.say("STDOUT-BYTES: " ~ $stdout.chars);
-    $fh.say("STDERR:\n" ~ $stderr);
-    $fh.say("=" x 60);
-    $fh.close;
   }
 
   if $result.exitcode > 1 {
