@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.9.3 — 2026-07-10
+
+### Fixed
+
+- Parallel discovery no longer hangs when a spec file fails to load in a worker
+- Failure reasons now reach the JSON formatter, so parallel runs report full
+  failure detail instead of an empty failure record
+- JSON event attributes emit in a stable order
+- Stray non-object lines in a worker's JSON stream are no longer treated as
+  valid events
+- Temporary paths are created before workers write to them
+- Mocked time no longer drifts backward between reads
+
 ## v0.9.2 — 2026-06-24
 
 ### Added
