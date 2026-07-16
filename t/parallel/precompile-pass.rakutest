@@ -1,0 +1,80 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 7;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $lib     = $root.add('lib');
+my $bin     = $root.add('bin/behave');
+my $marker-fixture = $root.add('t/fixtures/parallel/load-marker-fixture-spec.raku');
+my $clean-fixture  = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
+my $broken-fixture = $root.add('t/fixtures/broken-fixture-spec.raku');
+
+sub run-behave(:%env-extra, *@args) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_WORKER_INDEX>:delete;
+  %env<BEHAVE_WORKER_COUNT>:delete;
+  for %env-extra.kv -> $k, $v { %env{$k} = $v }
+  my $proc = Proc::Async.new(
+    'raku', "-I{$lib.absolute}", $bin.absolute, |@args, :w,
+  );
+  my $out = '';
+  my $err = '';
+  $proc.stdout.tap(-> $c { $out ~= $c });
+  $proc.stderr.tap(-> $c { $err ~= $c });
+  my $done = $proc.start(:ENV(%env));
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exit($result.exitcode), :$out, :$err );
+}
+
+# --compile-only
+
+{
+  my %r = run-behave('--no-config', '--compile-only', $clean-fixture.absolute);
+  is %r<exit>, 0, 'compile-only exits 0 when every file loads';
+  is %r<out>, '', 'compile-only prints nothing';
+}
+
+{
+  my %r = run-behave('--no-config', '--compile-only', $broken-fixture.absolute);
+  is %r<exit>, 1, 'compile-only exits 1 on a load error';
+}
+
+# The precompile pass loads every spec file once before discovery and the
+# worker, so a full parallel run loads a file three times; --no-precompile
+# skips the pass and loads it twice.
+
+{
+  my $marker = $*TMPDIR.add("behave-load-marker-{$*PID}-{(now * 1e6).Int}");
+  $marker.unlink if $marker.e;
+  LEAVE { $marker.unlink if $marker.e }
+
+  my %r = run-behave(
+    :env-extra(%(BEHAVE_LOAD_MARKER => $marker.absolute)),
+    '--parallel', '1', $marker-fixture.absolute,
+  );
+
+  is %r<exit>, 0, 'a parallel run with the precompile pass passes';
+  is $marker.slurp.lines.elems, 3,
+    'the precompile pass, discovery, and the worker each load the file once';
+}
+
+{
+  my $marker = $*TMPDIR.add("behave-load-marker-np-{$*PID}-{(now * 1e6).Int}");
+  $marker.unlink if $marker.e;
+  LEAVE { $marker.unlink if $marker.e }
+
+  my %r = run-behave(
+    :env-extra(%(BEHAVE_LOAD_MARKER => $marker.absolute)),
+    '--parallel', '1', '--no-precompile', $marker-fixture.absolute,
+  );
+
+  is %r<exit>, 0, 'a parallel run with --no-precompile passes';
+  is $marker.slurp.lines.elems, 2,
+    '--no-precompile skips the pass: only discovery and the worker load the file';
+}
+
+done-testing;

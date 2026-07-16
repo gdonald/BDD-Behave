@@ -101,7 +101,14 @@ class WorkerPool is export {
       my $retried = False;
       try {
         my $proc-result = $start-promise.result;
-        my $exit-code = $proc-result.exitcode;
+        # A worker killed by a signal (e.g. SIGSEGV) reports exitcode 0 and
+        # the signal separately; fold it to the 128+N shell convention so
+        # every crash check downstream sees it as a crash, never as success.
+        my $exit-code = $proc-result.signal
+          ?? 128 + $proc-result.signal
+          !! $proc-result.exitcode;
+        note "Worker {$handle.index} died with signal {$proc-result.signal}"
+          if $proc-result.signal;
         my @tail = $handle.parser.flush;
         for @tail -> $event {
           $handle.events.push($event);

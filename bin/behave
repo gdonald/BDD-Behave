@@ -33,6 +33,8 @@ my $watch-mode  = False;
 my @watch-paths;
 my $dry-run-mode    = False;
 my $list-examples   = False;
+my $compile-only    = False;
+my $no-precompile   = False;
 my $list-format     = 'text';
 my $cli-config = CLI-CONFIG.new;
 
@@ -259,6 +261,13 @@ sub usage() {
     --list-examples-format=FORMAT
                              Output format for --list-examples. FORMAT
                              is 'text' (default) or 'json'.
+    --compile-only           Load the given spec files (writing their
+                             modules' precompilation) and exit without
+                             running examples or printing. Exit 0 when
+                             every file loaded; 1 on a load error.
+    --no-precompile          Skip the serial precompile pass the parallel
+                             runner performs before discovery (one
+                             --compile-only subprocess per spec file).
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
@@ -614,6 +623,10 @@ while @args {
     @watch-paths.push: $arg.substr('--watch-path='.chars);
   } elsif $arg eq '--dry-run' {
     $dry-run-mode = True;
+  } elsif $arg eq '--compile-only' {
+    $compile-only = True;
+  } elsif $arg eq '--no-precompile' {
+    $no-precompile = True;
   } elsif $arg eq '--list-examples' {
     $list-examples = True;
   } elsif $arg eq '--list-examples-format' {
@@ -1100,6 +1113,40 @@ my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
 my $files-obj = Files.new;
 my @files = $files-obj.list(@effective-specs);
 
+# Load every given spec file in this one process (which writes their use'd
+# modules' precompilation in a single consistent pass) and exit without
+# running examples or printing. The parallel runner invokes this before
+# discovery, so discovery and the workers only read the cache. Precomp units
+# written by processes with different load states carry conflicting
+# repossession records, and loading such a mix segfaults MoarVM's
+# deserializer or leaves the deferred-exception teardown crash; one writer
+# for the whole graph is the consistency this pass provides.
+#
+# After each file loads, the FileSystem repositories now in the repo chain
+# (the project lib dirs the specs pulled in via `use lib`) are appended to
+# BEHAVE_COMPILE_REPORT when set. If this process dies mid-pass, the parent
+# reads the partial report, clears those repos' .precomp caches (the
+# inconsistent state that killed the load), and retries once.
+if $compile-only {
+  my $exit = 0;
+  my $report = %*ENV<BEHAVE_COMPILE_REPORT>;
+
+  for @files -> $file {
+    try {
+      BDD::Behave::SpecLoader::load-spec-file($file);
+      CATCH { default { $exit = 1 } }
+    }
+
+    if $report {
+      my @prefixes = gather for $*REPO.repo-chain {
+        take .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;
+      }
+      try $report.IO.spurt(@prefixes.map(* ~ "\n").join, :append) if @prefixes;
+    }
+  }
+  exit($exit);
+}
+
 if $dry-run-mode || $list-examples {
   unless $list-format eq 'text' | 'json' {
     note "Error: --list-examples-format must be 'text' or 'json' (got: '$list-format')";
@@ -1299,6 +1346,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
          :only-locations(@only-locations),
          :coverage-log-dir($par-coverage-dir),
          :coverage-counts($coverage-counts),
+         :precompile-pass(!$no-precompile),
        )
     !! BDD::Behave::Parallel::ParallelRunOptions.new(
          :worker-count($parallel-workers),
@@ -1317,6 +1365,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
          :exclude-tags(@exclude-tags),
          :example-patterns(@example-patterns),
          :only-locations(@only-locations),
+         :precompile-pass(!$no-precompile),
        );
 
   my $par-result = run-parallel($opts);

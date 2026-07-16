@@ -168,7 +168,13 @@ class QueueWorkerPool is export {
       Promise.allof($start-promise, $stdout-done, $stderr-done).then({
         try {
           my $proc-result = $start-promise.result;
-          $handle.exit-code = $proc-result.exitcode;
+          # Fold a signal death (exitcode 0, signal set) to 128+N so crash
+          # checks downstream never read it as success.
+          $handle.exit-code = $proc-result.signal
+            ?? 128 + $proc-result.signal
+            !! $proc-result.exitcode;
+          note "Queue worker $i died with signal {$proc-result.signal}"
+            if $proc-result.signal;
           my @tail = $handle.parser.flush;
           for @tail -> $event {
             self!handle-worker-event($i, $event);

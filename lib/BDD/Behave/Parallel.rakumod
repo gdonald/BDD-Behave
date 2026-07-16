@@ -39,6 +39,7 @@ class ParallelRunOptions is export {
   has @.only-locations;
   has Bool     $.fail-fast-any = False;
   has Bool     $.discovery-in-process = False;
+  has Bool     $.precompile-pass = True;
   has Str      $.parallel-mode = 'lpt';
   has Int      $.parallel-retry = 0;
   has IO::Path $.coverage-log-dir = IO::Path;
@@ -72,6 +73,95 @@ sub current-include-flags(--> List) is export {
 
 sub default-discovery-argv(--> List) is export {
   ('raku', |current-include-flags(), $*PROGRAM-NAME).List;
+}
+
+# Build the module precompilation for every spec file in ONE --compile-only
+# subprocess before discovery and the workers load anything, so the whole
+# dependency graph is written by a single process in a single pass and every
+# later process only reads it. Precomp units written by processes with
+# different load states carry conflicting repossession records; loading such
+# a mix segfaults MoarVM's deserializer, or surfaces as a deferred compile
+# exception that crashes the exception printer at process teardown.
+#
+# An already-inconsistent cache (left by earlier mixed-writer runs) kills the
+# pass itself the same way. The subprocess reports each project lib dir it
+# loads through (via BEHAVE_COMPILE_REPORT); when the pass dies by signal,
+# those dirs' .precomp caches are cleared and the pass runs once more to
+# rebuild them consistently. Nonzero exits are ignored: discovery reports
+# real load errors with their messages.
+sub precompile-specs-serially(
+  @spec-files,
+  :@discovery-argv,
+  :%base-env,
+  --> Nil
+) is export {
+  return unless @spec-files.elems;
+
+  my @base = (@discovery-argv.elems ?? @discovery-argv.list !! default-discovery-argv()).list;
+
+  my $report = $*TMPDIR.add("behave-compile-report-{$*PID}-{(now * 1e6).Int}");
+  LEAVE { try $report.unlink }
+
+  my %env = %base-env.elems ?? %base-env.Hash !! %*ENV.Hash;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_WORKER_INDEX> //= '0';
+  %env<BEHAVE_WORKER_COUNT> //= '1';
+  %env<BEHAVE_COMPILE_REPORT> = $report.absolute;
+  %env<MVM_COVERAGE_LOG>:delete;
+  %env<MVM_COVERAGE_CONTROL>:delete;
+  %env<BEHAVE_COVERAGE_LOG>:delete;
+
+  my $timeout-secs = (%*ENV<BEHAVE_DISCOVERY_TIMEOUT> // 300).Numeric;
+
+  sub run-pass(@files --> Bool) {
+    my @argv = |@base, '--no-config', '--compile-only', |@files.map(*.Str);
+    my $proc = Proc::Async.new(|@argv);
+    $proc.stdout.tap(-> $ { });
+    $proc.stderr.tap(-> $ { });
+
+    my $died-by-signal = False;
+    try {
+      my $promise = $proc.start(:ENV(%env));
+      await Promise.anyof($promise, Promise.in($timeout-secs));
+      if $promise.status ~~ Kept {
+        $died-by-signal = $promise.result.signal != 0;
+      } else {
+        $proc.kill(SIGKILL);
+        try await $promise;
+        $died-by-signal = True;
+      }
+      CATCH { default { $died-by-signal = True } }
+    }
+    $died-by-signal;
+  }
+
+  return unless run-pass(@spec-files);
+
+  # The union pass crashed on an inconsistent cache. Loading one file per
+  # process still works in that state, so run each file alone purely to learn
+  # the project lib dirs the specs pull in (each process appends its repo
+  # chain to the report), then clear those dirs' caches and rebuild the whole
+  # graph in one pass.
+  run-pass(($_,)) for @spec-files;
+
+  my @prefixes = $report.e ?? $report.slurp.lines.unique.grep(*.chars) !! ();
+  return unless @prefixes.elems;
+
+  for @prefixes -> $prefix {
+    my $precomp = $prefix.IO.add('.precomp');
+    next unless $precomp.d;
+    remove-tree($precomp);
+  }
+
+  run-pass(@spec-files);
+}
+
+# Recursive directory removal for the .precomp caches cleared above.
+sub remove-tree(IO::Path:D $dir --> Nil) {
+  for $dir.dir -> $entry {
+    $entry.d ?? remove-tree($entry) !! (try $entry.unlink);
+  }
+  try $dir.rmdir;
 }
 
 sub discover-suites-subprocess(
@@ -137,8 +227,12 @@ sub discover-suites-subprocess(
     }
   }
 
-  if $result.exitcode > 1 {
-    my $msg = "discovery subprocess exited with code {$result.exitcode}";
+  if $result.signal || $result.exitcode > 1 {
+    my $msg = $result.signal
+      ?? "discovery subprocess died with signal {$result.signal}"
+         ~ " (a corrupt precompilation cache can segfault the loader;"
+         ~ " clearing the project's .precomp directories usually clears it)"
+      !! "discovery subprocess exited with code {$result.exitcode}";
     $msg ~= ": $stderr" if $stderr.chars;
     for @spec-files -> $f {
       @load-errors.push: %( file => $f.Str, :message($msg) );
@@ -523,10 +617,15 @@ sub run-parallel-isolated-impl(
           }
         }
 
-        if $proc-result.exitcode > 1 {
+        my $effective = $proc-result.signal
+          ?? 128 + $proc-result.signal
+          !! $proc-result.exitcode;
+        if $effective > 1 {
           $event-lock.protect: {
             $result.exit-code = 1;
-            note red("Isolated worker for $file exited with code {$proc-result.exitcode}");
+            note red($proc-result.signal
+              ?? "Isolated worker for $file died with signal {$proc-result.signal}"
+              !! "Isolated worker for $file exited with code {$proc-result.exitcode}");
           }
         }
       }
@@ -662,9 +761,14 @@ sub run-parallel-queue-impl(
     for $parser.flush -> $event {
       handle-event($opts.formatter, $result, -1, $event, @suites);
     }
-    if $proc-result.exitcode > 1 {
+    my $effective = $proc-result.signal
+      ?? 128 + $proc-result.signal
+      !! $proc-result.exitcode;
+    if $effective > 1 {
       $result.exit-code = 1;
-      note red("Serial worker exited with code {$proc-result.exitcode}");
+      note red($proc-result.signal
+        ?? "Serial worker died with signal {$proc-result.signal}"
+        !! "Serial worker exited with code {$proc-result.exitcode}");
     }
   }
 
@@ -676,6 +780,12 @@ sub run-parallel(
   --> ParallelRunResult
 ) is export {
   my $result = ParallelRunResult.new;
+
+  precompile-specs-serially(
+    $opts.spec-files,
+    :discovery-argv($opts.discovery-argv),
+    :base-env(%(|$opts.base-env)),
+  ) if $opts.precompile-pass && !$opts.discovery-in-process;
 
   my $disco = $opts.discovery-in-process
   ?? discover-suites($opts.spec-files)
@@ -806,9 +916,14 @@ sub run-parallel(
     for $parser.flush -> $event {
       handle-event($opts.formatter, $result, -1, $event, @suites);
     }
-    if $proc-result.exitcode > 1 {
+    my $effective = $proc-result.signal
+      ?? 128 + $proc-result.signal
+      !! $proc-result.exitcode;
+    if $effective > 1 {
       $result.exit-code = 1;
-      note red("Serial worker exited with code {$proc-result.exitcode}");
+      note red($proc-result.signal
+        ?? "Serial worker died with signal {$proc-result.signal}"
+        !! "Serial worker exited with code {$proc-result.exitcode}");
     }
     $serial-manifest-path.unlink if $serial-manifest-path.e;
   }
