@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.9.4 — 2026-07-15
+
+### Added
+
+- A precompile pass before parallel discovery, building every spec file's module
+  precompilation in one `--compile-only` subprocess so a single process writes
+  the whole dependency graph and discovery and the workers only read it
+- Recovery from a cache left inconsistent by earlier runs: a precompile pass
+  that dies clears the project's reported `.precomp` directories and rebuilds
+- `--no-precompile` to skip the precompile pass
+- `--compile-only` to load the given spec files, writing their precompilation,
+  and exit without running examples or printing
+
+### Fixed
+
+- A worker or the discovery subprocess killed by a signal such as SIGSEGV no
+  longer reads as exit 0 and "0 examples" success. Signal deaths fold to the
+  128+N convention across the lpt, queue, isolated, and serial worker paths and
+  fail the run with a message naming the signal
+
 ## v0.9.3 — 2026-07-10
 
 ### Fixed

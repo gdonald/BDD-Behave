@@ -2,12 +2,13 @@ use v6.d;
 use lib 'lib';
 use Test;
 
-plan 6;
+plan 10;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
 my $bin     = $root.add('bin/behave');
-my $fixture = $root.add('t/fixtures/parallel/signal-crash-fixture-spec.raku');
+my $fixture        = $root.add('t/fixtures/parallel/signal-crash-fixture-spec.raku');
+my $serial-fixture = $root.add('t/fixtures/parallel/serial-signal-crash-fixture-spec.raku');
 
 sub strip-ansi(Str $s --> Str) {
   $s.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
@@ -53,6 +54,16 @@ sub run-behave(*@args) {
   isnt %r<exit>, 0, 'isolated: a signal-killed worker fails the run';
   ok strip-ansi(%r<out> ~ %r<err>).contains('died with signal'),
     'isolated: the failure names the signal death';
+}
+
+# A :serial example runs in the post-parallel serial worker, a separate crash
+# path from the pooled workers above.
+
+for <lpt queue> -> $mode {
+  my %r = run-behave('--parallel', '1', "--parallel-mode=$mode", $serial-fixture.absolute);
+  isnt %r<exit>, 0, "$mode: a signal-killed serial worker fails the run";
+  ok strip-ansi(%r<out> ~ %r<err>).contains('Serial worker died with signal'),
+    "$mode: the failure names the serial worker's signal death";
 }
 
 done-testing;

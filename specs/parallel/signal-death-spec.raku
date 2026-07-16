@@ -3,7 +3,8 @@ use BDD::Behave;
 my $root    = $?FILE.IO.parent.parent.parent;
 my $lib     = $root.add('lib');
 my $bin     = $root.add('bin/behave');
-my $fixture = $root.add('t/fixtures/parallel/signal-crash-fixture-spec.raku');
+my $fixture        = $root.add('t/fixtures/parallel/signal-crash-fixture-spec.raku');
+my $serial-fixture = $root.add('t/fixtures/parallel/serial-signal-crash-fixture-spec.raku');
 
 sub strip-ansi(Str $s --> Str) {
   $s.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
@@ -37,6 +38,21 @@ describe 'a worker killed by a signal', {
       aggregate-failures {
         expect(%r<exit> == 0).to.be-falsy;
         expect(strip-ansi(%r<out> ~ %r<err>).contains('died with signal')).to.be-truthy;
+      }
+    }
+  }
+}
+
+# A :serial example runs in the post-parallel serial worker, a separate crash
+# path from the pooled workers above.
+describe 'the serial worker killed by a signal', {
+  for <lpt queue> -> $mode {
+    it "fails the run and names the signal death in $mode mode", {
+      my %r = run-behave('--parallel', '1', "--parallel-mode=$mode", $serial-fixture.absolute);
+
+      aggregate-failures {
+        expect(%r<exit> == 0).to.be-falsy;
+        expect(strip-ansi(%r<out> ~ %r<err>).contains('Serial worker died with signal')).to.be-truthy;
       }
     }
   }

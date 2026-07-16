@@ -1,0 +1,51 @@
+use v6.d;
+use lib 'lib', 'specs/lib';
+use Test;
+use Behave::Test::CompilePassStub;
+
+plan 8;
+
+{
+  my $run = make-stub-run();
+  LEAVE $run.cleanup;
+
+  is $run.pass-count, 1, 'a clean pass builds the whole graph in one subprocess';
+  ok $run.precomp-exists, 'a clean pass leaves the project precomp cache alone';
+}
+
+{
+  my $run = make-stub-run(:crash);
+  LEAVE $run.cleanup;
+
+  nok $run.precomp-exists, 'a signal death clears the reported precomp cache';
+  is $run.pass-count, 4,
+    'the pass, one per-file pass each, and the rebuild pass all ran';
+
+  my $rebuild = $run.invocations[*-1];
+  is $run.spec-files.grep({ $rebuild.contains(.absolute) }).elems, 2,
+    'the rebuild pass covers every spec file';
+}
+
+{
+  my $run = make-stub-run(:hang, :timeout(1));
+  LEAVE $run.cleanup;
+
+  is $run.pass-count, 4, 'a timed-out pass recovers the same way a signal death does';
+}
+
+{
+  my $run = make-stub-run(:crash, :!report-prefixes);
+  LEAVE $run.cleanup;
+
+  is $run.pass-count, 3,
+    'a dead pass that reported no project lib dirs stops after the per-file passes';
+}
+
+{
+  my $run = make-stub-run(:spec-file-count(0));
+  LEAVE $run.cleanup;
+
+  is $run.pass-count, 0, 'no spec files runs no subprocess';
+}
+
+done-testing;

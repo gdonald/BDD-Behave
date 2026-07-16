@@ -71,6 +71,14 @@ them.
 
 ## Spec discovery
 
+Discovery is preceded by a precompile pass: one `behave --no-config
+--compile-only <spec-files>` subprocess loads every spec file, writing the whole
+module dependency graph's precompilation from a single process. Discovery and
+the workers then only read that cache. Units written concurrently by processes
+with differing load states carry conflicting repossession records, and loading
+that mix segfaults the deserializer. One writer per graph is the invariant the
+pass exists to hold. `--no-precompile` skips it.
+
 Distribution requires the parent to know what groups exist so it can bucket
 them. The parent runs a short-lived discovery subprocess
 (`behave --no-config --list-examples --list-examples-format=json`), parses the

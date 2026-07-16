@@ -52,6 +52,22 @@ Loading multiple spec files into one process has hazards that don't exist when e
 
 Spec discovery itself also runs in a subprocess. Before launching workers, the parent invokes `raku bin/behave --no-config --list-examples --list-examples-format=json <spec-files>`, parses the emitted JSON tree, and rebuilds a skeleton `Suite` / `ExampleGroup` / `Example` tree used only for bucket distribution and event lookups. The parent itself never `EVALFILE`s any user spec file, so user-declared `class` / `role` definitions and other top-level effects never run in the parent and cannot collide with one another or with Behave's own loaded modules.
 
+### Precompile pass
+
+Before discovery starts, the parent runs one more subprocess: `raku bin/behave --no-config --compile-only <spec-files>`. That process loads every spec file, which writes the precompilation for every module the specs `use`, then exits without running or printing anything. Discovery and all the workers that follow only read that cache.
+
+The single writer is the point. Raku writes precompilation units per process, and a unit carries repossession records describing what its process had already loaded. When several processes compile overlapping parts of the same dependency graph at once, they write units whose records disagree. Loading that mix later segfaults MoarVM's deserializer, or surfaces as a deferred compile exception that crashes the exception printer at teardown. Building the whole graph in one pass means every unit agrees with every other.
+
+If the pass itself dies by a signal, the cache was already inconsistent before this run. The runner recovers on its own: the `--compile-only` process reports each project `lib` directory the specs load through, so the parent loads each file in its own process to collect that list, clears those directories' `.precomp` caches, and runs the pass once more to rebuild them. A nonzero exit from the pass is ignored rather than retried, because a genuine load error is discovery's to report, with its message.
+
+`--no-precompile` skips the pass. The pass costs one extra load of each spec file per run, so it is worth skipping if your specs load no project modules and you want the load back.
+
+`--compile-only` is also usable on its own, for example to warm a cache in a build step:
+
+```shell
+$ behave --compile-only specs/       # exit 0 when every file loaded, 1 on a load error
+```
+
 ## Group affinity
 
 This section and [Seed mode](#seed-mode-seed-mode) describe the `lpt` / `queue` pool modes. Under the default `isolated` mode each spec file already runs in a single subprocess, so every group in a file shares one worker automatically and bucket distribution does not apply.
