@@ -1,0 +1,133 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel;
+
+plan 10;
+
+sub make-fixture-dir(--> IO::Path) {
+  my $dir = $*TMPDIR.add("behave-worker-count-t-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+  $dir;
+}
+
+sub probe-spec(Str $group --> Str) {
+  my $template = q:to/END/;
+  use BDD::Behave;
+  describe 'GROUP', {
+    it 'records where it ran', {
+      %*ENV<BEHAVE_PROBE_DIR>.IO.add('GROUP')
+        .spurt(%*ENV<BEHAVE_WORKER_INDEX> // 'in-process');
+      expect(1).to.be(1);
+    }
+  }
+  END
+  $template.subst('GROUP', $group, :g);
+}
+
+sub run-behave(IO::Path $probe-dir, @argv --> Nil) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_PROBE_DIR> = $probe-dir.absolute;
+  %env<BEHAVE_WORKER_INDEX>:delete;
+  %env<BEHAVE_WORKER_COUNT>:delete;
+
+  my $proc = run(
+    'raku', '-Ilib', 'bin/behave', '--no-config', '--format', 'progress', |@argv,
+    :out, :err, :cwd($*CWD), :%env,
+  );
+  $proc.out.slurp(:close);
+  $proc.err.slurp(:close);
+}
+
+sub remove-dir(IO::Path $dir --> Nil) {
+  return unless $dir.e;
+  for $dir.dir -> $entry { $entry.unlink if $entry.f }
+  $dir.rmdir;
+}
+
+is resolve-worker-count(:requested(1), :file-count(1), :cpu-cores(8)), 1,
+  'an explicit --parallel 1 is honoured for a single spec file';
+
+is resolve-worker-count(:requested(3), :file-count(20), :cpu-cores(8)), 3,
+  'an explicit --parallel 3 is honoured for a whole directory';
+
+is resolve-worker-count(:requested(32), :file-count(20), :cpu-cores(8)), 32,
+  'an explicit count larger than the core count is honoured';
+
+is resolve-worker-count(:file-count(1), :cpu-cores(8)), 0,
+  'an omitted --parallel resolves a single spec file to no workers';
+
+is resolve-worker-count(:file-count(0), :cpu-cores(8)), 0,
+  'an omitted --parallel resolves an empty selection to no workers';
+
+is resolve-worker-count(:file-count(2), :cpu-cores(8)), 8,
+  'an omitted --parallel resolves two spec files to the core count';
+
+is resolve-worker-count(:file-count(159), :cpu-cores(8)), 8,
+  'an omitted --parallel resolves a whole directory to the core count';
+
+{
+  my $workspace = make-fixture-dir;
+  my $probe-dir = $workspace.add('probes');
+  my $spec-dir  = $workspace.add('specs');
+  $probe-dir.mkdir;
+  $spec-dir.mkdir;
+
+  LEAVE {
+    remove-dir($probe-dir);
+    remove-dir($spec-dir);
+    remove-dir($workspace);
+  }
+
+  $spec-dir.add('solo-spec.raku').spurt(probe-spec('solo'));
+  run-behave($probe-dir, [$spec-dir.add('solo-spec.raku').absolute]);
+
+  is $probe-dir.add('solo').slurp, 'in-process',
+    'a single spec file with no --parallel runs in the behave process itself';
+}
+
+{
+  my $workspace = make-fixture-dir;
+  my $probe-dir = $workspace.add('probes');
+  my $spec-dir  = $workspace.add('specs');
+  $probe-dir.mkdir;
+  $spec-dir.mkdir;
+
+  LEAVE {
+    remove-dir($probe-dir);
+    remove-dir($spec-dir);
+    remove-dir($workspace);
+  }
+
+  $spec-dir.add('solo-spec.raku').spurt(probe-spec('solo'));
+  run-behave(
+    $probe-dir,
+    ['--parallel', '1', $spec-dir.add('solo-spec.raku').absolute],
+  );
+
+  isnt $probe-dir.add('solo').slurp, 'in-process',
+    'a single spec file with an explicit --parallel 1 runs in a worker subprocess';
+}
+
+{
+  my $workspace = make-fixture-dir;
+  my $probe-dir = $workspace.add('probes');
+  my $spec-dir  = $workspace.add('specs');
+  $probe-dir.mkdir;
+  $spec-dir.mkdir;
+
+  LEAVE {
+    remove-dir($probe-dir);
+    remove-dir($spec-dir);
+    remove-dir($workspace);
+  }
+
+  $spec-dir.add('one-spec.raku').spurt(probe-spec('one'));
+  $spec-dir.add('two-spec.raku').spurt(probe-spec('two'));
+  run-behave($probe-dir, [$spec-dir.absolute]);
+
+  is $probe-dir.dir.map(*.slurp).grep('in-process').elems, 0,
+    'a directory of two spec files with no --parallel runs both in worker subprocesses';
+}

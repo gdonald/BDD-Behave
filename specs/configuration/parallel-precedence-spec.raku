@@ -35,7 +35,7 @@ sub run-behave(:%env-extra, *@args) {
 }
 
 describe 'parallel config precedence', {
-  it 'isolates each spec in a worker subprocess by default', {
+  it 'runs a single spec file in the behave process with no workers by default', {
     my $detect = make-detect-path;
     my %r = run-behave(
       :env-extra(%(BEHAVE_PARALLEL_DETECT => $detect.absolute)),
@@ -45,8 +45,10 @@ describe 'parallel config precedence', {
     my $observed = $detect.slurp;
     $detect.unlink if $detect.e;
 
-    expect(%r<exit>).to.be(0);
-    expect($observed).not.to.be('serial');
+    aggregate-failures {
+      expect(%r<exit>).to.be(0);
+      expect($observed).to.be('serial');
+    }
   }
 
   it 'honors parallel = N from a config file', {

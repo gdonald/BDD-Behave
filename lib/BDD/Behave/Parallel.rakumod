@@ -75,6 +75,23 @@ sub default-discovery-argv(--> List) is export {
   ('raku', |current-include-flags(), $*PROGRAM-NAME).List;
 }
 
+# Reaching the parallel runner costs a precompile subprocess, a discovery
+# subprocess, and at least one worker subprocess, each paying the Raku
+# startup and the module load again. For a selection that resolves to a
+# single spec file that is more than the file itself costs, so an omitted
+# --parallel resolves to zero workers there and the run stays in this
+# process. An explicit --parallel N is always honoured.
+our sub resolve-worker-count(
+  Int :$requested,
+  Int :$file-count!,
+  Int :$cpu-cores!,
+  --> Int
+) is export {
+  return $requested if $requested.defined;
+  return 0 if $file-count <= 1;
+  $cpu-cores;
+}
+
 # Build the module precompilation for every spec file in ONE --compile-only
 # subprocess before discovery and the workers load anything, so the whole
 # dependency graph is written by a single process in a single pass and every

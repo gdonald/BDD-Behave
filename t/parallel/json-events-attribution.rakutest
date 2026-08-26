@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Parallel::EventStream;
 
-plan 6;
+plan 8;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -25,7 +25,7 @@ sub run-behave(*@args) {
   $out;
 }
 
-sub failure-message-by-example(*@extra-args --> Hash) {
+sub failure-by-example(*@extra-args --> Hash) {
   my $out = run-behave('--format', 'json-events', '--order', 'defined', |@extra-args, $failing.absolute);
 
   my %by-description;
@@ -34,26 +34,32 @@ sub failure-message-by-example(*@extra-args --> Hash) {
     my %event = parse-json-event($line);
     next unless (%event<type> // '') eq 'example-fail';
     my @failures = (%event<failures> // ()).list;
-    %by-description{%event<description>} = @failures ?? (@failures[0]<message> // '').Str !! '';
+    %by-description{%event<description>} = @failures ?? @failures[0] !! %();
   }
 
   %by-description;
 }
 
-my %serial = failure-message-by-example();
+# The fixture's three examples fail on distinct lines, so the reported line is
+# what ties a failure back to the example that produced it.
+my %in-process = failure-by-example();
 
-ok %serial{'first example fails'}.contains('to be: 2'),
-  'serial: first failing example carries its own expected value';
-ok %serial{'second example fails'}.contains('to be: b'),
-  'serial: second failing example carries its own expected value';
-ok %serial{'third example fails'}.contains('to be: False'),
-  'serial: third failing example carries its own expected value';
+is %in-process{'first example fails'}<line>, 5,
+  'no workers: first failing example carries its own failure line';
+is %in-process{'second example fails'}<line>, 9,
+  'no workers: second failing example carries its own failure line';
+is %in-process{'third example fails'}<line>, 13,
+  'no workers: third failing example carries its own failure line';
+is %in-process{'first example fails'}<expected>, '2',
+  'no workers: compared values land in the expected and given fields';
 
-my %parallel = failure-message-by-example('--parallel', '2');
+my %parallel = failure-by-example('--parallel', '2');
 
-ok %parallel{'first example fails'}.contains('to be: 2'),
-  'parallel: first failing example carries its own expected value';
-ok %parallel{'second example fails'}.contains('to be: b'),
-  'parallel: second failing example carries its own expected value';
-ok %parallel{'third example fails'}.contains('to be: False'),
-  'parallel: third failing example carries its own expected value';
+is %parallel{'first example fails'}<line>, 5,
+  'parallel: first failing example carries its own failure line';
+is %parallel{'second example fails'}<line>, 9,
+  'parallel: second failing example carries its own failure line';
+is %parallel{'third example fails'}<line>, 13,
+  'parallel: third failing example carries its own failure line';
+ok %parallel{'first example fails'}<message>.contains('to be: 2'),
+  'parallel: compared values land in the message field instead';

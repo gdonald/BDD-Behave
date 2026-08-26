@@ -21,7 +21,7 @@ sub run-behave(*@args) {
   $out;
 }
 
-sub failure-message-by-example(*@extra-args --> Hash) {
+sub failure-by-example(*@extra-args --> Hash) {
   my $out = run-behave('--format', 'json-events', '--order', 'defined', |@extra-args, $failing.absolute);
 
   my %by-description;
@@ -30,34 +30,52 @@ sub failure-message-by-example(*@extra-args --> Hash) {
     my %event = parse-json-event($line);
     next unless (%event<type> // '') eq 'example-fail';
     my @failures = (%event<failures> // ()).list;
-    %by-description{%event<description>} = @failures ?? (@failures[0]<message> // '').Str !! '';
+    %by-description{%event<description>} = @failures ?? @failures[0] !! %();
   }
 
   %by-description;
 }
 
+# The fixture's three examples fail on distinct lines, so the reported line is
+# what ties a failure back to the example that produced it.
 describe 'json-events per-example failure attribution', {
-  context 'running serially', {
-    it 'attaches each failure to the example that produced it', {
-      my %message = failure-message-by-example();
+  context 'running in the behave process with no workers', {
+    let(:failure, { failure-by-example() });
 
-      aggregate-failures {
-        expect(%message{'first example fails'}).to.include('to be: 2');
-        expect(%message{'second example fails'}).to.include('to be: b');
-        expect(%message{'third example fails'}).to.include('to be: False');
-      }
+    it 'attaches the first example its own failure line', {
+      expect(failure{'first example fails'}<line>).to.be(5);
+    }
+
+    it 'attaches the second example its own failure line', {
+      expect(failure{'second example fails'}<line>).to.be(9);
+    }
+
+    it 'attaches the third example its own failure line', {
+      expect(failure{'third example fails'}<line>).to.be(13);
+    }
+
+    it 'reports the compared values in the expected and given fields', {
+      expect(failure{'first example fails'}<expected>).to.be('2');
     }
   }
 
   context 'running across parallel workers', {
-    it 'attaches each failure to the example that produced it', {
-      my %message = failure-message-by-example('--parallel', '2');
+    let(:failure, { failure-by-example('--parallel', '2') });
 
-      aggregate-failures {
-        expect(%message{'first example fails'}).to.include('to be: 2');
-        expect(%message{'second example fails'}).to.include('to be: b');
-        expect(%message{'third example fails'}).to.include('to be: False');
-      }
+    it 'attaches the first example its own failure line', {
+      expect(failure{'first example fails'}<line>).to.be(5);
+    }
+
+    it 'attaches the second example its own failure line', {
+      expect(failure{'second example fails'}<line>).to.be(9);
+    }
+
+    it 'attaches the third example its own failure line', {
+      expect(failure{'third example fails'}<line>).to.be(13);
+    }
+
+    it 'reports the compared values in the message field instead', {
+      expect(failure{'first example fails'}<message>).to.include('to be: 2');
     }
   }
 }

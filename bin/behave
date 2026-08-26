@@ -13,6 +13,7 @@ use BDD::Behave::Coverage;
 use BDD::Behave::FailureStore;
 use BDD::Behave::SpecLoader;
 use BDD::Behave::Version;
+need BDD::Behave::Parallel;
 
 constant CLI-CONFIG = BDD::Behave::Configuration::Configuration;
 
@@ -189,11 +190,16 @@ sub usage() {
     --parallel N             Run specs across N worker subprocesses. N
                              must be a positive integer. The default mode
                              runs one subprocess per spec file, up to N in
-                             flight (see --parallel-mode). Default
-                             (omitted) keeps single-process serial
-                             execution. Mutually exclusive with --bisect /
-                             --bisect-data / --coverage. Ignored under
-                             --doc.
+                             flight (see --parallel-mode). Omitted, N
+                             defaults to the CPU core count, except for a
+                             selection that resolves to a single spec
+                             file, which runs in this process with no
+                             workers. Pass --parallel 1 to put a single
+                             file through a worker subprocess anyway.
+                             Under --coverage the omitted default stays
+                             at the core count for any file count.
+                             Mutually exclusive with --bisect /
+                             --bisect-data. Ignored under --doc.
     --progress-total         Append a running ` (N/TOTAL)` counter after
                              each example char emitted by the `progress`
                              formatter under --parallel. TOTAL is the
@@ -1112,6 +1118,18 @@ my @effective-specs = @specs.elems ?? @specs !! @config-spec-paths;
 
 my $files-obj = Files.new;
 my @files = $files-obj.list(@effective-specs);
+
+# Coverage keeps whatever --parallel resolved to at option-parsing time: the
+# serial path collects through an outer re-exec wrapper that has already been
+# decided above, and downgrading here would skip both it and the parallel
+# per-worker collection.
+if $parallel-workers > 0 && !$coverage-enabled && !$worker-manifest-path.defined {
+  $parallel-workers = BDD::Behave::Parallel::resolve-worker-count(
+    :requested($final-config.parallel),
+    :file-count(@files.elems),
+    :cpu-cores($*KERNEL.cpu-cores),
+  );
+}
 
 # Load every given spec file in this one process (which writes their use'd
 # modules' precompilation in a single consistent pass) and exit without
