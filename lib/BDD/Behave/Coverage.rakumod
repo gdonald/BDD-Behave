@@ -61,10 +61,30 @@ our class FileCoverage {
   has SetHash $.branch-lines    = SetHash.new;
   has SetHash $.branches-hit    = SetHash.new;
   has         %.hit-counts;
+  has List    $!covered;
+  has Str     $!covered-signature;
 
   method add-hit(Int $line, $count = 1) {
     $!hits{$line} = True;
     %!hit-counts{$line} += $count;
+  }
+
+  # Rendering one file asks for its hit total, its covered count, and its
+  # covered line numbers, and all three are the same intersection. The sizes of
+  # the two sets identify the state they were computed from, so a file that
+  # gains a hit or an executable line after a read is intersected again.
+  method !covered-numbers(--> List) {
+    my $signature = $!hits.elems ~ ':' ~ $!executable.elems;
+
+    # `.List` decontainerizes: handing back the attribute itself returns a
+    # Scalar holding a List, which iterates as a single item.
+    return $!covered.List
+      if $!covered.defined && $!covered-signature eq $signature;
+
+    $!covered-signature = $signature;
+    $!covered = ($!hits (&) $!executable).keys.map(*.Int).sort.List;
+
+    $!covered.List;
   }
 
   method hit-count(Int $line --> Int) {
@@ -72,7 +92,7 @@ our class FileCoverage {
   }
 
   method total-hits(--> Int) {
-    [+] ($!hits (&) $!executable).keys.map({ %!hit-counts{$_} // 0 });
+    [+] self!covered-numbers.map({ %!hit-counts{$_} // 0 });
   }
 
   method total-lines(--> Int) {
@@ -80,7 +100,7 @@ our class FileCoverage {
   }
 
   method covered-lines(--> Int) {
-    ($!hits (&) $!executable).elems;
+    self!covered-numbers.elems;
   }
 
   method missing-lines(--> List) {
@@ -88,7 +108,7 @@ our class FileCoverage {
   }
 
   method covered-line-numbers(--> List) {
-    ($!hits (&) $!executable).keys.map(*.Int).sort.List;
+    self!covered-numbers;
   }
 
   method percentage(--> Real) {

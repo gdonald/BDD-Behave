@@ -491,6 +491,79 @@ describe 'BDD::Behave::Coverage::FileCoverage hit counts', {
   }
 }
 
+describe 'BDD::Behave::Coverage::FileCoverage covered lines', {
+  let(:file-cov, {
+    my $f = FileCoverage.new(:path('/p'));
+    $f.executable{$_} = True for 1, 2, 3;
+    $f.add-hit(1, 2);
+    $f.add-hit(3, 5);
+    $f;
+  });
+
+  it 'lists the executable lines that were hit', {
+    expect(file-cov.covered-line-numbers.list).to.eq((1, 3));
+  }
+
+  it 'counts them', {
+    expect(file-cov.covered-lines).to.be(2);
+  }
+
+  it 'sums their hit counts', {
+    expect(file-cov.total-hits).to.be(7);
+  }
+
+  it 'lists the executable lines that were not hit', {
+    expect(file-cov.missing-lines.list).to.eq((2,));
+  }
+
+  it 'gives the same answer when asked twice', {
+    file-cov.covered-line-numbers;
+
+    expect(file-cov.covered-line-numbers.list).to.eq((1, 3));
+  }
+
+  context 'given a hit added after the covered lines were read', {
+    before-each {
+      file-cov().covered-line-numbers;
+      file-cov().add-hit(2, 1);
+    }
+
+    it 'counts the new line as covered', {
+      expect(file-cov.covered-line-numbers.list).to.eq((1, 2, 3));
+    }
+
+    it 'adds its count to the hit total', {
+      expect(file-cov.total-hits).to.be(8);
+    }
+  }
+
+  context 'given an executable line added after the covered lines were read', {
+    before-each {
+      file-cov().covered-line-numbers;
+      file-cov().add-hit(9, 1);
+      file-cov().executable{9} = True;
+    }
+
+    it 'counts the newly executable line as covered', {
+      expect(file-cov.covered-line-numbers.list).to.eq((1, 3, 9));
+    }
+  }
+
+  context 'given a hit on a line that is not executable', {
+    before-each {
+      file-cov().add-hit(42, 3);
+    }
+
+    it 'leaves it out of the covered lines', {
+      expect(file-cov.covered-line-numbers.list).to.eq((1, 3));
+    }
+
+    it 'leaves its count out of the hit total', {
+      expect(file-cov.total-hits).to.be(7);
+    }
+  }
+}
+
 describe 'BDD::Behave::Coverage::merge-coverage-logs', {
   it 'unions hits from multiple raw logs into one map', {
     my $a = tmp-log("HIT  /a.rakumod  1\nHIT  /a.rakumod  2\n");

@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 134;
+plan 144;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
@@ -305,6 +305,42 @@ sub cleanup-tmp-source(IO::Path $p) {
     %hits, :include-paths(('lib/',)), :exclude-paths(()),
   );
   is %hits.elems, 0, 'process-hit-line respects include filter';
+}
+
+# FileCoverage covered lines
+{
+  sub covered-file() {
+    my $f = Coverage::FileCoverage.new(:path('/p'));
+    $f.executable{$_} = True for 1, 2, 3;
+    $f.add-hit(1, 2);
+    $f.add-hit(3, 5);
+    $f;
+  }
+
+  my $file = covered-file();
+  is $file.covered-line-numbers.join(','), '1,3', 'covered-line-numbers lists hit executable lines';
+  is $file.covered-lines, 2, 'covered-lines counts them';
+  is $file.total-hits, 7, 'total-hits sums their counts';
+  is $file.missing-lines.join(','), '2', 'missing-lines lists the unhit executable lines';
+  is $file.covered-line-numbers.join(','), '1,3', 'a second read gives the same answer';
+
+  my $grown = covered-file();
+  $grown.covered-line-numbers;
+  $grown.add-hit(2, 1);
+  is $grown.covered-line-numbers.join(','), '1,2,3', 'a hit added after a read counts as covered';
+  is $grown.total-hits, 8, 'a hit added after a read adds to the total';
+
+  my $widened = covered-file();
+  $widened.covered-line-numbers;
+  $widened.add-hit(9, 1);
+  $widened.executable{9} = True;
+  is $widened.covered-line-numbers.join(','), '1,3,9',
+    'an executable line added after a read counts as covered';
+
+  my $stray = covered-file();
+  $stray.add-hit(42, 3);
+  is $stray.covered-line-numbers.join(','), '1,3', 'a hit on a non-executable line is left out';
+  is $stray.total-hits, 7, 'a hit on a non-executable line is left out of the total';
 }
 
 # process-hit-line keeps a parenthesis that is not a module suffix
