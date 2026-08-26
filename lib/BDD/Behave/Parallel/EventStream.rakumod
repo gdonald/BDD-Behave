@@ -1,27 +1,43 @@
 unit module BDD::Behave::Parallel::EventStream;
 
+# Every event line from every worker is parsed here. The scan compares single
+# characters rather than matching a regex per character, caches the length, and
+# finds the end of a string with `index` so a string with no escape in it is cut
+# out in one piece.
 class MiniJsonParser {
   has Str $.text is required;
-  has Int $!pos = 0;
+  has int $!pos = 0;
+  has int $!len = 0;
+
+  submethod TWEAK { $!len = $!text.chars }
+
+  method !at(int $offset --> Str) {
+    $offset < $!len ?? $!text.substr($offset, 1) !! '';
+  }
 
   method parse-value {
     self!skip-ws;
-    die "unexpected end of input" if $!pos >= $!text.chars;
+    die "unexpected end of input" if $!pos >= $!len;
+
     my $ch = $!text.substr($!pos, 1);
+
+    return self!parse-object if $ch eq '{';
+    return self!parse-array  if $ch eq '[';
+    return self!parse-string if $ch eq '"';
+    return self!parse-number if $ch eq '-' || ('0' le $ch le '9');
+
     given $ch {
-      when '{'      { self!parse-object }
-      when '['      { self!parse-array  }
-      when '"'      { self!parse-string }
-      when 't'      { self!parse-literal('true', True) }
-      when 'f'      { self!parse-literal('false', False) }
-      when 'n'      { self!parse-literal('null', Nil) }
-      when /<[-0..9]>/ { self!parse-number }
-      default { die "unexpected character '$ch' at $!pos" }
+      when 't' { self!parse-literal('true', True) }
+      when 'f' { self!parse-literal('false', False) }
+      when 'n' { self!parse-literal('null', Nil) }
+      default  { die "unexpected character '$ch' at $!pos" }
     }
   }
 
   method !skip-ws {
-    while $!pos < $!text.chars && $!text.substr($!pos, 1) ~~ /\s/ {
+    while $!pos < $!len {
+      my $ch = $!text.substr($!pos, 1);
+      last unless $ch eq ' ' || $ch eq "\t" || $ch eq "\n" || $ch eq "\r";
       $!pos++;
     }
   }
@@ -31,6 +47,7 @@ class MiniJsonParser {
       $!pos += $word.chars;
       return $value;
     }
+
     die "expected '$word' at $!pos";
   }
 
@@ -38,19 +55,24 @@ class MiniJsonParser {
     my %out;
     $!pos++;
     self!skip-ws;
-    if $!text.substr($!pos, 1) eq '}' { $!pos++; return %out }
+
+    if self!at($!pos) eq '}' { $!pos++; return %out }
+
     loop {
       self!skip-ws;
-      die "expected string key at $!pos" unless $!text.substr($!pos, 1) eq '"';
+      die "expected string key at $!pos" unless self!at($!pos) eq '"';
+
       my $key = self!parse-string;
       self!skip-ws;
-      die "expected ':' at $!pos" unless $!text.substr($!pos, 1) eq ':';
+
+      die "expected ':' at $!pos" unless self!at($!pos) eq ':';
       $!pos++;
       self!skip-ws;
-      my $value = self.parse-value;
-      %out{$key} = $value;
+
+      %out{$key} = self.parse-value;
       self!skip-ws;
-      my $next = $!text.substr($!pos, 1);
+
+      my $next = self!at($!pos);
       if $next eq ',' {
         $!pos++;
       } elsif $next eq '}' {
@@ -66,12 +88,15 @@ class MiniJsonParser {
     my @out;
     $!pos++;
     self!skip-ws;
-    if $!text.substr($!pos, 1) eq ']' { $!pos++; return @out }
+
+    if self!at($!pos) eq ']' { $!pos++; return @out }
+
     loop {
       self!skip-ws;
       @out.push(self.parse-value);
       self!skip-ws;
-      my $next = $!text.substr($!pos, 1);
+
+      my $next = self!at($!pos);
       if $next eq ',' {
         $!pos++;
       } elsif $next eq ']' {
@@ -83,65 +108,88 @@ class MiniJsonParser {
     }
   }
 
+  # The closing quote and the first backslash are both found with `index`. When
+  # no backslash comes first the whole string is one substr, and otherwise each
+  # run between escapes is, so no path appends a character at a time.
   method !parse-string {
-    die "expected '\"' at $!pos" unless $!text.substr($!pos, 1) eq '"';
+    die "expected '\"' at $!pos" unless self!at($!pos) eq '"';
     $!pos++;
-    my $out = '';
-    while $!pos < $!text.chars {
-      my $ch = $!text.substr($!pos, 1);
-      if $ch eq '"' { $!pos++; return $out }
-      if $ch eq '\\' {
-        $!pos++;
-        my $esc = $!text.substr($!pos, 1);
-        $!pos++;
-        given $esc {
-          when '"'  { $out ~= '"' }
-          when '\\' { $out ~= '\\' }
-          when '/'  { $out ~= '/'  }
-          when 'n'  { $out ~= "\n" }
-          when 'r'  { $out ~= "\r" }
-          when 't'  { $out ~= "\t" }
-          when 'b'  { $out ~= "\b" }
-          when 'f'  { $out ~= "\f" }
-          when 'u'  {
-            my $hex = $!text.substr($!pos, 4);
-            $!pos += 4;
-            $out ~= chr(:16($hex));
-          }
-          default { die "bad escape '\\$esc' at $!pos" }
+
+    my int $from = $!pos;
+    my @pieces;
+
+    loop {
+      my $quote = $!text.index('"', $from);
+      die "unterminated string at $from" without $quote;
+
+      my $escape = $!text.index('\\', $from);
+
+      if !$escape.defined || $escape > $quote {
+        $!pos = $quote + 1;
+        my $tail = $!text.substr($from, $quote - $from);
+
+        return @pieces.elems ?? @pieces.join ~ $tail !! $tail;
+      }
+
+      @pieces.push($!text.substr($from, $escape - $from));
+
+      my $esc = self!at($escape + 1);
+      $from = $escape + 2;
+
+      given $esc {
+        when '"'  { @pieces.push('"')  }
+        when '\\' { @pieces.push('\\') }
+        when '/'  { @pieces.push('/')  }
+        when 'n'  { @pieces.push("\n") }
+        when 'r'  { @pieces.push("\r") }
+        when 't'  { @pieces.push("\t") }
+        when 'b'  { @pieces.push("\b") }
+        when 'f'  { @pieces.push("\f") }
+        when 'u'  {
+          @pieces.push(chr(:16($!text.substr($from, 4))));
+          $from += 4;
         }
-      } else {
-        $out ~= $ch;
-        $!pos++;
+        default { die "bad escape '\\$esc' at {$escape + 1}" }
       }
     }
-    die "unterminated string at $!pos";
   }
 
   method !parse-number {
-    my $start = $!pos;
-    if $!text.substr($!pos, 1) eq '-' { $!pos++ }
-    while $!pos < $!text.chars && $!text.substr($!pos, 1) ~~ /<[0..9]>/ {
-      $!pos++;
-    }
-    my $is-float = False;
-    if $!pos < $!text.chars && $!text.substr($!pos, 1) eq '.' {
+    my int $start = $!pos;
+    $!pos++ if self!at($!pos) eq '-';
+
+    self!skip-digits;
+
+    my Bool $is-float = False;
+
+    if self!at($!pos) eq '.' {
       $is-float = True;
       $!pos++;
-      while $!pos < $!text.chars && $!text.substr($!pos, 1) ~~ /<[0..9]>/ {
-        $!pos++;
-      }
+      self!skip-digits;
     }
-    if $!pos < $!text.chars && $!text.substr($!pos, 1) ~~ /<[eE]>/ {
+
+    my $exponent = self!at($!pos);
+    if $exponent eq 'e' || $exponent eq 'E' {
       $is-float = True;
       $!pos++;
-      if $!pos < $!text.chars && $!text.substr($!pos, 1) ~~ /<[-+]>/ { $!pos++ }
-      while $!pos < $!text.chars && $!text.substr($!pos, 1) ~~ /<[0..9]>/ {
-        $!pos++;
-      }
+
+      my $sign = self!at($!pos);
+      $!pos++ if $sign eq '-' || $sign eq '+';
+
+      self!skip-digits;
     }
+
     my $raw = $!text.substr($start, $!pos - $start);
+
     $is-float ?? $raw.Num !! $raw.Int;
+  }
+
+  method !skip-digits {
+    while $!pos < $!len {
+      my $ch = $!text.substr($!pos, 1);
+      last unless '0' le $ch le '9';
+      $!pos++;
+    }
   }
 }
 

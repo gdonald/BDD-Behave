@@ -4,7 +4,55 @@ use Test;
 
 use BDD::Behave::Parallel::EventStream;
 
-plan 21;
+plan 46;
+
+is parse-json-event('{"a":"say \"hi\""}')<a>, 'say "hi"',
+  'scan: escaped quote';
+is parse-json-event('{"a":"C:\\\\path"}')<a>, 'C:\\path',
+  'scan: escaped backslash';
+is parse-json-event('{"a":"\/root"}')<a>, '/root',
+  'scan: escaped forward slash';
+is parse-json-event('{"a":"x\ry\bz\fw"}')<a>, "x\ry\bz\fw",
+  'scan: carriage return, backspace, and form feed escapes';
+is parse-json-event('{"a":"caf\u00e9"}')<a>, 'café',
+  'scan: unicode escape';
+is parse-json-event('{"a":"plain text"}')<a>, 'plain text',
+  'scan: a string with no escapes';
+is parse-json-event('{"a":""}')<a>, '',
+  'scan: empty string value';
+is parse-json-event('{}').elems, 0,
+  'scan: empty object';
+is parse-json-event('{"a":[]}')<a>.elems, 0,
+  'scan: empty array';
+is parse-json-event('{"a":[1,2,3]}')<a>[2], 3,
+  'scan: array of scalars';
+is parse-json-event(qq[\{ "a" : \{ "b" : [ 1 , 2 ] \} \}])<a><b>[1], 2,
+  'scan: whitespace between tokens';
+is parse-json-event('{"a":-42}')<a>, -42,
+  'scan: negative integer';
+is parse-json-event('{"a":1.5e2}')<a>, 150e0,
+  'scan: lower-case exponent';
+is parse-json-event('{"a":2E+3}')<a>, 2000e0,
+  'scan: upper-case exponent with a sign';
+is parse-json-event('{"a":5e-1}')<a>, 0.5e0,
+  'scan: negative exponent';
+
+# The scanner walks codepoints, so a multi-byte character before an escape
+# would misplace every later position if the two ever disagreed.
+is parse-json-event('{"a":"héllo\tworld","b":7}')<b>, 7,
+  'scan: keeps its place across text outside the ASCII range';
+is parse-json-event('{"a":"héllo\tworld"}')<a>, "héllo\tworld",
+  'scan: text after a multi-byte character is unchanged';
+
+dies-ok { parse-json-event('{"a":"\q"}') }, 'scan: unknown escape';
+dies-ok { parse-json-event('{"a":"open') }, 'scan: unterminated string';
+dies-ok { parse-json-event('{"a":?}') },    'scan: character that starts no value';
+dies-ok { parse-json-event('{a:1}') },      'scan: object key that is not a string';
+dies-ok { parse-json-event('{"a" 1}') },    'scan: missing colon after a key';
+dies-ok { parse-json-event('{"a":1 "b":2}') }, 'scan: missing separator between members';
+dies-ok { parse-json-event('{"a":[1 2]}') }, 'scan: missing separator between elements';
+dies-ok { parse-json-event('{"a":tru}') },  'scan: truncated literal';
+dies-ok { parse-json-event('') },           'scan: empty document';
 
 # Parse simple object
 {
