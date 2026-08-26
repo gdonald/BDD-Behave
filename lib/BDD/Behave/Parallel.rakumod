@@ -13,6 +13,7 @@ use BDD::Behave::Failures;
 use BDD::Behave::Failure;
 use BDD::Behave::Colors;
 use BDD::Behave::Coverage;
+use BDD::Behave::Configuration;
 
 need BDD::Behave::SpecTree;
 
@@ -40,7 +41,7 @@ class ParallelRunOptions is export {
   has Bool     $.fail-fast-any = False;
   has Bool     $.discovery-in-process = False;
   has Bool     $.precompile-pass = True;
-  has Str      $.parallel-mode = 'lpt';
+  has Str      $.parallel-mode = BDD::Behave::Configuration::DEFAULT-PARALLEL-MODE;
   has Int      $.parallel-retry = 0;
   has IO::Path $.coverage-log-dir = IO::Path;
   has Bool     $.coverage-counts = False;
@@ -815,7 +816,7 @@ sub run-parallel(
   my @load-errors = $disco[1].list;
   $result.load-errors.append: @load-errors;
 
-  my $mode = ($opts.parallel-mode // 'lpt').lc;
+  my $mode = BDD::Behave::Configuration::resolve-parallel-mode($opts.parallel-mode);
 
   if $mode eq 'queue' {
     return run-parallel-queue-impl($opts, $result, @suites);

@@ -1,5 +1,21 @@
 unit module BDD::Behave::Configuration;
 
+# The execution models `--parallel-mode` accepts. `isolated` is the default: it
+# gives every spec file its own process, so top-level symbols one file declares
+# cannot collide with another file's, and a crashed worker takes one file down
+# rather than the run. `lpt` and `queue` share a fixed pool of processes across
+# files, trading that isolation for fewer process startups.
+our constant PARALLEL-MODES = <isolated lpt queue>;
+our constant DEFAULT-PARALLEL-MODE = 'isolated';
+
+our sub resolve-parallel-mode($requested --> Str) {
+  ($requested // DEFAULT-PARALLEL-MODE).lc;
+}
+
+our sub is-parallel-mode(Str $mode --> Bool) {
+  so $mode ∈ PARALLEL-MODES;
+}
+
 our class ConfigInclude {
   has Mu  $.class is required;
   has Str $.as;
@@ -233,7 +249,7 @@ our sub defaults(--> Configuration) {
   $c.order                = 'random';
   $c.seed-mode            = 'xor';
   $c.show-seed            = False;
-  $c.parallel-mode        = 'isolated';
+  $c.parallel-mode        = DEFAULT-PARALLEL-MODE;
   $c.fail-fast            = 0;
   $c.retry                = 0;
   $c.only-failures        = False;

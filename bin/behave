@@ -682,7 +682,7 @@ my $order                = $final-config.order;
 my $seed                 = $final-config.seed;
 my $show-seed            = ?$final-config.show-seed;
 my $seed-mode            = $final-config.seed-mode // 'xor';
-my $parallel-mode        = $final-config.parallel-mode // 'isolated';
+my $parallel-mode        = BDD::Behave::Configuration::resolve-parallel-mode($final-config.parallel-mode);
 my $parallel-retry       = $final-config.parallel-retry // 0;
 my $parallel-explicit    = $final-config.parallel.defined;
 $parallel-workers        = $final-config.parallel // $*KERNEL.cpu-cores;
@@ -747,7 +747,7 @@ unless $seed-mode eq 'xor' | 'stable' {
   exit 2;
 }
 
-unless $parallel-mode eq 'lpt' | 'queue' | 'isolated' {
+unless BDD::Behave::Configuration::is-parallel-mode($parallel-mode) {
   note "Error: --parallel-mode must be 'lpt', 'queue', or 'isolated' (got: '$parallel-mode')";
   exit 2;
 }
