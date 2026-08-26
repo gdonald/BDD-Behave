@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Coverage;
 
-plan 127;
+plan 134;
 
 constant Coverage        = BDD::Behave::Coverage;
 constant CoverageOptions = BDD::Behave::Coverage::CoverageOptions;
@@ -305,6 +305,82 @@ sub cleanup-tmp-source(IO::Path $p) {
     %hits, :include-paths(('lib/',)), :exclude-paths(()),
   );
   is %hits.elems, 0, 'process-hit-line respects include filter';
+}
+
+# process-hit-line keeps a parenthesis that is not a module suffix
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /path/file (1).rakumod  11',
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  ok ?%hits{'/path/file (1).rakumod'}{11},
+    'process-hit-line keeps a parenthesis that is not a module suffix';
+}
+
+# process-hit-line keeps an empty parenthesis pair
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /path/file.rakumod ()  12',
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  ok ?%hits{'/path/file.rakumod ()'}{12},
+    'process-hit-line keeps an empty parenthesis pair';
+}
+
+# process-hit-line rejects a trailing token that is not a number
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /path/file.rakumod  abc',
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  is %hits.elems, 0, 'process-hit-line ignores a non-numeric line token';
+}
+
+# process-hit-line survives a HIT entry with nothing after it
+{
+  my %hits;
+  Coverage::process-hit-line('HIT', %hits, :include-paths(()), :exclude-paths(()));
+  is %hits.elems, 0, 'process-hit-line ignores a HIT entry with no line number';
+}
+
+# process-hit-line only reads a tab prefix that is a count
+{
+  my %hits;
+  Coverage::process-hit-line(
+    "x\tHIT  /path/file.rakumod  13",
+    %hits, :include-paths(()), :exclude-paths(()),
+  );
+  is %hits.elems, 0, 'process-hit-line ignores a non-numeric tab prefix';
+}
+
+# process-hit-line respects an exclude filter
+{
+  my %hits;
+  Coverage::process-hit-line(
+    'HIT  /vendor/foo.rakumod  14',
+    %hits, :include-paths(()), :exclude-paths(('/vendor/',)),
+  );
+  is %hits.elems, 0, 'process-hit-line respects exclude filter';
+}
+
+# process-hit-line remembers a filter answer per file
+{
+  my %hits;
+  my %filter-memo;
+
+  Coverage::process-hit-line(
+    'HIT  /path/file.rakumod  15',
+    %hits, :include-paths(()), :exclude-paths(()), :%filter-memo,
+  );
+  Coverage::process-hit-line(
+    'HIT  /path/file.rakumod  16',
+    %hits, :include-paths(()), :exclude-paths(()), :%filter-memo,
+  );
+
+  is %filter-memo.elems, 1, 'process-hit-line asks the filter once per file';
 }
 
 # process-hit-line accumulates a tab-prefixed occurrence count

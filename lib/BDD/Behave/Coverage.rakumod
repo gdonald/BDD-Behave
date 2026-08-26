@@ -451,36 +451,74 @@ our sub matches-path-filter(Str $file, @include, @exclude --> Bool) {
   True;
 }
 
+# A coverage log reaches millions of lines, so every test here is an index,
+# a substr, or a character comparison rather than a regex.
+sub all-digits(Str $text --> Bool) {
+  return False unless $text.chars;
+
+  for ^$text.chars -> $offset {
+    my $ch = $text.substr($offset, 1);
+    return False unless '0' le $ch le '9';
+  }
+
+  True;
+}
+
+# `HIT  /path/to/file.rakumod (Foo::Bar)` names the module the file was loaded
+# as. The file is what the report is keyed by, so the suffix comes off.
+sub strip-module-suffix(Str $file-part --> Str) {
+  return $file-part unless $file-part.ends-with(')');
+
+  my $open = $file-part.rindex(' (');
+  return $file-part without $open;
+
+  my $close = $file-part.index(')', $open);
+  return $file-part unless $close == $file-part.chars - 1;
+  return $file-part unless $close > $open + 2;
+
+  $file-part.substr(0, $open);
+}
+
 our sub process-hit-line(
   Str $line,
   %hits,
   :@include-paths,
   :@exclude-paths,
+  # The same file part repeats for every line of a file, so a caller reading a
+  # whole log hands in a hash and pays for the filter once per file.
+  :%filter-memo,
 ) {
   my $count = 1;
   my $entry = $line;
-  if $line ~~ / ^ (\d+) \t (.*) $ / {
-    $count = +$0;
-    $entry = ~$1;
+
+  with $line.index("\t") -> $tab {
+    my $prefix = $line.substr(0, $tab);
+
+    if all-digits($prefix) {
+      $count = $prefix.Int;
+      $entry = $line.substr($tab + 1);
+    }
   }
 
-  return Nil unless $entry.starts-with('HIT');
+  return Nil unless $entry.starts-with('HIT') && $entry.chars >= 4;
 
   my $rest = $entry.substr(4).trim-leading;
   my $last-space = $rest.rindex(' ');
   return Nil unless $last-space.defined;
 
   my $line-token = $rest.substr($last-space + 1);
-  return Nil unless $line-token ~~ /^ \d+ $/;
+  return Nil unless all-digits($line-token);
   my $line-num = $line-token.Int;
 
-  my $file-part = $rest.substr(0, $last-space).trim;
+  my $file-part = strip-module-suffix($rest.substr(0, $last-space).trim);
 
-  if $file-part ~~ / (.+) ' (' <-[)]>+ ')' $/ {
-    $file-part = ~$0;
+  my $allowed = %filter-memo{$file-part};
+  without $allowed {
+    $allowed = matches-path-filter($file-part, @include-paths, @exclude-paths);
+    %filter-memo{$file-part} = $allowed;
   }
 
-  return Nil unless matches-path-filter($file-part, @include-paths, @exclude-paths);
+  return Nil unless $allowed;
 
   %hits{$file-part}{$line-num} += $count;
   Nil;
@@ -494,9 +532,12 @@ our sub parse-coverage-log(
 ) {
   my %hits;
   return %hits unless $log-path.defined && $log-path.e;
+
+  my %filter-memo;
   for $log-path.lines -> $line {
-    process-hit-line($line, %hits, :@include-paths, :@exclude-paths);
+    process-hit-line($line, %hits, :@include-paths, :@exclude-paths, :%filter-memo);
   }
+
   %hits;
 }
 
@@ -507,9 +548,12 @@ our sub parse-coverage-stream(
   --> Hash
 ) {
   my %hits;
+
+  my %filter-memo;
   for $fh.lines -> $line {
-    process-hit-line($line, %hits, :@include-paths, :@exclude-paths);
+    process-hit-line($line, %hits, :@include-paths, :@exclude-paths, :%filter-memo);
   }
+
   %hits;
 }
 
@@ -520,13 +564,17 @@ our sub merge-coverage-logs(
   --> Hash
 ) {
   my %hits;
+
+  my %filter-memo;
   for @log-paths -> $p {
     my $io = $p ~~ IO::Path ?? $p !! $p.IO;
     next unless $io.defined && $io.e;
+
     for $io.lines -> $line {
-      process-hit-line($line, %hits, :@include-paths, :@exclude-paths);
+      process-hit-line($line, %hits, :@include-paths, :@exclude-paths, :%filter-memo);
     }
   }
+
   %hits;
 }
 

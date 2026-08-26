@@ -385,6 +385,75 @@ describe 'BDD::Behave::Coverage::process-hit-line', {
     expect(%hits.elems).to.be(0);
   }
 
+  it 'keeps a line whose file part holds a parenthesis that is not a module suffix', {
+    my %hits;
+    Coverage::process-hit-line(
+      'HIT  /path/to/file (1).rakumod  11',
+      %hits, :include-paths(()), :exclude-paths(()),
+    );
+    expect(?%hits{'/path/to/file (1).rakumod'}{11}).to.be-truthy;
+  }
+
+  it 'keeps a file part whose only parenthesis pair is empty', {
+    my %hits;
+    Coverage::process-hit-line(
+      'HIT  /path/to/file.rakumod ()  12',
+      %hits, :include-paths(()), :exclude-paths(()),
+    );
+    expect(?%hits{'/path/to/file.rakumod ()'}{12}).to.be-truthy;
+  }
+
+  it 'ignores a line whose trailing token is not a number', {
+    my %hits;
+    Coverage::process-hit-line(
+      'HIT  /path/to/file.rakumod  abc',
+      %hits, :include-paths(()), :exclude-paths(()),
+    );
+    expect(%hits.elems).to.be(0);
+  }
+
+  it 'ignores a HIT entry with no line number at all', {
+    my %hits;
+    Coverage::process-hit-line(
+      'HIT', %hits, :include-paths(()), :exclude-paths(()),
+    );
+    expect(%hits.elems).to.be(0);
+  }
+
+  it 'treats a non-numeric tab prefix as part of the entry rather than a count', {
+    my %hits;
+    Coverage::process-hit-line(
+      "x\tHIT  /path/to/file.rakumod  13",
+      %hits, :include-paths(()), :exclude-paths(()),
+    );
+    expect(%hits.elems).to.be(0);
+  }
+
+  it 'skips a line whose file matches an exclude filter', {
+    my %hits;
+    Coverage::process-hit-line(
+      'HIT  /vendor/foo.rakumod  14',
+      %hits, :include-paths(()), :exclude-paths(('/vendor/',)),
+    );
+    expect(%hits.elems).to.be(0);
+  }
+
+  it 'reuses a filter answer it was handed for a file it has already seen', {
+    my %hits;
+    my %filter-memo;
+
+    Coverage::process-hit-line(
+      'HIT  /path/to/file.rakumod  15',
+      %hits, :include-paths(()), :exclude-paths(()), :%filter-memo,
+    );
+    Coverage::process-hit-line(
+      'HIT  /path/to/file.rakumod  16',
+      %hits, :include-paths(()), :exclude-paths(()), :%filter-memo,
+    );
+
+    expect(%filter-memo.elems).to.be(1);
+  }
+
   it 'sums a tab-prefixed occurrence count across repeated lines', {
     my %hits;
     Coverage::process-hit-line(
