@@ -147,6 +147,33 @@ describe 'JsonLineParser feed/flush', {
     expect(@ev2[0]<id>).to.be('a:1');
   }
 
+  it 'yields one event per line when a chunk carries many lines', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    my $chunk  = (^50).map({ qq[\{"type":"example-pass","id":"a:$_"\}] }).join("\n") ~ "\n";
+
+    expect($parser.feed($chunk).elems).to.be(50);
+  }
+
+  it 'keeps the lines of a many-line chunk in order', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    my $chunk  = (^50).map({ qq[\{"type":"example-pass","id":"a:$_"\}] }).join("\n") ~ "\n";
+
+    expect($parser.feed($chunk)[49]<id>).to.be('a:49');
+  }
+
+  it 'holds back the trailing partial line of a many-line chunk', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+    $parser.feed(qq[\{"id":"a:1"\}\n\{"id":"a:2"\}\n\{"id":"a:3"\}]);
+
+    expect($parser.flush()[0]<id>).to.be('a:3');
+  }
+
+  it 'skips blank lines inside a chunk', {
+    my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
+
+    expect($parser.feed(qq[\{"id":"a:1"\}\n\n   \n\{"id":"a:2"\}\n]).elems).to.be(2);
+  }
+
   it 'returns parse-error for malformed JSON', {
     my $parser = BDD::Behave::Parallel::EventStream::JsonLineParser.new;
     my @ev = $parser.feed("not json\n");

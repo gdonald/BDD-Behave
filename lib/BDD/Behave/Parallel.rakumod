@@ -227,10 +227,10 @@ sub discover-suites-subprocess(
   %env<BEHAVE_COVERAGE_LOG>:delete;
 
   my $proc = Proc::Async.new(|@argv);
-  my $stdout = '';
-  my $stderr = '';
-  $proc.stdout.tap(-> $chunk { $stdout ~= $chunk });
-  $proc.stderr.tap(-> $chunk { $stderr ~= $chunk });
+  my @stdout-chunks;
+  my @stderr-chunks;
+  $proc.stdout.tap(-> $chunk { @stdout-chunks.push($chunk) });
+  $proc.stderr.tap(-> $chunk { @stderr-chunks.push($chunk) });
 
   my $timeout-secs = $timeout.defined
     ?? $timeout.Numeric
@@ -262,6 +262,9 @@ sub discover-suites-subprocess(
       }
     }
   }
+
+  my $stdout = @stdout-chunks.join;
+  my $stderr = @stderr-chunks.join;
 
   if $result.signal || $result.exitcode > 1 {
     my $msg = $result.signal

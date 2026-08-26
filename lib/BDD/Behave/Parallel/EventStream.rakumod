@@ -201,19 +201,31 @@ sub parse-json-event(Str $line) is export {
 class JsonLineParser is export {
   has Str $!buffer = '';
 
+  # A chunk carrying N lines is walked with a moving offset and the remainder is
+  # sliced once at the end, so the cost stays linear in the chunk rather than
+  # re-copying what is left after every line.
   method feed(Str $chunk --> List) {
     my @events;
     return @events.List unless $chunk.defined && $chunk.chars;
+
     $!buffer ~= $chunk;
-    while $!buffer.contains("\n") {
-      my $idx = $!buffer.index("\n");
-      my $line = $!buffer.substr(0, $idx);
-      $!buffer = $!buffer.substr($idx + 1);
-      my $trimmed = $line.trim;
+
+    my int $from = 0;
+    loop {
+      my $break = $!buffer.index("\n", $from);
+      last without $break;
+
+      my $trimmed = $!buffer.substr($from, $break - $from).trim;
+      $from = $break + 1;
+
       next unless $trimmed.chars;
+
       my $event = try parse-json-event($trimmed);
       @events.push: $event ~~ Associative ?? $event !! %( :type<parse-error>, :raw($trimmed) );
     }
+
+    $!buffer = $!buffer.substr($from) if $from;
+
     @events.List;
   }
 

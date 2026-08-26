@@ -1,0 +1,30 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::WorkerPool;
+
+plan 3;
+
+sub make-handle() {
+  BDD::Behave::Parallel::WorkerPool::WorkerHandle.new(
+    :index(0),
+    :manifest-path('unused'.IO),
+    :exit-promise(Promise.new),
+  );
+}
+
+is make-handle().stderr-output, '',
+  'a handle with no output reports an empty string';
+
+{
+  my $handle = make-handle();
+  $handle.stderr-chunks.push($_) for ('first ', 'second ', 'third');
+
+  is $handle.stderr-output, 'first second third',
+    'chunks join in the order they arrived';
+  is $handle.stderr-chunks.elems, 3,
+    'every chunk the handle was handed is kept';
+}
+
+done-testing;

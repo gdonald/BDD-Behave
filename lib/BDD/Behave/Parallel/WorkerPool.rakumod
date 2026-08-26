@@ -12,7 +12,11 @@ class WorkerHandle is export {
   has @.events is rw;
   has Bool $.finished is rw = False;
   has Int $.exit-code is rw = 0;
-  has Str $.stderr-output is rw = '';
+  # Chunks are kept as they arrive and joined only when someone asks, so a
+  # worker printing a lot of stderr does not re-copy what it already printed.
+  has @.stderr-chunks is rw;
+
+  method stderr-output(--> Str) { @!stderr-chunks.join }
   has Int $.attempt is rw = 1;
   has @.crash-codes is rw;
 }
@@ -76,7 +80,7 @@ class WorkerPool is export {
     $handle.proc = $proc;
     $handle.parser = JsonLineParser.new;
     $handle.events = [];
-    $handle.stderr-output = '';
+    $handle.stderr-chunks = [];
 
     my $buffering = $!retry-count > 0;
 
@@ -92,7 +96,7 @@ class WorkerPool is export {
     });
 
     $proc.stderr.tap(-> $chunk {
-      $handle.stderr-output ~= $chunk;
+      $handle.stderr-chunks.push($chunk);
       $*ERR.print($chunk);
     });
 
