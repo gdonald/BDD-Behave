@@ -2,12 +2,15 @@ use v6.d;
 use lib 'lib';
 use Test;
 
-plan 7;
+use BDD::Behave::Parallel;
+
+plan 14;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
 my $bin     = $root.add('bin/behave');
 my $marker-fixture = $root.add('t/fixtures/parallel/load-marker-fixture-spec.raku');
+my $second-fixture = $root.add('t/fixtures/parallel/load-marker-second-fixture-spec.raku');
 my $clean-fixture  = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
 my $broken-fixture = $root.add('t/fixtures/broken-fixture-spec.raku');
 
@@ -43,12 +46,26 @@ sub run-behave(:%env-extra, *@args) {
   is %r<exit>, 1, 'compile-only exits 1 on a load error';
 }
 
+nok should-precompile(:file-count(1)),
+  'a single spec file skips the precompile pass';
+
+nok should-precompile(:file-count(0)),
+  'an empty selection skips the precompile pass';
+
+ok should-precompile(:file-count(2)),
+  'more than one spec file runs the precompile pass';
+
+nok should-precompile(:file-count(20), :!requested),
+  '--no-precompile skips the pass whatever the file count';
+
+nok should-precompile(:file-count(20), :discovery-in-process),
+  'in-process discovery skips the pass whatever the file count';
+
 # The precompile pass loads every spec file once before discovery and the
-# worker, so a full parallel run loads a file three times; --no-precompile
-# skips the pass and loads it twice.
+# workers, so a two-file parallel run loads each file three times.
 
 {
-  my $marker = $*TMPDIR.add("behave-load-marker-{$*PID}-{(now * 1e6).Int}");
+  my $marker = $*TMPDIR.add("behave-load-marker-single-{$*PID}-{(now * 1e6).Int}");
   $marker.unlink if $marker.e;
   LEAVE { $marker.unlink if $marker.e }
 
@@ -57,9 +74,24 @@ sub run-behave(:%env-extra, *@args) {
     '--parallel', '1', $marker-fixture.absolute,
   );
 
-  is %r<exit>, 0, 'a parallel run with the precompile pass passes';
-  is $marker.slurp.lines.elems, 3,
-    'the precompile pass, discovery, and the worker each load the file once';
+  is %r<exit>, 0, 'a single-file parallel run passes';
+  is $marker.slurp.lines.elems, 2,
+    'a single spec file spawns no precompile subprocess';
+}
+
+{
+  my $marker = $*TMPDIR.add("behave-load-marker-{$*PID}-{(now * 1e6).Int}");
+  $marker.unlink if $marker.e;
+  LEAVE { $marker.unlink if $marker.e }
+
+  my %r = run-behave(
+    :env-extra(%(BEHAVE_LOAD_MARKER => $marker.absolute)),
+    '--parallel', '2', $marker-fixture.absolute, $second-fixture.absolute,
+  );
+
+  is %r<exit>, 0, 'a two-file parallel run with the precompile pass passes';
+  is $marker.slurp.lines.elems, 6,
+    'the precompile pass, discovery, and each worker load their file once';
 }
 
 {
@@ -69,12 +101,13 @@ sub run-behave(:%env-extra, *@args) {
 
   my %r = run-behave(
     :env-extra(%(BEHAVE_LOAD_MARKER => $marker.absolute)),
-    '--parallel', '1', '--no-precompile', $marker-fixture.absolute,
+    '--parallel', '2', '--no-precompile',
+    $marker-fixture.absolute, $second-fixture.absolute,
   );
 
-  is %r<exit>, 0, 'a parallel run with --no-precompile passes';
-  is $marker.slurp.lines.elems, 2,
-    '--no-precompile skips the pass: only discovery and the worker load the file';
+  is %r<exit>, 0, 'a two-file parallel run with --no-precompile passes';
+  is $marker.slurp.lines.elems, 4,
+    '--no-precompile skips the pass: only discovery and the workers load';
 }
 
 done-testing;

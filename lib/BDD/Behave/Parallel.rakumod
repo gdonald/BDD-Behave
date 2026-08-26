@@ -93,6 +93,24 @@ our sub resolve-worker-count(
   $cpu-cores;
 }
 
+# The pass exists to stop several processes writing the same precomp units from
+# different load states, so it only pays for its extra Raku process when more
+# than one process will load the spec files concurrently. A selection of one
+# spec file is loaded by discovery and then by its single worker, one after the
+# other, so the second process reads what the first wrote and there is nothing
+# to protect against. Discovery in-process loads everything in this process for
+# the same reason.
+our sub should-precompile(
+  Int  :$file-count!,
+  Bool :$requested = True,
+  Bool :$discovery-in-process = False,
+  --> Bool
+) is export {
+  return False unless $requested;
+  return False if $discovery-in-process;
+  $file-count > 1;
+}
+
 # Build the module precompilation for every spec file in ONE --compile-only
 # subprocess before discovery and the workers load anything, so the whole
 # dependency graph is written by a single process in a single pass and every
@@ -803,7 +821,11 @@ sub run-parallel(
     $opts.spec-files,
     :discovery-argv($opts.discovery-argv),
     :base-env(%(|$opts.base-env)),
-  ) if $opts.precompile-pass && !$opts.discovery-in-process;
+  ) if should-precompile(
+    :file-count($opts.spec-files.elems),
+    :requested($opts.precompile-pass),
+    :discovery-in-process($opts.discovery-in-process),
+  );
 
   my $disco = $opts.discovery-in-process
   ?? discover-suites($opts.spec-files)

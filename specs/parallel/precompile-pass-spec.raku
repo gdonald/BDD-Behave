@@ -1,9 +1,11 @@
 use BDD::Behave;
+use BDD::Behave::Parallel;
 
 my $root           = $?FILE.IO.parent.parent.parent;
 my $lib            = $root.add('lib');
 my $bin            = $root.add('bin/behave');
 my $marker-fixture = $root.add('t/fixtures/parallel/load-marker-fixture-spec.raku');
+my $second-fixture = $root.add('t/fixtures/parallel/load-marker-second-fixture-spec.raku');
 my $clean-fixture  = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
 my $broken-fixture = $root.add('t/fixtures/broken-fixture-spec.raku');
 
@@ -42,36 +44,86 @@ describe '--compile-only', {
   }
 }
 
+describe 'deciding whether to run the precompile pass', {
+  it 'skips the pass for a single spec file', {
+    expect(should-precompile(:file-count(1))).to.be-falsy;
+  }
+
+  it 'skips the pass for an empty selection', {
+    expect(should-precompile(:file-count(0))).to.be-falsy;
+  }
+
+  it 'runs the pass for more than one spec file', {
+    expect(should-precompile(:file-count(2))).to.be-truthy;
+  }
+
+  it 'skips the pass when it was not requested', {
+    expect(should-precompile(:file-count(20), :!requested)).to.be-falsy;
+  }
+
+  it 'skips the pass when discovery runs in this process', {
+    expect(should-precompile(:file-count(20), :discovery-in-process)).to.be-falsy;
+  }
+}
+
 describe 'the precompile pass of a parallel run', {
-  it 'loads each spec file in the pass, discovery, and the worker', {
-    my $marker = $*TMPDIR.add("behave-load-marker-spec-{$*PID}-{(now * 1e6).Int}");
-    $marker.unlink if $marker.e;
-    LEAVE { $marker.unlink if $marker.e }
+  let(:marker, {
+    my $path = $*TMPDIR.add("behave-load-marker-spec-{$*PID}-{(now * 1e6).Int}");
+    $path.unlink if $path.e;
+    $path;
+  });
 
-    my %r = run-behave(
-      :env-extra(%(BEHAVE_LOAD_MARKER => $marker.absolute)),
-      '--parallel', '1', $marker-fixture.absolute,
-    );
+  after-each {
+    my $path = marker();
+    $path.unlink if $path.e;
+  }
 
-    aggregate-failures {
-      expect(%r<exit>).to.be(0);
-      expect($marker.slurp.lines.elems).to.be(3);
+  context 'given a single spec file', {
+    let(:run, {
+      run-behave(
+        :env-extra(%(BEHAVE_LOAD_MARKER => marker().absolute)),
+        '--parallel', '1', $marker-fixture.absolute,
+      );
+    });
+
+    it 'runs the file without a precompile subprocess', {
+      aggregate-failures {
+        expect(run()<exit>).to.be(0);
+        expect(marker().slurp.lines.elems).to.be(2);
+      }
     }
   }
 
-  it 'skips the pass under --no-precompile', {
-    my $marker = $*TMPDIR.add("behave-load-marker-spec-np-{$*PID}-{(now * 1e6).Int}");
-    $marker.unlink if $marker.e;
-    LEAVE { $marker.unlink if $marker.e }
+  context 'given more than one spec file', {
+    let(:run, {
+      run-behave(
+        :env-extra(%(BEHAVE_LOAD_MARKER => marker().absolute)),
+        '--parallel', '2', $marker-fixture.absolute, $second-fixture.absolute,
+      );
+    });
 
-    my %r = run-behave(
-      :env-extra(%(BEHAVE_LOAD_MARKER => $marker.absolute)),
-      '--parallel', '1', '--no-precompile', $marker-fixture.absolute,
-    );
+    it 'loads each file in the pass, discovery, and its worker', {
+      aggregate-failures {
+        expect(run()<exit>).to.be(0);
+        expect(marker().slurp.lines.elems).to.be(6);
+      }
+    }
+  }
 
-    aggregate-failures {
-      expect(%r<exit>).to.be(0);
-      expect($marker.slurp.lines.elems).to.be(2);
+  context 'given more than one spec file under --no-precompile', {
+    let(:run, {
+      run-behave(
+        :env-extra(%(BEHAVE_LOAD_MARKER => marker().absolute)),
+        '--parallel', '2', '--no-precompile',
+        $marker-fixture.absolute, $second-fixture.absolute,
+      );
+    });
+
+    it 'loads each file in discovery and its worker only', {
+      aggregate-failures {
+        expect(run()<exit>).to.be(0);
+        expect(marker().slurp.lines.elems).to.be(4);
+      }
     }
   }
 }

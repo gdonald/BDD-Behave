@@ -273,7 +273,10 @@ sub usage() {
                              every file loaded; 1 on a load error.
     --no-precompile          Skip the serial precompile pass the parallel
                              runner performs before discovery (one
-                             --compile-only subprocess per spec file).
+                             --compile-only subprocess for all spec
+                             files). The pass is skipped anyway for a
+                             selection of one spec file, which no two
+                             processes load at the same time.
 
   Tags inherit from enclosing describe/context blocks. --exclude-tag wins over
   --tag when both match the same example. --tag, --exclude-tag, --example,
