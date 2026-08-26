@@ -1,5 +1,6 @@
 use BDD::Behave::Formatter;
 use BDD::Behave::Failures;
+use BDD::Behave::Failure;
 
 unit class BDD::Behave::Formatter::JsonEvents does BDD::Behave::Formatter;
 
@@ -145,15 +146,23 @@ method example-fail($example, :$failure-info) {
     ?? Failures.list[$!failure-watermark ..^ $total].grep(!*.from-runner-exception).List
     !! ().List;
   $!failure-watermark = $total;
-  %payload<failures> = @new.map({ %(
-    :file($_.file // ''),
-    :line($_.line // 0),
-    :given(($_.given // '').gist),
-    :expected(($_.expected // '').gist),
-    :message(($_.?message // Str).defined ?? $_.message !! ''),
-    :aggregation-label(($_.?aggregation-label // Str).defined ?? $_.aggregation-label !! ''),
-    :negated(?$_.negated),
-  ) }).List;
+  %payload<failures> = @new.map({
+    my $given    = ($_.given // '').gist;
+    my $expected = ($_.expected // '').gist;
+    my $negated  = ?$_.negated;
+
+    %(
+      :file($_.file // ''),
+      :line($_.line // 0),
+      :$given,
+      :$expected,
+      :message(($_.?message // Str).defined
+        ?? $_.message
+        !! compose-failure-message($given, $expected, $negated)),
+      :aggregation-label(($_.?aggregation-label // Str).defined ?? $_.aggregation-label !! ''),
+      :$negated,
+    )
+  }).List;
   emit %payload;
 }
 

@@ -929,7 +929,8 @@ our class Runner {
             given    => ($fl.given.defined    ?? $fl.given.gist    !! Str),
             expected => ($fl.expected.defined ?? $fl.expected.gist !! Str),
           );
-          %rec<message>           = $fl.message           if $fl.message.defined;
+          my $message = $fl.message // compose-failure-message(%rec<given>, %rec<expected>, $fl.negated);
+          %rec<message>           = $message                 if $message.chars;
           %rec<aggregation_label> = $fl.aggregation-label if $fl.aggregation-label.defined;
           %rec;
         }).List,

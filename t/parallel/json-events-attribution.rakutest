@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::Parallel::EventStream;
 
-plan 8;
+plan 14;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -41,25 +41,26 @@ sub failure-by-example(*@extra-args --> Hash) {
 }
 
 # The fixture's three examples fail on distinct lines, so the reported line is
-# what ties a failure back to the example that produced it.
-my %in-process = failure-by-example();
+# what ties a failure back to the example that produced it. Both paths report
+# the same record for the same failure.
+for (
+  ('no workers', failure-by-example()),
+  ('parallel',   failure-by-example('--parallel', '2')),
+) -> ($path, %failure) {
+  is %failure{'first example fails'}<line>, 5,
+    "$path: first failing example carries its own failure line";
+  is %failure{'second example fails'}<line>, 9,
+    "$path: second failing example carries its own failure line";
+  is %failure{'third example fails'}<line>, 13,
+    "$path: third failing example carries its own failure line";
+  is %failure{'first example fails'}<given>, '1',
+    "$path: the value the example was given";
+  is %failure{'first example fails'}<expected>, '2',
+    "$path: the value the example expected";
+  is %failure{'first example fails'}<message>, "Expected: 1\nto be: 2",
+    "$path: the comparison rendered as a message";
+  nok %failure{'first example fails'}<negated>,
+    "$path: the expectation was not negated";
+}
 
-is %in-process{'first example fails'}<line>, 5,
-  'no workers: first failing example carries its own failure line';
-is %in-process{'second example fails'}<line>, 9,
-  'no workers: second failing example carries its own failure line';
-is %in-process{'third example fails'}<line>, 13,
-  'no workers: third failing example carries its own failure line';
-is %in-process{'first example fails'}<expected>, '2',
-  'no workers: compared values land in the expected and given fields';
-
-my %parallel = failure-by-example('--parallel', '2');
-
-is %parallel{'first example fails'}<line>, 5,
-  'parallel: first failing example carries its own failure line';
-is %parallel{'second example fails'}<line>, 9,
-  'parallel: second failing example carries its own failure line';
-is %parallel{'third example fails'}<line>, 13,
-  'parallel: third failing example carries its own failure line';
-ok %parallel{'first example fails'}<message>.contains('to be: 2'),
-  'parallel: compared values land in the message field instead';
+done-testing;

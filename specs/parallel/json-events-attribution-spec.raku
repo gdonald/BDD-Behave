@@ -38,44 +38,59 @@ sub failure-by-example(*@extra-args --> Hash) {
 
 # The fixture's three examples fail on distinct lines, so the reported line is
 # what ties a failure back to the example that produced it.
+# One subprocess per context, shared by every example the context registers.
+sub run-once(&produce) {
+  my %cache;
+  my $produced = False;
+
+  -> {
+    unless $produced {
+      %cache = produce();
+      $produced = True;
+    }
+
+    %cache;
+  }
+}
+
+shared-examples 'a per-example failure record', -> &failure {
+  it 'attaches the first example its own failure line', {
+    expect(failure{'first example fails'}<line>).to.be(5);
+  }
+
+  it 'attaches the second example its own failure line', {
+    expect(failure{'second example fails'}<line>).to.be(9);
+  }
+
+  it 'attaches the third example its own failure line', {
+    expect(failure{'third example fails'}<line>).to.be(13);
+  }
+
+  it 'reports the value the example was given', {
+    expect(failure{'first example fails'}<given>).to.be('1');
+  }
+
+  it 'reports the value the example expected', {
+    expect(failure{'first example fails'}<expected>).to.be('2');
+  }
+
+  it 'reports the comparison as a rendered message as well', {
+    expect(failure{'first example fails'}<message>).to.be("Expected: 1\nto be: 2");
+  }
+
+  it 'reports whether the expectation was negated', {
+    expect(failure{'first example fails'}<negated>).to.be-falsy;
+  }
+}
+
 describe 'json-events per-example failure attribution', {
   context 'running in the behave process with no workers', {
-    let(:failure, { failure-by-example() });
-
-    it 'attaches the first example its own failure line', {
-      expect(failure{'first example fails'}<line>).to.be(5);
-    }
-
-    it 'attaches the second example its own failure line', {
-      expect(failure{'second example fails'}<line>).to.be(9);
-    }
-
-    it 'attaches the third example its own failure line', {
-      expect(failure{'third example fails'}<line>).to.be(13);
-    }
-
-    it 'reports the compared values in the expected and given fields', {
-      expect(failure{'first example fails'}<expected>).to.be('2');
-    }
+    it-behaves-like 'a per-example failure record',
+      run-once({ failure-by-example() });
   }
 
   context 'running across parallel workers', {
-    let(:failure, { failure-by-example('--parallel', '2') });
-
-    it 'attaches the first example its own failure line', {
-      expect(failure{'first example fails'}<line>).to.be(5);
-    }
-
-    it 'attaches the second example its own failure line', {
-      expect(failure{'second example fails'}<line>).to.be(9);
-    }
-
-    it 'attaches the third example its own failure line', {
-      expect(failure{'third example fails'}<line>).to.be(13);
-    }
-
-    it 'reports the compared values in the message field instead', {
-      expect(failure{'first example fails'}<message>).to.include('to be: 2');
-    }
+    it-behaves-like 'a per-example failure record',
+      run-once({ failure-by-example('--parallel', '2') });
   }
 }

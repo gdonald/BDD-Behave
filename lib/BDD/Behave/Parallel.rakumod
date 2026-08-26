@@ -1054,18 +1054,18 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       my $desc = %failure-info<description>;
       my @event-failures = (%event<failures> // ()).list;
       for @event-failures -> %f {
-        my $msg = (%f<message> // '').Str;
-        if !$msg.chars {
-          my $given    = (%f<given>    // '').Str;
-          my $expected = (%f<expected> // '').Str;
-          if $given.chars || $expected.chars {
-            my $op = (%f<negated> // False) ?? 'not to be' !! 'to be';
-            $msg = "Expected: $given\n$op: $expected";
-          }
-        }
+        my $given    = (%f<given>    // '').Str;
+        my $expected = (%f<expected> // '').Str;
+        my $negated  = ?(%f<negated> // False);
+        my $msg      = (%f<message> // '').Str;
+        $msg = compose-failure-message($given, $expected, $negated) unless $msg.chars;
+
         Failures.list.push: Failure.new(
           :file((%f<file> // '').Str),
           :line((%f<line> // 0).Int),
+          :given($given.chars ?? $given !! Nil),
+          :expected($expected.chars ?? $expected !! Nil),
+          :$negated,
           :message($msg.chars ?? $msg !! Str),
           :aggregation-label(
             ((%f<aggregation-label> // '').Str.chars

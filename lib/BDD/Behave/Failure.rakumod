@@ -44,3 +44,17 @@ class Failure is export {
     }
   }
 }
+
+# The rendered form of an expectation failure that carries no message of its
+# own. The JSON event stream and the parallel parent both describe a failure
+# through this, so an event carries the same fields whichever path produced it.
+sub compose-failure-message($given, $expected, Bool $negated = False --> Str) is export {
+  my $given-text    = ($given    // '').Str;
+  my $expected-text = ($expected // '').Str;
+
+  return '' unless $given-text.chars || $expected-text.chars;
+
+  my $op = $negated ?? 'not to be' !! 'to be';
+
+  "Expected: $given-text\n$op: $expected-text";
+}
