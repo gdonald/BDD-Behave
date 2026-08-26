@@ -506,16 +506,17 @@ our multi sub pending(Str $reason, &block, *%meta) is export {
   Nil;
 }
 
+# Every `expect` lands here, and each `callframe` call re-walks the chain from
+# the top, so the frame the loop stops on is the one returned.
 sub caller-outside-behave() {
   my $depth = 1;
-  loop {
-    my $frame = callframe($depth);
-    last unless $frame.defined;
-    my $f = $frame.file // '';
-    last unless $f.contains('BDD/Behave');
-    $depth++;
+  my $frame = callframe($depth);
+
+  while $frame.defined && ($frame.file // '').contains('BDD/Behave') {
+    $frame = callframe(++$depth);
   }
-  callframe($depth);
+
+  $frame;
 }
 
 our multi sub pending(Str $reason, *%meta) is export {

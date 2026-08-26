@@ -19,6 +19,76 @@ describe 'LetRuntime has-name', {
   }
 }
 
+describe 'LetRuntime resolving a name to a definition', {
+  context 'given a name declared with a leading colon', {
+    let(:runtime, {
+      LetRuntime.new(:definitions([LetDefinition.new(:name(':colonised'), :block({ 'yes' }))]));
+    });
+
+    it 'finds it by its bare spelling', {
+      expect(runtime.has-name('colonised')).to.be-truthy;
+    }
+
+    it 'reads its value by its bare spelling', {
+      expect(runtime.value('colonised')).to.eq('yes');
+    }
+
+    it 'reads its value by its colon spelling', {
+      expect(runtime.value(':colonised')).to.eq('yes');
+    }
+  }
+
+  context 'given a name defined twice', {
+    let(:runtime, {
+      LetRuntime.new(:definitions([
+        LetDefinition.new(:name<shadowed>, :block({ 'outer' })),
+        LetDefinition.new(:name<shadowed>, :block({ 'inner' })),
+      ]));
+    });
+
+    it 'reads the value of the last definition', {
+      expect(runtime.value('shadowed')).to.eq('inner');
+    }
+  }
+
+  context 'given a name defined twice in different spellings', {
+    let(:runtime, {
+      LetRuntime.new(:definitions([
+        LetDefinition.new(:name<mixed>, :block({ 'outer' })),
+        LetDefinition.new(:name(':mixed'), :block({ 'inner' })),
+      ]));
+    });
+
+    it 'treats the two spellings as one name', {
+      expect(runtime.value('mixed')).to.eq('inner');
+    }
+  }
+
+  context 'given a definition added after the runtime was built', {
+    let(:runtime, { LetRuntime.new(:definitions([])) });
+
+    before-each {
+      runtime().add-definition(LetDefinition.new(:name<added>, :block({ 'late' })));
+    }
+
+    it 'finds the added name', {
+      expect(runtime.has-name('added')).to.be-truthy;
+    }
+
+    it 'reads the added value', {
+      expect(runtime.value('added')).to.eq('late');
+    }
+  }
+
+  context 'given a name that was never defined', {
+    let(:runtime, { LetRuntime.new(:definitions([])) });
+
+    it 'dies when the value is read', {
+      expect({ runtime.value('missing') }).to.throw;
+    }
+  }
+}
+
 describe 'foo bar', {
   let(:number, { 42 });
 

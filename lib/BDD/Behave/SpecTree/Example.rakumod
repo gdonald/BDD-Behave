@@ -37,6 +37,7 @@ our class Example is SpecNode {
   has Instant $.started-at is rw;
   has Instant $.finished-at is rw;
   has @.benchmarks;
+  has Bool $!takes-context;
 
   method execute(*%context) {
     my $*BEHAVE-CURRENT-EXAMPLE = self;
@@ -55,11 +56,19 @@ our class Example is SpecNode {
     }
   }
 
+  # The answer cannot change for a given block, and the block runs again for
+  # every `--retry` attempt and every benchmark iteration.
+  method !takes-context(--> Bool) {
+    return $!takes-context if $!takes-context.defined;
+
+    my $params = $!block.signature.params;
+
+    $!takes-context = $params.elems > 0 && !$params[0].named;
+  }
+
   method !run-block(*%context) {
-    my $ctx = LetContext.new;
-    my $sig = $!block.signature;
-    if $sig.params.elems > 0 && !$sig.params[0].named {
-      $!block($ctx, |%context);
+    if self!takes-context {
+      $!block(LetContext.new, |%context);
     } else {
       $!block(|%context);
     }

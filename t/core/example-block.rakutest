@@ -1,0 +1,56 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::SpecTree;
+
+plan 5;
+
+constant Example = BDD::Behave::SpecTree::Example;
+
+{
+  my @seen;
+  my $example = Example.new(
+    :description('takes a context'),
+    :file('specs/example.raku'),
+    :line(1),
+    :block(-> $context { @seen.push($context.defined) }),
+  );
+
+  $example.execute;
+  ok @seen[0], 'a block taking a positional argument is handed a context';
+
+  $example.execute for ^2;
+  is @seen.elems, 3, 'the context is handed over on every run';
+}
+
+{
+  my @runs;
+  my $example = Example.new(
+    :description('takes nothing'),
+    :file('specs/example.raku'),
+    :line(2),
+    :block(sub { @runs.push(1) }),
+  );
+
+  $example.execute;
+  is @runs.elems, 1, 'a block taking no argument runs';
+
+  $example.execute for ^2;
+  is @runs.elems, 3, 'a block taking no argument runs again on a repeat';
+}
+
+{
+  my @values;
+  my $example = Example.new(
+    :description('takes a named argument'),
+    :file('specs/example.raku'),
+    :line(3),
+    :block(-> :$value { @values.push($value) }),
+  );
+
+  $example.execute(:value(7));
+  is @values[0], 7, 'a block taking only named arguments is given them, not a context';
+}
+
+done-testing;

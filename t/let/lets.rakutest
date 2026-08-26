@@ -6,7 +6,7 @@ use BDD::Behave;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::LetRuntime;
 
-plan 9;
+plan 17;
 
 registry().clear;
 
@@ -39,3 +39,48 @@ is $outer-called, 0, 'does not execute shadowed parent let';
 ok $runtime.has-name('foo'), 'has-name finds a defined let';
 ok $runtime.has-name(':foo'), 'has-name ignores a leading colon on the query';
 nok $runtime.has-name('bar'), 'has-name returns False for an undefined name';
+
+sub runtime-of(*@definitions) {
+  BDD::Behave::LetRuntime::LetRuntime.new(:definitions(@definitions));
+}
+
+{
+  my $colonised = runtime-of(LetDefinition.new(:name(':colonised'), :block({ 'yes' })));
+
+  ok $colonised.has-name('colonised'),
+    'a name declared with a colon is found by its bare spelling';
+  is $colonised.value('colonised'), 'yes',
+    'a name declared with a colon reads by its bare spelling';
+  is $colonised.value(':colonised'), 'yes',
+    'a name declared with a colon reads by its colon spelling';
+}
+
+{
+  my $shadowed = runtime-of(
+    LetDefinition.new(:name<shadowed>, :block({ 'outer' })),
+    LetDefinition.new(:name<shadowed>, :block({ 'inner' })),
+  );
+
+  is $shadowed.value('shadowed'), 'inner', 'the last definition of a name wins';
+}
+
+{
+  my $mixed = runtime-of(
+    LetDefinition.new(:name<mixed>, :block({ 'outer' })),
+    LetDefinition.new(:name(':mixed'), :block({ 'inner' })),
+  );
+
+  is $mixed.value('mixed'), 'inner', 'the two spellings of a name are one name';
+}
+
+{
+  my $late = runtime-of();
+  $late.add-definition(LetDefinition.new(:name<added>, :block({ 'late' })));
+
+  ok $late.has-name('added'), 'a definition added later is found';
+  is $late.value('added'), 'late', 'a definition added later reads its value';
+}
+
+dies-ok { runtime-of().value('missing') }, 'reading a name that was never defined dies';
+
+done-testing;
