@@ -7,7 +7,7 @@ constant Suite = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example = BDD::Behave::SpecTree::Example;
 
-plan 16;
+plan 19;
 
 my $suite = Suite.create(:file('specs/example.raku'));
 ok $suite.is-root, 'suite is root node';
@@ -30,6 +30,26 @@ my $example = Example.new(
 $group.add-example($example);
 is $group.examples.elems, 1, 'example added to group';
 is-deeply $example.ancestry».description.Array, ['suite', 'math', 'adds numbers'], 'ancestry includes suite, group, example';
+ok $example.ancestry.all ~~ BDD::Behave::SpecTree::Core::SpecNode,
+  'ancestry yields spec nodes rather than a nested list';
+{
+  my $moved = ExampleGroup.new(:description('moved'), :file('specs/example.raku'), :line(20));
+  my $leaf  = Example.new(
+    :description('a leaf'),
+    :file('specs/example.raku'),
+    :line(21),
+    :block(sub { }),
+  );
+  $moved.add-example($leaf);
+
+  is $leaf.ancestry».description.join(','), 'moved,a leaf',
+    'ancestry before the group is attached to a suite';
+
+  $suite.add-group($moved);
+
+  is $leaf.ancestry».description.join(','), 'suite,moved,a leaf',
+    'attaching the group updates an ancestry read earlier';
+}
 ok !$example.pending, 'example not pending by default';
 
 $example.mark-pending(:reason('wip'));

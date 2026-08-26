@@ -2,12 +2,19 @@ unit module BDD::Behave::SpecTree::Core;
 
 subset HookPhase of Str where { $_ eq any(<before-all after-all before-each after-each around-all around-each>) };
 
+# Re-parenting any node invalidates every cached ancestry at once. The tree is
+# built once and never changes afterwards, so the counter stops moving before
+# the first example runs and the caches stay warm for the whole run.
+my Int $tree-generation = 0;
+
 our class SpecNode {
   has Str $.description is required;
   has IO::Path $.file is required;
   has Int $.line is required;
-  has $.parent is rw = Nil;
+  has     $!parent = Nil;
   has %.metadata = Hash.new;
+  has List $!ancestry;
+  has Int  $!ancestry-generation = -1;
 
   submethod BUILD(:$!description, :$file!, :$line!, :$parent, :%metadata = {}) {
     $!file = $file ~~ IO::Path ?? $file !! $file.IO;
@@ -16,18 +23,36 @@ our class SpecNode {
     %!metadata = %metadata.clone;
   }
 
+  method parent() is rw {
+    Proxy.new(
+      FETCH => -> $         { $!parent },
+      STORE => -> $, $value { $!parent = $value; $tree-generation++ },
+    );
+  }
+
   method location { "$!file:$!line" }
 
   method root { self.ancestry[0] }
 
-  method ancestry {
-    gather {
-      my $node = self;
-      while $node.defined {
-        take $node;
-        $node = $node.parent;
-      }
-    }.reverse.List;
+  # Every effective-* lookup, `depth`, and `root` walks this, and the runner
+  # calls four of them per example, so the walk is done once per tree.
+  method ancestry(--> List) {
+    # `.List` decontainerizes: returning the attribute itself hands back a
+    # Scalar holding a List, which `for` then iterates as a single item.
+    return $!ancestry.List
+      if $!ancestry.defined && $!ancestry-generation == $tree-generation;
+
+    my @nodes;
+    my $node = self;
+    while $node.defined {
+      @nodes.push($node);
+      $node = $node.parent;
+    }
+
+    $!ancestry-generation = $tree-generation;
+    $!ancestry = @nodes.reverse.List;
+
+    $!ancestry.List;
   }
 
   method set-metadata(*%pairs) {
