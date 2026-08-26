@@ -93,9 +93,13 @@ prove6 -Ilib t
 
 #### Documentation
 
-Documentation: [https://docs.behave.dev](https://docs.behave.dev)
+Documentation: [https://behave.dev/docs](https://behave.dev/docs)
 
 See also the examples in [specs/*](https://github.com/gdonald/BDD-Behave/tree/main/specs).
+
+#### Coverage
+
+[https://coverage.behave.dev](https://coverage.behave.dev)
 
 #### Homepage
 

@@ -28,3 +28,36 @@ jobs:
         run: zef install --/test DBIish
       - name: Run ${{ matrix.stage }}
         run: ./test.raku ${{ matrix.stage }}
+
+  coverage:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: Raku/setup-raku@v1
+        with:
+          raku-version: 'latest'
+      - name: Install Dependencies
+        run: zef install --/test --test-depends --deps-only .
+      - name: Install DBIish
+        run: zef install --/test DBIish
+      - name: Run specs under coverage
+        run: |
+          raku -Ilib bin/behave --coverage --coverage-branch \
+            --coverage-format html --coverage-output coverage specs
+      - name: Name the site
+        run: echo coverage.behave.dev > coverage/CNAME
+      - name: Upload the report
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: coverage
+      - name: Publish to coverage.behave.dev
+        id: deploy
+        uses: actions/deploy-pages@v4
