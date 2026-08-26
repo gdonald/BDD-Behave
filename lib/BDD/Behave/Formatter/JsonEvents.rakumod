@@ -25,8 +25,9 @@ sub json-value($v --> Str) {
     when Str      { json-string($v) }
     when Positional { '[' ~ $v.list.map(&json-value).join(',') ~ ']' }
     when Associative {
-      my @pairs = $v.kv.rotor(2).map(-> ($k, $val) { json-string($k.Str) ~ ':' ~ json-value($val) });
-      '{' ~ @pairs.sort.join(',') ~ '}';
+      # Sorting the keys rather than the rendered pairs keeps the order an
+      # event is emitted in stable without comparing whole payloads.
+      '{' ~ $v.keys.sort.map({ json-string(.Str) ~ ':' ~ json-value($v{$_}) }).join(',') ~ '}';
     }
     default { json-string($v.gist) }
   }
@@ -39,7 +40,9 @@ sub json-string(Str $s --> Str) {
   $out = $out.subst("\n", '\\n',  :g);
   $out = $out.subst("\r", '\\r',  :g);
   $out = $out.subst("\t", '\\t',  :g);
-  $out = $out.subst(/<:Cc>/, { sprintf('\\u%04x', $/.Str.ord) }, :g);
+  # A control character other than the three with their own escape is rare, so
+  # the pass that rewrites one runs only when the string holds one.
+  $out = $out.subst(/<:Cc>/, { sprintf('\\u%04x', $/.Str.ord) }, :g) if $out ~~ /<:Cc>/;
   '"' ~ $out ~ '"';
 }
 

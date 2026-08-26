@@ -1,0 +1,61 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Formatter::JsonEvents;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::SpecTree;
+
+plan 10;
+
+constant Suite = BDD::Behave::SpecTree::Suite;
+
+my $formatter = BDD::Behave::Formatter::JsonEvents.new;
+
+sub emitted(Str $description --> Str) {
+  my $suite = Suite.new(:$description, :file('/abs/spec.raku'.IO), :line(1));
+
+  stdout-from({ $formatter.suite-start($suite) }).lines[0];
+}
+
+sub round-tripped(Str $description --> Str) {
+  parse-json-event(emitted($description))<description>;
+}
+
+ok emitted('a "quoted" name').contains('a \"quoted\" name'),
+  'a double quote is escaped';
+
+ok emitted('a \\ backslash').contains('a \\\\ backslash'),
+  'a backslash is escaped';
+
+ok emitted("two\nlines").contains('two\nlines'),
+  'a newline is escaped';
+
+ok emitted("two\rlines").contains('two\rlines'),
+  'a carriage return is escaped';
+
+ok emitted("two\tcolumns").contains('two\tcolumns'),
+  'a tab is escaped';
+
+is round-tripped("a \"quote\", a \\ backslash, a\nnewline, a\ttab"),
+  "a \"quote\", a \\ backslash, a\nnewline, a\ttab",
+  'every reserved character reads back unchanged';
+
+ok emitted("bell" ~ 7.chr ~ "here").contains(Q[bell\u0007here]),
+  'a control character with no escape of its own is written as a unicode escape';
+
+is round-tripped("bell" ~ 7.chr ~ "here"), "bell" ~ 7.chr ~ "here",
+  'a control character reads back unchanged';
+
+ok emitted('a plain description').contains('"description":"a plain description"'),
+  'a description with no reserved character is written through unchanged';
+
+{
+  my @keys = emitted('sorted keys').comb(/ '"' <( <-["]>+ )> '":' /);
+
+  is @keys.join(','), @keys.sort.join(','),
+    'the keys of an event object are written in sorted order';
+}
+
+done-testing;
