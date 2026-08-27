@@ -30,6 +30,7 @@ jobs:
         run: ./test.raku ${{ matrix.stage }}
 
   coverage:
+    needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
