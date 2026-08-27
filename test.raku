@@ -28,6 +28,10 @@ my @all-stages = (
 
 my $only = @*ARGS[0];
 
+# Anything after the stage name is passed on to that stage's command, so a run
+# can ask for coverage without a second entry point.
+my @extra = @*ARGS.elems > 1 ?? @*ARGS[1 .. *] !! ();
+
 my @stages = $only.defined
   ?? @all-stages.grep({ .<name> eq $only })
   !! @all-stages;
@@ -36,6 +40,13 @@ unless @stages {
   note "Unknown stage '$only'. Available: @all-stages.map(*<name>).join(', ')";
   exit 2;
 }
+
+if @extra.elems && @stages.elems > 1 {
+  note "Extra arguments need a stage name: ./test.raku <stage> @extra.join(' ')";
+  exit 2;
+}
+
+@stages[0]<cmd>.append: @extra if @extra.elems;
 
 my %durations;
 my $total-start = now;

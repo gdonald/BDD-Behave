@@ -27,7 +27,19 @@ jobs:
       - name: Install DBIish
         run: zef install --/test DBIish
       - name: Run ${{ matrix.stage }}
+        if: matrix.stage != 'behave'
         run: ./test.raku ${{ matrix.stage }}
+      - name: Run behave under coverage
+        if: matrix.stage == 'behave'
+        run: |
+          ./test.raku behave --coverage --coverage-branch \
+            --coverage-format html --coverage-output coverage
+      - name: Keep the report for the coverage job
+        if: matrix.stage == 'behave'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage
 
   coverage:
     needs: test
@@ -40,19 +52,11 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - uses: Raku/setup-raku@v1
+      - name: Take the report from the behave run
+        uses: actions/download-artifact@v4
         with:
-          raku-version: 'latest'
-      - name: Install Dependencies
-        run: zef install --/test --test-depends --deps-only .
-      - name: Install DBIish
-        run: zef install --/test DBIish
-      - name: Run specs under coverage
-        run: |
-          raku -Ilib bin/behave --coverage --coverage-branch \
-            --coverage-format html --coverage-output coverage specs
+          name: coverage-report
+          path: coverage
       - name: Name the site
         run: echo coverage.behave.dev > coverage/CNAME
       - name: Upload the report
