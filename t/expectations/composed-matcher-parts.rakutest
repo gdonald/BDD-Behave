@@ -1,0 +1,68 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Matcher;
+use BDD::Behave::Matcher::Boolean;
+use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::Numeric;
+
+plan 18;
+
+# A matcher with no description of its own falls back to its type name, which is
+# what a matcher written outside behave gets for free.
+my class PlainMatcher does Matcher {
+  method matches($actual --> Bool) { $actual eq 'ok' }
+}
+
+ok PlainMatcher.new.description.contains('PlainMatcher'), 'a bare matcher falls back to its name';
+nok PlainMatcher.new.failure-message('x').defined, 'a bare matcher reports no failure message';
+nok PlainMatcher.new.failure-message-negated('x').defined,
+  'a bare matcher reports no negated message';
+is PlainMatcher.new.expected-value, Nil, 'a bare matcher reports no expected value';
+
+{
+  my $composed = BeGreaterThanMatcher.new(:expected(1)).and(BeLessThanMatcher.new(:expected(9)));
+
+  ok $composed.matches(5), 'an and matches when both parts accept';
+  is $composed.failing-matcher, Nil, 'an and that matched names no failing part';
+
+  nok $composed.matches(20), 'an and does not match when a part rejects';
+  is $composed.failing-matcher.description, 'be less than 9', 'the failing part is named';
+  ok $composed.failure-message(20).contains('be less than 9 failed'),
+    'the failing part reports what it said';
+}
+
+{
+  my $silent = EqMatcher.new(:expected('ok')).and(PlainMatcher.new);
+  $silent.matches('nope');
+
+  ok $silent.failure-message('nope').contains('did not match'),
+    'a silent failing part is reported as not matching';
+}
+
+{
+  my $composed = EqMatcher.new(:expected('first')).or(EqMatcher.new(:expected('second')));
+
+  ok $composed.matches('second'), 'an or matches when a part accepts';
+  is $composed.matched-matcher.description, 'eq "second"', 'the matching part is named';
+  ok $composed.failure-message-negated('second').contains('but eq "second" matched'),
+    'an unwanted match names the part that matched';
+
+  nok $composed.matches('neither'), 'an or does not match when no part accepts';
+  is $composed.matched-matcher, Nil, 'an or that missed names no matching part';
+  ok $composed.failure-message('neither').contains('but none matched'),
+    'an or that missed reports that none matched';
+}
+
+throws-like { EqMatcher.new(:expected(1)).and('not a matcher') }, Exception,
+  message => /'requires Matcher'/, 'building an and from a non-matcher is refused';
+
+{
+  my $composed = EqMatcher.new(:expected(1)).and(EqMatcher.new(:expected(2)));
+
+  throws-like { $composed.and('not a matcher') }, Exception,
+    message => /'requires Matcher'/, 'extending an and with a non-matcher is refused';
+}
+
+done-testing;

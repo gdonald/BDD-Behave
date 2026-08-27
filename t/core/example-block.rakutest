@@ -3,10 +3,18 @@ use lib 'lib';
 use Test;
 
 use BDD::Behave::SpecTree;
+use BDD::Behave::LetRuntime;
 
-plan 5;
+plan 6;
 
 constant Example = BDD::Behave::SpecTree::Example;
+
+# An example run outside a runner has no let runtime in scope, which is the
+# branch where it builds one from the lets it carries.
+sub execute-without-runtime($example) {
+  my $*LET-RUNTIME = Nil;
+  $example.execute;
+}
 
 {
   my @seen;
@@ -51,6 +59,24 @@ constant Example = BDD::Behave::SpecTree::Example;
 
   $example.execute(:value(7));
   is @values[0], 7, 'a block taking only named arguments is given them, not a context';
+}
+
+
+{
+  my @seen;
+  my $example = Example.new(
+    :description('reads a let'),
+    :file('specs/example.raku'),
+    :line(4),
+    :block(-> $context { @seen.push($*LET-RUNTIME.value('a-value')) }),
+  );
+  $example.set-metadata(:lets([
+    LetDefinition.new(:name('a-value'), :block({ 'from the let' })),
+  ]));
+
+  execute-without-runtime($example);
+
+  is @seen[0], 'from the let', 'an example with no runtime in scope builds one from its lets';
 }
 
 done-testing;

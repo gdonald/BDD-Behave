@@ -1,0 +1,41 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 2;
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $bin  = $root.add('bin/behave');
+
+sub remove-tree(IO::Path $node --> Nil) {
+  return unless $node.e;
+
+  if $node.d {
+    remove-tree($_) for $node.dir;
+    $node.rmdir;
+  } else {
+    $node.unlink;
+  }
+}
+
+# The message about a missing specs directory is followed by `exit 1`, so it is
+# read back from a run of behave rather than by calling the collector here.
+my $dir = $*TMPDIR.add("behave-no-specs-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+$dir.mkdir;
+
+my %env = |%*ENV;
+%env<BEHAVE_DISABLE_CONFIG> = '1';
+
+my $proc = run(
+  'raku', "-I{$root.add('lib').absolute}", $bin.absolute, '--no-config',
+  :out, :err, :cwd($dir.absolute), :%env,
+);
+my $out = $proc.out.slurp(:close);
+my $err = $proc.err.slurp(:close);
+
+isnt $proc.exitcode, 0, 'a run with no specs directory exits non-zero';
+ok ($out ~ $err).contains('`specs` directory not found'), 'the missing directory is named';
+
+remove-tree($dir);
+
+done-testing;

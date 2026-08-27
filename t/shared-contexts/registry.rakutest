@@ -1,0 +1,58 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::SharedContexts;
+
+plan 12;
+
+constant Registry = BDD::Behave::SharedContexts::SharedContextRegistry;
+
+my &database-body = -> { 'database' };
+
+sub fresh() { Registry.new }
+
+{
+  my $store = fresh();
+  $store.register('a database', &database-body);
+
+  ok $store.exists('a database'), 'a registered name is reported as registered';
+  is $store.lookup('a database'), &database-body, 'a registered name looks its block up';
+  is $store.names.join(','), 'a database', 'a registered name is listed';
+}
+
+is fresh().register('a database', &database-body), &database-body,
+  'register hands back the block it was given';
+
+{
+  my $store = fresh();
+  $store.register($_, &database-body) for <charlie alpha bravo>;
+
+  is $store.names.join(','), 'alpha,bravo,charlie', 'names come out sorted';
+
+  $store.clear;
+  is $store.names.elems, 0, 'clear forgets every name';
+}
+
+{
+  my $store = fresh();
+  $store.register('shadowed', -> { 'first' });
+  $store.register('shadowed', -> { 'second' });
+
+  is $store.lookup('shadowed').(), 'second', 'the block registered last wins';
+}
+
+{
+  my $store = fresh();
+
+  nok $store.exists('missing'), 'an unregistered name is not reported as registered';
+  throws-like { $store.lookup('missing') }, Exception,
+    message => /"Unknown shared context: 'missing'"/,
+    'looking up an unregistered name names it in the error';
+  is $store.names.elems, 0, 'an empty registry lists no names';
+}
+
+is registry(), registry(), 'the shared registry is one object';
+ok registry() ~~ Registry, 'the shared registry is a shared context registry';
+
+done-testing;

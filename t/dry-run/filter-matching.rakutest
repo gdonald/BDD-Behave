@@ -1,0 +1,93 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::DryRun;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::SpecTree;
+
+plan 16;
+
+constant Suite         = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
+constant Example       = BDD::Behave::SpecTree::Example;
+constant FilterOptions = BDD::Behave::DryRun::FilterOptions;
+
+sub built-suite(Str $description = 'spec.raku', Str $file = '/abs/spec.raku' --> Suite) {
+  my $suite = Suite.new(:$description, :file($file.IO), :line(1));
+  my $group = ExampleGroup.new(:description('a group'), :file($file.IO), :line(5));
+  $suite.add-child($group);
+
+  $group.add-child(Example.new(
+    :description('adds numbers'), :file($file.IO), :line(7), :block(sub { }),
+  ));
+  $group.add-child(Example.new(
+    :description('subtracts numbers'), :file($file.IO), :line(11), :block(sub { }),
+  ));
+
+  $suite;
+}
+
+sub load-errors-of(%error --> Array) {
+  my @errors;
+  @errors.push(%error);
+  @errors;
+}
+
+sub matching(@suites, *%filters --> List) {
+  BDD::Behave::DryRun::matching-examples(@suites, FilterOptions.new(|%filters));
+}
+
+my @suites = [built-suite()];
+
+is matching(@suites, :example-patterns(['adds'])).elems, 1,
+  'a description holding the text is taken';
+is matching(@suites, :example-patterns(['divides'])).elems, 0,
+  'text appearing nowhere takes nothing';
+is matching(@suites, :example-patterns(['/adds | multiplies/'])).elems, 1,
+  'a pattern written as a regex is taken';
+is matching(@suites, :example-patterns(['/divides \d+/'])).elems, 0,
+  'a regex matching nothing takes nothing';
+
+is matching(@suites, :only-locations(['/abs/spec.raku:7'])).elems, 1,
+  'the example at that line is taken';
+is matching(@suites, :only-locations(['/abs/spec.raku:5'])).elems, 2,
+  'every example of the group at that line is taken';
+is matching(@suites, :only-locations(['spec.raku:7'])).elems, 1,
+  'a file basename names the example';
+is matching(@suites, :only-locations(['abs/spec.raku:7'])).elems, 1,
+  'a trailing part of the path names the example';
+is matching(@suites, :only-locations(['/abs/spec.raku:99'])).elems, 0,
+  'a line nothing was declared at takes nothing';
+is matching(@suites, :only-locations(['/abs/spec.raku'])).elems, 0,
+  'a location with no line takes nothing';
+
+{
+  my $rendered = BDD::Behave::DryRun::render-text(
+    [built-suite('first.raku', '/abs/first.raku'),
+     built-suite('second.raku', '/abs/second.raku')],
+    FilterOptions.new,
+  );
+
+  ok $rendered.contains('# first.raku'), 'the first file is headed with its name';
+  ok $rendered.contains('# second.raku'), 'the second file is headed with its name';
+}
+
+{
+  my %document = parse-json-event(
+    BDD::Behave::DryRun::render-json(
+      [built-suite()],
+      FilterOptions.new,
+      :load-errors(load-errors-of(%( :file('/abs/broken.raku'), :message('boom') ))),
+    ).lines.join,
+  );
+
+  is %document<count>, 2, 'the examples that would run are counted';
+  is %document{'load-errors'}[0]<file>, '/abs/broken.raku', 'a file that failed to load is named';
+  is %document{'load-errors'}[0]<message>, 'boom', 'the reason it failed is reported';
+}
+
+is BDD::Behave::DryRun::serialize-suite-node('not a node').elems, 0,
+  'a node that is neither a group nor an example writes nothing';
+
+done-testing;

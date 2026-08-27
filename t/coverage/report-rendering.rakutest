@@ -1,0 +1,231 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Coverage;
+
+plan 49;
+
+constant Coverage = BDD::Behave::Coverage;
+
+# A small project of one source file, plus a hit log naming some of its lines,
+# is enough to drive every report format end to end.
+sub project(--> IO::Path) {
+  my $root = $*TMPDIR.add("behave-coverage-report-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $root.mkdir;
+  $root.add('lib').mkdir;
+
+  $root.add('lib').add('Sample.rakumod').spurt(q:to/SOURCE/);
+  unit module Sample;
+
+  our sub classify(Int $n --> Str) {
+    if $n > 10 {
+      'big';
+    } else {
+      'small';
+    }
+  }
+
+  our sub untouched(--> Str) {
+    'never called';
+  }
+  SOURCE
+
+  $root;
+}
+
+sub remove-tree(IO::Path $node --> Nil) {
+  return unless $node.e;
+  if $node.d {
+    remove-tree($_) for $node.dir;
+    $node.rmdir;
+  } else {
+    $node.unlink;
+  }
+}
+
+sub log-for(IO::Path $root, *@lines --> IO::Path) {
+  my $log = $root.add('coverage.log');
+  my $source = $root.add('lib').add('Sample.rakumod').absolute;
+  $log.spurt(@lines.map({ "HIT  $source  $_" }).join("\n") ~ "\n");
+  $log;
+}
+
+sub report-of(IO::Path $root, *%named) {
+  my $opts = Coverage::CoverageOptions.new(|%named);
+  $opts.include-path($root.add('lib').absolute);
+
+  Coverage::build-report(log-for($root, 4, 5, 11), $opts, $root);
+}
+
+sub baseline-of(IO::Path $root, *@lines --> IO::Path) {
+  my $opts = Coverage::CoverageOptions.new;
+  $opts.include-path($root.add('lib').absolute);
+
+  my $report = Coverage::build-report(log-for($root, |@lines), $opts, $root);
+  my $path = $root.add('baseline.json');
+  $path.spurt(Coverage::render-json($report));
+  $path;
+}
+
+my $root = project();
+
+{
+  my $report = report-of($root);
+
+  is $report.files.elems, 1, 'the report holds the source file it covered';
+  is $report.files[0].display-path, 'lib/Sample.rakumod', 'the file is named by its project path';
+  is $report.files[0].covered-lines, 2, 'the executable lines that were hit are counted';
+  is $report.files[0].covered-line-numbers.grep(* == 11).elems, 0,
+    'a hit on a line that is not executable is left out';
+  ok $report.overall-percentage < 100, 'the percentage is below a hundred';
+  is $report.overall-branch-percentage, 100e0, 'no branches are reported when tracking was off';
+}
+
+{
+  my $report = report-of($root, :branch);
+
+  ok $report.files[0].total-branches > 0, 'the branching lines of the file are found';
+  ok $report.files[0].branch-percentage <= 100, 'a branch percentage is reported for the file';
+  ok $report.overall-branch-percentage <= 100, 'a branch percentage is reported for the run';
+
+  ok Coverage::render-report($report, 'text', :color(False)).contains('lib/Sample.rakumod'),
+    'a text table is written';
+  ok Coverage::render-report($report, 'text', :color(True)).contains('lib/Sample.rakumod'),
+    'a text table is written in colour';
+  ok Coverage::render-report($report, 'text', :color(False)).contains('Branches:'),
+    'a branch line is written into the text table';
+  ok Coverage::render-report($report, 'json').contains('"files"'), 'json is written';
+  ok Coverage::render-report($report, 'json').contains('total-branches'),
+    'the branch counts are written into the json';
+  ok Coverage::render-report($report, 'lcov').contains('SF:'), 'lcov is written';
+  ok Coverage::render-report($report, 'lcov').contains('BRDA:'),
+    'the branch records are written into the lcov';
+  ok Coverage::render-report($report, 'cobertura').contains('<coverage'), 'cobertura is written';
+
+  throws-like { Coverage::render-report($report, 'html') }, Exception,
+    message => /'writes a directory tree'/, 'html as a single string is refused';
+  throws-like { Coverage::render-report($report, 'yaml') }, Exception,
+    message => /'Unknown coverage format'/, 'an unknown format is refused';
+}
+
+{
+  my $out-dir = $root.add('html');
+  Coverage::write-html-tree(report-of($root, :branch, :counts), $out-dir);
+
+  ok $out-dir.add('index.html').e, 'an index page is written';
+  ok $out-dir.add('style.css').e, 'a stylesheet is written';
+  ok $out-dir.add('style.css').slurp.contains('.src-line.hit'),
+    'the rules the report needs are written into the stylesheet';
+  is $out-dir.dir.grep(*.basename.ends-with('-rakumod.html')).elems, 1,
+    'one page per source file is written';
+  ok $out-dir.add('index.html').slurp.contains('lib/Sample.rakumod'),
+    'the file is listed on the index page';
+  ok $out-dir.add('index.html').slurp.contains('coverage-table'),
+    'the sorting script is carried on the index page';
+  ok $out-dir.dir.grep(*.basename.ends-with('-rakumod.html'))[0].slurp.contains('src-line hit'),
+    'the covered lines are marked on the file page';
+  ok $out-dir.dir.grep(*.basename.ends-with('-rakumod.html'))[0].slurp.contains('class="hits"'),
+    'the hit counts are shown when they were tracked';
+}
+
+{
+  my $log = log-for($root, 4, 5);
+  my $handle = $log.open(:r);
+  my %hits = Coverage::parse-coverage-stream($handle);
+  $handle.close;
+
+  is %hits.values[0].keys.elems, 2, 'a log read from a handle gives the same hits';
+}
+
+is Coverage::find-source-files($root.add('lib')).elems, 1,
+  'the modules under a directory are taken';
+is Coverage::enumerate-include-files(($root.add('lib').absolute,), (), $root).elems, 1,
+  'the files named by an include path are taken';
+is Coverage::enumerate-include-files(($root.add('lib').absolute,), ('Sample',), $root).elems, 0,
+  'a file named by an exclude path is left out';
+
+{
+  my $baseline = baseline-of($root, 4);
+  my $diff = Coverage::compute-diff(report-of($root), $baseline);
+
+  ok $diff.delta > 0, 'coverage that went up is reported';
+  ok Coverage::render-diff($diff).contains('Improved files:'), 'the file that improved is named';
+  ok Coverage::render-diff($diff).contains('Newly covered lines:'),
+    'the newly covered lines are counted';
+}
+
+{
+  my $baseline = baseline-of($root, 4, 5, 11, 12);
+  my $diff = Coverage::compute-diff(report-of($root), $baseline);
+
+  ok Coverage::render-diff($diff).contains('Regressed files:'), 'coverage that went down is reported';
+}
+
+is Coverage::parse-baseline-json('{"path":"a \"quoted\" name"}')<path>, 'a "quoted" name',
+  'an escaped quote is read';
+is Coverage::parse-baseline-json('{"path":"a\nb\tc\rd"}')<path>, "a\nb\tc\rd",
+  'the escapes that stand for whitespace are read';
+is Coverage::parse-baseline-json('{"path":"a\\\\b\/c"}')<path>, 'a\\b/c',
+  'an escaped backslash and slash are read';
+is Coverage::parse-baseline-json('{"lines":[1,2,3]}')<lines>.elems, 3, 'a list of numbers is read';
+is Coverage::parse-baseline-json('{"a":{"b":{"c":1}}}')<a><b><c>, 1, 'nested objects are read';
+
+dies-ok { Coverage::parse-baseline-json('{"lines":[1,2') }, 'a list that is not closed is refused';
+dies-ok { Coverage::parse-baseline-json('{"a":1') }, 'an object that is not closed is refused';
+
+
+{
+  my $dir = $*TMPDIR.add("behave-coverage-pod-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $dir.mkdir;
+  $dir.add('lib').mkdir;
+  $dir.add('lib').add('Documented.rakumod').spurt(q:to/SOURCE/);
+  unit module Documented;
+
+  =begin pod
+
+  =head1 Documented
+
+  This prose is not code, and `if True { }` inside it is not a branch.
+
+  =end pod
+
+  our sub answer(--> Int) {
+    my $base = 21;
+    $base * 2;
+  }
+  SOURCE
+
+  my $source = $dir.add('lib').add('Documented.rakumod');
+  my $executable = Coverage::identify-executable-lines($source);
+
+  is $executable.keys.grep({ 5 <= $_ <= 9 }).elems, 0, 'prose is left out of executable lines';
+  ok $executable.elems > 0, 'the code after the prose is kept';
+  is Coverage::identify-branch-lines($source).keys.grep({ 5 <= $_ <= 9 }).elems, 0,
+    'prose is left out of branching lines';
+
+  remove-tree($dir);
+}
+
+throws-like { Coverage::parse-baseline-json('{"a":1 "b":2}') }, Exception,
+  message => /'expected , or }'/, 'an object whose members are not separated is refused';
+throws-like { Coverage::parse-baseline-json('{"a":[1 2]}') }, Exception,
+  message => /'expected , or ]'/, 'a list whose items are not separated is refused';
+is Coverage::parse-baseline-json(Q[{"path":"a\qb"}])<path>, 'aqb',
+  'an escape that is not known is read as the character itself';
+
+{
+  my $fresh = project();
+  my $baseline = $fresh.add('empty-baseline.json');
+  $baseline.spurt(Q[{"version":1,"overall":{"percentage":0.0},"files":[]}]);
+
+  my $diff = Coverage::compute-diff(report-of($fresh), $baseline);
+
+  is $diff.newly-covered, 2, 'every covered line of a file missing from the baseline is new';
+
+  remove-tree($fresh);
+}
+
+remove-tree($root);
+
+done-testing;

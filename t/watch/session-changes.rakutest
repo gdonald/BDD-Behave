@@ -1,0 +1,173 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Watch::Watcher;
+use BDD::Behave::Watch::SmartSelector;
+use BDD::Behave::Watch::UI;
+use BDD::Behave::Watch::Session;
+
+plan 13;
+
+sub fresh-dir(--> IO::Path) {
+  my $d = $*TMPDIR.add("behave-session-changes-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $d.mkdir;
+  $d;
+}
+
+sub rm-rf($node) {
+  if $node.d {
+    rm-rf($_) for $node.dir;
+    $node.rmdir if $node.e;
+  } else {
+    $node.unlink if $node.e;
+  }
+}
+
+# `run` re-snapshots the tree before its first poll, so a file edited before the
+# session starts is part of the baseline. The tick hook stands in for the sleep
+# between polls, which is where an edit lands mid-loop.
+sub make-session(
+  $dir, @all-specs, &runner,
+  Int  :$max-iterations = 1,
+  Bool :$capture-output = False,
+  :&on-tick = -> $ {},
+) {
+  my $lib   = $dir.add('lib');   $lib.mkdir   unless $lib.e;
+  my $specs = $dir.add('specs'); $specs.mkdir unless $specs.e;
+
+  my $watcher = BDD::Behave::Watch::Watcher::Watcher.new;
+  $watcher.add-path($lib);
+  $watcher.add-path($specs);
+
+  my $selector = BDD::Behave::Watch::SmartSelector::Selector.new(:lib-root($lib));
+
+  my $out = $capture-output
+    ?? $dir.add('ui-output.txt').open(:w)
+    !! open($*SPEC.devnull, :w);
+
+  my $ui = BDD::Behave::Watch::UI::UI.new(:color(False), :out($out));
+
+  BDD::Behave::Watch::Session::Session.new(
+    :$watcher, :$selector, :$ui,
+    :all-specs(@all-specs.map(*.IO)),
+    :&runner,
+    :sleep-fn(&on-tick),
+    :$max-iterations,
+    :running-test-after-initialize(False),
+  );
+}
+
+{
+  my $dir = fresh-dir();
+  my $specs = $dir.add('specs');
+  $specs.mkdir unless $specs.e;
+  my $file = $specs.add('a-spec.raku');
+  $file.spurt('');
+
+  my @runs;
+  my $edited = False;
+  my $session = make-session(
+    $dir, [$file], -> $req { @runs.push($req); 0 },
+    :max-iterations(3),
+    :on-tick(-> $ {
+      unless $edited {
+        $file.spurt('# touched, and longer than it was');
+        $edited = True;
+      }
+    }),
+  );
+  $session.run;
+
+  is @runs.elems, 1, 'a mapped change runs the spec';
+  is @runs[0].reason, 'change detected', 'the run reports what set it off';
+  is @runs[0].specs[0].basename, 'a-spec.raku', 'the file that changed is the one run';
+
+  rm-rf($dir);
+}
+
+{
+  my $dir = fresh-dir();
+  my $lib = $dir.add('lib');
+  $lib.mkdir unless $lib.e;
+  my $module = $lib.add('Unmapped.rakumod');
+  $module.spurt('# first');
+
+  my @runs;
+  my $edited = False;
+  my $session = make-session(
+    $dir, [], -> $req { @runs.push($req); 0 },
+    :capture-output,
+    :max-iterations(3),
+    :on-tick(-> $ {
+      unless $edited {
+        $module.spurt('# changed, and longer than it was');
+        $edited = True;
+      }
+    }),
+  );
+  $session.run;
+
+  is @runs.elems, 0, 'a change mapping to no spec runs nothing';
+  ok $dir.add('ui-output.txt').slurp.contains('no specs mapped to these changes'),
+    'a change mapping to no spec is reported';
+
+  rm-rf($dir);
+}
+
+{
+  my $dir = fresh-dir();
+  my @runs;
+  make-session($dir, [], -> $req { @runs.push($req); 0 }).run;
+
+  is @runs.elems, 0, 'no change runs nothing';
+
+  rm-rf($dir);
+}
+
+sub output-after(Str $command --> List) {
+  my $dir = fresh-dir();
+  my @runs;
+  my $session = make-session($dir, [], -> $req { @runs.push($req); 0 }, :capture-output);
+  $session.ui.submit-command($command);
+  $session.run;
+
+  my $output = $dir.add('ui-output.txt').slurp;
+  rm-rf($dir);
+
+  ($output, @runs.elems).List;
+}
+
+{
+  my ($output, $run-count) = output-after('h');
+  ok $output.contains('press r rerun selection'), 'the help command prints the prompt';
+  is $run-count, 0, 'the help command runs nothing';
+}
+
+{
+  my ($output, $run-count) = output-after('zzz');
+  ok $output.contains("unknown command: 'zzz'"), 'an unknown command is named';
+  ok $output.contains('press r rerun selection'), 'an unknown command prints the prompt';
+  is $run-count, 0, 'an unknown command runs nothing';
+}
+
+{
+  my $dir = fresh-dir();
+  my $session = make-session($dir, [], -> $req { 0 }, :max-iterations(2));
+  $session.ui.submit-command('q');
+  $session.run;
+
+  ok $session.stopped, 'the quit command stops the session';
+  rm-rf($dir);
+}
+
+{
+  my $dir = fresh-dir();
+  my $session = make-session($dir, [], -> $req { 0 }, :max-iterations(1));
+  $session.run;
+
+  nok $session.stopped, 'running out of iterations does not count as stopping';
+  rm-rf($dir);
+}
+
+done-testing;

@@ -1,0 +1,20 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Matcher::Boolean;
+use BDD::Behave::Matcher::Core;
+
+plan 5;
+
+# A matcher's description is what composed matchers and the `eventually` wrapper
+# read to build their own, so each one is asked for it here.
+is EqMatcher.new(:expected(42)).description, 'eq 42',
+  'an equality matcher describes the value it holds';
+is EqMatcher.new(:expected('a name')).description, 'eq "a name"',
+  'an equality matcher describes a string it holds';
+is BeTruthyMatcher.new.description, 'be truthy', 'a truthiness matcher describes itself';
+is BeFalsyMatcher.new.description, 'be falsy', 'a falsiness matcher describes itself';
+is BeNilMatcher.new.description, 'be nil', 'a nil matcher describes itself';
+
+done-testing;

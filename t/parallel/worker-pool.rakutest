@@ -1,0 +1,81 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::WorkerPool;
+
+plan 7;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $lib     = $root.add('lib');
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/parallel-clean-fixture-spec.raku');
+
+sub manifest-dir(--> IO::Path) {
+  my $dir = $*TMPDIR.add("behave-worker-pool-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $dir.mkdir;
+  $dir;
+}
+
+sub remove-dir(IO::Path $dir --> Nil) {
+  return unless $dir.e;
+  for $dir.dir -> $entry { $entry.unlink if $entry.f }
+  $dir.rmdir;
+}
+
+sub pool-for(IO::Path $dir, @events, IO::Path :$coverage-log-dir) {
+  BDD::Behave::Parallel::WorkerPool::WorkerPool.new(
+    :worker-count(1),
+    :worker-argv(('raku', "-I{$lib.absolute}", $bin.absolute)),
+    :base-env(%(|%*ENV, BEHAVE_DISABLE_CONFIG => '1')),
+    :manifest-dir($dir),
+    :$coverage-log-dir,
+    :on-event(-> $index, $event { @events.push($event) }),
+  );
+}
+
+{
+  my $dir = manifest-dir();
+  my @events;
+  my $pool = pool-for($dir, @events);
+  $pool.launch([[$fixture.absolute ~ ':1']]);
+  $pool.wait-all;
+
+  is $pool.workers.elems, 1, 'the pool holds one worker';
+  nok $pool.any-nonzero-exit, 'the worker finished cleanly';
+  is @events.grep({ (.<type> // '') eq 'run-summary' }).elems, 1,
+    'every event the worker sent reached the callback';
+  ok $pool.workers[0].events.elems > 0, 'the events are kept on the handle';
+
+  $pool.cleanup-manifests;
+  nok $pool.workers[0].manifest-path.e, 'the manifest is taken away when asked';
+
+  remove-dir($dir);
+}
+
+{
+  my $dir = manifest-dir();
+  my $log-dir = manifest-dir();
+  my @events;
+  my $pool = pool-for($dir, @events, :coverage-log-dir($log-dir));
+  $pool.launch([[$fixture.absolute ~ ':1']]);
+  $pool.wait-all;
+
+  is $log-dir.dir.grep(*.basename.starts-with('worker-0')).elems, 1,
+    'a coverage log is written for the worker';
+
+  $pool.cleanup-manifests;
+  remove-dir($dir);
+  remove-dir($log-dir);
+}
+
+{
+  my $dir = manifest-dir();
+
+  throws-like { pool-for($dir, []).launch([[], []]) }, Exception,
+    message => /'must equal worker-count'/, 'more manifests than workers is refused';
+
+  remove-dir($dir);
+}
+
+done-testing;

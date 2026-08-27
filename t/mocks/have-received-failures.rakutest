@@ -1,0 +1,146 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 24;
+
+my class Ledger {
+  method deposit($amount) { $amount }
+}
+
+# Every message below is built only when the expectation misses, so each one is
+# driven through a failing expectation and read back off the failure list.
+sub message-of(&expectation --> Str) {
+  Failures.list = ();
+  expectation();
+  my $message = Failures.list.elems ?? Failures.list[0].message !! '';
+  Failures.list = ();
+
+  $message;
+}
+
+sub failure-count-of(&expectation --> Int) {
+  Failures.list = ();
+  expectation();
+  my $count = Failures.list.elems;
+  Failures.list = ();
+
+  $count;
+}
+
+sub uncalled-double-message(&apply --> Str) {
+  message-of({
+    my $log = double('Logger');
+    apply(expect($log).to.have-received('info'));
+  });
+}
+
+{
+  my $message = message-of({
+    my $log = double('Logger');
+    expect($log).to.have-received('info');
+  });
+
+  ok $message.contains('double("Logger")#info'), 'the double and method are named';
+  ok $message.contains('to have been called at least once'), 'at least once is the default count';
+  ok $message.contains('got 0 calls'), 'no calls seen is reported';
+}
+
+{
+  my &called-once = {
+    my $ledger = Ledger.new;
+    allow($ledger).to.receive('deposit').and-return(1);
+    $ledger.deposit(1);
+    expect($ledger).to.have-received('deposit').twice;
+  };
+
+  ok message-of(&called-once).contains('Ledger#deposit'), 'the class and method are named';
+  ok message-of(&called-once).contains('got 1 call'), 'one call is reported in the singular';
+}
+
+{
+  my $message = message-of({
+    my $ledger = Ledger.new;
+    expect($ledger).to.have-received('deposit');
+  });
+
+  ok $message.contains('no stub installed'), 'a missing stub is reported';
+  ok $message.contains(".to.receive('deposit')"), 'the call that installs a stub is shown';
+}
+
+ok message-of({
+  my $log = double('Logger');
+  $log.info('starting');
+  expect($log).not.to.have-received('info');
+}).contains('not to have been called'), 'a negated miss says the call was not expected';
+
+ok uncalled-double-message(-> $e { $e.once }).contains('exactly once'),
+  'exactly one call reads as once';
+ok uncalled-double-message(-> $e { $e.twice }).contains('exactly twice'),
+  'exactly two calls read as twice';
+ok uncalled-double-message(-> $e { $e.thrice }).contains('exactly 3 times'),
+  'three calls and up are counted in numerals';
+ok uncalled-double-message(-> $e { $e.exactly(5) }).contains('exactly 5 times'),
+  'an exact count is named';
+ok uncalled-double-message(-> $e { $e.at-least(1) }).contains('at least once'),
+  'a lower bound of one reads as once';
+ok uncalled-double-message(-> $e { $e.at-least(4) }).contains('at least 4 times'),
+  'a larger lower bound is counted in numerals';
+
+ok message-of({
+  my $log = double('Logger');
+  $log.info('a');
+  $log.info('b');
+  expect($log).to.have-received('info').at-most(1);
+}).contains('at most once'), 'an upper bound of one reads as once';
+
+ok message-of({
+  my $log = double('Logger');
+  $log.info($_) for ^3;
+  expect($log).to.have-received('info').at-most(2);
+}).contains('at most 2 times'), 'a larger upper bound is counted in numerals';
+
+ok message-of({
+  my $log = double('Logger');
+  $log.info('other');
+  expect($log).to.have-received('info').with('expected');
+}).contains('with ("expected")'), 'a plain argument is rendered as written';
+
+ok uncalled-double-message(-> $e { $e.with(anything) }).contains('with (anything)'),
+  'an argument matcher is rendered by its description';
+
+ok uncalled-double-message(-> $e { $e.with(:level('warn')) }).contains(':level("warn")'),
+  'a named argument is rendered with its name';
+
+ok uncalled-double-message(-> $e { $e.with(:level(anything)) }).contains(':level(anything)'),
+  'a named argument matcher is rendered by its description';
+
+ok message-of({
+  my $log = double('Logger');
+  $log.info('other');
+  expect($log).to.have-received('info').with('expected');
+}).contains('got 0 matching calls (out of 1 total)'), 'matching calls are counted against the total';
+
+ok message-of({
+  my $log = double('Logger');
+  $log.info('expected');
+  $log.info('other');
+  expect($log).to.have-received('info').with('expected').twice;
+}).contains('got 1 matching call (out of 2 total)'), 'one matching call is reported in the singular';
+
+is failure-count-of({
+  my $log = double('Logger');
+  $log.info('starting');
+  expect($log).to.have-received('info').twice.at-least(1);
+}), 0, 'a later satisfied link clears the earlier failure';
+
+is failure-count-of({
+  my $log = double('Logger');
+  $log.info('starting');
+  expect($log).to.have-received('info').at-least(1).twice;
+}), 1, 'a last link that misses records one failure';
+
+done-testing;

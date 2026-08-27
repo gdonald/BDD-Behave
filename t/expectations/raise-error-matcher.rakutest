@@ -1,0 +1,116 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Matcher::Exception;
+
+plan 27;
+
+my class X::Sample is Exception {
+  method message { 'sample failure' }
+}
+
+# The expectation builder drives this matcher through its captured state, so
+# the matcher's own `matches` is exercised here directly.
+sub matcher-for(--> RaiseErrorMatcher) { RaiseErrorMatcher.new }
+
+sub matcher-for-type(Mu \type --> RaiseErrorMatcher) {
+  RaiseErrorMatcher.new(:expected-type(type), :has-type);
+}
+
+sub matcher-for-message($message --> RaiseErrorMatcher) {
+  RaiseErrorMatcher.new(:expected-message($message));
+}
+
+{
+  my $matcher = matcher-for();
+
+  ok $matcher.matches({ die 'boom' }), 'a raising block matches';
+  is $matcher.raised-exception.message, 'boom', 'the exception it caught is kept';
+
+  $matcher.matches({ 'quiet' });
+  nok $matcher.raised-exception.defined, 'a later quiet block forgets the exception';
+}
+
+{
+  my $matcher = matcher-for();
+
+  nok $matcher.matches({ 'quiet' }), 'a quiet block does not match';
+  is $matcher.failure-message({ }), 'expected block to raise an error, but none was raised',
+    'a quiet block is reported as raising nothing';
+}
+
+{
+  my $matcher = matcher-for();
+
+  nok $matcher.matches(42), 'a non-callable does not match';
+  is $matcher.failure-message(42), 'expected a Callable, but got 42',
+    'a non-callable is named in the message';
+}
+
+{
+  my $matcher = matcher-for-type(X::Sample);
+  $matcher.matches({ die 'boom' });
+
+  nok $matcher.check-captured, 'a type that misses does not match';
+  ok $matcher.failure-message({ }).contains('but raised X::AdHoc: boom'),
+    'what was raised instead is reported';
+  ok $matcher.failure-message({ }).contains('raise X::Sample'), 'the type wanted is named';
+}
+
+ok matcher-for-type(X::Sample).matches({ X::Sample.new.throw }), 'a matching type matches';
+
+{
+  my $matcher = matcher-for-message('expected text');
+  $matcher.matches({ die 'other text' });
+
+  nok $matcher.check-captured, 'a message that misses does not match';
+  ok $matcher.failure-message({ }).contains('with message "expected text"'),
+    'the message wanted is named';
+  ok $matcher.failure-message({ }).contains('but raised X::AdHoc: other text'),
+    'the message raised is reported';
+}
+
+ok matcher-for-message('boom').matches({ die 'boom' }), 'an exact message matches';
+ok matcher-for-message(/'oo'/).matches({ die 'boom' }), 'a message pattern matches';
+
+{
+  my $matcher = matcher-for-message(/'nothing like it'/);
+  $matcher.matches({ die 'boom' });
+
+  nok $matcher.check-captured, 'a pattern that misses does not match';
+  ok $matcher.failure-message({ }).contains('with message matching'), 'the pattern wanted is named';
+}
+
+is matcher-for().description, 'raise an error', 'any error describes itself';
+is matcher-for-type(X::Sample).description, 'raise X::Sample', 'a type is described';
+is matcher-for-message('boom').description, 'raise an error with message "boom"',
+  'a message is described';
+
+is matcher-for-type(X::Sample).expected-value, X::Sample, 'the type is the expected value';
+is matcher-for-message('boom').expected-value, 'boom',
+  'the message is the expected value when no type was given';
+is matcher-for().expected-value, Nil, 'neither given leaves no expected value';
+
+{
+  my $matcher = matcher-for();
+  $matcher.matches({ die 'boom' });
+
+  is $matcher.failure-message({ }), 'expected block to raise an error',
+    'a matcher that missed nothing falls back to its description';
+}
+
+{
+  my $matcher = matcher-for();
+  $matcher.matches({ die 'boom' });
+
+  is $matcher.failure-message-negated({ }),
+    'expected block not to raise an error, but one was raised (X::AdHoc: boom)',
+    'an unwanted error is described';
+}
+
+is matcher-for().failure-message-negated({ }),
+  'expected block not to raise an error, but one was raised',
+  'an unwanted error with none caught is described';
+
+done-testing;

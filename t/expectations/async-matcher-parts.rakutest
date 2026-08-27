@@ -1,0 +1,78 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Matcher::Async;
+
+plan 17;
+
+# `expect` reports these through the builder, so the descriptions and the
+# messages each matcher carries are read here directly.
+is BeKeptMatcher.new.description, 'be kept', 'waiting for a kept promise describes itself';
+is BeBrokenMatcher.new.description, 'be broken', 'waiting for a broken promise describes itself';
+is CompleteWithinMatcher.new(:duration(2)).description, 'complete within 2s',
+  'waiting for a promise to settle describes itself';
+is EmitMatcher.new(:expected([1, 2])).description, 'emit [1, 2]',
+  'waiting for values describes itself';
+is EmitAtLeastMatcher.new(:minimum(3)).description, 'emit at least 3 values',
+  'waiting for a count describes itself';
+is CompleteMatcher.new(:window(1)).description, 'complete within 1s',
+  'waiting for a stream to finish describes itself';
+is EventuallyMatcher.new(:inner(BeKeptMatcher.new)).description, 'eventually be kept',
+  'retrying an inner matcher describes itself';
+
+is BeKeptMatcher.new.failure-message-negated(Promise.kept(1)),
+  'expected Promise not to be kept', 'an unwanted kept promise is reported';
+is BeBrokenMatcher.new.failure-message-negated(Promise.new),
+  'expected Promise not to be broken', 'an unwanted broken promise is reported';
+
+{
+  my $matcher = CompleteWithinMatcher.new(:duration(2));
+  $matcher.matches(Promise.kept(1));
+
+  ok $matcher.failure-message-negated(Promise.kept(1))
+    .contains('expected Promise not to complete within 2s'),
+    'an unwanted settled promise is reported';
+}
+
+is EmitMatcher.new(:expected([1])).failure-message-negated(Supply.from-list(1)),
+  'expected stream not to emit [1]', 'an unwanted emission is reported';
+
+{
+  my $matcher = BeBrokenMatcher.new(:timeout(1));
+  nok $matcher.matches(Promise.kept('a value')), 'a kept promise does not match be-broken';
+  ok $matcher.failure-message(Promise.kept('a value')).contains('but it was kept with "a value"'),
+    'the value it was kept with is reported';
+}
+
+# A `die` inside the map quits the supply after the first value, which is what
+# the matchers report on, and it needs no timing to arrange.
+sub quitting-supply(--> Supply) {
+  Supply.from-list(1, 2).map({ $_ == 2 ?? die('stream broke') !! $_ });
+}
+
+{
+  my $matcher = EmitMatcher.new(:expected([1, 2]), :window(1));
+  $matcher.matches(quitting-supply());
+
+  ok $matcher.failure-message(Nil).contains('but it quit'), 'a stream that quit is reported';
+  ok $matcher.failure-message(Nil).contains('stream broke'), 'the error it quit with is named';
+}
+
+{
+  my $matcher = EmitAtLeastMatcher.new(:minimum(5), :window(1));
+  $matcher.matches(quitting-supply());
+
+  ok $matcher.failure-message(Nil).contains('but it quit'),
+    'a count never reached because the stream quit is reported';
+}
+
+{
+  my $matcher = CompleteMatcher.new(:window(1));
+  $matcher.matches(quitting-supply());
+
+  ok $matcher.failure-message(Nil).contains('but it quit'),
+    'a stream that quit rather than finishing is reported';
+}
+
+done-testing;

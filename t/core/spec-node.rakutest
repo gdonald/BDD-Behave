@@ -1,0 +1,81 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::SpecTree;
+
+plan 15;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant Hook         = BDD::Behave::SpecTree::Hook;
+
+{
+  my $example = Example.new(
+    :description('an example'),
+    :file('/abs/spec.raku'.IO),
+    :line(12),
+    :block(sub { }),
+    :metadata({ tags => ['slow', 'database'] }),
+  );
+
+  is $example.location, '/abs/spec.raku:12', 'a node names its file and line';
+  ok $example.has-tag('slow'), 'a tag the node carries is reported';
+  nok $example.has-tag('fast'), 'a tag the node does not carry is not reported';
+}
+
+{
+  my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+  my $group = ExampleGroup.new(
+    :description('a group'),
+    :file('/abs/spec.raku'.IO),
+    :line(5),
+    :metadata({ tags => ['integration'] }),
+  );
+  my $example = Example.new(
+    :description('an example'),
+    :file('/abs/spec.raku'.IO),
+    :line(7),
+    :block(sub { }),
+    :metadata({ tags => ['slow'] }),
+  );
+  $suite.add-child($group);
+  $group.add-child($example);
+
+  ok $example.has-effective-tag('slow'), 'a tag of its own is reported';
+  ok $example.has-effective-tag('integration'), 'a tag from the group above is reported';
+  nok $example.has-effective-tag('fast'), 'a tag nothing carries is not reported';
+}
+
+sub node-with(%metadata) {
+  Example.new(
+    :description('an example'),
+    :file('/abs/spec.raku'.IO),
+    :line(7),
+    :block(sub { }),
+    :metadata(%metadata),
+  );
+}
+
+sub hook-wanting(%meta) { Hook.new(:callback(sub { }), :%meta) }
+
+ok hook-wanting({ area => 'db' }).matches(node-with({ area => 'db' })),
+  'a value the node carries matches';
+nok hook-wanting({ area => 'db' }).matches(node-with({ area => 'http' })),
+  'another value does not match';
+nok hook-wanting({ area => 'db' }).matches(node-with({ })),
+  'a node carrying nothing for the key does not match';
+ok hook-wanting({ area => 'db' }).matches(node-with({ area => ['db', 'http'] })),
+  'a list holding the value matches';
+nok hook-wanting({ area => 'db' }).matches(node-with({ area => ['http'] })),
+  'a list without the value does not match';
+ok hook-wanting({ area => ['db', 'http'] }).matches(node-with({ area => ['db', 'http'] })),
+  'a node carrying every wanted value matches';
+nok hook-wanting({ area => ['db', 'http'] }).matches(node-with({ area => ['db'] })),
+  'a node carrying only some wanted values does not match';
+ok hook-wanting({ area => ['db'] }).matches(node-with({ area => 'db' })),
+  'a single value satisfies a one-item list';
+ok Hook.new(:callback(sub { })).matches(node-with({ })), 'a hook with no filter matches any node';
+
+done-testing;

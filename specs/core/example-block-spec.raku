@@ -1,7 +1,15 @@
 use BDD::Behave;
 use BDD::Behave::SpecTree;
+use BDD::Behave::LetRuntime;
 
 constant Example = BDD::Behave::SpecTree::Example;
+
+# Behave runs these examples with a let runtime in scope, so the branch that
+# builds one is reached by hiding it for the length of one call.
+sub execute-without-runtime($example) {
+  my $*LET-RUNTIME = Nil;
+  $example.execute;
+}
 
 describe 'running the block of an example', {
   context 'given a block that takes a context argument', {
@@ -55,6 +63,35 @@ describe 'running the block of an example', {
       example().execute for ^3;
 
       expect(runs().elems).to.be(3);
+    }
+  }
+
+  # Running inside behave means a let runtime is already in scope, so the branch
+  # that builds one is reached by shadowing the dynamic variable with Nil.
+  context 'given an example run with no let runtime in scope', {
+    let(:seen, { [] });
+
+    let(:example, {
+      my @seen := seen();
+
+      Example.new(
+        :description('reads a let'),
+        :file('specs/example.raku'),
+        :line(4),
+        :block(-> $context { @seen.push($*LET-RUNTIME.value('a-value')) }),
+      );
+    });
+
+    before-each {
+      example().set-metadata(:lets([
+        BDD::Behave::LetRuntime::LetDefinition.new(:name('a-value'), :block({ 'from the let' })),
+      ]));
+    }
+
+    it 'builds a runtime from the lets the example carries', {
+      execute-without-runtime(example());
+
+      expect(seen()[0]).to.eq('from the let');
     }
   }
 

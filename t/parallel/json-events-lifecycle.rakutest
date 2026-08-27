@@ -1,0 +1,212 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Formatter::JsonEvents;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 37;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant RetryRecord  = BDD::Behave::Runner::RetryRecord;
+constant RunResult    = BDD::Behave::Runner::RunResult;
+
+my $formatter = BDD::Behave::Formatter::JsonEvents.new;
+
+my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+my $group = ExampleGroup.new(:description('a group'), :file('/abs/spec.raku'.IO), :line(5));
+$suite.add-child($group);
+
+my $example = Example.new(
+  :description('an example'),
+  :file('/abs/spec.raku'.IO),
+  :line(7),
+  :block(sub { }),
+);
+$group.add-child($example);
+$example.duration = 0.5;
+
+# An array literal and a slurpy both flatten a hash into pairs, so the one
+# record each of these summaries takes is pushed onto an array instead.
+sub records-of($record --> Array) {
+  my @out;
+  @out.push($record);
+  @out;
+}
+
+sub event-of(&emit-it --> Hash) {
+  parse-json-event(stdout-from(&emit-it).lines[0]);
+}
+
+is $formatter.name, 'json-events', 'the formatter names itself';
+
+{
+  my %event = event-of({ $formatter.suite-loading(:file('/abs/spec.raku')) });
+  is %event<file>, '/abs/spec.raku', 'a suite load reports the file';
+  is %event<type>, 'suite-loading', 'a suite load is typed';
+}
+
+{
+  my %event = event-of({ $formatter.suite-end($suite) });
+  is %event<id>, '/abs/spec.raku:1', 'a suite end identifies the suite';
+  is %event<type>, 'suite-end', 'a suite end is typed';
+}
+
+{
+  my %event = event-of({ $formatter.group-around-skipped($group) });
+  is %event<id>, '/abs/spec.raku:5', 'a skipped group is identified';
+  is %event<type>, 'group-around-skipped', 'a skipped group is typed';
+}
+
+{
+  my %event = event-of({ $formatter.example-around-skipped($example) });
+  is %event<description>, 'an example', 'a skipped example is described';
+  is %event<line>, 7, 'a skipped example reports where it was declared';
+}
+
+{
+  my %event = event-of({
+    $formatter.example-auto-description($example, :description('derived from the matcher'));
+  });
+
+  is %event<description>, 'derived from the matcher', 'an auto description reports what was derived';
+  is %event<id>, '/abs/spec.raku:7', 'an auto description identifies its example';
+}
+
+{
+  my %event = event-of({ $formatter.example-pending($example) });
+  is %event<type>, 'example-pending', 'a pending example is typed';
+  is %event<description>, 'an example', 'a pending example is described';
+}
+
+{
+  my %event = event-of({ $formatter.example-skipped($example) });
+  is %event<type>, 'example-skipped', 'a skipped example is typed';
+  is %event<description>, 'an example', 'a skipped example is described';
+}
+
+{
+  # A thrown exception is what the runner hands over, and only a thrown one
+  # carries a backtrace.
+  my $caught;
+  try {
+    die 'boom';
+    CATCH { default { $caught = $_ } }
+  }
+
+  my %event = event-of({
+    $formatter.example-fail($example, :failure-info(%( :exception($caught) )));
+  });
+
+  is %event<exception-message>, 'boom', 'a thrown body reports the exception message';
+  ok %event<exception-backtrace>.chars > 0, 'a thrown body reports the backtrace';
+}
+
+{
+  my %event = event-of({ $formatter.example-retry($example, :attempt(2), :max-attempts(3)) });
+  is %event<attempt>, 2, 'a retry reports which attempt it is';
+  is %event<max-attempts>, 3, 'a retry reports how many attempts are allowed';
+}
+
+{
+  my %event = event-of({ $formatter.example-slow($example, :threshold(0.1)) });
+  is %event<threshold>, 0.1, 'a slow example reports the threshold it passed';
+  is %event<duration>, 0.5, 'a slow example reports how long it took';
+}
+
+{
+  my %event = event-of({
+    $formatter.retry-summary(records-of(
+      RetryRecord.new(
+        :description('an example'),
+        :location('/abs/spec.raku:7'),
+        :attempts(2),
+        :max-attempts(3),
+        :outcome('passed'),
+      ),
+    ));
+  });
+
+  is %event<type>, 'retry-record', 'a retry summary emits one record per example';
+  is %event<outcome>, 'passed', 'a retry record reports the outcome';
+  is %event<attempts>, 2, 'a retry record reports the attempts taken';
+}
+
+{
+  my @records = records-of(%( :example($example), :description('an example'), :duration(0.5) ));
+
+  is event-of({ $formatter.profile-summary(@records, :limit(1)) })<duration>, 0.5,
+    'a profile record reports the duration';
+  is event-of({ $formatter.profile-summary(@records, :limit(1)) })<id>, '/abs/spec.raku:7',
+    'a profile record identifies its example';
+  is stdout-from({ $formatter.profile-summary(@records, :limit(0)) }), '',
+    'a profile of no records emits nothing';
+}
+
+{
+  my %event = event-of({
+    $formatter.benchmark-summary-section(
+      records-of(%(
+        :example($example),
+        :description('an example'),
+        :key('a-key'),
+        :label('a label'),
+        :position(1),
+        :runs(3),
+        :iterations(10),
+        :timings((0.1, 0.2, 0.3)),
+        :min(0.1),
+        :max(0.3),
+        :mean(0.2),
+        :median(0.2),
+        :total(0.6),
+      )),
+      [],
+    );
+  });
+
+  is %event<label>, 'a label', 'a benchmark record reports its label';
+  is %event<timings>.elems, 3, 'a benchmark record reports every timing';
+  is %event<mean>, 0.2, 'a benchmark record reports the mean';
+}
+
+{
+  my %event = event-of({
+    $formatter.benchmark-summary-section(
+      records-of(%( :description('detached'), :key('k'), :timings(()) )),
+      [],
+    );
+  });
+
+  is %event<id>, '', 'a benchmark record with no example reports no identifier';
+  is %event<line>, 0, 'a benchmark record with no example reports no line';
+}
+
+{
+  my $result = RunResult.new;
+  $result.total = 4;
+  $result.passed = 3;
+  $result.failed = 1;
+
+  my %event = event-of({ $formatter.run-summary($result, :order('random'), :seed(99)) });
+
+  is %event<total>, 4, 'the run summary reports how many examples ran';
+  is %event<failed>, 1, 'the run summary reports how many failed';
+  is %event<seed>, 99, 'the run summary reports the seed';
+}
+
+{
+  my %event = event-of({
+    $formatter.load-errors(records-of(%( :file('/abs/broken.raku'), :message('boom') )));
+  });
+
+  is %event<file>, '/abs/broken.raku', 'a load error names the file';
+  is %event<message>, 'boom', 'a load error reports why it failed';
+}
+
+done-testing;

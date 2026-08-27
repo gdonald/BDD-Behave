@@ -1,0 +1,32 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Mock::ArgMatcher;
+
+plan 14;
+
+is anything.describe, 'anything', 'a matcher taking anything describes itself';
+is instance-of(Int).describe, 'instance-of(Int)', 'a matcher taking one type describes itself';
+is hash-including(:size(3)).describe, 'hash-including({:size(3)})',
+  'a matcher taking a hash describes itself';
+is array-including(1, 2).describe, 'array-including([1, 2])',
+  'a matcher taking a list describes itself';
+
+ok array-including(1, 3).matches([1, 2, 3]), 'a list holding all the items matches';
+nok array-including(1, 9).matches([1, 2, 3]), 'a list missing an item does not match';
+nok array-including(1).matches('not a list'), 'something that is not a list does not match';
+ok array-including(instance-of(Str)).matches(['a string', 2]),
+  'a list holding a value the inner matcher accepts matches';
+nok array-including(instance-of(Str)).matches([1, 2]),
+  'a list holding nothing the inner matcher accepts does not match';
+
+ok hash-including(:size(3)).matches({ :size(3), :name('a') }), 'a hash holding the pair matches';
+nok hash-including(:size(3)).matches({ :size(4) }), 'a hash with a different value does not match';
+nok hash-including(:size(3)).matches('not a hash'), 'something that is not a hash does not match';
+
+nok user-callframe().file.contains('BDD/Behave/Mock'),
+  'the reported frame skips the mocking code';
+ok user-callframe().file.ends-with('arg-matcher.rakutest'), 'the reported frame is the caller';
+
+done-testing;

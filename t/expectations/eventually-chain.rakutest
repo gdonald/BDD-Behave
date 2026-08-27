@@ -1,0 +1,75 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 29;
+
+# Every matcher the eventually builder chains is reached here, since a test
+# written against `expect` only ever exercises the few it needs.
+sub passes(&body --> Bool) {
+  Failures.list = ();
+  body();
+  my $count = Failures.list.elems;
+  Failures.list = ();
+
+  $count == 0;
+}
+
+ok passes({ expect({ 'ready' }).to.eventually.be('ready') }), 'a value to be is taken';
+ok passes({ expect({ 'ready' }).to.eventually.eq('ready') }), 'a value to equal is taken';
+ok passes({ expect({ 1 }).to.eventually.be-truthy }), 'a truthiness check is taken';
+ok passes({ expect({ 0 }).to.eventually.be-falsy }), 'a falsiness check is taken';
+ok passes({ expect({ Nil }).to.eventually.be-nil }), 'a nil check is taken';
+ok passes({ expect({ 'ready to go' }).to.eventually.match(/'to go'/) }), 'a pattern is taken';
+ok passes({ expect({ [1, 2, 3] }).to.eventually.include(2) }), 'an item a list holds is taken';
+ok passes({ expect({ [1, 2] }).to.eventually.contain-exactly(1, 2) }), 'exact items are taken';
+ok passes({ expect({ [1, 2] }).to.eventually.match-array([1, 2]) }), 'an array is taken';
+ok passes({ expect({ [1, 2, 3] }).to.eventually.start-with(1) }), 'leading items are taken';
+ok passes({ expect({ [1, 2, 3] }).to.eventually.end-with(3) }), 'trailing items are taken';
+ok passes({ expect({ 'a string' }).to.eventually.be-a(Str) }), 'a type is taken';
+ok passes({ expect({ 42 }).to.eventually.be-an(Int) }), 'a type with an article is taken';
+ok passes({ expect({ 5 }).to.eventually.be-greater-than(1) }), 'an excluding lower bound is taken';
+ok passes({ expect({ 5 }).to.eventually.be-gt(1) }), 'that bound written short is taken';
+ok passes({ expect({ 5 }).to.eventually.be-greater-than-or-equal-to(5) }),
+  'an including lower bound is taken';
+ok passes({ expect({ 5 }).to.eventually.be-gte(5) }), 'that bound written short is taken';
+ok passes({ expect({ 5 }).to.eventually.be-less-than(9) }), 'an excluding upper bound is taken';
+ok passes({ expect({ 5 }).to.eventually.be-lt(9) }), 'that bound written short is taken';
+ok passes({ expect({ 5 }).to.eventually.be-less-than-or-equal-to(5) }),
+  'an including upper bound is taken';
+ok passes({ expect({ 5 }).to.eventually.be-lte(5) }), 'that bound written short is taken';
+
+{
+  my $value = 0;
+  start { sleep 0.05; $value = 7 }
+
+  ok passes({ expect({ $value }).to.eventually(:timeout(2)).be(7) }),
+    'a value that settles late is waited for';
+}
+
+ok passes({ expect({ 'never ready' }).to.eventually(:timeout(0.2)).not.be('ready') }),
+  'a value that never arrives passes a negated chain';
+
+throws-like { expect({ 1 }).to.eventually.be-completely-made-up }, X::Method::NotFound,
+  'a matcher name nothing registered is refused';
+
+{
+  define-matcher 'eventually-chain-t-be-ready', match => -> $actual { $actual eq 'ready' };
+
+  ok passes({ expect({ 'ready' }).to.eventually.eventually-chain-t-be-ready }),
+    'a custom matcher is taken by name';
+}
+
+throws-like { expect({ [1] }).to.eventually.include }, Exception,
+  message => /'requires at least one item'/, 'an include with nothing to look for is refused';
+throws-like { expect({ [1] }).to.eventually.match-array('not an array') }, Exception,
+  message => /'requires an array argument'/, 'a match-array against a non-array is refused';
+throws-like { expect({ [1] }).to.eventually.start-with }, Exception,
+  message => /'requires at least one item'/, 'a start-with with nothing to look for is refused';
+throws-like { expect({ [1] }).to.eventually.end-with }, Exception,
+  message => /'requires at least one item'/, 'an end-with with nothing to look for is refused';
+
+done-testing;

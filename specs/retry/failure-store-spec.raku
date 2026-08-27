@@ -8,6 +8,18 @@ sub fresh-file(--> IO::Path) {
 }
 
 describe 'BDD::Behave::FailureStore', {
+  describe 'default-path', {
+    it 'names the store beside the directory it was given', {
+      expect(BDD::Behave::FailureStore::default-path(:base('/some/project'.IO)).absolute)
+        .to.eq('/some/project/.behave-failures');
+    }
+
+    it 'names the store in the working directory by default', {
+      expect(BDD::Behave::FailureStore::default-path().basename)
+        .to.eq('.behave-failures');
+    }
+  }
+
   describe 'read-failures', {
     it 'returns empty list when the file does not exist', {
       my $path = fresh-file();

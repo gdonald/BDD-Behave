@@ -1,0 +1,44 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Matcher::Numeric;
+
+plan 13;
+
+# The expectation builder reports these through `expect`, so the descriptions
+# and negated messages each matcher carries are read here directly.
+is BeGreaterThanMatcher.new(:expected(3)).description, 'be greater than 3',
+  'an excluding lower bound describes itself';
+is BeGreaterThanOrEqualMatcher.new(:expected(3)).description, 'be greater than or equal to 3',
+  'an including lower bound describes itself';
+is BeLessThanMatcher.new(:expected(7)).description, 'be less than 7',
+  'an excluding upper bound describes itself';
+is BeLessThanOrEqualMatcher.new(:expected(7)).description, 'be less than or equal to 7',
+  'an including upper bound describes itself';
+is BeBetweenMatcher.new(:min(1), :max(9)).description, 'be between 1 and 9 (inclusive)',
+  'a range describes itself';
+is BeWithinMatcher.new(:delta(0.5), :expected(10)).description, 'be within 0.5 of 10',
+  'a tolerance describes itself';
+
+is BeGreaterThanOrEqualMatcher.new(:expected(3)).failure-message-negated(5),
+  'expected 5 not to be greater than or equal to 3',
+  'an unwanted lower bound match is reported';
+is BeLessThanOrEqualMatcher.new(:expected(7)).failure-message-negated(5),
+  'expected 5 not to be less than or equal to 7',
+  'an unwanted upper bound match is reported';
+is BeBetweenMatcher.new(:min(1), :max(9)).failure-message-negated(5),
+  'expected 5 not to be between 1 and 9 (inclusive)',
+  'an unwanted range match is reported';
+is BeWithinMatcher.new(:delta(0.5), :expected(10)).failure-message-negated(10),
+  'expected 10 not to be within 0.5 of 10',
+  'an unwanted tolerance match is reported';
+
+is BeGreaterThanOrEqualMatcher.new(:expected(3)).expected-value, 3,
+  'a lower bound reports the bound it expected';
+is BeBetweenMatcher.new(:min(1), :max(9)).expected-value.join(','), '1,9',
+  'a range reports both ends';
+is BeWithinMatcher.new(:delta(0.5), :expected(10)).expected-value, 10,
+  'a tolerance reports its centre';
+
+done-testing;

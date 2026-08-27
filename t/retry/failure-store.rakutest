@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave::FailureStore;
 
-plan 12;
+plan 14;
 
 sub fresh-file(--> IO::Path) {
   my $path = $*TMPDIR.add("behave-failure-store-test-{$*PID}-{(now * 1e6).Int.base(36)}.txt");
@@ -86,3 +86,10 @@ sub fresh-file(--> IO::Path) {
   is $path.slurp, '',     'empty failures yields empty file contents';
   $path.unlink;
 }
+
+is BDD::Behave::FailureStore::default-path(:base('/some/project'.IO)).absolute,
+  '/some/project/.behave-failures',
+  'the store is named beside the directory it was given';
+
+is BDD::Behave::FailureStore::default-path().basename, '.behave-failures',
+  'the store is named in the working directory by default';

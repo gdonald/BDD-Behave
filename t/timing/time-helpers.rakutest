@@ -1,0 +1,52 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Time;
+
+plan 16;
+
+nok frozen-instant().defined, 'no freeze means no frozen instant';
+nok time-is-frozen(), 'no freeze means time is not frozen';
+
+{
+  my $moment = DateTime.new('2020-05-15T12:00:00Z').Instant;
+
+  freeze-time($moment, {
+    is frozen-instant(), $moment, 'a freeze reports the instant it was frozen at';
+    ok time-is-frozen(), 'a freeze reports that time is frozen';
+  });
+}
+
+{
+  my $moment = DateTime.new('2020-05-15T12:00:00Z').Instant;
+  is to-instant($moment), $moment, 'an instant is taken as it is';
+}
+
+is to-instant(DateTime.new('2020-05-15T12:00:00Z')),
+  DateTime.new('2020-05-15T12:00:00Z').Instant, 'a date and time is taken';
+is to-instant(Date.new('2020-05-15')), Date.new('2020-05-15').DateTime.Instant,
+  'a date is taken';
+is to-instant('2020-05-15T12:00:00Z'), DateTime.new('2020-05-15T12:00:00Z').Instant,
+  'a string is taken';
+is to-instant(1589544000).DateTime.year, 2020, 'a count of seconds since the epoch is taken';
+is to-instant(1589544000.5).DateTime.year, 2020, 'a fractional count of seconds is taken';
+
+throws-like { to-instant([1, 2, 3]) }, Exception, message => /'cannot convert'/,
+  'a value that is not a moment is refused';
+throws-like { to-instant([1, 2, 3]) }, Exception, message => /'Array'/,
+  'the type handed over is named in the refusal';
+
+{
+  my $moment = DateTime.new('2020-05-15T12:00:00Z').Instant;
+
+  freeze-time($moment, {
+    is DateTime.now(:timezone(0)).year, 2020, 'DateTime.now reports the frozen moment';
+    is Date.today(:timezone(0)).Str, '2020-05-15', 'Date.today reports the frozen day';
+  });
+}
+
+ok DateTime.now.year >= 2024, 'DateTime.now reports the real year outside a freeze';
+ok Date.today.year >= 2024, 'Date.today reports a real day outside a freeze';
+
+done-testing;

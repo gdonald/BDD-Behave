@@ -1,0 +1,131 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Mock::Stub;
+
+plan 23;
+
+my class Ledger {
+  method balance { 100 }
+  method deposit($amount) { $amount }
+}
+
+# Each block installs its own stubs and takes them off again, so the count a
+# test sees never depends on what ran before it.
+sub with-clean-registry(&body) {
+  my $snapshot = StubRegistry.active-count;
+  body($snapshot);
+  StubRegistry.clear-since($snapshot);
+}
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('balance').and-return(1);
+
+  ok StubRegistry.any-for($ledger), 'an object with a stub is reported';
+  nok StubRegistry.any-for(Ledger.new), 'an object with no stub is not reported';
+  is StubRegistry.find-existing($ledger, 'balance').method-name, 'balance',
+    'a stub is found by its object and method';
+  is StubRegistry.find-existing($ledger, 'deposit'), Nil,
+    'no stub is found for a method never stubbed';
+  is StubRegistry.active-count, $snapshot + 1, 'the registry counts the stubs it holds';
+});
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('balance').and-return(1);
+  StubRegistry.remove(StubRegistry.find-existing($ledger, 'balance'));
+
+  is StubRegistry.active-count, $snapshot, 'a removed stub is no longer held';
+  is $ledger.balance, 100, 'a removed stub lets the real method answer';
+});
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('balance').and-return(1);
+  my $stub = StubRegistry.find-existing($ledger, 'balance');
+  StubRegistry.remove($stub);
+  StubRegistry.remove($stub);
+
+  is StubRegistry.active-count, $snapshot, 'removing a stub twice is ignored';
+});
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('deposit').and-return('stubbed');
+  my $stub = StubRegistry.find-existing($ledger, 'deposit');
+  $ledger.deposit(10);
+  $ledger.deposit(20);
+
+  is $stub.calls.elems, 2, 'a stub keeps one record per call';
+  is $stub.call-count('deposit'), 2, 'a stub counts the calls to its method';
+  ok $stub.received('deposit'), 'a stub reports the method it received';
+  nok $stub.received('balance'), 'a stub does not report another method';
+  is $stub.calls[1].args[0], 20, 'a stub keeps the arguments of a call';
+});
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('balance').and-return(7);
+
+  is $ledger.balance, 7, 'a stub answers with the value it was given';
+  is Ledger.new.balance, 100, 'another instance of the class is left alone';
+});
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('balance').and-raise(X::AdHoc.new(:payload('no balance')));
+
+  throws-like { $ledger.balance }, Exception, message => /'no balance'/,
+    'a stub raises the exception it was given';
+});
+
+with-clean-registry(-> $snapshot {
+  my $ledger = Ledger.new;
+
+  throws-like { allow($ledger).to.receive('missing').and-return(1) }, Exception,
+    message => /"has no method 'missing'"/, 'stubbing a method the class lacks is refused';
+});
+
+with-clean-registry(-> $snapshot {
+  my $log = double('Logger');
+  allow($log).to.receive('level').and-return('warn');
+
+  is $log.level, 'warn', 'a stub on a double answers with its value';
+});
+
+with-clean-registry(-> $snapshot {
+  my $log = double('Logger');
+  allow($log).to.receive('level').and-raise(X::AdHoc.new(:payload('no level')));
+
+  throws-like { $log.level }, Exception, message => /'no level'/,
+    'a stub on a double raises its exception';
+});
+
+with-clean-registry(-> $snapshot {
+  my $log = double('Logger');
+  allow($log).to.receive('level').and-do(-> { 'from a block' });
+
+  is $log.level, 'from a block', 'a stub on a double answers from its block';
+});
+
+with-clean-registry(-> $snapshot {
+  my $log = double('Logger');
+
+  throws-like { allow($log).to.receive('level').and-call-original }, Exception,
+    message => /'no original method'/, 'calling an original a double lacks is refused';
+});
+
+
+{
+  my $ledger = Ledger.new;
+  allow($ledger).to.receive('balance').and-return(1);
+  StubRegistry.clear-all;
+
+  is StubRegistry.active-count, 0, 'clearing every stub leaves the registry empty';
+  is $ledger.balance, 100, 'clearing every stub lets the real method answer';
+}
+
+done-testing;

@@ -1,0 +1,62 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Files;
+
+plan 8;
+
+sub make-tree(--> IO::Path) {
+  my $base = $*TMPDIR.add("behave-files-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $base.mkdir;
+  $base.add('nested').mkdir;
+  $base.add('alpha-spec.raku').spurt('');
+  $base.add('beta-spec.raku').spurt('');
+  $base.add('README.md').spurt('');
+  $base.add('nested').add('gamma-spec.raku').spurt('');
+  $base;
+}
+
+sub remove-tree(IO::Path $base --> Nil) {
+  return unless $base.e;
+  for $base.dir -> $entry {
+    remove-tree($entry) if $entry.d;
+    $entry.unlink if $entry.f;
+  }
+  $base.rmdir;
+}
+
+my $tree = make-tree();
+
+{
+  my @found = Files.list([$tree.absolute]);
+
+  is @found.grep(*.ends-with('alpha-spec.raku')).elems, 1, 'a directory yields its spec files';
+  is @found.grep(*.ends-with('gamma-spec.raku')).elems, 1, 'a directory is walked into';
+  is @found.grep(*.ends-with('README.md')).elems, 0, 'files that are not specs are left alone';
+}
+
+{
+  my $file = $tree.add('alpha-spec.raku').absolute;
+  is Files.list([$file]).join(','), $file, 'a named spec file is collected';
+}
+
+{
+  my $target = $tree.add('alpha-spec.raku').absolute ~ ':12';
+  is Files.list([$target]).join(','), $target, 'a line number stays with the file';
+}
+
+{
+  my @collected;
+  my $warning = stderr-from({ @collected = Files.list([$tree.add('README.md').absolute]) });
+
+  is @collected.elems, 0, 'a path that is neither spec nor directory yields nothing';
+  ok $warning.contains('is not a spec file or directory; ignoring'), 'the ignored path is reported';
+}
+
+is Files.specs-dir, 'specs', 'the default directory is named';
+
+remove-tree($tree);
+
+done-testing;

@@ -1,0 +1,48 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel;
+
+plan 10;
+
+# Discovery runs behave in a subprocess and reads a JSON document back. The
+# argv is a parameter, so each way that subprocess can let the parent down is
+# driven here by standing a small raku program in its place.
+sub discovery-with(@argv, *%named --> List) {
+  discover-suites-subprocess(
+    ('/abs/spec.raku',),
+    :discovery-argv(@argv),
+    :base-env(%(|%*ENV, BEHAVE_DISABLE_CONFIG => '1')),
+    |%named,
+  );
+}
+
+{
+  my @errors = discovery-with(('raku', '-e', 'say "not json at all"'))[1];
+
+  is @errors.elems, 1, 'a subprocess writing something other than json reports one error';
+  is @errors[0]<file>, '/abs/spec.raku', 'the file being discovered is named';
+  ok @errors[0]<message>.contains('returned invalid JSON'), 'the unreadable document is reported';
+}
+
+{
+  my @errors = discovery-with(('raku', '-e', 'note "load failed"; exit 2'))[1];
+
+  is @errors.elems, 1, 'a subprocess exiting with an error reports one error';
+  ok @errors[0]<message>.contains('exited with code 2'), 'the exit code is reported';
+  ok @errors[0]<message>.contains('load failed'), 'what it wrote to stderr is passed on';
+}
+
+{
+  my @errors = discovery-with(('raku', '-e', 'sleep 30'), :timeout(1))[1];
+
+  is @errors.elems, 1, 'a subprocess that never finishes reports one error';
+  ok @errors[0]<message>.contains('timed out after 1s'), 'the wait is reported';
+  ok @errors[0]<message>.contains('stale precompilation'), 'the usual cause is suggested';
+}
+
+is discover-suites-subprocess(())[1].elems, 0,
+  'discovering no spec files asks nothing of a subprocess';
+
+done-testing;

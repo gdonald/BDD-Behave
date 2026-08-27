@@ -1,0 +1,137 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Matcher::Change;
+
+plan 32;
+
+# The expectation builder drives this matcher through its captured state, so
+# the matcher's own `matches` is exercised here directly.
+sub matcher-for(&observable, *%bounds --> ChangeMatcher) {
+  my $matcher = ChangeMatcher.new(:&observable);
+
+  for %bounds.kv -> $name, $value {
+    given $name {
+      when 'from'     { $matcher.expected-from = $value;        $matcher.has-from = True }
+      when 'to'       { $matcher.expected-to = $value;          $matcher.has-to = True }
+      when 'by'       { $matcher.expected-by = $value;          $matcher.has-by = True }
+      when 'at-least' { $matcher.expected-by-at-least = $value; $matcher.has-by-at-least = True }
+      when 'at-most'  { $matcher.expected-by-at-most = $value;  $matcher.has-by-at-most = True }
+    }
+  }
+
+  $matcher;
+}
+
+{
+  my @counter = [0];
+  my $matcher = matcher-for({ @counter[0] });
+
+  ok $matcher.matches({ @counter[0]++ }), 'a changed value matches';
+  is $matcher.before-value, 0, 'the value from before the action is recorded';
+  is $matcher.after-value, 1, 'the value from after the action is recorded';
+  ok $matcher.action-ran, 'the action is recorded as having run';
+
+  $matcher.matches({ @counter[0] += 3 });
+  is $matcher.delta, 3, 'the difference between the two values is reported';
+  is $matcher.before-value, 1, 'a second action starts from the current value';
+}
+
+{
+  my $matcher = matcher-for({ 7 });
+
+  nok $matcher.matches({ 'no change here' }), 'an unchanged value does not match';
+  ok $matcher.failure-message({ }).contains('but it remained 7'),
+    'an unchanged value is reported as it was';
+}
+
+{
+  my $matcher = matcher-for({ 0 });
+
+  nok $matcher.matches(42), 'a non-callable does not match';
+  nok $matcher.action-ran, 'a non-callable never runs an action';
+  is $matcher.failure-message(42), 'expected a Callable for change, but got 42',
+    'a non-callable is named in the message';
+}
+
+{
+  my @value = [0];
+  my $matcher = matcher-for({ @value[0] }, :from(9));
+  $matcher.matches({ @value[0]++ });
+
+  nok $matcher.check-captured, 'a starting value that misses from does not match';
+  ok $matcher.failure-message({ }).contains('but it started as 0'),
+    'the starting value is reported';
+}
+
+{
+  my @value = [0];
+  my $matcher = matcher-for({ @value[0] }, :to(9));
+  $matcher.matches({ @value[0]++ });
+
+  ok $matcher.failure-message({ }).contains('but it ended as 1'), 'the ending value is reported';
+}
+
+{
+  my @value = [0];
+  my $matcher = matcher-for({ @value[0] }, :by(5));
+  $matcher.matches({ @value[0] += 2 });
+
+  nok $matcher.check-captured, 'a change of the wrong size does not match';
+  ok $matcher.failure-message({ }).contains('but it changed by 2'), 'the size seen is reported';
+  ok $matcher.failure-message({ }).contains('by 5'), 'the size wanted is named';
+}
+
+{
+  my @value = [0];
+  my $matcher = matcher-for({ @value[0] }, :at-least(5));
+  $matcher.matches({ @value[0] += 2 });
+
+  nok $matcher.check-captured, 'a change below the lower bound does not match';
+  ok $matcher.failure-message({ }).contains('by at least 5'), 'the lower bound is named';
+}
+
+{
+  my @value = [0];
+  my $matcher = matcher-for({ @value[0] }, :at-most(1));
+  $matcher.matches({ @value[0] += 4 });
+
+  nok $matcher.check-captured, 'a change above the upper bound does not match';
+  ok $matcher.failure-message({ }).contains('by at most 1'), 'the upper bound is named';
+}
+
+{
+  my @words = ['before'];
+  my $matcher = matcher-for({ @words[0] }, :by(1));
+  $matcher.matches({ @words[0] = 'after' });
+
+  nok $matcher.check-captured, 'a size bound on non-numbers does not match';
+  ok $matcher.failure-message({ }).contains('but values were not numeric'),
+    'non-numeric values are reported';
+  ok $matcher.failure-message({ }).contains('(before: "before", after: "after")'),
+    'both non-numeric values are shown';
+  is $matcher.delta, Nil, 'no difference is reported for non-numbers';
+}
+
+is matcher-for({ 0 }).description, 'change observable', 'an unbounded change describes itself';
+is matcher-for({ 0 }, :from(1)).description, 'change observable from 1',
+  'a starting value is described';
+is matcher-for({ 0 }, :to(2)).description, 'change observable to 2', 'an ending value is described';
+is matcher-for({ 0 }, :by(3)).description, 'change observable by 3', 'a size is described';
+is matcher-for({ 0 }, :at-least(4)).description, 'change observable by at least 4',
+  'a lower bound is described';
+is matcher-for({ 0 }, :at-most(5)).description, 'change observable by at most 5',
+  'an upper bound is described';
+
+{
+  my @value = [0];
+  my $matcher = matcher-for({ @value[0] });
+  $matcher.matches({ @value[0] = 8 });
+
+  is $matcher.failure-message-negated({ }),
+    'expected block not to change observable, but it changed from 0 to 8',
+    'an unwanted change is described';
+}
+
+done-testing;

@@ -1,0 +1,110 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Watch;
+use BDD::Behave::Watch::Session;
+
+plan 12;
+
+constant RunRequest = BDD::Behave::Watch::Session::RunRequest;
+
+sub make-tree(*@names --> IO::Path) {
+  my $base = $*TMPDIR.add("behave-watch-entry-t-{$*PID}-{(now * 1e6).Int}");
+  $base.mkdir;
+  $base.add($_).mkdir for @names;
+  $base;
+}
+
+sub remove-tree(IO::Path $base --> Nil) {
+  return unless $base.e;
+  for $base.dir -> $entry {
+    $entry.rmdir if $entry.d;
+    $entry.unlink if $entry.f;
+  }
+  $base.rmdir;
+}
+
+{
+  my $base = make-tree('lib', 'specs');
+  is BDD::Behave::Watch::default-paths(:$base).map(*.basename).sort.join(','), 'lib,specs',
+    'both lib and specs are followed when both exist';
+
+  is BDD::Behave::Watch::default-watcher(BDD::Behave::Watch::default-paths(:$base)).paths.elems, 2,
+    'the default watcher watches every path it was given';
+
+  remove-tree($base);
+}
+
+{
+  my $base = make-tree('lib');
+  is BDD::Behave::Watch::default-paths(:$base).map(*.basename).join(','), 'lib',
+    'only the directory that exists is followed';
+  remove-tree($base);
+}
+
+{
+  my $base = make-tree();
+  is BDD::Behave::Watch::default-paths(:$base).elems, 0,
+    'nothing is followed when neither directory exists';
+  remove-tree($base);
+}
+
+is BDD::Behave::Watch::default-selector(:lib-root('lib'.IO)).lib-root.basename, 'lib',
+  'the default selector maps source files under the lib root it was given';
+
+# The runner spawns `bin/behave`, so the argv it builds is inspected through a
+# stand-in first argument that reports its own arguments and exits.
+my $record = $*TMPDIR.add("behave-watch-argv-t-{$*PID}-{(now * 1e6).Int}");
+
+sub argv-for(RunRequest $request, IO::Path :$failures-path --> List) {
+  $record.unlink if $record.e;
+  temp %*ENV<BEHAVE_ARGV_RECORD> = $record.absolute;
+
+  BDD::Behave::Watch::make-subprocess-runner(
+    :base-argv(('raku', '-e', 'spurt %*ENV<BEHAVE_ARGV_RECORD>, @*ARGS.join("\n")')),
+    :$failures-path,
+  )($request);
+
+  $record.e ?? $record.slurp.lines.List !! ().List;
+}
+
+{
+  my @argv = argv-for(RunRequest.new(
+    :reason('changed'),
+    :specs(('specs/a-spec.raku'.IO, 'specs/b-spec.raku'.IO)),
+  ));
+
+  is @argv.grep(*.ends-with('a-spec.raku')).elems, 1, 'each spec file is passed to the run';
+  is @argv.grep(*.ends-with('-spec.raku')).elems, 2, 'every spec file is passed';
+  is @argv.grep(* eq '--only-failures').elems, 0, 'a full run does not ask for only the failures';
+}
+
+{
+  my @argv = argv-for(RunRequest.new(
+    :reason('rerun'),
+    :specs(('specs/a-spec.raku'.IO,)),
+    :only-failures,
+  ));
+
+  is @argv.grep(* eq '--only-failures').elems, 1, 'a rerun asks for only the failures';
+  is @argv.grep(* eq '--failures-path').elems, 0, 'no failures file is named when none was given';
+}
+
+{
+  my @argv = argv-for(
+    RunRequest.new(
+      :reason('rerun'),
+      :specs(('specs/a-spec.raku'.IO,)),
+      :only-failures,
+    ),
+    :failures-path('.behave-failures'.IO),
+  );
+
+  is @argv.grep(* eq '--failures-path').elems, 1, 'the failures file is named';
+  is @argv.grep(*.ends-with('.behave-failures')).elems, 1, 'the failures file path is passed';
+}
+
+$record.unlink if $record.e;
+
+done-testing;

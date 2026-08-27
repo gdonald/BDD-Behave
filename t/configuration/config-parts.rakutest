@@ -1,0 +1,82 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Configuration;
+use BDD::Behave::SpecTree;
+
+plan 18;
+
+constant Configuration = BDD::Behave::Configuration::Configuration;
+constant ConfigHook    = BDD::Behave::Configuration::ConfigHook;
+constant Example       = BDD::Behave::SpecTree::Example;
+
+sub example-with(%metadata --> Example) {
+  Example.new(
+    :description('an example'),
+    :file('/abs/spec.raku'.IO),
+    :line(7),
+    :block(sub { }),
+    :metadata(%metadata),
+  );
+}
+
+sub hook-with(*%filter --> ConfigHook) {
+  ConfigHook.new(:phase('before-each'), :block(sub { }), |%filter);
+}
+
+ok hook-with().matches-example(example-with({ })), 'a hook with no filter applies anywhere';
+
+ok hook-with(:tag('slow')).matches-example(example-with({ tags => ['slow'] })),
+  'a wanted tag applies to an example carrying it';
+nok hook-with(:tag('slow')).matches-example(example-with({ tags => ['fast'] })),
+  'a wanted tag does not apply without it';
+
+nok hook-with(:exclude-tag('slow')).matches-example(example-with({ tags => ['slow'] })),
+  'an excluded tag does not apply to an example carrying it';
+ok hook-with(:exclude-tag('slow')).matches-example(example-with({ tags => ['fast'] })),
+  'an excluded tag applies to an example without it';
+
+ok hook-with(:meta({ area => 'db' })).matches-example(example-with({ area => 'db' })),
+  'a wanted metadata value applies to an example carrying it';
+nok hook-with(:meta({ area => 'db' })).matches-example(example-with({ area => 'http' })),
+  'a wanted metadata value does not apply to another value';
+nok hook-with(:meta({ area => 'db' })).matches-example(example-with({ })),
+  'a wanted metadata value does not apply when the key is absent';
+
+ok hook-with(:meta({ slow => True })).matches-example(example-with({ slow => True })),
+  'a wanted flag applies to an example carrying it';
+nok hook-with(:meta({ slow => True })).matches-example(example-with({ slow => False })),
+  'a wanted flag does not apply when it is turned off';
+
+{
+  my $config = Configuration.new;
+  $config.coverage-include-path('lib/', 'bin/');
+  $config.coverage-exclude-path('vendor/');
+
+  is $config.coverage-include.join(','), 'lib/,bin/', 'the paths to include are kept';
+  is $config.coverage-exclude.join(','), 'vendor/', 'the paths to exclude are kept';
+  is $config.coverage-include-path('spec/'), $config, 'the configuration is handed back';
+}
+
+{
+  my $base = Configuration.new;
+  $base.metadata-exclude-filters<area> = 'db';
+
+  my $other = Configuration.new;
+  $other.metadata-exclude-filters<speed> = 'slow';
+
+  my $merged = $base.merge($other);
+
+  is $merged.metadata-exclude-filters<area>, 'db', 'an exclusion from the first is kept';
+  is $merged.metadata-exclude-filters<speed>, 'slow', 'an exclusion from the second is kept';
+}
+
+is BDD::Behave::Configuration::project-config-path(:base('/some/project'.IO)).absolute,
+  '/some/project/.behave', 'a project config is looked for beside its directory';
+is BDD::Behave::Configuration::project-config-path().basename, '.behave',
+  'a project config is looked for in the working directory by default';
+is BDD::Behave::Configuration::user-config-path().basename, '.behave',
+  'a user config is looked for in the home directory';
+
+done-testing;

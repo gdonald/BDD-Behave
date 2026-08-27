@@ -1,0 +1,86 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+plan 18;
+
+constant SpecRegistry = BDD::Behave::SpecRegistry::SpecRegistry;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub built-registry(--> SpecRegistry) {
+  my $registry = SpecRegistry.new;
+  my $file = $*PROGRAM.absolute.IO;
+  my $entry = $registry.entry-for($file);
+
+  my $group = ExampleGroup.new(:description('math'), :file($file), :line(20));
+  $entry.suite.add-group($group);
+
+  my $fast = Example.new(:description('adds numbers'), :file($file), :line(22), :block(-> { }));
+  $fast.set-metadata(:areas(<db http>));
+  $fast.set-metadata(:speed('fast'));
+  $group.add-example($fast);
+
+  my $slow = Example.new(:description('multiplies numbers'), :file($file), :line(25), :block(-> { }));
+  $slow.set-metadata(:areas(<http>));
+  $slow.set-metadata(:speed('slow'));
+  $group.add-example($slow);
+
+  $registry;
+}
+
+my $registry = built-registry();
+
+is $registry.all-examples[0].location, "{$*PROGRAM.absolute}:22",
+  'a query result joins the file and line of its example';
+
+is $registry.query-examples(:file($*PROGRAM.absolute)).elems, 2,
+  'the whole path takes the examples in that file';
+is $registry.query-examples(:file($*PROGRAM.absolute.IO)).elems, 2,
+  'the path as an IO object takes them too';
+is $registry.query-examples(:file($*PROGRAM.basename)).elems, 2,
+  'the file basename takes them';
+is $registry.query-examples(
+  :file($*PROGRAM.absolute.split('/')[*-2 .. *-1].join('/')),
+).elems, 2, 'a trailing part of the path takes them';
+is $registry.query-examples(:file('/elsewhere/other-spec.raku')).elems, 0,
+  'another file takes none';
+
+is $registry.query-examples(:metadata({ speed => 'fast' })).elems, 1,
+  'a metadata value takes the example carrying it';
+is $registry.query-examples(:metadata({ areas => 'db' })).elems, 1,
+  'a value takes the example whose list holds it';
+is $registry.query-examples(:metadata({ areas => <db http> })).elems, 1,
+  'a list takes the example carrying exactly it';
+is $registry.query-examples(:metadata({ areas => <db http mail> })).elems, 0,
+  'a longer list takes nothing';
+is $registry.query-examples(:metadata({ areas => <db mail> })).elems, 0,
+  'a list of different values takes nothing';
+is $registry.query-examples(:metadata({ missing => 'x' })).elems, 0,
+  'a key nothing carries takes nothing';
+
+is $registry.query-examples(:metadata-exclude({ speed => 'slow' })).elems, 1,
+  'an excluded value drops the example carrying it';
+is $registry.query-examples(:metadata-exclude({ speed => 'glacial' })).elems, 2,
+  'an excluded value nothing carries drops nothing';
+
+{
+  my $fresh = SpecRegistry.new;
+  my $file = $*PROGRAM.absolute.IO;
+  my $entry = $fresh.entry-for($file);
+
+  is $fresh.current-group-for($file), Nil, 'no group is open before one is pushed';
+
+  my $group = ExampleGroup.new(:description('math'), :file($file), :line(20));
+  $entry.stack.push($group);
+
+  is $fresh.current-group-for($file).description, 'math', 'the group pushed last is the open one';
+}
+
+is suites().elems, registry().suites.elems, 'the exported suites are the registry\'s own';
+ok registry() === registry(), 'the exported registry is one object';
+
+done-testing;

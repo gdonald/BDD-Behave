@@ -1,0 +1,111 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 13;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant Runner       = BDD::Behave::Runner::Runner;
+
+# A runner writes to stdout as it goes, so every run below is driven with its
+# output captured and only the result read back.
+sub run-suite($suite) {
+  my $result;
+  stderr-from({ stdout-from({ $result = Runner.new(:format('progress')).run($suite) }) });
+  $result;
+}
+
+sub suite-with(&build --> Suite) {
+  my $suite = Suite.create(:description('Synthetic'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('a group'), :file('synthetic'.IO), :line(5));
+  $suite.add-group($group);
+
+  build($group);
+
+  $suite;
+}
+
+sub passing-example(Str $description = 'an example', Int $line = 10 --> Example) {
+  Example.new(:$description, :file('synthetic'.IO), :$line, :block({ True }));
+}
+
+{
+  my $result = run-suite(suite-with(-> $group {
+    $group.add-example(passing-example());
+    $group.add-example(passing-example('another example', 14));
+    $group.add-hook('around-all', -> &continue { 'skipped on purpose' });
+  }));
+
+  is $result.skipped, 2, 'an around-all that never continues skips every example';
+  is $result.passed, 0, 'none of them run';
+}
+
+{
+  my $result = run-suite(suite-with(-> $group {
+    $group.add-example(passing-example());
+    $group.add-hook('around-all', -> &continue { die 'around-all broke' });
+  }));
+
+  is $result.total, 1, 'an around-all that fails still reaches the example';
+}
+
+{
+  my $result = run-suite(suite-with(-> $group {
+    $group.add-example(passing-example());
+    $group.add-hook('around-each', -> &continue { continue(); die 'around-each broke' });
+  }));
+
+  is $result.passed, 1, 'an around-each failing after the example keeps the example';
+}
+
+{
+  my $result = run-suite(suite-with(-> $group {
+    $group.add-example(passing-example());
+    $group.add-hook('around-each', -> &continue { die 'around-each broke early' });
+  }));
+
+  is $result.failed, 1, 'an around-each failing before the example fails it';
+}
+
+{
+  my $result = run-suite(suite-with(-> $group {
+    $group.add-example(passing-example());
+    $group.add-hook('before-each', { die 'before-each broke' });
+  }));
+
+  is $result.total, 1, 'a before-each that fails still reaches the example';
+}
+
+{
+  my $result = run-suite(suite-with(-> $group {
+    $group.add-example(passing-example());
+    $group.add-hook('before-all', { die 'this hook should not run' }, :include-tags(['nonexistent']));
+  }));
+
+  is $result.passed, 1, 'a hook filtered to a tag nothing carries never runs';
+}
+
+{
+  my $runner = Runner.new(:format('progress'));
+
+  ok $runner.location-matches-pattern('/abs/spec.raku:7', '/abs/spec.raku:7'),
+    'the same path and line match';
+  ok $runner.location-matches-pattern('/abs/dir/spec.raku:7', 'dir/spec.raku:7'),
+    'a relative path matches';
+  ok $runner.location-matches-pattern('/abs/spec.raku:7', 'spec.raku:7'),
+    'the file basename matches';
+  nok $runner.location-matches-pattern('/abs/spec.raku:7', 'spec.raku:9'),
+    'another line does not match';
+  nok $runner.location-matches-pattern('/abs/spec.raku:7', 'other.raku:7'),
+    'another file does not match';
+  nok $runner.location-matches-pattern('/abs/spec.raku:7', 'spec.raku'),
+    'a pattern carrying no line does not match';
+}
+
+done-testing;

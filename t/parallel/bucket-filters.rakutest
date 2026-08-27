@@ -1,0 +1,80 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel;
+use BDD::Behave::SpecTree;
+
+plan 18;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub built-suite(--> Suite) {
+  my $file = '/abs/spec.raku'.IO;
+  my $suite = Suite.new(:description('spec.raku'), :$file, :line(1));
+
+  my $group = ExampleGroup.new(:description('math'), :$file, :line(5));
+  $suite.add-child($group);
+
+  my $fast = Example.new(:description('adds numbers'), :$file, :line(7), :block(sub { }));
+  $fast.set-metadata(:tags(['fast']));
+  $group.add-child($fast);
+
+  my $slow = Example.new(:description('multiplies numbers'), :$file, :line(11), :block(sub { }));
+  $slow.set-metadata(:tags(['slow']));
+  $group.add-child($slow);
+
+  $suite;
+}
+
+sub buckets(*%filters --> List) {
+  collect-filtered-buckets([built-suite()], |%filters);
+}
+
+sub example-count(@buckets --> Int) {
+  [+] @buckets.map(*.examples.elems);
+}
+
+is example-count(buckets()), 2, 'no filter keeps every example';
+is example-count(buckets(:include-tags(['fast', 'slow']))), 2,
+  'a tag every example carries keeps the bucket whole';
+is example-count(buckets(:include-tags(['fast']))), 1,
+  'a tag one example carries keeps only that example';
+is buckets(:include-tags(['fast'])).elems, 1, 'the bucket it came from is kept';
+is buckets(:include-tags(['nonexistent'])).elems, 0, 'a tag nothing carries keeps no bucket';
+is example-count(buckets(:exclude-tags(['slow']))), 1, 'an excluded tag drops its example';
+
+is example-count(buckets(:example-patterns(['adds']))), 1, 'a pattern keeps the example it names';
+is example-count(buckets(:example-patterns(['/adds | divides/']))), 1,
+  'a regex keeps the example it names';
+is buckets(:example-patterns(['divides'])).elems, 0, 'a pattern naming nothing keeps nothing';
+
+is example-count(buckets(:only-locations(['/abs/spec.raku:7']))), 1,
+  'a location keeps the example declared there';
+is example-count(buckets(:only-locations(['/abs/spec.raku:5']))), 2,
+  'a group location keeps every example of the group';
+is example-count(buckets(:only-locations(['spec.raku:7']))), 1,
+  'a file basename names the example';
+is buckets(:only-locations(['/abs/spec.raku:99'])).elems, 0,
+  'a line nothing was declared at keeps nothing';
+is buckets(:only-locations(['/abs/spec.raku'])).elems, 0,
+  'a location with no line keeps nothing';
+
+is locations-for-buckets(buckets()).elems, 2, 'one location is listed per example';
+is locations-for-buckets([]).elems, 0, 'no buckets list no locations';
+
+{
+  my $broken = $*TMPDIR.add("behave-broken-t-{$*PID}-{(now * 1e6).Int.base(36)}-spec.raku");
+  $broken.spurt('use BDD::Behave; this is not raku;');
+
+  my ($suites, $errors) = discover-suites([$broken.absolute]);
+
+  is $errors.elems, 1, 'a spec file that fails to load is reported';
+  ok $errors[0]<message>.chars > 0, 'the reason it failed is reported';
+
+  $broken.unlink;
+}
+
+done-testing;

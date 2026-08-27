@@ -1,0 +1,118 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Formatter::JSON;
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 12;
+
+constant Suite     = BDD::Behave::SpecTree::Suite;
+constant Example   = BDD::Behave::SpecTree::Example;
+constant RunResult = BDD::Behave::Runner::RunResult;
+
+# The formatter builds one document for the whole run, so each block below
+# drives a small run through it and reads the document back.
+sub document-of(&drive --> Hash) {
+  my $formatter = BDD::Behave::Formatter::JSON.new;
+  my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+
+  my $output = stdout-from({
+    $formatter.suite-start($suite);
+    drive($formatter, $suite);
+    $formatter.run-summary(RunResult.new, :order('defined'));
+  });
+
+  parse-json-event($output.lines[0]);
+}
+
+sub example-in($suite --> Example) {
+  my $ex = Example.new(
+    :description('an example'),
+    :file('/abs/spec.raku'.IO),
+    :line(7),
+    :block(sub { }),
+  );
+  $suite.add-child($ex);
+  $ex;
+}
+
+{
+  my %failure = document-of(-> $formatter, $suite {
+    $formatter.example-fail(example-in($suite), :failure-info(%( :message('a rendered message') )));
+  })<examples>[0]<failure>;
+
+  is %failure<type>, 'exception', 'a rendered message is recorded as an exception';
+  is %failure<message>, 'a rendered message', 'the rendered message is recorded';
+}
+
+{
+  my %failure = document-of(-> $formatter, $suite {
+    $formatter.example-fail(
+      example-in($suite),
+      :failure-info(%( :exception-message('a thrown message') )),
+    );
+  })<examples>[0]<failure>;
+
+  is %failure<type>, 'exception', 'a thrown message is recorded as an exception';
+  is %failure<message>, 'a thrown message', 'the thrown message is recorded';
+}
+
+{
+  my $caught;
+  try {
+    die 'boom';
+    CATCH { default { $caught = $_ } }
+  }
+
+  my %failure = document-of(-> $formatter, $suite {
+    $formatter.example-fail(example-in($suite), :failure-info(%( :exception($caught) )));
+  })<examples>[0]<failure>;
+
+  is %failure<message>, 'boom', 'the message an exception carried is recorded';
+}
+
+{
+  my %record = document-of(-> $formatter, $suite {
+    my $ex = example-in($suite);
+    $ex.mark-pending(:reason('not written yet'));
+    $formatter.example-pending($ex);
+  })<examples>[0];
+
+  is %record<status>, 'pending', 'a pending example is recorded as pending';
+  is %record<pending_reason>, 'not written yet', 'the pending reason is recorded';
+}
+
+is document-of(-> $formatter, $suite {
+  $formatter.example-skipped(example-in($suite));
+})<examples>[0]<status>, 'skipped', 'a skipped example is recorded as skipped';
+
+ok document-of(-> $formatter, $suite {
+  $formatter.example-around-skipped(example-in($suite));
+})<examples>[0]<skip_reason>.contains('around-each'),
+  'an example its around hook never ran records why';
+
+{
+  my $formatter = BDD::Behave::Formatter::JSON.new;
+  my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+
+  is stdout-from({
+    $formatter.suite-start($suite, :multi-file);
+    $formatter.run-summary(RunResult.new, :order('defined'));
+  }), '', 'a multi-file run writes nothing when one file finishes';
+
+  my $output = stdout-from({
+    $formatter.multi-file-overall(RunResult.new, :order('defined'), :seed(7));
+  });
+
+  is parse-json-event($output.lines[0])<seed>, 7,
+    'a multi-file run writes the document when the whole run finishes';
+
+  is stdout-from({ $formatter.multi-file-profile(Nil, [], :limit(5)) }), '',
+    'a multi-file run writes no profile section of its own';
+}
+
+done-testing;
