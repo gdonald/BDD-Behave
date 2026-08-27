@@ -111,8 +111,12 @@ describe 'an eventually chain given a matcher name nothing registered', {
 }
 
 describe 'an eventually chain given a custom matcher', {
-  define-matcher 'eventually-chain-be-ready',
-    match => -> $actual { $actual eq 'ready' };
+  # Registering inside the example rather than at load time, since the registry
+  # is process-wide and another spec file clears it while examples run.
+  before-each {
+    define-matcher 'eventually-chain-be-ready',
+      match => -> $actual { $actual eq 'ready' };
+  }
 
   it 'takes it by name', {
     expect({ 'ready' }).to.eventually.eventually-chain-be-ready;

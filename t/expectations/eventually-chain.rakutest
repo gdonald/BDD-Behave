@@ -57,10 +57,12 @@ throws-like { expect({ 1 }).to.eventually.be-completely-made-up }, X::Method::No
   'a matcher name nothing registered is refused';
 
 {
-  define-matcher 'eventually-chain-t-be-ready', match => -> $actual { $actual eq 'ready' };
-
-  ok passes({ expect({ 'ready' }).to.eventually.eventually-chain-t-be-ready }),
-    'a custom matcher is taken by name';
+  # The registry is process-wide, so the matcher is registered right before it
+  # is used rather than at load time.
+  ok passes({
+    define-matcher 'eventually-chain-t-be-ready', match => -> $actual { $actual eq 'ready' };
+    expect({ 'ready' }).to.eventually.eventually-chain-t-be-ready;
+  }), 'a custom matcher is taken by name';
 }
 
 throws-like { expect({ [1] }).to.eventually.include }, Exception,
