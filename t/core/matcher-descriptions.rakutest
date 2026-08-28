@@ -4,8 +4,9 @@ use Test;
 
 use BDD::Behave::Matcher::Boolean;
 use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::String;
 
-plan 5;
+plan 6;
 
 # A matcher's description is what composed matchers and the `eventually` wrapper
 # read to build their own, so each one is asked for it here.
@@ -16,5 +17,8 @@ is EqMatcher.new(:expected('a name')).description, 'eq "a name"',
 is BeTruthyMatcher.new.description, 'be truthy', 'a truthiness matcher describes itself';
 is BeFalsyMatcher.new.description, 'be falsy', 'a falsiness matcher describes itself';
 is BeNilMatcher.new.description, 'be nil', 'a nil matcher describes itself';
+
+ok MatchMatcher.new(:expected(/'ready'/)).description.contains('match'),
+  'a pattern matcher describes the pattern it holds';
 
 done-testing;

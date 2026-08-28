@@ -1,6 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
+use Test::Output;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -166,5 +167,32 @@ describe '--slow-threshold', {
     expect({
       BDD::Behave::Runner::Runner.new(:slow-threshold(-0.5));
     }).to.raise-error(/'slow-threshold'/);
+  }
+}
+
+describe 'Runner.print-profile called on its own', {
+  let(:run, {
+    my $ex = Example.new(:description('a'), :file('f'.IO), :line(1), :block({ True }));
+    capture-run(build-suite([$ex]));
+  });
+
+  it 'heads the section with the number of entries it was asked for', {
+    my %r = run();
+    my $out = strip-ansi(stdout-from({ %r<runner>.print-profile(1) }));
+
+    expect($out).to.include('Top 1 slowest example');
+  }
+
+  it 'names the example it timed', {
+    my %r = run();
+    my $out = strip-ansi(stdout-from({ %r<runner>.print-profile(1) }));
+
+    expect($out).to.include('a');
+  }
+
+  it 'writes nothing when asked for no entries', {
+    my %r = run();
+
+    expect(stdout-from({ %r<runner>.print-profile(0) })).to.eq('');
   }
 }

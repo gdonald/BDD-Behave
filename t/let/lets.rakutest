@@ -6,7 +6,7 @@ use BDD::Behave;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::LetRuntime;
 
-plan 17;
+plan 19;
 
 registry().clear;
 
@@ -82,5 +82,17 @@ sub runtime-of(*@definitions) {
 }
 
 dies-ok { runtime-of().value('missing') }, 'reading a name that was never defined dies';
+
+
+{
+  my $named = runtime-of(
+    LetDefinition.new(:name<beta>, :block({ 1 })),
+    LetDefinition.new(:name<alpha>, :block({ 2 })),
+    LetDefinition.new(:name<beta>, :block({ 3 })),
+  );
+
+  is $named.names.elems, 2, 'each definition is named once';
+  is $named.names.join(','), 'beta,alpha', 'the order they were declared in is kept';
+}
 
 done-testing;

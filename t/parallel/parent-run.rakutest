@@ -1,0 +1,153 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter;
+use BDD::Behave::Parallel;
+
+plan 17;
+
+# Running the parallel runner here puts the parent side of it in this process,
+# so the event handling that turns worker output back into a result is
+# exercised rather than left in a subprocess.
+my class QuietFormatter does BDD::Behave::Formatter { }
+
+my $root = $*PROGRAM.parent.parent.parent;
+my $lib  = $root.add('lib');
+my $bin  = $root.add('bin/behave');
+
+sub run-over(@files, Str :$mode = 'isolated') {
+  my $dir = $*TMPDIR.add("behave-parent-run-t-{$*PID}-{(now * 1e6).Int.base(36)}");
+  $dir.mkdir;
+
+  LEAVE {
+    for $dir.dir -> $entry { $entry.unlink if $entry.f }
+    $dir.rmdir if $dir.e;
+  }
+
+  # The parent records a worker's failures on the process-wide list.
+  my $watermark = Failures.list.elems;
+  LEAVE { Failures.list = Failures.list[^$watermark].list }
+
+  run-parallel(ParallelRunOptions.new(
+    :worker-count(1),
+    :spec-files(@files.map(*.absolute)),
+    :worker-argv(('raku', "-I{$lib.absolute}", $bin.absolute)),
+    :discovery-argv(('raku', "-I{$lib.absolute}", $bin.absolute)),
+    :base-env(%(|%*ENV, BEHAVE_DISABLE_CONFIG => '1')),
+    :formatter(QuietFormatter.new),
+    :parallel-mode($mode),
+    :order('defined'),
+  ));
+}
+
+sub fixture-holding(Str $name, Str $source --> IO::Path) {
+  my $path = $*TMPDIR.add("behave-parent-$name-{$*PID}-{(now * 1e6).Int.base(36)}-spec.raku");
+  $path.spurt($source);
+  $path;
+}
+
+{
+  my $result = run-over([$root.add('t/fixtures/parallel-clean-fixture-spec.raku')]);
+
+  ok $result.total > 0, 'the parent counts the examples the worker ran';
+  is $result.passed, $result.total, 'it counts them all as passing';
+  is $result.executed-locations.elems, $result.total, 'it records where each one ran';
+  is $result.exit-code, 0, 'it reports a clean exit';
+}
+
+{
+  my $result = run-over([$root.add('t/fixtures/failing-fixture-spec.raku')]);
+
+  is $result.failed, 3, 'the parent counts the failures';
+  is $result.failed-locations.elems, 3, 'it records where each failure was';
+  is $result.failures.elems, 3, 'it keeps the failure details the worker sent';
+  is $result.exit-code, 0, 'a failed example is not a crash, so the exit code is untouched';
+}
+
+{
+  my $throwing = fixture-holding('throw', q:to/SPEC/);
+  use BDD::Behave;
+
+  describe 'a throwing example', {
+    it 'raises rather than failing an expectation', {
+      die 'the body gave up';
+    }
+  }
+  SPEC
+
+  my $result = run-over([$throwing]);
+
+  is $result.failed, 1, 'an example that threw counts as a failure';
+  ok $result.failures[0]<exception-message>.contains('the body gave up'),
+    'what the exception said is kept';
+
+  $throwing.unlink;
+}
+
+{
+  my $quiet = fixture-holding('skip', q:to/SPEC/);
+  use BDD::Behave;
+
+  describe 'examples that do not run', {
+    xit 'is skipped', { expect(1).to.be(2) }
+
+    pending 'not written yet';
+  }
+  SPEC
+
+  my $result = run-over([$quiet]);
+
+  is $result.skipped, 1, 'the parent counts a skipped example';
+  is $result.pending, 1, 'the parent counts a pending example';
+
+  $quiet.unlink;
+}
+
+{
+  my $unrun = fixture-holding('around', q:to/SPEC/);
+  use BDD::Behave;
+
+  describe 'an around hook that never continues', {
+    around-each -> &continue { Nil }
+
+    it 'never runs its body', { expect(1).to.be(2) }
+  }
+  SPEC
+
+  my $result = run-over([$unrun]);
+
+  is $result.skipped, 1, 'an example an around hook never ran counts as skipped';
+  is $result.failed,  0, 'an example an around hook never ran counts no failure';
+
+  $unrun.unlink;
+}
+
+{
+  my $counter = $*TMPDIR.add("behave-parent-retry-count-t-{$*PID}-{(now * 1e6).Int.base(36)}.txt");
+  my $flaky = fixture-holding('retry', qq:to/SPEC/);
+  use BDD::Behave;
+
+  my \$counter = '{$counter.absolute}'.IO;
+
+  describe 'an example that settles on its second attempt', \{
+    it 'passes once it has been tried again', :retry(2), \{
+      my \$attempts = \$counter.e ?? \$counter.slurp.Int !! 0;
+      \$counter.spurt((\$attempts + 1).Str);
+      expect(\$attempts).to.be(1);
+    \}
+  \}
+  SPEC
+
+  my $result = run-over([$flaky]);
+
+  is $result.passed, 1, 'a retried example counts as passing';
+  is $result.retry-records.elems, 1, 'the parent keeps a record of the retry';
+  is $result.retry-records[0].attempts, 2, 'the record says how many attempts it took';
+
+  $flaky.unlink;
+  $counter.unlink if $counter.e;
+}
+
+done-testing;

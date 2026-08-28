@@ -1,6 +1,7 @@
 use v6.d;
 use lib 'lib';
 use Test;
+use Test::Output;
 
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
@@ -8,7 +9,7 @@ use BDD::Behave::Benchmark;
 use BDD::Behave::Benchmark::Baseline;
 use BDD::Behave::Benchmark::Format;
 
-plan 11;
+plan 12;
 
 constant Suite           = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup    = BDD::Behave::SpecTree::ExampleGroup;
@@ -182,4 +183,16 @@ subtest 'benchmark-output writes a file instead of stdout', {
   ok $tmp.e, 'output file written';
   ok $tmp.slurp.contains('"label:o"'), 'expected key present';
   $tmp.unlink;
+}
+
+subtest 'print-benchmark-summary called on its own', {
+  plan 2;
+  my $ex = make-example('measured', {
+    BDD::Behave::Benchmark::benchmark('sum', :iterations(2), { Nil });
+  });
+  my ($runner, $result) = silent-run(build-suite([$ex]), :benchmark-mode, :benchmark-quiet);
+
+  my $section = strip-ansi(stdout-from({ $runner.print-benchmark-summary }));
+  ok $section.contains('Benchmarks (1 measurement):'), 'the section is headed';
+  ok $section.contains('label:sum'), 'the measurement it holds is named';
 }

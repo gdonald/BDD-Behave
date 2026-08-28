@@ -6,7 +6,7 @@ use Test::Output;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
-plan 16;
+plan 19;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -160,3 +160,18 @@ sub build-suite(@examples) {
   dies-ok { BDD::Behave::Runner::Runner.new(:slow-threshold(-0.5)) },
     'negative slow-threshold is rejected';
 }
+
+# print-profile called on its own
+{
+  my $ex = Example.new(:description('a'), :file('f'.IO), :line(1), :block({ True }));
+  my ($runner, $ignored) = run-and-capture(build-suite([$ex]));
+
+  my $section = strip-ansi(stdout-from({ $runner.print-profile(1) }));
+  ok $section.contains('Top 1 slowest example'),
+    'the section is headed with the number of entries asked for';
+  ok $section.contains('a'), 'the timed example is named';
+  is stdout-from({ $runner.print-profile(0) }), '',
+    'nothing is written when no entries are asked for';
+}
+
+done-testing;

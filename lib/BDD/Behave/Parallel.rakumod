@@ -518,7 +518,6 @@ sub location-matches(Str $ex-loc, Str $pattern --> Bool) {
   return True if $ex-path eq $pat-path;
   return True if $ex-path.IO.absolute eq $pat-path.IO.absolute;
   return True if $ex-path.ends-with('/' ~ $pat-path);
-  return True if $ex-path.IO.basename eq $pat-path;
   False;
 }
 

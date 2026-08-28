@@ -1,6 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Matcher::Boolean;
 use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::String;
 
 # A matcher's description is what composed matchers and the `eventually` wrapper
 # read to build their own, so each one is asked for it here.
@@ -23,5 +24,9 @@ describe 'the way a matcher describes itself', {
 
   it 'describes a nil matcher', {
     expect(BeNilMatcher.new.description).to.eq('be nil');
+  }
+
+  it 'describes a pattern matcher by the pattern it holds', {
+    expect(MatchMatcher.new(:expected(/'ready'/)).description).to.include('match');
   }
 }

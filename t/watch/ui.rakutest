@@ -1,0 +1,40 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Watch::UI;
+
+plan 8;
+
+# The UI writes to a handle it is given, so each line it can write is read back
+# from a file rather than from the terminal.
+sub written(&say-it, Bool :$color = False --> Str) {
+  my $path = $*TMPDIR.add("behave-watch-ui-t-{$*PID}-{(now * 1e6).Int.base(36)}.txt");
+  my $ui = BDD::Behave::Watch::UI::UI.new(:$color, :out($path.open(:w)));
+
+  say-it($ui);
+  $ui.out.close;
+
+  my $text = $path.slurp;
+  $path.unlink;
+
+  $text;
+}
+
+ok written(-> $ui { $ui.banner('starting watch mode') }).contains('[behave watch] starting watch mode'),
+  'a banner is written';
+ok written(-> $ui { $ui.info('nothing to do') }).contains('[behave watch] nothing to do'),
+  'a note is written';
+ok written(-> $ui { $ui.warn('unknown command') }).contains('[behave watch] unknown command'),
+  'a warning is written';
+ok written(-> $ui { $ui.error('the run died') }).contains('[behave watch] the run died'),
+  'an error is written';
+
+ok written(-> $ui { $ui.error('the run died') }, :color).contains("\e["), 'an error is colored';
+ok written(-> $ui { $ui.error('the run died') }, :color).contains('the run died'),
+  'a colored error still carries its text';
+ok written(-> $ui { $ui.warn('unknown command') }, :color).contains("\e["), 'a warning is colored';
+nok written(-> $ui { $ui.info('nothing to do') }, :color).contains("\e["),
+  'a note is left uncolored';
+
+done-testing;

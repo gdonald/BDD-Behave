@@ -1,6 +1,7 @@
 use BDD::Behave;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
+use Test::Output;
 
 need BDD::Behave::Benchmark;
 need BDD::Behave::Benchmark::Baseline;
@@ -224,5 +225,24 @@ describe 'benchmark-output writes to a file instead of stdout', {
     my $content = $tmp.slurp;
     expect($content.contains('"label:o"')).to.be-truthy;
     $tmp.unlink;
+  }
+}
+
+describe 'Runner.print-benchmark-summary called on its own', {
+  let(:runner, {
+    my $ex = make-example('measured', {
+      BDD::Behave::Benchmark::benchmark('sum', :iterations(2), { Nil });
+    });
+    silent-run(build-suite([$ex]), :benchmark-mode, :benchmark-quiet)[0];
+  });
+
+  it 'heads the section it writes', {
+    expect(strip-ansi(stdout-from({ runner().print-benchmark-summary })))
+      .to.include('Benchmarks (1 measurement):');
+  }
+
+  it 'names the measurement it holds', {
+    expect(strip-ansi(stdout-from({ runner().print-benchmark-summary })))
+      .to.include('label:sum');
   }
 }

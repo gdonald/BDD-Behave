@@ -1,5 +1,7 @@
 use BDD::Behave;
+use BDD::Behave::Parallel::Queue;
 use BDD::Behave::Parallel::WorkerPool;
+use Test::Output;
 
 my $root    = $?FILE.IO.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -97,5 +99,69 @@ describe 'a pool asked for more manifests than it has workers', {
   it 'refuses to launch', {
     expect({ pool-for(dir(), []).launch([[], []]) })
       .to.raise-error(/'must equal worker-count'/);
+  }
+}
+
+describe 'a queue pool told to shut its workers down', {
+  let(:dir, { manifest-dir() });
+
+  after-each { remove-dir(dir()) }
+
+  let(:pool, {
+    BDD::Behave::Parallel::Queue::QueueWorkerPool.new(
+      :worker-count(2),
+      :worker-argv(('raku', "-I{$lib.absolute}", $bin.absolute)),
+      :spec-files(($fixture.absolute,)),
+      :base-env(%(|%*ENV, BEHAVE_DISABLE_CONFIG => '1')),
+    );
+  });
+
+  it 'asks each worker to stop', {
+    pool().launch;
+    pool().shutdown-all;
+    pool().wait-all;
+
+    expect(pool().workers.grep(*.shutdown-sent).elems).to.be(2);
+  }
+
+  it 'leaves every worker finished', {
+    pool().launch;
+    pool().shutdown-all;
+    pool().wait-all;
+
+    expect(pool().workers.grep({ .exit-promise.status ~~ Kept }).elems).to.be(2);
+  }
+}
+
+describe 'a worker that writes to its error stream', {
+  let(:dir, { manifest-dir() });
+  let(:events, { [] });
+  let(:noisy, {
+    my $path = dir().add('noisy-spec.raku');
+    $path.spurt(q:to/SPEC/);
+    use BDD::Behave;
+
+    note 'a worker complaining';
+
+    describe 'noisy', {
+      it 'passes', { expect(1).to.be(1) }
+    }
+    SPEC
+    $path;
+  });
+
+  after-each { remove-dir(dir()) }
+
+  it 'passes what the worker wrote through to the parent', {
+    my $pool = pool-for(dir(), events());
+
+    my $errors = stderr-from({
+      $pool.launch([[noisy().absolute ~ ':6']]);
+      $pool.wait-all;
+    });
+
+    $pool.cleanup-manifests;
+
+    expect($errors).to.include('a worker complaining');
   }
 }

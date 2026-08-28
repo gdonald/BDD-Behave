@@ -1,0 +1,34 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::LetRuntime;
+
+plan 4;
+
+# Declaring a let while a runtime is in scope registers it with the runtime and
+# hands the value straight back. Naming it through a variable keeps the slang
+# out of the way, so what is left is the sub's own return.
+my $*LET-RUNTIME = BDD::Behave::LetRuntime::LetRuntime.new(:definitions([]));
+
+my $temperature = 'temperature';
+is let($temperature, { 41 }), 41, 'a runtime let reads back the value its block returns';
+
+my $altitude = 'altitude';
+let($altitude, { 500 });
+is let($altitude), 500, 'a runtime let reads the same value back through the fetch form';
+
+my $depth-calls = 0;
+my $depth = 'depth';
+let($depth, { $depth-calls++; 7 });
+is $depth-calls, 1, 'the block is evaluated once the name is declared';
+
+my $pressure-calls = 0;
+my $pressure = 'pressure';
+let($pressure, { $pressure-calls++; 3 });
+let($pressure);
+let($pressure);
+is $pressure-calls, 1, 'the block is evaluated only once however often the name is read';
+
+done-testing;

@@ -1,0 +1,42 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 3;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+# An around-each hook that never calls its continuation leaves the example
+# unrun, which the runner reports as a skip rather than as a pass.
+sub suite-with-around-each(&hook-body, &example-body --> Suite) {
+  my $suite = Suite.create(:description('around'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('a group'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example(
+    Example.new(:description('an example'), :file('synthetic'.IO), :line(2), :block(&example-body)),
+  );
+  $group.add-hook('around-each', &hook-body);
+  $suite;
+}
+
+sub silent-run(Suite $suite) {
+  my $sink = open '/dev/null', :w;
+  my $*OUT = $sink;
+  my $result = BDD::Behave::Runner::Runner.new.run($suite);
+  $sink.close;
+  $result;
+}
+
+my $ran = False;
+my $result = silent-run(suite-with-around-each(-> &continue { Nil }, { $ran = True }));
+
+is $result.skipped, 1, 'the example is counted as skipped';
+is $result.passed,  0, 'no example is counted as passing';
+nok $ran, 'the example block is left unrun';
+
+done-testing;

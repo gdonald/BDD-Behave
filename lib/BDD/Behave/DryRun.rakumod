@@ -95,7 +95,6 @@ sub path-matches(Str $node-path, Str $pattern-path --> Bool) {
   return True if $node-path eq $pattern-path;
   return True if $node-path.IO.absolute eq $pattern-path.IO.absolute;
   return True if $node-path.ends-with('/' ~ $pattern-path);
-  return True if $node-path.IO.basename eq $pattern-path;
   False;
 }
 

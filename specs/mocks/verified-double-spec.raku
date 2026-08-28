@@ -63,6 +63,20 @@ describe 'a double built without a class behind it', {
   }
 }
 
+describe 'allowing a method on a double built from a class', {
+  it 'refuses a method the class does not have', {
+    expect({ allow(double(Mailer)).to.receive('missing') })
+      .to.raise-error(/"has no method 'missing'"/);
+  }
+
+  it 'allows a method the class has', {
+    my $mailer = double(Mailer);
+    allow($mailer).to.receive('address').and-return('stubbed');
+
+    expect($mailer.address).to.eq('stubbed');
+  }
+}
+
 describe 'the calls a double records', {
   let(:log, { double('Logger', :info(Nil)) });
 

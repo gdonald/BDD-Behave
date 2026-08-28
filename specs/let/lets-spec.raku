@@ -19,6 +19,24 @@ describe 'LetRuntime has-name', {
   }
 }
 
+describe 'LetRuntime listing the names it holds', {
+  let(:runtime, {
+    LetRuntime.new(:definitions([
+      LetDefinition.new(:name<beta>,  :block({ 1 })),
+      LetDefinition.new(:name<alpha>, :block({ 2 })),
+      LetDefinition.new(:name<beta>,  :block({ 3 })),
+    ]));
+  });
+
+  it 'names each definition once', {
+    expect(runtime.names.elems).to.eq(2);
+  }
+
+  it 'keeps the order they were declared in', {
+    expect(runtime.names.join(',')).to.eq('beta,alpha');
+  }
+}
+
 describe 'LetRuntime resolving a name to a definition', {
   context 'given a name declared with a leading colon', {
     let(:runtime, {

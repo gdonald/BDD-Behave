@@ -1,0 +1,70 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 10;
+
+my class Ledger {
+  has Int $.balance is rw = 0;
+}
+
+# An expectation reports whether it passed, so a test can branch on one without
+# reading the failure list. The list is reset around each call so a deliberate
+# miss does not leak into the next check.
+sub outcome-of(&expectation --> Bool) {
+  Failures.list = ();
+  my $passed = ?expectation();
+  Failures.list = ();
+
+  $passed;
+}
+
+{
+  my $ledger = Ledger.new;
+  ok outcome-of({ expect({ $ledger.balance = 5 }).to.change({ $ledger.balance }) }),
+    'a change that happened reads as passed';
+}
+
+{
+  my $ledger = Ledger.new;
+  nok outcome-of({ expect({ 'nothing here' }).to.change({ $ledger.balance }) }),
+    'a change that did not happen reads as failed';
+}
+
+{
+  my $ledger = Ledger.new;
+  ok outcome-of({ expect({ $ledger.balance += 3 }).to.change({ $ledger.balance }).by(3) }),
+    'a change of the size asked for reads as passed';
+}
+
+ok outcome-of({ expect({ die 'boom' }).to.raise-error }), 'a block that raised reads as passed';
+nok outcome-of({ expect({ 'quiet' }).to.raise-error }), 'a quiet block reads as failed';
+ok outcome-of({ expect({ die 'boom' }).to.raise-error(/'oo'/) }),
+  'a message that matched reads as passed';
+
+{
+  Failures.list = ();
+  expect({ 'ready' }).to.eventually.to.be('ready');
+  is Failures.list.elems, 0, 'an eventually chain written with a second to passes';
+
+  Failures.list = ();
+  expect({ 'ready' }).to.eventually(:timeout(1)).to.be('ready');
+  is Failures.list.elems, 0, 'that form still takes a timeout';
+  Failures.list = ();
+}
+
+throws-like { expect(42).to.be(:no-such-let) }, Exception,
+  message => /'Unknown let' .* 'no-such-let'/,
+  'comparing against a let nothing declared is refused and names it';
+
+{
+  Failures.list = ();
+  expect(1).to.be(1);
+  is Failures.list.elems, 0, 'an ordinary comparison still passes alongside these';
+  Failures.list = ();
+}
+
+done-testing;

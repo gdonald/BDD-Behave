@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave;
 
-plan 16;
+plan 18;
 
 my class Mailer {
   method deliver($message) { $message }
@@ -46,6 +46,18 @@ throws-like { double('Logger', Mailer) }, Exception,
   $log.reset;
   is $log.calls.elems, 0, 'a reset forgets the calls';
   ok $log.stubs<info>:exists, 'a reset keeps the stubs';
+}
+
+
+throws-like { allow(double(Mailer)).to.receive('missing') }, Exception,
+  message => /"has no method 'missing'"/,
+  'allowing a method the class lacks on a double is refused';
+
+{
+  my $mailer = double(Mailer);
+  allow($mailer).to.receive('address').and-return('stubbed');
+
+  is $mailer.address, 'stubbed', 'allowing a method the class has works on a double';
 }
 
 done-testing;

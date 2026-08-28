@@ -1,0 +1,57 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Runner;
+
+plan 11;
+
+sub strip-ansi(Str $s --> Str) { $s.subst(/\e '[' \d+ 'm'/, '', :g) }
+
+sub comparison-row(Real $delta-pct, Bool :$regression = False --> Hash) {
+  %(
+    description     => 'sum',
+    key             => 'label:sum',
+    baseline-median => 0.001,
+    median          => 0.001 * (1 + $delta-pct),
+    delta-pct       => $delta-pct,
+    regression      => $regression,
+  );
+}
+
+sub one-row(|c --> Array) {
+  my @rows;
+  @rows.push: comparison-row(|c);
+  @rows;
+}
+
+my $runner = BDD::Behave::Runner::Runner.new(:benchmark-threshold(0.10));
+
+is strip-ansi($runner.render-delta-cell(comparison-row(0.25, :regression))),
+  '↑ +25.0% REGRESSION', 'a regression gets an up arrow and the word REGRESSION';
+is strip-ansi($runner.render-delta-cell(comparison-row(-0.25))),
+  '↓ -25.0%', 'an improvement past the threshold gets a down arrow';
+is strip-ansi($runner.render-delta-cell(comparison-row(0.05))),
+  '↑ +5.0%', 'a slowdown under the threshold gets a plain up arrow';
+is strip-ansi($runner.render-delta-cell(comparison-row(-0.05))),
+  '↓ -5.0%', 'a speedup under the threshold gets a plain down arrow';
+is strip-ansi($runner.render-delta-cell(comparison-row(0))),
+  '→ +0.0%', 'an unchanged measurement gets a right arrow';
+
+ok $runner.render-delta-cell(comparison-row(-0.25)).contains("\e[32m"),
+  'an improvement past the threshold is colored green';
+nok $runner.render-delta-cell(comparison-row(0.05)).contains("\e["),
+  'a slowdown under the threshold is left uncolored';
+
+ok strip-ansi($runner.render-bench-comparison-table(one-row(0.05)))
+     .contains('Benchmark comparison (no regressions; threshold 10.0%):'),
+  'a table with no regressions names the threshold';
+ok strip-ansi($runner.render-bench-comparison-table(one-row(0.25, :regression)))
+     .contains('Benchmark regressions (1, threshold 10.0%):'),
+  'a table with regressions counts them';
+ok strip-ansi($runner.render-bench-comparison-table(one-row(0.05))).contains('DESCRIPTION'),
+  'each column is named';
+ok strip-ansi($runner.render-bench-comparison-table(one-row(0.05))).contains('0.001000s'),
+  'the baseline median is rendered in seconds';
+
+done-testing;

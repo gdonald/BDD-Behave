@@ -160,14 +160,7 @@ our sub let(|c) is export {
   if $in-runtime {
     $*LET-RUNTIME.add-definition($definition);
 
-    return Proxy.new(
-      FETCH => method () {
-        $*LET-RUNTIME.value($name);
-      },
-      STORE => method ($new) {
-        die "Let values are read-only";
-      }
-    );
+    return $*LET-RUNTIME.value($name);
   }
 
   my $registry = registry();

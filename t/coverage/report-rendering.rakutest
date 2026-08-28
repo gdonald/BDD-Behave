@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave::Coverage;
 
-plan 49;
+plan 62;
 
 constant Coverage = BDD::Behave::Coverage;
 
@@ -92,7 +92,7 @@ my $root = project();
   ok Coverage::render-report($report, 'text', :color(False)).contains('lib/Sample.rakumod'),
     'a text table is written';
   ok Coverage::render-report($report, 'text', :color(True)).contains('lib/Sample.rakumod'),
-    'a text table is written in colour';
+    'a text table is written in color';
   ok Coverage::render-report($report, 'text', :color(False)).contains('Branches:'),
     'a branch line is written into the text table';
   ok Coverage::render-report($report, 'json').contains('"files"'), 'json is written';
@@ -144,6 +144,20 @@ is Coverage::enumerate-include-files(($root.add('lib').absolute,), (), $root).el
   'the files named by an include path are taken';
 is Coverage::enumerate-include-files(($root.add('lib').absolute,), ('Sample',), $root).elems, 0,
   'a file named by an exclude path is left out';
+is Coverage::enumerate-include-files(($root.add('lib').add('Sample.rakumod').absolute,), (), $root).elems, 1,
+  'a single module named directly as an include path is taken';
+is Coverage::enumerate-include-files(
+     ($root.add('lib').add('Sample.rakumod').absolute,), ('Sample',), $root).elems, 0,
+  'a single module named directly that an exclude path also names is left out';
+
+$root.add('lib').add('notes.txt').spurt('not code');
+is Coverage::enumerate-include-files(($root.add('lib').add('notes.txt').absolute,), (), $root).elems, 0,
+  'a file named directly whose extension is not a Raku one is left out';
+
+is Coverage::enumerate-include-files(($root.add('nowhere').absolute,), (), $root).elems, 0,
+  'an include path that does not exist is left out';
+is Coverage::enumerate-include-files(('lib',), (), $root).elems, 1,
+  'a relative include path is read against the project root';
 
 {
   my $baseline = baseline-of($root, 4);
@@ -225,6 +239,42 @@ is Coverage::parse-baseline-json(Q[{"path":"a\qb"}])<path>, 'aqb',
 
   remove-tree($fresh);
 }
+
+
+{
+  my $dir = project();
+  $dir.add('lib').add('Untouched.rakumod').spurt(q:to/SOURCE/);
+  unit module Untouched;
+
+  our sub never-called(--> Int) {
+    my $value = 1;
+    $value + 1;
+  }
+  SOURCE
+
+  my $report = report-of($dir);
+  my $untouched = $report.files.first(*.display-path.ends-with('Untouched.rakumod'));
+
+  is $report.files.elems, 2, 'a project holding an unreached file reports both';
+  is $untouched.covered-lines, 0, 'the file the run never reached is uncovered';
+  ok $untouched.total-lines > 0, 'its executable lines are still counted';
+
+  my $opts = Coverage::CoverageOptions.new;
+  $opts.include-path($dir.add('lib').absolute);
+  $opts.exclude-path('Untouched');
+
+  is Coverage::build-report(log-for($dir, 4, 5), $opts, $dir)
+    .files.grep(*.display-path.ends-with('Untouched.rakumod')).elems, 0,
+    'an exclude path leaves the unreached file out';
+
+  remove-tree($dir);
+}
+
+is Coverage::naive-json(Nil), 'null', 'nothing at all is written as null';
+is Coverage::naive-json(Version.new('1.2.3')), '"1.2.3"',
+  'a value with no shape of its own is written through its string form';
+ok Coverage::naive-json([1, 2]).contains('1'), 'a list of values is written';
+is Coverage::naive-json('say "hi"'), '"say \\"hi\\""', 'a string with a quote is escaped';
 
 remove-tree($root);
 

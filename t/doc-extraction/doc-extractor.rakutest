@@ -10,7 +10,7 @@ constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example      = BDD::Behave::SpecTree::Example;
 constant DocExtractor = BDD::Behave::DocExtractor::DocExtractor;
 
-plan 48;
+plan 53;
 
 sub build-suite() {
   my $suite = Suite.create(
@@ -248,6 +248,58 @@ sub build-suite() {
 
   my $none = DocExtractor.new(:include-tags(<no-such-tag>));
   is $none.extract([$suite]).trim, '',                 'no-match suite yields empty';
+}
+
+# A spec file can hold an example outside any describe block, and can put one
+# before a nested group, so the extractor meets both shapes.
+sub build-flat-suite() {
+  my $suite = Suite.create(
+    :description('flat-spec.raku'),
+    :file('/tmp/flat-spec.raku'.IO),
+    :line(0),
+  );
+
+  my $loose = Example.new(
+    :description('stands on its own'),
+    :file('/tmp/flat-spec.raku'.IO),
+    :line(2),
+    :block({ Nil }),
+  );
+  $loose.set-metadata(:tags(<user-facing>));
+  $suite.add-example($loose);
+
+  my $group = ExampleGroup.new(
+    :description('a later group'),
+    :file('/tmp/flat-spec.raku'.IO),
+    :line(4),
+  );
+  $suite.add-group($group);
+
+  $group.add-example(
+    Example.new(
+      :description('sits inside the group'),
+      :file('/tmp/flat-spec.raku'.IO),
+      :line(5),
+      :block({ Nil }),
+    ),
+  );
+
+  $suite;
+}
+
+{
+  my $html = DocExtractor.new(:format<html>).extract([build-flat-suite()]);
+
+  ok $html.contains('stands on its own'), 'an example before the first group is listed';
+  ok $html.contains('<h2>a later group</h2>'), 'a section opens for the group that follows it';
+  ok $html.index('stands on its own') < $html.index('a later group'),
+    'the loose example is listed before the section';
+
+  my $kept = DocExtractor.new(:include-tags(<user-facing>)).extract([build-flat-suite()]);
+  ok $kept.contains('stands on its own'), 'the suite is kept when the loose example matches';
+
+  my $dropped = DocExtractor.new(:include-tags(<no-such-tag>)).extract([build-flat-suite()]);
+  is $dropped.trim, '', 'the suite is dropped when nothing in it matches';
 }
 
 done-testing;

@@ -135,3 +135,33 @@ describe 'around-all wraps the whole group', {
     expect($wrap-start).to.be(1);
   }
 }
+
+describe 'a tag-filtered around-all', :order<defined>, {
+  my @log;
+
+  context 'a group holding a matching example', {
+    around-all :tag<db>, -> &continue {
+      @log.push('db-wrap');
+      continue();
+    }
+
+    it 'fires the wrapper once for the whole group', :tag<db>, {
+      expect(@log).to.eq(['db-wrap']);
+    }
+
+    it 'does not fire it again for a later example', {
+      expect(@log).to.eq(['db-wrap']);
+    }
+  }
+
+  context 'a group holding no matching example', {
+    around-all :tag<cache>, -> &continue {
+      @log.push('cache-wrap');
+      continue();
+    }
+
+    it 'leaves the wrapper unfired', {
+      expect(@log).to.eq(['db-wrap']);
+    }
+  }
+}

@@ -1,0 +1,62 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Watch::UI;
+
+plan 6;
+
+# The reader thread pulls lines off the handle the UI was given, so a file
+# standing in for the terminal drives it here.
+sub ui-reading(*@lines) {
+  my $path = $*TMPDIR.add("behave-watch-reader-t-{$*PID}-{(now * 1e6).Int.base(36)}.txt");
+  $path.spurt(@lines.elems ?? @lines.join("\n") ~ "\n" !! '');
+
+  my $ui = BDD::Behave::Watch::UI::UI.new(
+    :in($path.open(:r)),
+    :out(open('/dev/null', :w)),
+  );
+  $ui.start-reader;
+
+  $path.unlink;
+  $ui;
+}
+
+# The reader runs on its own thread, so a poll can arrive before the line does.
+sub next-command($ui --> Str) {
+  for ^200 {
+    my $cmd = $ui.poll-command;
+    return $cmd if $cmd.defined;
+    sleep 0.01;
+  }
+  Str;
+}
+
+my $one = ui-reading('r');
+is next-command($one), 'r', 'the first line read is queued';
+$one.stop;
+
+my $many = ui-reading('r', 'a', 'q');
+is (next-command($many), next-command($many), next-command($many)), <r a q>,
+  'each line is queued in the order it was read';
+$many.stop;
+
+my $padded = ui-reading('  Q  ');
+is next-command($padded), 'q', 'what was read is lowercased and trimmed';
+$padded.stop;
+
+my $restarted = ui-reading('r');
+$restarted.start-reader;
+is next-command($restarted), 'r', 'only one reader is started';
+$restarted.stop;
+
+my $empty = ui-reading();
+nok $empty.poll-command.defined, 'no command is reported when nothing was read';
+$empty.stop;
+
+my $manual = BDD::Behave::Watch::UI::UI.new(:out(open('/dev/null', :w)));
+$manual.submit-command('a');
+is $manual.poll-command, 'a', 'a command submitted without the reader is polled back';
+$manual.stop;
+
+done-testing;

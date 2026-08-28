@@ -32,3 +32,13 @@ fdescribe 'focus + skip combined', {
   it  'focused and runs', { expect(7 + 1).to.be(8); }
   xit 'skipped, body never executes', { expect(False).to.be-truthy; }
 }
+
+describe 'fcontext focuses a nested context', {
+  it 'plain example, filtered out by focus mode', { expect(1).to.be(2) }
+
+  fcontext 'the focused context', {
+    it 'every example here runs', {
+      expect('focused'.chars).to.be(7);
+    }
+  }
+}

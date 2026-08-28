@@ -392,3 +392,76 @@ describe 'BDD::Behave::DocExtractor', {
     }
   }
 }
+
+# A spec file can hold an example outside any describe block, and can put one
+# before a nested group, so the extractor meets both shapes.
+sub build-flat-suite() {
+  my $suite = Suite.create(
+    :description('flat-spec.raku'),
+    :file('/tmp/flat-spec.raku'.IO),
+    :line(0),
+  );
+
+  my $loose = Example.new(
+    :description('stands on its own'),
+    :file('/tmp/flat-spec.raku'.IO),
+    :line(2),
+    :block({ Nil }),
+  );
+  $loose.set-metadata(:tags(<user-facing>));
+  $suite.add-example($loose);
+
+  my $group = ExampleGroup.new(
+    :description('a later group'),
+    :file('/tmp/flat-spec.raku'.IO),
+    :line(4),
+  );
+  $suite.add-group($group);
+
+  $group.add-example(
+    Example.new(
+      :description('sits inside the group'),
+      :file('/tmp/flat-spec.raku'.IO),
+      :line(5),
+      :block({ Nil }),
+    ),
+  );
+
+  $suite;
+}
+
+describe 'a suite holding an example before its first group', {
+  let(:extractor, { BDD::Behave::DocExtractor::DocExtractor.new(:format<html>) });
+
+  it 'lists the loose example', {
+    expect(extractor.extract([build-flat-suite()])).to.include('stands on its own');
+  }
+
+  it 'opens a section for the group that follows it', {
+    expect(extractor.extract([build-flat-suite()])).to.include('<h2>a later group</h2>');
+  }
+
+  it 'lists the loose example before the section', {
+    my $out = extractor.extract([build-flat-suite()]);
+
+    expect($out.index('stands on its own') < $out.index('a later group')).to.be-truthy;
+  }
+}
+
+describe 'filtering a suite that holds an example outside every group', {
+  it 'keeps the suite when the loose example matches', {
+    my $extractor = BDD::Behave::DocExtractor::DocExtractor.new(
+      :include-tags(<user-facing>),
+    );
+
+    expect($extractor.extract([build-flat-suite()])).to.include('stands on its own');
+  }
+
+  it 'drops the suite when nothing in it matches', {
+    my $extractor = BDD::Behave::DocExtractor::DocExtractor.new(
+      :include-tags(<no-such-tag>),
+    );
+
+    expect($extractor.extract([build-flat-suite()]).trim).to.eq('');
+  }
+}

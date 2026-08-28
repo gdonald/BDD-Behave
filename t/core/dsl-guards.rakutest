@@ -1,0 +1,34 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+
+plan 5;
+
+throws-like { describe('a description only') }, Exception,
+  message => /'expects a description string and a block'/,
+  'a describe with no block is refused';
+throws-like { context('a description only') }, Exception,
+  message => /'expects a description string and a block'/,
+  'a context with no block is refused';
+
+throws-like { is-expected.to.be(1) }, Exception, message => /'must be called inside an example'/,
+  'is-expected outside an example is refused';
+
+{
+  Failures.list = ();
+  expect(42).to.be(42);
+  is Failures.list.elems, 0, 'an ordinary comparison passes';
+  Failures.list = ();
+}
+
+{
+  Failures.list = ();
+  expect('a string').to.be-a(Str);
+  is Failures.list.elems, 0, 'a type comparison passes';
+  Failures.list = ();
+}
+
+done-testing;

@@ -119,7 +119,7 @@ describe 'rendering a coverage report', {
       .to.include('lib/Sample.rakumod');
   }
 
-  it 'writes a text table in colour', {
+  it 'writes a text table in color', {
     expect(Coverage::render-report(report(), 'text', :color(True)))
       .to.include('lib/Sample.rakumod');
   }
@@ -240,6 +240,42 @@ describe 'collecting the source files of a project', {
         (root().add('lib').absolute,), ('Sample',), root(),
       ).elems,
     ).to.be(0);
+  }
+
+  it 'takes a single module named directly as an include path', {
+    expect(
+      Coverage::enumerate-include-files(
+        (root().add('lib').add('Sample.rakumod').absolute,), (), root(),
+      ).elems,
+    ).to.be(1);
+  }
+
+  it 'leaves out a single module named directly that an exclude path also names', {
+    expect(
+      Coverage::enumerate-include-files(
+        (root().add('lib').add('Sample.rakumod').absolute,), ('Sample',), root(),
+      ).elems,
+    ).to.be(0);
+  }
+
+  it 'leaves out a file named directly whose extension is not a Raku one', {
+    root().add('lib').add('notes.txt').spurt('not code');
+
+    expect(
+      Coverage::enumerate-include-files(
+        (root().add('lib').add('notes.txt').absolute,), (), root(),
+      ).elems,
+    ).to.be(0);
+  }
+
+  it 'leaves out an include path that does not exist', {
+    expect(
+      Coverage::enumerate-include-files((root().add('nowhere').absolute,), (), root()).elems,
+    ).to.be(0);
+  }
+
+  it 'reads relative include paths against the project root', {
+    expect(Coverage::enumerate-include-files(('lib',), (), root()).elems).to.be(1);
   }
 }
 
@@ -391,5 +427,67 @@ describe 'comparing a report against a baseline that is missing a file', {
     my $diff = Coverage::compute-diff(report-of(root()), $baseline);
 
     expect($diff.newly-covered).to.be(2);
+  }
+}
+
+describe 'a project holding a file the run never reached', {
+  let(:root, {
+    my $dir = project();
+    $dir.add('lib').add('Untouched.rakumod').spurt(q:to/SOURCE/);
+    unit module Untouched;
+
+    our sub never-called(--> Int) {
+      my $value = 1;
+      $value + 1;
+    }
+    SOURCE
+    $dir;
+  });
+
+  after-each { remove-tree(root()) }
+
+  let(:report, { report-of(root()) });
+
+  it 'holds both files', {
+    expect(report().files.elems).to.be(2);
+  }
+
+  it 'reports the file it never reached as uncovered', {
+    expect(report().files.first(*.display-path.ends-with('Untouched.rakumod')).covered-lines)
+      .to.be(0);
+  }
+
+  it 'still counts the executable lines of that file', {
+    expect(report().files.first(*.display-path.ends-with('Untouched.rakumod')).total-lines > 0)
+      .to.be-truthy;
+  }
+
+  it 'leaves it out when an exclude path names it', {
+    my $opts = options-for();
+    $opts.include-path(root().add('lib').absolute);
+    $opts.exclude-path('Untouched');
+
+    expect(
+      Coverage::build-report(log-for(root(), 4, 5), $opts, root())
+        .files.grep(*.display-path.ends-with('Untouched.rakumod')).elems,
+    ).to.be(0);
+  }
+}
+
+describe 'writing a value the report json has no shape for', {
+  it 'writes nothing at all as null', {
+    expect(Coverage::naive-json(Nil)).to.eq('null');
+  }
+
+  it 'writes anything else through its string form', {
+    expect(Coverage::naive-json(Version.new('1.2.3'))).to.eq('"1.2.3"');
+  }
+
+  it 'writes a list of values', {
+    expect(Coverage::naive-json([1, 2])).to.include('1');
+  }
+
+  it 'writes a string with a quote in it', {
+    expect(Coverage::naive-json('say "hi"')).to.eq('"say \\"hi\\""');
   }
 }

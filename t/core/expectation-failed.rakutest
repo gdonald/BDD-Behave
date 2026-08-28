@@ -1,0 +1,20 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Failure;
+
+plan 3;
+
+# The exception the runner throws when an expectation fails carries the place
+# it failed, and reads it back in its message.
+my $failed = X::BDD::Behave::ExpectationFailed.new(
+  :file('t/core/basic.rakutest'), :line(12),
+);
+
+is $failed.message, 'expectation failed at t/core/basic.rakutest:12',
+  'the message names the file and the line';
+is $failed.file, 't/core/basic.rakutest', 'the file reads back';
+is $failed.line, 12, 'the line reads back';
+
+done-testing;

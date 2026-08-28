@@ -1,0 +1,51 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+need BDD::Behave::Benchmark::Format;
+use BDD::Behave::Matcher::Collection;
+use BDD::Behave::Matcher::Core;
+use BDD::Behave::Matcher::Type;
+
+plan 19;
+
+my class Ledger {
+  has Int $.balance = 0;
+  method deposit($amount) { $amount }
+}
+
+# `expect` reports these through the builder, so the description each matcher
+# carries is read here directly.
+is IncludeMatcher.new(:expected([1, 2])).description, 'include 1, 2',
+  'the items a collection must hold are described';
+is ContainExactlyMatcher.new(:expected([1, 2])).description, 'contain exactly 1, 2',
+  'the exact items are described';
+is StartWithMatcher.new(:expected([1])).description, 'start with 1',
+  'the leading items are described';
+is EndWithMatcher.new(:expected([3])).description, 'end with 3',
+  'the trailing items are described';
+is AllMatcher.new(:inner(EqMatcher.new(:expected(1)))).description, 'all eq 1',
+  'a matcher every item must satisfy is described';
+
+is BeAMatcher.new(:type(Str)).description, 'be a Str', 'the type a value must be is described';
+is BeAnInstanceOfMatcher.new(:type(Str)).description, 'be an instance of Str',
+  'the type a value must be an instance of is described';
+ok RespondToMatcher.new(:expected(['deposit'])).description.contains('respond to'),
+  'the methods a value must answer are described';
+ok HaveAttributesMatcher.new(:expected({ balance => 0 })).description.contains('have attributes'),
+  'the attributes a value must carry are described';
+
+nok IncludeMatcher.new(:expected([1])).matches(42), 'a plain number holds nothing';
+nok IncludeMatcher.new(:expected([1])).matches(Int), 'a type object holds nothing';
+ok IncludeMatcher.new(:expected([1])).matches([1, 2]), 'a list holding the item matches';
+ok IncludeMatcher.new(:expected([:size(3)])).matches({ :size(3) }), 'a hash holding the pair matches';
+
+is BDD::Behave::Benchmark::Format::to-json(42), '42', 'a number is written';
+is BDD::Behave::Benchmark::Format::to-json('a name'), '"a name"', 'a string is written';
+is BDD::Behave::Benchmark::Format::to-json([1, 2]), '[1,2]', 'a list is written';
+is BDD::Behave::Benchmark::Format::to-json({ :size(3) }), '{"size":3}', 'a map is written';
+is BDD::Behave::Benchmark::Format::to-json(Nil), 'null', 'nothing at all is written as null';
+is BDD::Behave::Benchmark::Format::to-json(Version.new('1.2.3')), '"1.2.3"',
+  'anything else is written through its string form';
+
+done-testing;

@@ -1,0 +1,46 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Formatter;
+use BDD::Behave::Formatter::Tree;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 8;
+
+constant Suite     = BDD::Behave::SpecTree::Suite;
+constant Example   = BDD::Behave::SpecTree::Example;
+constant RunResult = BDD::Behave::Runner::RunResult;
+
+# A formatter written outside behave gets every method from the role and
+# overrides only what it cares about, so the defaults are exercised here.
+my class BareFormatter does BDD::Behave::Formatter { }
+
+my $formatter = BareFormatter.new;
+my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+my $example = Example.new(
+  :description('an example'), :file('/abs/spec.raku'.IO), :line(7), :block(sub { }),
+);
+
+is $formatter.name, 'formatter', 'a formatter overriding nothing names itself';
+is stdout-from({ $formatter.set-total(42) }), '', 'a total is taken quietly';
+is stdout-from({ $formatter.suite-start($suite) }), '', 'the start of a suite is taken quietly';
+is stdout-from({ $formatter.example-pass($example) }), '', 'a passing example is taken quietly';
+is stdout-from({ $formatter.example-fail($example, :failure-info(%())) }), '',
+  'a failing example is taken quietly';
+is stdout-from({ $formatter.run-summary(RunResult.new) }), '', 'the end of the run is quiet';
+
+
+{
+  my $tree = BDD::Behave::Formatter::Tree.new;
+
+  ok stdout-from({ $tree.suite-loading(:file('/abs/spec.raku')) })
+    .contains('Loading: /abs/spec.raku'), 'the tree formatter names the file it is loading';
+  ok stdout-from({
+    $tree.example-auto-description($example, :description('derived from the matcher'));
+  }).contains('derived from the matcher'), 'the tree formatter writes a derived description';
+}
+
+done-testing;

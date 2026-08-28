@@ -1,0 +1,117 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter::JUnit;
+use BDD::Behave::Formatter::TAP;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 13;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant RunResult    = BDD::Behave::Runner::RunResult;
+
+# Both formatters write one document at the end of the run, so each block drives
+# a small run and reads the document back.
+sub document-of($formatter, &drive --> Str) {
+  my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+
+  stdout-from({
+    $formatter.suite-loading(:file('/abs/spec.raku'));
+    $formatter.suite-start($suite);
+    drive($formatter, $suite);
+    $formatter.suite-end($suite);
+    $formatter.run-summary(RunResult.new, :order('defined'));
+  });
+}
+
+sub example-in($suite --> Example) {
+  my $ex = Example.new(
+    :description('an example'), :file('/abs/spec.raku'.IO), :line(7), :block(sub { }),
+  );
+  $suite.add-child($ex);
+  $ex.duration = 0.25;
+  $ex;
+}
+
+sub group-in($suite --> ExampleGroup) {
+  my $group = ExampleGroup.new(:description('a group'), :file('/abs/spec.raku'.IO), :line(5));
+  $suite.add-child($group);
+  $group;
+}
+
+{
+  my $junit = BDD::Behave::Formatter::JUnit.new;
+
+  ok document-of($junit, -> $f, $suite { $f.example-around-skipped(example-in($suite)) })
+    .contains('around-each did not invoke continuation'),
+    'junit records an example its around hook never ran';
+  ok document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
+    $f.example-around-skipped(example-in($suite));
+  }).contains('skipped="1"'), 'junit counts it in the skipped total';
+
+  ok document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
+    my $ex = example-in($suite);
+    $f.example-start($ex);
+    $f.example-auto-description($ex, :description('derived from the matcher'));
+    $f.example-pass($ex);
+  }).contains('derived from the matcher'), 'junit records a derived description';
+
+  nok document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
+    $f.group-around-skipped(group-in($suite));
+  }).contains('a group'), 'junit writes nothing of its own for a skipped group';
+
+  nok document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
+    $f.example-slow(example-in($suite), :threshold(0.1));
+  }).contains('threshold'), 'junit writes nothing for a slow example';
+
+  is stdout-from({ BDD::Behave::Formatter::JUnit.new.profile-summary([], :limit(5)) }), '',
+    'junit writes no profile section';
+  is stdout-from({ BDD::Behave::Formatter::JUnit.new.multi-file-profile(Nil, [], :limit(5)) }), '',
+    'junit writes no profile section for a run spanning several files';
+}
+
+{
+  Failures.list = ();
+
+  my $document = document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
+    my $ex = example-in($suite);
+    $f.example-start($ex);
+    aggregate-failures 'the totals', { expect(1).to.be(2) };
+    $f.example-fail($ex, :failure-info(%()));
+  });
+
+  Failures.list = ();
+
+  ok $document.contains('aggregate: the totals'), 'junit names the aggregation a failure came from';
+}
+
+{
+  ok document-of(BDD::Behave::Formatter::TAP.new, -> $f, $suite {
+    my $ex = example-in($suite);
+    $f.example-start($ex);
+    $f.example-auto-description($ex, :description('derived from the matcher'));
+    $f.example-pass($ex);
+  }).contains('derived from the matcher'), 'tap records a derived description';
+
+  nok document-of(BDD::Behave::Formatter::TAP.new, -> $f, $suite {
+    $f.group-around-skipped(group-in($suite));
+  }).contains('a group'), 'tap writes nothing of its own for a skipped group';
+
+  nok document-of(BDD::Behave::Formatter::TAP.new, -> $f, $suite {
+    $f.example-slow(example-in($suite), :threshold(0.1));
+  }).contains('threshold'), 'tap writes nothing for a slow example';
+
+  is stdout-from({ BDD::Behave::Formatter::TAP.new.profile-summary([], :limit(5)) }), '',
+    'tap writes no profile section';
+  is stdout-from({ BDD::Behave::Formatter::TAP.new.multi-file-profile(Nil, [], :limit(5)) }), '',
+    'tap writes no profile section for a run spanning several files';
+}
+
+done-testing;

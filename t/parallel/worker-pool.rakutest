@@ -2,9 +2,11 @@ use v6.d;
 use lib 'lib';
 use Test;
 
+use BDD::Behave::Parallel::Queue;
 use BDD::Behave::Parallel::WorkerPool;
+use Test::Output;
 
-plan 7;
+plan 10;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $lib     = $root.add('lib');
@@ -75,6 +77,52 @@ sub pool-for(IO::Path $dir, @events, IO::Path :$coverage-log-dir) {
   throws-like { pool-for($dir, []).launch([[], []]) }, Exception,
     message => /'must equal worker-count'/, 'more manifests than workers is refused';
 
+  remove-dir($dir);
+}
+
+
+{
+  my $pool = BDD::Behave::Parallel::Queue::QueueWorkerPool.new(
+    :worker-count(2),
+    :worker-argv(('raku', "-I{$lib.absolute}", $bin.absolute)),
+    :spec-files(($fixture.absolute,)),
+    :base-env(%(|%*ENV, BEHAVE_DISABLE_CONFIG => '1')),
+  );
+
+  $pool.launch;
+  $pool.shutdown-all;
+  $pool.wait-all;
+
+  is $pool.workers.grep(*.shutdown-sent).elems, 2, 'each queue worker is asked to stop';
+  is $pool.workers.grep({ .exit-promise.status ~~ Kept }).elems, 2,
+    'each queue worker finishes';
+}
+
+{
+  my $dir = manifest-dir();
+  my $noisy = $dir.add('noisy-spec.raku');
+  $noisy.spurt(q:to/SPEC/);
+  use BDD::Behave;
+
+  note 'a worker complaining';
+
+  describe 'noisy', {
+    it 'passes', { expect(1).to.be(1) }
+  }
+  SPEC
+
+  my @events;
+  my $pool = pool-for($dir, @events);
+
+  my $errors = stderr-from({
+    $pool.launch([[$noisy.absolute ~ ':6']]);
+    $pool.wait-all;
+  });
+
+  ok $errors.contains('a worker complaining'),
+    'what a worker writes to its error stream reaches the parent';
+
+  $pool.cleanup-manifests;
   remove-dir($dir);
 }
 

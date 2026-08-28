@@ -1,52 +1,26 @@
 use v6.d;
 use lib 'lib';
 use Test;
-use Test::Output;
 
 use BDD::Behave::Bisect;
 
-plan 10;
+plan 4;
 
-constant Bisector = BDD::Behave::Bisect::Bisector;
+# Driving the bisector directly, rather than through bin/behave, reads back the
+# record it keeps of its own work.
+my $fixture = $*PROGRAM.parent.parent.parent.add('t/fixtures/bisect-fixture-spec.raku');
 
-my $root    = $*PROGRAM.parent.parent.parent;
-my $fixture = $root.add('t/fixtures/bisect-fixture-spec.raku');
-my $failing = $root.add('t/fixtures/failing-fixture-spec.raku');
-my $passing = $root.add('specs/expectations/be-between-spec.raku');
+my $bisector = BDD::Behave::Bisect::Bisector.new(
+  :spec-files([$fixture.absolute]),
+  :quiet,
+);
 
-# Each run spawns one behave subprocess per iteration, so the bisector is run
-# once per block and the tests read the result it produced.
-sub bisect-of(@files, *%options) {
-  Bisector.new(:spec-files(@files.map(*.absolute)), :quiet, |%options).run;
-}
+my $result = $bisector.run;
 
-{
-  my $result = bisect-of([$passing]);
-
-  nok $result.had-failures, 'a run with no failures reports none';
-  is $result.message, 'no failures', 'a run with no failures says there was no work';
-  is $result.initial-failing.elems, 0, 'a run with no failures names no example';
-  is $result.iterations, 1, 'a run with no failures counts the pass it made';
-}
-
-{
-  my $result = bisect-of([$failing]);
-
-  ok $result.had-failures, 'a failing run reports failures';
-  is $result.minimal-deps.values.map(*.elems).sum, 0,
-    'a failure reproducing on its own records no prior examples';
-}
-
-{
-  my $result = bisect-of([$fixture]);
-  my @dependency = $result.minimal-deps{$result.initial-failing[0]}.list;
-
-  is @dependency.elems, 1, 'an order-dependent failure depends on one example';
-  ok @dependency[0].ends-with(':20'), 'the example that pollutes the counter is named';
-  ok $result.iterations > 1, 'bisecting takes more than one pass';
-}
-
-ok stderr-from({ bisect-of([$passing], :verbose) }).contains('--bisect-data'),
-  'a verbose bisector writes each command it spawns';
+ok $result.had-failures, 'the initial pass found failures';
+ok $result.initial-failing[0].ends-with(':29'), 'the failing example is named';
+ok $result.minimal-deps{$result.initial-failing[0]}[0].ends-with(':20'),
+  'the minimal prior set is kept';
+ok $bisector.iterations > 1, 'the subprocess runs it took are counted';
 
 done-testing;

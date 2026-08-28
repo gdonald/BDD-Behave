@@ -1,0 +1,75 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use Test::Output;
+
+use BDD::Behave::Configuration;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+
+plan 6;
+
+constant Configuration = BDD::Behave::Configuration::Configuration;
+constant Runner        = BDD::Behave::Runner::Runner;
+constant Suite         = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
+constant Example       = BDD::Behave::SpecTree::Example;
+
+# A hook that throws is reported on stderr and the run carries on.
+sub suite-recording-into(@log --> List) {
+  my $suite = Suite.create(:description('hooks'), :file('synthetic'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('a group'), :file('synthetic'.IO), :line(1));
+  $suite.add-group($group);
+  $group.add-example(
+    Example.new(
+      :description('an example'),
+      :file('synthetic'.IO),
+      :line(2),
+      :block(sub { @log.push('example') }),
+    ),
+  );
+  ($suite, $group);
+}
+
+sub run-quiet(Suite $suite, $config = Nil) {
+  my $sink = open '/dev/null', :w;
+  my $runner = Runner.new(:order<defined>, |($config.defined ?? (:$config) !! ()));
+  {
+    my $*OUT = $sink;
+    $runner.run($suite);
+  }
+  $sink.close;
+}
+
+sub group-hook-stderr(@log --> Str) {
+  my ($suite, $group) = suite-recording-into(@log);
+  $group.add-hook('before-all', sub { die 'hook exploded' });
+  stderr-from({ run-quiet($suite) });
+}
+
+sub config-hook-stderr(@log --> Str) {
+  my ($suite, $group) = suite-recording-into(@log);
+  my $config = Configuration.new;
+  $config.before-each(sub { die 'config hook exploded' });
+  stderr-from({ run-quiet($suite, $config) });
+}
+
+my @group-log;
+my $group-err = group-hook-stderr(@group-log);
+
+ok $group-err.contains('Hook before-all failed in a group'),
+  'a group hook failure names the phase and the group';
+ok $group-err.contains('hook exploded'),
+  'a group hook failure carries the message of the exception';
+is-deeply @group-log, ['example'], 'the example still runs after a group hook fails';
+
+my @config-log;
+my $config-err = config-hook-stderr(@config-log);
+
+ok $config-err.contains('Config before-each hook failed'),
+  'a config hook failure names the phase';
+ok $config-err.contains('config hook exploded'),
+  'a config hook failure carries the message of the exception';
+is-deeply @config-log, ['example'], 'the example still runs after a config hook fails';
+
+done-testing;
