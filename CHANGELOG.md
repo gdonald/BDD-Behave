@@ -1,5 +1,49 @@
 # Changelog
 
+## v0.9.5 — 2026-08-28
+
+### Added
+
+- The coverage report is built by CI and published to
+  [https://coverage.behave.dev](https://coverage.behave.dev)
+
+### Changed
+
+- An omitted `--parallel` now defaults to the CPU core count. A selection that
+  resolves to a single spec file still runs in this process with no workers,
+  since reaching the parallel runner costs a precompile subprocess, a discovery
+  subprocess, and a worker subprocess. Pass `--parallel 1` to put one file
+  through a worker anyway. Under `--coverage` the omitted default stays at the
+  core count for any file count
+- The precompile pass is skipped for a selection of one spec file, and when
+  discovery runs in this process. Nothing loads the spec files concurrently in
+  either case, which is the only thing the pass protects against
+- The default `--parallel-mode` and the set of modes it accepts come from
+  `BDD::Behave::Configuration` rather than from a literal in `bin/behave`
+- The ancestry walk of a spec node is cached, and the repeated work on the
+  per-example path is cut, so a large suite spends less time between examples
+- JSON events are emitted with less work per event
+- A worker's output is collected without re-slicing the buffer after every
+  line, and its events are parsed without scanning character by character
+- Coverage log lines are parsed without regexes, and each file's covered-line
+  set is computed once rather than on every read
+
+### Fixed
+
+- An expectation failure carrying no message of its own reached the JSON event
+  stream and the parallel parent with an empty `message`. Both now render the
+  same `Expected: ... / to be: ...` text the serial runner shows
+
+### Removed
+
+- The bundled `docs-src/` manual. The documentation is at
+  [https://behave.dev/docs](https://behave.dev/docs)
+- Three unreachable code paths: the read-only `STORE` on a `let` declared
+  inside a running example, which the sub's return decontainerized before any
+  caller could assign to it, and the basename comparison in location matching
+  in `DryRun` and `Parallel`, which the path-suffix comparison above it already
+  answered
+
 ## v0.9.4 — 2026-07-15
 
 ### Added
