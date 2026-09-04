@@ -63,7 +63,7 @@ describe 'the value a numeric matcher expected', {
     expect(BeBetweenMatcher.new(:min(1), :max(9)).expected-value.join(',')).to.eq('1,9');
   }
 
-  it 'reports the centre of a tolerance', {
+  it 'reports the center of a tolerance', {
     expect(BeWithinMatcher.new(:delta(0.5), :expected(10)).expected-value).to.be(10);
   }
 }

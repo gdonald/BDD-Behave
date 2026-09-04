@@ -57,7 +57,7 @@ plan 91;
 {
   my $m = BeGreaterThanMatcher.new(:expected(5));
   is $m.expected-value, 5, 'expected-value returns the threshold';
-  is $m.description, 'be greater than 5', 'description summarises threshold';
+  is $m.description, 'be greater than 5', 'description summarizes threshold';
 }
 
 # expect(...).to.be-greater-than(...) integration.

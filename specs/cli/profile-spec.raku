@@ -30,13 +30,20 @@ describe 'bin/behave --profile', {
     expect($out.contains('c slow example')).to.be-truthy;
   }
 
+  # Which examples land in a capped section depends on measured wall-clock
+  # duration, which reorders under load. The cap itself is what --profile=N
+  # promises, so count the entries rather than name them. Ordering is covered
+  # deterministically from synthetic durations in the tree formatter specs.
   it 'caps the section at N entries with --profile=N', {
     my %r = run-behave('--profile=2', $fixture.absolute);
-    expect(%r<exit>).to.be(0);
     my $out = strip-ansi(%r<out>);
-    expect($out.contains('Top 2 slowest examples')).to.be-truthy;
-    expect($out.contains('c slow example')).to.be-truthy;
-    expect($out.contains('b medium example')).to.be-truthy;
+    my @entries = $out.lines.grep(/^ '  ' \d+ '.' \d ** 3 's  ' \S/);
+
+    aggregate-failures {
+      expect(%r<exit>).to.be(0);
+      expect($out).to.include('Top 2 slowest examples');
+      expect(@entries.elems).to.be(2);
+    }
   }
 
   it 'rejects --profile=0 with a non-zero exit code', {

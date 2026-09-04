@@ -19,11 +19,11 @@ class Person {
   has Int $.age;
 }
 
-role Coloured {
-  has Str $.colour;
+role Colored {
+  has Str $.color;
 }
 
-class Shape does Coloured {
+class Shape does Colored {
   has Int $.sides;
 }
 
@@ -96,8 +96,8 @@ class Shape does Coloured {
 
 # Inherited / role-supplied attributes
 {
-  my $m = HaveAttributesMatcher.new(:expected({:colour<red>, :sides(3)}));
-  ok $m.matches(Shape.new(:colour<red>, :sides(3))),
+  my $m = HaveAttributesMatcher.new(:expected({:color<red>, :sides(3)}));
+  ok $m.matches(Shape.new(:color<red>, :sides(3))),
      'role-supplied accessor matches';
 }
 

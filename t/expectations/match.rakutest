@@ -72,7 +72,7 @@ plan 34;
   my $regex = /\w+/;
   my $m = MatchMatcher.new(:expected($regex));
   ok $m.expected-value === $regex,  'expected-value returns the regex';
-  is $m.description, 'match /\w+/',  'description summarises pattern';
+  is $m.description, 'match /\w+/',  'description summarizes pattern';
 }
 
 # expect(...).to.match(...) integration.

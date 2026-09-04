@@ -81,7 +81,7 @@ sub default-discovery-argv(--> List) is export {
 # startup and the module load again. For a selection that resolves to a
 # single spec file that is more than the file itself costs, so an omitted
 # --parallel resolves to zero workers there and the run stays in this
-# process. An explicit --parallel N is always honoured.
+# process. An explicit --parallel N is always honored.
 our sub resolve-worker-count(
   Int :$requested,
   Int :$file-count!,

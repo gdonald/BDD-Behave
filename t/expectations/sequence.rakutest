@@ -84,7 +84,7 @@ plan 76;
 {
   my $m = StartWithMatcher.new(:expected([1, 2]));
   is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
-  is $m.description, 'start with 1, 2', 'description summarises items';
+  is $m.description, 'start with 1, 2', 'description summarizes items';
 }
 
 # expect(...).to.start-with(...) integration.
@@ -201,7 +201,7 @@ plan 76;
 {
   my $m = EndWithMatcher.new(:expected([1, 2]));
   is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
-  is $m.description, 'end with 1, 2', 'description summarises items';
+  is $m.description, 'end with 1, 2', 'description summarizes items';
 }
 
 # expect(...).to.end-with(...) integration.

@@ -40,19 +40,19 @@ describe 'LetRuntime listing the names it holds', {
 describe 'LetRuntime resolving a name to a definition', {
   context 'given a name declared with a leading colon', {
     let(:runtime, {
-      LetRuntime.new(:definitions([LetDefinition.new(:name(':colonised'), :block({ 'yes' }))]));
+      LetRuntime.new(:definitions([LetDefinition.new(:name(':colonized'), :block({ 'yes' }))]));
     });
 
     it 'finds it by its bare spelling', {
-      expect(runtime.has-name('colonised')).to.be-truthy;
+      expect(runtime.has-name('colonized')).to.be-truthy;
     }
 
     it 'reads its value by its bare spelling', {
-      expect(runtime.value('colonised')).to.eq('yes');
+      expect(runtime.value('colonized')).to.eq('yes');
     }
 
     it 'reads its value by its colon spelling', {
-      expect(runtime.value(':colonised')).to.eq('yes');
+      expect(runtime.value(':colonized')).to.eq('yes');
     }
   }
 

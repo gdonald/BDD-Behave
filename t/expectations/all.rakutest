@@ -113,7 +113,7 @@ class PositiveMatcher does Matcher {
   my $inner = BeMatcher.new(:expected(0));
   my $m     = AllMatcher.new(:inner($inner));
   ok $m.expected-value === $inner, 'expected-value returns the inner matcher';
-  is $m.description, 'all be 0',   'description summarises inner matcher';
+  is $m.description, 'all be 0',   'description summarizes inner matcher';
 }
 
 # expect(...).to.all(...) integration.

@@ -13,12 +13,20 @@ sub write-spec(IO::Path $dir, Str $name, Str $body) {
   $dir.add($name).spurt($body);
 }
 
+# The child gets its own closed stdin. Inheriting this process's stdin hands it
+# the queue control channel when these specs themselves run under
+# --parallel-mode=queue, and bin/behave's worker loop reads bucket commands from
+# there.
 sub run-behave(@argv --> Hash) {
-  my @cmd = 'raku', '-Ilib', 'bin/behave', |@argv;
-  my $proc = run(|@cmd, :out, :err, :cwd($*CWD));
-  my $stdout = $proc.out.slurp(:close);
-  my $stderr = $proc.err.slurp(:close);
-  %( :exitcode($proc.exitcode), :$stdout, :$stderr );
+  my $proc = Proc::Async.new('raku', '-Ilib', 'bin/behave', |@argv, :w);
+  my $stdout = '';
+  my $stderr = '';
+  $proc.stdout.tap(-> $c { $stdout ~= $c });
+  $proc.stderr.tap(-> $c { $stderr ~= $c });
+  my $done = $proc.start(:cwd($*CWD));
+  $proc.close-stdin;
+  my $result = await $done;
+  %( :exitcode($result.exitcode), :$stdout, :$stderr );
 }
 
 describe '`behave --parallel N` end-to-end', {

@@ -13,11 +13,11 @@ my class Person {
   has Int $.age;
 }
 
-my role Coloured {
-  has Str $.colour;
+my role Colored {
+  has Str $.color;
 }
 
-my class Shape does Coloured {
+my class Shape does Colored {
   has Int $.sides;
 }
 
@@ -36,8 +36,8 @@ describe 'have-attributes matcher passes', {
   }
 
   it 'passes for role-supplied attributes', {
-    expect(Shape.new(:colour<red>, :sides(3)))
-      .to.have-attributes(:colour<red>, :sides(3));
+    expect(Shape.new(:color<red>, :sides(3)))
+      .to.have-attributes(:color<red>, :sides(3));
   }
 }
 

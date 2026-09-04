@@ -246,6 +246,21 @@ describe 'BDD::Behave::Formatter::Tree', {
       expect($out).to.include('mid');
       expect($out.contains('fast')).to.be-falsy;
     }
+
+    it 'profile-summary orders entries slowest first', {
+      my $f = BDD::Behave::Formatter::Tree.new;
+      my @records = (
+        %( description => 'fast', duration => 0.001, example => Any ),
+        %( description => 'slow', duration => 0.500, example => Any ),
+        %( description => 'mid',  duration => 0.050, example => Any ),
+      );
+      my $out = strip-ansi capture-formatter-output({
+        $f.profile-summary(@records, :limit(3));
+      });
+      my @listed = $out.lines.grep(/^ '  ' \d+ '.' \d ** 3 's  ' \S/).map(*.words[*-1]);
+
+      expect(@listed).to.eq(['slow', 'mid', 'fast']);
+    }
   }
 
   describe 'multi-file output', {

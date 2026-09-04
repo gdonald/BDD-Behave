@@ -50,19 +50,19 @@ sub remove-dir(IO::Path $dir --> Nil) {
 
 describe 'resolving the worker count', {
   context 'when --parallel was given explicitly', {
-    it 'honours the requested count for a single spec file', {
+    it 'honors the requested count for a single spec file', {
       expect(
         resolve-worker-count(:requested(1), :file-count(1), :cpu-cores(8)),
       ).to.be(1);
     }
 
-    it 'honours the requested count for a whole directory', {
+    it 'honors the requested count for a whole directory', {
       expect(
         resolve-worker-count(:requested(3), :file-count(20), :cpu-cores(8)),
       ).to.be(3);
     }
 
-    it 'honours a requested count larger than the core count', {
+    it 'honors a requested count larger than the core count', {
       expect(
         resolve-worker-count(:requested(32), :file-count(20), :cpu-cores(8)),
       ).to.be(32);

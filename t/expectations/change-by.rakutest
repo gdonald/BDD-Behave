@@ -193,7 +193,7 @@ plan 56;
   is $m2.miss-reason, 'by-at-most', 'by-at-most catches the overflow';
 }
 
-# Backwards-compat: no by-modifier means no by clause anywhere.
+# Backward-compat: no by-modifier means no by clause anywhere.
 {
   my $m = ChangeMatcher.new(:observable({ 1 }));
   is $m.change-clause, '', 'no by clause when nothing set';

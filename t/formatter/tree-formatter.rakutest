@@ -8,7 +8,7 @@ use BDD::Behave::Formatter::Tree;
 use BDD::Behave::SpecTree;
 use Behave::Test::FakeResult;
 
-plan 29;
+plan 30;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -151,10 +151,16 @@ ok $mf-shown.contains('Randomized with seed 7'),
 my @records = (
   %( description => 'fast', duration => 0.001, example => Any ),
   %( description => 'slow', duration => 0.500, example => Any ),
+  %( description => 'mid',  duration => 0.050, example => Any ),
 );
 my $prof = strip-ansi capture({ $f.profile-summary(@records, :limit(1)) });
 ok $prof.contains('Top 1 slowest'), 'profile-summary prints the heading';
 ok $prof.contains('slow'),          'profile-summary shows the slowest entry';
+
+my $ordered = strip-ansi capture({ $f.profile-summary(@records, :limit(3)) });
+is-deeply $ordered.lines.grep(/^ '  ' \d+ '.' \d ** 3 's  ' \S/).map(*.words[*-1]).Array,
+  ['slow', 'mid', 'fast'],
+  'profile-summary orders entries slowest first';
 
 my @errs = (%( file => '/tmp/a.raku', message => "syntax err" ),);
 my $errs-out = strip-ansi capture({ $f.load-errors(@errs) });

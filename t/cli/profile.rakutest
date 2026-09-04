@@ -2,7 +2,7 @@ use v6.d;
 use lib 'lib';
 use Test;
 
-plan 12;
+plan 13;
 
 my $root    = $*PROGRAM.parent.parent.parent;
 my $bin     = $root.add('bin/behave');
@@ -37,11 +37,15 @@ sub strip-ansi(Str $s --> Str) {
     'profile lists the slowest example';
 }
 
+# Which examples land in a capped section depends on measured wall-clock
+# duration, which reorders under load. Count the entries rather than name them.
 {
   my %r = run-behave('--profile=2', $fixture.absolute);
   my $out = strip-ansi(%r<out>);
   ok $out.contains('Top 2 slowest examples'),
     '--profile=2 caps the section header';
+  is $out.lines.grep(/^ '  ' \d+ '.' \d ** 3 's  ' \S/).elems, 2,
+    '--profile=2 lists exactly two entries';
 }
 
 {

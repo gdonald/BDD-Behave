@@ -39,6 +39,6 @@ is BeGreaterThanOrEqualMatcher.new(:expected(3)).expected-value, 3,
 is BeBetweenMatcher.new(:min(1), :max(9)).expected-value.join(','), '1,9',
   'a range reports both ends';
 is BeWithinMatcher.new(:delta(0.5), :expected(10)).expected-value, 10,
-  'a tolerance reports its centre';
+  'a tolerance reports its center';
 
 done-testing;

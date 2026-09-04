@@ -73,7 +73,7 @@ plan 73;
 {
   my $m = EqMatcher.new(:expected([1, 2]));
   is-deeply $m.expected-value, [1, 2], 'expected-value returns the expected value';
-  is $m.description, 'eq $[1, 2]', 'description summarises the expected';
+  is $m.description, 'eq $[1, 2]', 'description summarizes the expected';
 }
 
 # expect(...).to.eq(...) integration.
@@ -168,7 +168,7 @@ plan 73;
 {
   my $m = ContainExactlyMatcher.new(:expected([1, 2]));
   is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
-  is $m.description, 'contain exactly 1, 2', 'description summarises items';
+  is $m.description, 'contain exactly 1, 2', 'description summarizes items';
 }
 
 # expect(...).to.contain-exactly(...) integration.

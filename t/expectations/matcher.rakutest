@@ -33,7 +33,7 @@ plan 30;
   is $m.expected-value, 42, 'BeMatcher.expected-value matches expected';
 }
 
-# 3. BeMatcher honours full smartmatch semantics (types, regex, ranges, junctions).
+# 3. BeMatcher honors full smartmatch semantics (types, regex, ranges, junctions).
 {
   ok BeMatcher.new(:expected(Int)).matches(7), 'BeMatcher matches type';
   ok BeMatcher.new(:expected(/hell/)).matches('hello'), 'BeMatcher matches regex';

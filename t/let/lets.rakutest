@@ -45,13 +45,13 @@ sub runtime-of(*@definitions) {
 }
 
 {
-  my $colonised = runtime-of(LetDefinition.new(:name(':colonised'), :block({ 'yes' })));
+  my $colonized = runtime-of(LetDefinition.new(:name(':colonized'), :block({ 'yes' })));
 
-  ok $colonised.has-name('colonised'),
+  ok $colonized.has-name('colonized'),
     'a name declared with a colon is found by its bare spelling';
-  is $colonised.value('colonised'), 'yes',
+  is $colonized.value('colonized'), 'yes',
     'a name declared with a colon reads by its bare spelling';
-  is $colonised.value(':colonised'), 'yes',
+  is $colonized.value(':colonized'), 'yes',
     'a name declared with a colon reads by its colon spelling';
 }
 

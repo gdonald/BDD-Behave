@@ -48,13 +48,13 @@ sub remove-dir(IO::Path $dir --> Nil) {
 }
 
 is resolve-worker-count(:requested(1), :file-count(1), :cpu-cores(8)), 1,
-  'an explicit --parallel 1 is honoured for a single spec file';
+  'an explicit --parallel 1 is honored for a single spec file';
 
 is resolve-worker-count(:requested(3), :file-count(20), :cpu-cores(8)), 3,
-  'an explicit --parallel 3 is honoured for a whole directory';
+  'an explicit --parallel 3 is honored for a whole directory';
 
 is resolve-worker-count(:requested(32), :file-count(20), :cpu-cores(8)), 32,
-  'an explicit count larger than the core count is honoured';
+  'an explicit count larger than the core count is honored';
 
 is resolve-worker-count(:file-count(1), :cpu-cores(8)), 0,
   'an omitted --parallel resolves a single spec file to no workers';

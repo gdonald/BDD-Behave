@@ -101,7 +101,7 @@ plan 43;
 {
   my $m = IncludeMatcher.new(:expected([1, 2]));
   is-deeply $m.expected-value.list.Array, [1, 2], 'expected-value exposes items';
-  is $m.description, 'include 1, 2', 'description summarises items';
+  is $m.description, 'include 1, 2', 'description summarizes items';
 }
 
 # expect(...).to.include(...) integration.
