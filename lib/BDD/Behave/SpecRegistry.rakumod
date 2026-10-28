@@ -13,17 +13,17 @@ class Entry {
   has %!first-nodes;
   has Bool $.loaded is rw = False;
 
-  method next-occurrence(Str $kind, Int $line --> Int) {
-    ++%!occurrences{"$kind:$line"};
+  # Groups and examples share the count, because a location selects an example
+  # through any group above it as well as directly.
+  method next-occurrence(Int $line --> Int) {
+    ++%!occurrences{$line};
   }
 
-  method record-node(Str $kind, $node) {
-    my $key = "$kind:{$node.line}";
-
+  method record-node($node) {
     if $node.occurrence == 1 {
-      %!first-nodes{$key} = $node;
+      %!first-nodes{$node.line} = $node;
     } elsif !$!loaded {
-      %!first-nodes{$key}.shares-line = True;
+      %!first-nodes{$node.line}.shares-line = True;
     }
   }
 }
@@ -133,7 +133,7 @@ class SpecRegistry {
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
     my $group = example-group-type().new(
       :$description, :file($path), :$line,
-      :occurrence($entry.next-occurrence('group', $line.Int)),
+      :occurrence($entry.next-occurrence($line.Int)),
     );
     $group.set-metadata(:tags(@tags.list)) if @tags.elems;
     $group.set-metadata(:skipped(True))    if $skipped;
@@ -141,7 +141,7 @@ class SpecRegistry {
     for %extra-meta.kv -> $key, $value {
       $group.set-metadata(|%($key => $value));
     }
-    $entry.record-node('group', $group);
+    $entry.record-node($group);
     $parent.add-group($group);
     $entry.stack.push($group);
     LEAVE {
@@ -158,7 +158,7 @@ class SpecRegistry {
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
     my $example = example-type().new(
       :$description, :file($path), :$line, :block(&block),
-      :occurrence($entry.next-occurrence('example', $line.Int)),
+      :occurrence($entry.next-occurrence($line.Int)),
     );
 
     my @lets;
@@ -173,7 +173,7 @@ class SpecRegistry {
     for %extra-meta.kv -> $key, $value {
       $example.set-metadata(|%($key => $value));
     }
-    $entry.record-node('example', $example);
+    $entry.record-node($example);
     $parent.add-example($example);
     $example;
   }

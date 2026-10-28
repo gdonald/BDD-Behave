@@ -1,6 +1,7 @@
 unit module BDD::Behave::DSL;
 
 use BDD::Behave::Callsite;
+use BDD::Behave::Slang;
 use BDD::Behave::Expectation;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
@@ -21,6 +22,10 @@ sub registry() { BDD::Behave::SpecRegistry::registry() }
 sub shared-context-registry() { BDD::Behave::SharedContexts::registry() }
 sub shared-examples-registry() { BDD::Behave::SharedExamples::registry() }
 constant LetDefinition = BDD::Behave::LetRuntime::LetDefinition;
+
+sub declared-line(%meta, &block --> Int) {
+  %meta{DECLARED-LINE}:delete // &block.line;
+}
 
 sub normalize-tags(%meta --> List) {
   my @tags;
@@ -84,7 +89,7 @@ our proto sub describe(|) is export {*}
 
 our multi sub describe(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
-  my $line = &block.line;
+  my $line = declared-line(%meta, &block);
   my @tags = normalize-tags(%meta);
   my %extra-meta = extract-extra-meta(%meta);
   registry().register-group(
@@ -120,6 +125,7 @@ our sub xcontext(|c) is export { xdescribe(|c) }
 our sub let(|c) is export {
   my @pos = c.list;
   my %named = c.hash;
+  my $declared-line = %named{DECLARED-LINE}:delete;
   my $name;
   my $block;
 
@@ -150,7 +156,7 @@ our sub let(|c) is export {
   }
 
   my $file = $block.file.IO;
-  my $line = $block.line;
+  my $line = $declared-line // $block.line;
   my $definition = LetDefinition.new(:name($name), :block($block), :$file, :$line);
 
   my $in-runtime = False;
@@ -318,8 +324,8 @@ our sub include-context(Str:D $name, |args) is export {
   block(|args);
 }
 
-our sub shared-examples(Str:D $name, &block) is export {
-  shared-examples-registry().register($name, &block);
+our sub shared-examples(Str:D $name, &block, *%meta) is export {
+  shared-examples-registry().register($name, &block, :line(declared-line(%meta, &block)));
 }
 
 our sub include-examples(Str:D $name, |args) is export {
@@ -348,7 +354,7 @@ our sub it-behaves-like(Str:D $name, |args) is export {
     description => "behaves like '$name'",
     block       => &wrapper,
     file        => $parent-group.file,
-    line        => &shared-block.line,
+    line        => shared-examples-registry().line-of($name),
   );
 }
 
@@ -356,7 +362,7 @@ our proto sub it(|) is export {*}
 
 our multi sub it(Str $description, &block, *%meta) is export {
   my $file = &block.file.IO;
-  my $line = &block.line;
+  my $line = declared-line(%meta, &block);
   my @tags = normalize-tags(%meta);
   my %extra-meta = extract-extra-meta(%meta);
   registry().register-example(
@@ -374,7 +380,7 @@ our multi sub it(Str $description, &block, *%meta) is export {
 
 our multi sub it(&block, *%meta) is export {
   my $file = &block.file.IO;
-  my $line = &block.line;
+  my $line = declared-line(%meta, &block);
   my $description = "example at {$file.basename}:$line";
   my @tags = normalize-tags(%meta);
   my %extra-meta = extract-extra-meta(%meta);
@@ -485,7 +491,7 @@ our proto sub pending(|) is export {*}
 
 our multi sub pending(Str $reason, &block, *%meta) is export {
   my $file = &block.file.IO;
-  my $line = &block.line;
+  my $line = declared-line(%meta, &block);
   my @tags = normalize-tags(%meta);
   my %extra-meta = extract-extra-meta(%meta);
   my $example = registry().register-example(
@@ -503,7 +509,7 @@ our multi sub pending(Str $reason, &block, *%meta) is export {
 our multi sub pending(Str $reason, *%meta) is export {
   my $frame = user-frame();
   my $file = ($frame.defined ?? $frame.file !! 'unknown').IO;
-  my $line = ($frame.defined ?? $frame.line.Int !! 0);
+  my $line = %meta{DECLARED-LINE}:delete // ($frame.defined ?? $frame.line.Int !! 0);
   my &block = sub { Nil };
   my @tags = normalize-tags(%meta);
   my %extra-meta = extract-extra-meta(%meta);

@@ -58,9 +58,9 @@ sub example-at(Int $occurrence, Bool :$shares-line = $occurrence > 1 --> Example
   my $group = $registry.suites.head.children.head;
 
   is-deeply $group.children.map(*.node-id).List,
-    ('/abs/loop-spec.raku:3[1]', '/abs/loop-spec.raku:3[2]', '/abs/loop-spec.raku:3[3]'),
+    ('/abs/loop-spec.raku:3[2]', '/abs/loop-spec.raku:3[3]', '/abs/loop-spec.raku:3[4]'),
     'the registry gives each example on one line its own id';
-  is $group.node-id, '/abs/loop-spec.raku:3', 'the registry counts groups apart from examples';
+  is $group.node-id, '/abs/loop-spec.raku:3[1]', 'the registry counts the group on a line together with its examples';
 }
 
 {

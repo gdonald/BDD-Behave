@@ -2,10 +2,17 @@ unit module BDD::Behave::SharedExamples;
 
 class SharedExampleRegistry {
   has %.examples;
+  has %!lines;
 
-  method register(Str:D $name, Callable:D $block) {
+  method register(Str:D $name, Callable:D $block, Int :$line = $block.line) {
     %!examples{$name} = $block;
+    %!lines{$name} = $line;
     $block;
+  }
+
+  method line-of(Str:D $name --> Int) {
+    self.lookup($name);
+    %!lines{$name};
   }
 
   method lookup(Str:D $name) {
@@ -24,6 +31,7 @@ class SharedExampleRegistry {
 
   method clear {
     %!examples = ();
+    %!lines = ();
   }
 }
 

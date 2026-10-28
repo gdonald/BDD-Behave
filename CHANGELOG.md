@@ -25,6 +25,10 @@
 - Under `--parallel`, examples registered in a loop at one line were all
   reported under the first example's description, failures included. Top-level
   examples registered in a loop also ran more than once
+- Specs failed to load on Rakudo builds that compile with the RakuAST frontend
+  (`Incompatible MROs in P6opaque rebless`). Under that frontend, groups and
+  examples whose block spans several lines also reported the line after the one
+  they were declared on
 
 ## v0.9.5 — 2026-08-28
 

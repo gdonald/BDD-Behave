@@ -127,3 +127,26 @@ describe 'rerunning the failures of examples registered in a loop', {
     }
   }
 }
+
+my constant SHARED-ONE-LINE-SPEC = q:to/END/;
+  use BDD::Behave;
+
+  shared-examples 'a pair', { it 'checks the first', { expect(1).to.be(1) }; it 'checks the second', { expect(2).to.be(2) } };
+
+  describe 'one group', { it-behaves-like 'a pair' }
+
+  describe 'another group', { it-behaves-like 'a pair' }
+  END
+
+describe 'running shared examples declared on one line with their group', {
+  for <lpt queue> -> $mode {
+    it "runs each example once in $mode mode", {
+      expect(reported-names(run-parallel($mode, SHARED-ONE-LINE-SPEC))).to.eq((
+        "another group behaves like 'a pair' checks the first",
+        "another group behaves like 'a pair' checks the second",
+        "one group behaves like 'a pair' checks the first",
+        "one group behaves like 'a pair' checks the second",
+      ));
+    }
+  }
+}

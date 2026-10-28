@@ -109,4 +109,24 @@ is-deeply reported-names(rerun-failures(('--parallel', '2', '--parallel-mode', '
   ('routes routes login', 'routes routes signup'),
   'rerunning failures after a parallel run selects each failed example on a shared line by its occurrence';
 
+my constant SHARED-ONE-LINE-SPEC = q:to/END/;
+  use BDD::Behave;
+
+  shared-examples 'a pair', { it 'checks the first', { expect(1).to.be(1) }; it 'checks the second', { expect(2).to.be(2) } };
+
+  describe 'one group', { it-behaves-like 'a pair' }
+
+  describe 'another group', { it-behaves-like 'a pair' }
+  END
+
+for <lpt queue> -> $mode {
+  is-deeply reported-names(run-parallel($mode, SHARED-ONE-LINE-SPEC)), (
+      "another group behaves like 'a pair' checks the first",
+      "another group behaves like 'a pair' checks the second",
+      "one group behaves like 'a pair' checks the first",
+      "one group behaves like 'a pair' checks the second",
+    ),
+    "$mode mode runs each shared example declared on one line with its group once";
+}
+
 done-testing;

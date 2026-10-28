@@ -81,11 +81,11 @@ describe 'the occurrences the registry assigns', {
 
   it 'gives each example on one line its own id', {
     expect(group().children.map(*.node-id).List)
-      .to.eq(('/abs/loop-spec.raku:3[1]', '/abs/loop-spec.raku:3[2]', '/abs/loop-spec.raku:3[3]'));
+      .to.eq(('/abs/loop-spec.raku:3[2]', '/abs/loop-spec.raku:3[3]', '/abs/loop-spec.raku:3[4]'));
   }
 
-  it 'counts groups apart from examples', {
-    expect(group().node-id).to.eq('/abs/loop-spec.raku:3');
+  it 'counts the group on the line together with its examples', {
+    expect(group().node-id).to.eq('/abs/loop-spec.raku:3[1]');
   }
 }
 
