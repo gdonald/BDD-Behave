@@ -47,7 +47,7 @@ sub json-string(Str $s --> Str) {
 }
 
 method node-id($node --> Str) {
-  $node.file.absolute ~ ':' ~ $node.line;
+  $node.node-id;
 }
 
 method suite-loading(Str :$file) {

@@ -87,7 +87,7 @@ sub location-matches-node($node, Str $loc --> Bool) {
   my $idx = $loc.rindex(':');
   my $pattern-path = $loc.substr(0, $idx);
   my $pattern-line = $loc.substr($idx + 1);
-  return False unless $node.line.Str eq $pattern-line;
+  return False unless $node.matches-line($pattern-line);
   path-matches($node.file.Str, $pattern-path);
 }
 
@@ -290,6 +290,8 @@ our sub serialize-suite-node($node --> Hash) {
         description => $node.description,
         file        => $node.file.Str,
         line        => $node.line,
+        occurrence  => $node.occurrence,
+        shares-line => $node.shares-line,
         metadata    => sanitize-metadata($node.metadata),
         children    => $node.children.map(&serialize-suite-node).List,
       );
@@ -300,6 +302,8 @@ our sub serialize-suite-node($node --> Hash) {
         description => $node.description,
         file        => $node.file.Str,
         line        => $node.line,
+        occurrence  => $node.occurrence,
+        shares-line => $node.shares-line,
         metadata    => sanitize-metadata($node.metadata),
         pending     => $node.pending.so,
       );

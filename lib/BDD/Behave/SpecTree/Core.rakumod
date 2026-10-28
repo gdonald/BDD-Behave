@@ -11,14 +11,18 @@ our class SpecNode {
   has Str $.description is required;
   has IO::Path $.file is required;
   has Int $.line is required;
+  has Int $.occurrence = 1;
+  has Bool $.shares-line is rw = False;
   has     $!parent = Nil;
   has %.metadata = Hash.new;
   has List $!ancestry;
   has Int  $!ancestry-generation = -1;
 
-  submethod BUILD(:$!description, :$file!, :$line!, :$parent, :%metadata = {}) {
+  submethod BUILD(:$!description, :$file!, :$line!, :$parent, :%metadata = {}, Int :$occurrence = 1, Bool :$shares-line = False) {
     $!file = $file ~~ IO::Path ?? $file !! $file.IO;
     $!line = $line;
+    $!occurrence = $occurrence;
+    $!shares-line = $shares-line;
     $!parent = $parent if $parent.defined;
     %!metadata = %metadata.clone;
   }
@@ -31,6 +35,20 @@ our class SpecNode {
   }
 
   method location { "$!file:$!line" }
+
+  # Nodes registered in a loop share a line, so each of them carries its
+  # occurrence as a suffix. A bare line still selects every node on it.
+  method line-key(--> Str) {
+    $!occurrence > 1 || $!shares-line ?? self!occurrence-line-key !! $!line.Str;
+  }
+
+  method !occurrence-line-key(--> Str) { $!line ~ "[$!occurrence]" }
+
+  method node-id(--> Str) { $!file.absolute ~ ':' ~ self.line-key }
+
+  method matches-line(Str $line-key --> Bool) {
+    $line-key eq $!line.Str || $line-key eq self!occurrence-line-key;
+  }
 
   method root { self.ancestry[0] }
 

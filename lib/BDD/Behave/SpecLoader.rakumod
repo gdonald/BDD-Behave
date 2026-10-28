@@ -8,7 +8,11 @@ sub eval-spec-source(Str $code, Str $filename) {
 
 unit module BDD::Behave::SpecLoader;
 
+use BDD::Behave::SpecRegistry;
+
 our sub load-spec-file($file) is export {
   my $path = $file ~~ IO::Path ?? $file !! $file.IO;
+  LEAVE registry().finish-loading($path);
+
   eval-spec-source($path.slurp, $path.absolute.Str);
 }

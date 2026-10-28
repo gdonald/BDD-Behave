@@ -1,0 +1,112 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+my constant GROUPED-SPEC = q:to/END/;
+  use BDD::Behave;
+
+  describe 'routes', {
+    for <signup login status> -> $name {
+      it "routes $name", { expect($name).not.to.eq('status') }
+    }
+  }
+  END
+
+my constant TOP-LEVEL-SPEC = q:to/END/;
+  use BDD::Behave;
+
+  for <alpha beta gamma> -> $name {
+    it "checks $name", { expect($name.chars).to.be(5) }
+  }
+  END
+
+sub run-parallel(Str $mode, Str $source --> Str) {
+  my $dir = $*TMPDIR.add("behave-same-line-t-{$mode}-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+
+  my $spec = $dir.add('same-line-spec.raku');
+  $spec.spurt($source);
+
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_WORKER_INDEX>:delete;
+  %env<BEHAVE_WORKER_COUNT>:delete;
+
+  my $proc = run(
+    'raku', '-Ilib', 'bin/behave', '--no-config', '--format', 'tap',
+    '--order', 'defined', '--parallel', '2', '--parallel-mode', $mode,
+    $spec.absolute,
+    :out, :err, :cwd($*CWD), :%env,
+  );
+  my $stdout = $proc.out.slurp(:close);
+  $proc.err.slurp(:close);
+
+  for $dir.dir -> $entry { $entry.unlink if $entry.f }
+  $dir.rmdir;
+
+  $stdout;
+}
+
+sub reported-names(Str $tap-output --> List) {
+  $tap-output.lines.grep(/^ 'not '? 'ok ' \d+ ' - '/).map(*.subst(/^ 'not '? 'ok ' \d+ ' - '/, '')).sort.List;
+}
+
+for <isolated lpt queue> -> $mode {
+  my $grouped-output = run-parallel($mode, GROUPED-SPEC);
+
+  is-deeply reported-names($grouped-output), ('routes routes login', 'routes routes signup', 'routes routes status'),
+    "$mode mode reports each example registered in a loop under its own description";
+  like $grouped-output, /^^ 'not ok ' \d+ ' - routes routes status' $$/,
+    "$mode mode reports the failure under the example that failed";
+
+  is-deeply reported-names(run-parallel($mode, TOP-LEVEL-SPEC)), ('checks alpha', 'checks beta', 'checks gamma'),
+    "$mode mode runs and reports each top-level example registered in a loop once";
+}
+
+my constant LATER-FAILURE-SPEC = q:to/END/;
+  use BDD::Behave;
+
+  describe 'routes', {
+    for <signup login status> -> $name {
+      it "routes $name", { expect($name).to.eq('status') }
+    }
+  }
+  END
+
+sub rerun-failures(@first-run-options --> Str) {
+  my $dir = $*TMPDIR.add("behave-same-line-rerun-t-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+
+  my $spec = $dir.add('same-line-spec.raku');
+  my $failures = $dir.add('failures.txt');
+  $spec.spurt(LATER-FAILURE-SPEC);
+
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_WORKER_INDEX>:delete;
+  %env<BEHAVE_WORKER_COUNT>:delete;
+
+  my @common = 'raku', '-Ilib', 'bin/behave', '--no-config', '--format', 'tap',
+    '--order', 'defined', '--failures-path', $failures.absolute;
+
+  my $first = run(|@common, |@first-run-options, $spec.absolute, :out, :err, :cwd($*CWD), :%env);
+  $first.out.slurp(:close);
+  $first.err.slurp(:close);
+
+  my $rerun = run(|@common, '--only-failures', $spec.absolute, :out, :err, :cwd($*CWD), :%env);
+  my $stdout = $rerun.out.slurp(:close);
+  $rerun.err.slurp(:close);
+
+  for $dir.dir -> $entry { $entry.unlink if $entry.f }
+  $dir.rmdir;
+
+  $stdout;
+}
+
+is-deeply reported-names(rerun-failures(())), ('routes routes login', 'routes routes signup'),
+  'rerunning failures after a serial run selects each failed example on a shared line by its occurrence';
+is-deeply reported-names(rerun-failures(('--parallel', '2', '--parallel-mode', 'queue'))),
+  ('routes routes login', 'routes routes signup'),
+  'rerunning failures after a parallel run selects each failed example on a shared line by its occurrence';
+
+done-testing;

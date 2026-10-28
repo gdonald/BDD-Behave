@@ -1,0 +1,109 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::DryRun;
+use BDD::Behave::Formatter::Tree;
+use BDD::Behave::Parallel::Distribution;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+use BDD::Behave::SpecTree;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant Example      = BDD::Behave::SpecTree::Example;
+constant Runner       = BDD::Behave::Runner::Runner;
+constant SpecRegistry = BDD::Behave::SpecRegistry::SpecRegistry;
+
+sub example-at(Int $occurrence, Bool :$shares-line = $occurrence > 1 --> Example) {
+  Example.new(
+    :description('an example'), :file('/abs/spec.raku'.IO), :line(12),
+    :$occurrence, :$shares-line, :block(sub { }),
+  );
+}
+
+{
+  my $alone = example-at(1);
+
+  is $alone.node-id, '/abs/spec.raku:12', 'a node alone on its line is identified by its file and line';
+  ok $alone.matches-line('12'), 'a node alone on its line matches a bare line';
+  ok $alone.matches-line('12[1]'), 'a node alone on its line matches its occurrence';
+  nok $alone.matches-line('13'), 'a node alone on its line does not match another line';
+}
+
+{
+  my $first = example-at(1, :shares-line);
+
+  is $first.node-id, '/abs/spec.raku:12[1]', 'the first node on a shared line adds its occurrence to the id';
+  nok $first.matches-line('12[2]'), 'the first node on a shared line does not match another occurrence';
+}
+
+{
+  my $second = example-at(2);
+
+  is $second.node-id, '/abs/spec.raku:12[2]', 'a later node on a shared line adds its occurrence to the id';
+  ok $second.matches-line('12'), 'a later node on a shared line matches a bare line';
+  ok $second.matches-line('12[2]'), 'a later node on a shared line matches its own occurrence';
+}
+
+{
+  my $registry = SpecRegistry.new;
+  my $file = '/abs/loop-spec.raku'.IO;
+
+  $registry.register-group(:description('routes'), :$file, :line(3), :block({
+    for ^3 {
+      $registry.register-example(:description("route $_"), :$file, :line(3), :block(sub { }));
+    }
+  }));
+
+  my $group = $registry.suites.head.children.head;
+
+  is-deeply $group.children.map(*.node-id).List,
+    ('/abs/loop-spec.raku:3[1]', '/abs/loop-spec.raku:3[2]', '/abs/loop-spec.raku:3[3]'),
+    'the registry gives each example on one line its own id';
+  is $group.node-id, '/abs/loop-spec.raku:3', 'the registry counts groups apart from examples';
+}
+
+{
+  my $registry = SpecRegistry.new;
+  my $file = '/abs/helper-spec.raku'.IO;
+
+  $registry.register-group(:description('loaded'), :$file, :line(3), :block(sub { }));
+  $registry.finish-loading($file);
+  $registry.register-group(:description('built while running'), :$file, :line(3), :block(sub { }));
+
+  my @groups = $registry.suites.head.children;
+
+  is @groups[0].node-id, '/abs/helper-spec.raku:3',
+    'a node registered after its file has loaded leaves the id of the node loaded at that line unchanged';
+  is @groups[1].node-id, '/abs/helper-spec.raku:3[2]',
+    'a node registered after its file has loaded gets an id of its own';
+}
+
+{
+  my $runner = Runner.new(:formatter(BDD::Behave::Formatter::Tree.new), :only-locations(['/abs/spec.raku:12[2]']));
+
+  ok $runner.location-matches(example-at(2)), 'a location with an occurrence selects that example';
+  nok $runner.location-matches(example-at(1, :shares-line)),
+    'a location with an occurrence leaves out the other examples on the line';
+}
+
+{
+  my %node = BDD::Behave::DryRun::serialize-suite-node(example-at(3));
+
+  is %node<occurrence>, 3, 'a dry run tree node carries the occurrence of its node';
+  ok %node<shares-line>, 'a dry run tree node carries whether its node shares its line';
+}
+
+{
+  my $suite = Suite.new(:description('spec.raku'), :file('/abs/spec.raku'.IO), :line(1));
+  $suite.add-child(example-at($_, :shares-line)) for 1..2;
+
+  my @buckets = collect-buckets($suite);
+
+  is-deeply @buckets.map(*.id).List, ('/abs/spec.raku#ex:12[1]', '/abs/spec.raku#ex:12[2]'),
+    'each top-level example on one line gets its own bucket id';
+  is-deeply @buckets.map(*.locations.head).List, ('/abs/spec.raku:12[1]', '/abs/spec.raku:12[2]'),
+    'each bucket sends the location of its own example';
+}
+
+done-testing;

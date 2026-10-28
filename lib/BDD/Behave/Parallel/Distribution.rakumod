@@ -15,7 +15,7 @@ class Bucket {
   method cost(--> Int) { @!examples.elems }
 
   method locations(--> List) {
-    @!examples.map({ "{$_.file.absolute}:{$_.line}" }).List;
+    @!examples.map(*.node-id).List;
   }
 
   method add(Example $example) {
@@ -44,7 +44,7 @@ sub visit-children($container, @buckets, Str $prefix, Int $depth) {
     given $child {
       when Example {
         my $bucket = Bucket.new(
-          :id($prefix ~ "ex:{$child.line}"),
+          :id($prefix ~ "ex:{$child.line-key}"),
           :file($child.file.absolute),
         );
         $bucket.add($child);
@@ -53,10 +53,10 @@ sub visit-children($container, @buckets, Str $prefix, Int $depth) {
       }
       when ExampleGroup {
         if allow-split($child) {
-          visit-children($child, @buckets, $prefix ~ "g{$depth}:{$child.line}/", $depth + 1);
+          visit-children($child, @buckets, $prefix ~ "g{$depth}:{$child.line-key}/", $depth + 1);
         } else {
           my $bucket = Bucket.new(
-            :id($prefix ~ "g{$depth}:{$child.line}"),
+            :id($prefix ~ "g{$depth}:{$child.line-key}"),
             :file($child.file.absolute),
           );
           collect-examples($child, $bucket);

@@ -9,6 +9,23 @@ sub example-type() { ::('BDD::Behave::SpecTree::Example') }
 class Entry {
   has $.suite;
   has @.stack;
+  has %!occurrences;
+  has %!first-nodes;
+  has Bool $.loaded is rw = False;
+
+  method next-occurrence(Str $kind, Int $line --> Int) {
+    ++%!occurrences{"$kind:$line"};
+  }
+
+  method record-node(Str $kind, $node) {
+    my $key = "$kind:{$node.line}";
+
+    if $node.occurrence == 1 {
+      %!first-nodes{$key} = $node;
+    } elsif !$!loaded {
+      %!first-nodes{$key}.shares-line = True;
+    }
+  }
 }
 
 our class ExampleQueryResult {
@@ -99,6 +116,12 @@ class SpecRegistry {
     %.entries{$key};
   }
 
+  # An id goes out in events once its file has loaded, so a node an example
+  # registers while running must not change the id of a node loaded before it.
+  method finish-loading(IO::Path $file) {
+    self.entry-for($file).loaded = True;
+  }
+
   method suite-for(IO::Path $file) {
     self.entry-for($file).suite;
   }
@@ -108,13 +131,17 @@ class SpecRegistry {
     my $entry = self.entry-for($path);
     $!current-entry = $entry;
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
-    my $group = example-group-type().new(:$description, :file($path), :$line);
+    my $group = example-group-type().new(
+      :$description, :file($path), :$line,
+      :occurrence($entry.next-occurrence('group', $line.Int)),
+    );
     $group.set-metadata(:tags(@tags.list)) if @tags.elems;
     $group.set-metadata(:skipped(True))    if $skipped;
     $group.set-metadata(:focused(True))    if $focused;
     for %extra-meta.kv -> $key, $value {
       $group.set-metadata(|%($key => $value));
     }
+    $entry.record-node('group', $group);
     $parent.add-group($group);
     $entry.stack.push($group);
     LEAVE {
@@ -129,7 +156,10 @@ class SpecRegistry {
     my IO::Path $path = ($file ~~ IO::Path ?? $file !! $file.IO).absolute.IO;
     my $entry = self.entry-for($path);
     my $parent = $entry.stack.elems ?? $entry.stack[*-1] !! $entry.suite;
-    my $example = example-type().new(:$description, :file($path), :$line, :block(&block));
+    my $example = example-type().new(
+      :$description, :file($path), :$line, :block(&block),
+      :occurrence($entry.next-occurrence('example', $line.Int)),
+    );
 
     my @lets;
     @lets.append: $entry.suite.let-definitions.list;
@@ -143,6 +173,7 @@ class SpecRegistry {
     for %extra-meta.kv -> $key, $value {
       $example.set-metadata(|%($key => $value));
     }
+    $entry.record-node('example', $example);
     $parent.add-example($example);
     $example;
   }

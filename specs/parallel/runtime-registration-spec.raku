@@ -1,0 +1,54 @@
+use BDD::Behave;
+
+# The example in the first group calls the same helper the second group was
+# built with, so it registers a group at that line while the file is running.
+my constant RUNTIME-SPEC = q:to/END/;
+  use BDD::Behave;
+
+  sub checks(Str $name) { describe "checks $name", { it 'passes', { expect(1).to.be(1) } } }
+
+  describe 'a running example', {
+    it 'builds another group with the helper', {
+      checks('built while running');
+
+      expect(1).to.be(1);
+    }
+  }
+
+  checks('built while loading');
+  END
+
+sub run-parallel(Str $mode --> Str) {
+  my $dir = $*TMPDIR.add("behave-runtime-registration-{$mode}-{$*PID}-{(now * 1e6).Int}");
+  $dir.mkdir;
+
+  my $spec = $dir.add('runtime-registration-spec.raku');
+  $spec.spurt(RUNTIME-SPEC);
+
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env<BEHAVE_WORKER_INDEX>:delete;
+  %env<BEHAVE_WORKER_COUNT>:delete;
+
+  my $proc = run(
+    'raku', '-Ilib', 'bin/behave', '--no-config', '--format', 'tap',
+    '--order', 'defined', '--parallel', '2', '--parallel-mode', $mode,
+    $spec.absolute,
+    :out, :err, :cwd($*CWD), :%env,
+  );
+  my $stdout = $proc.out.slurp(:close);
+  $proc.err.slurp(:close);
+
+  for $dir.dir -> $entry { $entry.unlink if $entry.f }
+  $dir.rmdir;
+
+  $stdout;
+}
+
+for <isolated lpt queue> -> $mode {
+  describe "a group registered while a file runs in $mode mode", {
+    it 'leaves the examples registered at load time reported under their own names', {
+      expect(run-parallel($mode)).to.match(/^^ 'ok ' \d+ ' - checks built while loading passes' $$/);
+    }
+  }
+}

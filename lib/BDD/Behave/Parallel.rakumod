@@ -330,6 +330,8 @@ sub rebuild-child-into($parent, %node) {
         :description((%node<description> // '').Str),
         :file((%node<file> // '').IO),
         :line((%node<line> // 0).Int),
+        :occurrence((%node<occurrence> // 1).Int),
+        :shares-line(?%node<shares-line>),
         :metadata(%meta),
       );
       $parent.add-child($group);
@@ -342,6 +344,8 @@ sub rebuild-child-into($parent, %node) {
         :description((%node<description> // '').Str),
         :file((%node<file> // '').IO),
         :line((%node<line> // 0).Int),
+        :occurrence((%node<occurrence> // 1).Int),
+        :shares-line(?%node<shares-line>),
         :metadata(%meta),
         :block(sub { }),
       );
@@ -470,15 +474,14 @@ sub example-passes-filters(Example $example, :@include-tags, :@exclude-tags, :@e
   }
   if @only-locations.elems {
     my $matched = False;
-    my $ex-loc = "{$example.file.absolute}:{$example.line}";
     for @only-locations -> $loc {
-      if location-matches($ex-loc, $loc) {
+      if location-matches($example, $loc) {
         $matched = True;
         last;
       }
       for $example.ancestry -> $node {
         next unless $node ~~ ExampleGroup;
-        if location-matches("{$node.file.absolute}:{$node.line}", $loc) {
+        if location-matches($node, $loc) {
           $matched = True;
           last;
         }
@@ -505,16 +508,14 @@ sub pattern-matches(Str $description, Str $pattern --> Bool) {
   $description.contains($pattern);
 }
 
-sub location-matches(Str $ex-loc, Str $pattern --> Bool) {
+sub location-matches($node, Str $pattern --> Bool) {
   return False unless $pattern.contains(':');
   my $idx = $pattern.rindex(':');
   my $pat-path = $pattern.substr(0, $idx);
   my $pat-line = $pattern.substr($idx + 1);
-  my $ex-idx = $ex-loc.rindex(':');
-  return False unless $ex-idx.defined;
-  my $ex-path = $ex-loc.substr(0, $ex-idx);
-  my $ex-line = $ex-loc.substr($ex-idx + 1);
-  return False unless $ex-line eq $pat-line;
+  return False unless $node.matches-line($pat-line);
+
+  my $ex-path = $node.file.absolute;
   return True if $ex-path eq $pat-path;
   return True if $ex-path.IO.absolute eq $pat-path.IO.absolute;
   return True if $ex-path.ends-with('/' ~ $pat-path);
@@ -1040,7 +1041,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       if $example.defined {
         $example.duration = (%event<duration> // 0).Real;
         $formatter.example-pass($example);
-        $result.executed-locations.push("{$example.file.absolute}:{$example.line}");
+        $result.executed-locations.push($example.node-id);
       }
       $result.total++;
       $result.passed++;
@@ -1121,7 +1122,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
       if $example.defined {
         $example.duration = (%event<duration> // 0).Real;
         $formatter.example-fail($example, :%failure-info);
-        my $loc = "{$example.file.absolute}:{$example.line}";
+        my $loc = $example.node-id;
         $result.executed-locations.push($loc);
         $result.failed-locations.push($loc);
       } else {
@@ -1213,7 +1214,7 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
 sub lookup-suite(@suites, Str $id) {
   return Nil unless $id.defined;
   for @suites -> $suite {
-    return $suite if "{$suite.file.absolute}:{$suite.line}" eq $id;
+    return $suite if $suite.node-id eq $id;
   }
   Nil;
 }
@@ -1231,7 +1232,7 @@ sub walk-find-group($container, Str $id) {
   for $container.children -> $child {
     given $child {
       when ExampleGroup {
-        return $child if "{$child.file.absolute}:{$child.line}" eq $id;
+        return $child if $child.node-id eq $id;
         my $deeper = walk-find-group($child, $id);
         return $deeper if $deeper.defined;
       }
@@ -1249,7 +1250,7 @@ sub lookup-example(@suites, Str $id) {
   Nil;
 }
 
-sub resolve-example(@suites, %event) {
+our sub resolve-example(@suites, %event) {
   my $hit = lookup-example(@suites, %event<id>);
   return $hit if $hit.defined;
   my $desc = (%event<description> // %event<failure-description> // '').Str;
@@ -1260,7 +1261,7 @@ sub resolve-example(@suites, %event) {
     :description($desc),
     :file($file.IO),
     :line($line),
-    :block({ }),
+    :block(sub { }),
   );
 }
 
@@ -1268,7 +1269,7 @@ sub walk-find-example($container, Str $id) {
   for $container.children -> $child {
     given $child {
       when Example {
-        return $child if "{$child.file.absolute}:{$child.line}" eq $id;
+        return $child if $child.node-id eq $id;
       }
       when ExampleGroup {
         my $deeper = walk-find-example($child, $id);

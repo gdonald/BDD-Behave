@@ -7,6 +7,11 @@
 - `needs-whole-files` on the `BDD::Behave::Formatter` role. Under `--parallel`
   the parent hands a formatter each worker's events one whole file at a time,
   unless the formatter returns `False`, as `progress` does
+- A location can name one of several examples registered at the same line, as
+  `FILE:LINE[N]` for the Nth. `--only-example`, `.behave-failures`, and
+  `--bisect` use it, so rerunning a failure from a loop runs only that example
+- The `--list-examples-format=json` tree gives each group and example `occurrence`
+  and `shares-line`
 
 ### Fixed
 
@@ -17,6 +22,9 @@
 - Under `--parallel`, the `tap`, `json`, `junit`, `html`, `documentation`, and
   `tree` formatters could report an example under a group from another file
   that a different worker was running at the same time
+- Under `--parallel`, examples registered in a loop at one line were all
+  reported under the first example's description, failures included. Top-level
+  examples registered in a loop also ran more than once
 
 ## v0.9.5 — 2026-08-28
 

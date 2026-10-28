@@ -1,0 +1,16 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel;
+
+my $example = BDD::Behave::Parallel::resolve-example((), %(
+  :id('/abs/spec.raku:9'), :description('checks totals'), :file('/abs/spec.raku'), :line(9),
+));
+
+is $example.description, 'checks totals',
+  'an event whose id names no loaded example resolves to an example built from its description';
+is $example.line, 9,
+  'an event whose id names no loaded example resolves to an example built from its line';
+
+done-testing;

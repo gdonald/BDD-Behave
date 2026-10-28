@@ -726,7 +726,7 @@ our class Runner {
     my $pattern-path = $pattern.substr(0, $idx);
     my $pattern-line = $pattern.substr($idx + 1);
 
-    return False unless $node.line.Str eq $pattern-line;
+    return False unless $node.matches-line($pattern-line);
     self!path-matches($node.file.Str, $pattern-path);
   }
 
@@ -818,7 +818,7 @@ our class Runner {
       return;
     }
 
-    @!execution-order.push("{$example.file}:{$example.line}") if $first-attempt;
+    @!execution-order.push("{$example.file}:{$example.line-key}") if $first-attempt;
 
     my ($auto-agg-on, $auto-agg-label) = self.resolve-auto-aggregation($example);
     my $initial-failure-count = Failures.list.elems;
@@ -884,7 +884,7 @@ our class Runner {
         description  => self.full-description($example),
         file         => $example.file,
         line         => $example.line,
-        example-line => $example.line,
+        example-line => $example.line-key,
         exception    => $error,
         message      => $error.message,
       );
@@ -920,7 +920,7 @@ our class Runner {
         description  => self.full-description($example),
         file         => $example.file,
         line         => ($primary-failure.defined ?? $primary-failure.line !! $example.line),
-        example-line => $example.line,
+        example-line => $example.line-key,
         expectations => @expectation-failures.map(-> $fl {
           my %rec = (
             file     => $fl.file,
