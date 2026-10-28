@@ -1,7 +1,7 @@
 {
   "name": "BDD::Behave",
   "description": "Behavior driven development framework",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "api": "1",
   "perl": "6.d",
   "authors": ["Greg Donald"],
@@ -15,6 +15,7 @@
     "BDD::Behave::Benchmark::Baseline": "lib/BDD/Behave/Benchmark/Baseline.rakumod",
     "BDD::Behave::Benchmark::Format": "lib/BDD/Behave/Benchmark/Format.rakumod",
     "BDD::Behave::Bisect": "lib/BDD/Behave/Bisect.rakumod",
+    "BDD::Behave::Callsite": "lib/BDD/Behave/Callsite.rakumod",
     "BDD::Behave::Colors": "lib/BDD/Behave/Colors.rakumod",
     "BDD::Behave::Configuration": "lib/BDD/Behave/Configuration.rakumod",
     "BDD::Behave::Coverage": "lib/BDD/Behave/Coverage.rakumod",

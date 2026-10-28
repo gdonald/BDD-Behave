@@ -1734,6 +1734,7 @@ for @files -> $file {
   } else {
     $result = $runner.run($suite);
   }
+  $formatter.suite-end($suite) unless $bisect-data;
   $suites-run++;
 
   @all-execution-order.append: $runner.execution-order;

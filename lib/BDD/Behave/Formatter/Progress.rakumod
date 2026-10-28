@@ -11,6 +11,8 @@ has Int  $!shown      = 0;
 
 method name(--> Str) { 'progress' }
 
+method needs-whole-files(--> Bool) { False }
+
 method set-total(Int $total) {
   $!total = $total;
 }

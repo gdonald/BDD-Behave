@@ -240,3 +240,27 @@ class JsonLineParser is export {
     @events.List;
   }
 }
+
+# Workers run at the same time but report to one formatter, which tracks open
+# groups as a stack. Each worker's events are held until its file ends and then
+# handed over together, so no other worker's events land inside its groups.
+class WorkerEventBuffer is export {
+  has Bool $.pass-through = False;
+  has %!held{Any};
+
+  method hold($worker, %event --> List) {
+    return (%event,) if $!pass-through;
+
+    (%!held{$worker} //= []).push: %event;
+
+    (%event<type> // '') eq 'suite-end' ?? self.release($worker) !! ();
+  }
+
+  method release($worker --> List) {
+    (%!held{$worker}:delete // []).List;
+  }
+
+  method release-all(--> List) {
+    %!held.keys.sort.map({ $_ => self.release($_) }).eager.List;
+  }
+}

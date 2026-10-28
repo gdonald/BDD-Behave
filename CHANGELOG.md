@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.9.6 - 2026-10-28
+
+### Added
+
+- `needs-whole-files` on the `BDD::Behave::Formatter` role. Under `--parallel`
+  the parent hands a formatter each worker's events one whole file at a time,
+  unless the formatter returns `False`, as `progress` does
+
+### Fixed
+
+- Expectation, `is-expected`, `aggregate-failures`, and mock call locations
+  pointed at behave's own precompiled source (`site#sources/<sha1>`) when
+  BDD::Behave was installed rather than loaded from `lib/`. They now point at
+  the spec file and line
+- Under `--parallel`, the `tap`, `json`, `junit`, `html`, `documentation`, and
+  `tree` formatters could report an example under a group from another file
+  that a different worker was running at the same time
+
 ## v0.9.5 — 2026-08-28
 
 ### Added

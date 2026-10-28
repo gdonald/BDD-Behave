@@ -1,5 +1,6 @@
 unit module BDD::Behave::DSL;
 
+use BDD::Behave::Callsite;
 use BDD::Behave::Expectation;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;
@@ -499,21 +500,8 @@ our multi sub pending(Str $reason, &block, *%meta) is export {
   Nil;
 }
 
-# Every `expect` lands here, and each `callframe` call re-walks the chain from
-# the top, so the frame the loop stops on is the one returned.
-sub caller-outside-behave() {
-  my $depth = 1;
-  my $frame = callframe($depth);
-
-  while $frame.defined && ($frame.file // '').contains('BDD/Behave') {
-    $frame = callframe(++$depth);
-  }
-
-  $frame;
-}
-
 our multi sub pending(Str $reason, *%meta) is export {
-  my $frame = caller-outside-behave();
+  my $frame = user-frame();
   my $file = ($frame.defined ?? $frame.file !! 'unknown').IO;
   my $line = ($frame.defined ?? $frame.line.Int !! 0);
   my &block = sub { Nil };
@@ -605,18 +593,9 @@ our sub capture-failures(&block --> List) is export {
 }
 
 sub user-callsite(--> List) {
-  my $depth = 1;
-  loop {
-    my $frame = callframe($depth);
-    last unless $frame.defined;
-    my $file = ($frame.file // '').Str;
-    if !$file.contains('lib/BDD/Behave') {
-      return ($file, $frame.line.Int).List;
-    }
-    $depth++;
-    last if $depth > 30;
-  }
-  ('', 0).List;
+  my $frame = user-frame();
+
+  $frame.defined ?? ($frame.file.Str, $frame.line.Int).List !! ('', 0).List;
 }
 
 our proto sub aggregate-failures(|) is export {*}
@@ -634,8 +613,9 @@ our multi sub aggregate-failures(Str:D $label, &block) is export {
 }
 
 our sub is-expected() is export {
-  my $caller-file = callframe(1).file.Str;
-  my $caller-line = callframe(1).line.Int;
+  my $frame = user-frame();
+  my $caller-file = ($frame.defined ?? $frame.file.Str !! 'unknown');
+  my $caller-line = ($frame.defined ?? $frame.line.Int !! 0);
 
   my $rt;
   try { $rt = $*LET-RUNTIME if $*LET-RUNTIME.defined }
@@ -661,10 +641,7 @@ our sub is-expected() is export {
 }
 
 our sub expect(|c) is export {
-  # Walk up callframes to the first one outside the BDD::Behave codebase so
-  # the failure location points at the user's expect(...) call site, not at
-  # the internal proxy in lib/BDD/Behave.rakumod that re-dispatches to here.
-  my $frame = caller-outside-behave();
+  my $frame = user-frame();
   my $caller-file = ($frame.defined ?? $frame.file.Str !! 'unknown');
   my $caller-line = ($frame.defined ?? $frame.line.Int !! 0);
 

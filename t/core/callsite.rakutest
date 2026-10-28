@@ -1,0 +1,54 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Callsite;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecRegistry;
+
+ok is-behave-source('/home/dev/BDD-Behave/lib/BDD/Behave/DSL.rakumod'),
+  'a module under lib/BDD/Behave in a checkout is behave source';
+ok is-behave-source('lib/BDD/Behave.rakumod'),
+  'the top-level module in a checkout is behave source';
+ok is-behave-source('site#sources/FCA2F770896E4A5DC9E4158B571C80EB2BCC8ACE (BDD::Behave::DSL)'),
+  'an installed BDD::Behave submodule is behave source';
+ok is-behave-source('site#sources/0A1B2C3D4E5F60718293A4B5C6D7E8F901234567 (BDD::Behave)'),
+  'the installed top-level BDD::Behave module is behave source';
+nok is-behave-source('site#sources/0A1B2C3D4E5F60718293A4B5C6D7E8F901234567 (MVC::Keayl::CLI)'),
+  'an installed module from another distribution is not behave source';
+nok is-behave-source('site#sources/0A1B2C3D4E5F60718293A4B5C6D7E8F901234567 (BDD::Behaviour)'),
+  'an installed module whose name only starts with BDD::Behave is not behave source';
+nok is-behave-source('/home/dev/crm/specs/users-spec.raku'),
+  'a spec file is not behave source';
+nok is-behave-source(Str), 'an undefined file is not behave source';
+
+is user-frame().file.IO.basename, 'callsite.rakutest',
+  'user-frame returns the frame that called into behave';
+
+# is-expected records the line of its own call
+{
+  BDD::Behave::SpecRegistry::registry().clear;
+
+  my $failure;
+  my $failure-line;
+  describe 'is-expected location', {
+    subject({ 1 });
+    it 'fails', {
+      $failure-line = $?LINE + 1;
+      $failure = capture-failures({ is-expected.to.be(2) }).head;
+    }
+  }
+
+  my $sink = open '/dev/null', :w;
+  {
+    my $*OUT = $sink;
+    BDD::Behave::Runner::Runner.new.run(BDD::Behave::SpecRegistry::registry().suites[0]);
+  }
+  $sink.close;
+
+  is $failure.file.IO.basename, 'callsite.rakutest', 'is-expected failure records the calling file';
+  is $failure.line, $failure-line, 'is-expected failure records the line of the call';
+}
+
+done-testing;

@@ -1,0 +1,71 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::Formatter::Progress;
+use BDD::Behave::Formatter::TAP;
+
+sub event-types(@events --> List) {
+  @events.map(*<type>).List;
+}
+
+{
+  my $buffer = WorkerEventBuffer.new;
+
+  is $buffer.hold(0, %( :type<group-start> )).elems, 0,
+    'an event is held until its worker file ends';
+}
+
+{
+  my $buffer = WorkerEventBuffer.new;
+  $buffer.hold(0, %( :type<suite-start> ));
+  $buffer.hold(1, %( :type<example-pass> ));
+  $buffer.hold(0, %( :type<group-start> ));
+
+  is-deeply event-types($buffer.hold(0, %( :type<suite-end> ))), <suite-start group-start suite-end>,
+    'suite-end releases that worker events in arrival order';
+  is-deeply event-types($buffer.release(1)), ('example-pass',),
+    'events of other workers stay held';
+}
+
+{
+  my $buffer = WorkerEventBuffer.new;
+  $buffer.hold(2, %( :type<group-start> ));
+  $buffer.hold(2, %( :type<example-pass> ));
+
+  is-deeply event-types($buffer.release(2)), <group-start example-pass>,
+    'release returns events of a file that never ended';
+  is $buffer.release(2).elems, 0, 'a second release returns nothing';
+}
+
+{
+  my $buffer = WorkerEventBuffer.new;
+  $buffer.hold(1, %( :type<example-fail> ));
+  $buffer.hold(0, %( :type<example-pass> ));
+
+  is-deeply $buffer.release-all.map({ .key => event-types(.value) }).List,
+    (0 => ('example-pass',), 1 => ('example-fail',)),
+    'release-all pairs each worker index with its events, in worker order';
+  is $buffer.release-all.elems, 0, 'release-all leaves nothing held';
+}
+
+{
+  my $buffer = WorkerEventBuffer.new;
+
+  is $buffer.hold(0, %( :raw<text> )).elems, 0, 'an event with no type is held';
+}
+
+{
+  my $buffer = WorkerEventBuffer.new(:pass-through);
+
+  is-deeply event-types($buffer.hold(0, %( :type<example-pass> ))), ('example-pass',),
+    'a pass-through buffer returns each event as soon as it arrives';
+  is $buffer.release-all.elems, 0, 'a pass-through buffer has nothing left to release';
+}
+
+ok BDD::Behave::Formatter::TAP.new.needs-whole-files, 'the tap formatter gets whole files';
+nok BDD::Behave::Formatter::Progress.new.needs-whole-files,
+  'the progress formatter gets events as they arrive';
+
+done-testing;

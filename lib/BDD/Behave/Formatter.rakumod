@@ -2,6 +2,8 @@ unit role BDD::Behave::Formatter;
 
 method name(--> Str) { 'formatter' }
 
+method needs-whole-files(--> Bool) { True }
+
 method suite-loading(Str :$file)                               { }
 method suite-start($suite, Bool :$multi-file = False)          { }
 method suite-end($suite)                                       { }

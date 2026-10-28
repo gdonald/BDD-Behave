@@ -1,5 +1,7 @@
 unit module BDD::Behave::Mock::ArgMatcher;
 
+use BDD::Behave::Callsite;
+
 our sub user-callframe() is export {
   my $i = 1;
   loop {
@@ -11,7 +13,7 @@ our sub user-callframe() is export {
             || $file.contains('Metamodel')
             || $file.contains('NQP::')
             || $file.contains('/nqp')
-            || $file.contains('BDD/Behave/Mock');
+            || is-behave-source($file);
     return $cf;
   }
   Nil;

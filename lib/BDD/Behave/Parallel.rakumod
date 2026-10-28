@@ -582,6 +582,7 @@ sub run-parallel-isolated-impl(
   }
 
   my Lock $event-lock .= new;
+  my $event-buffer = WorkerEventBuffer.new(:pass-through(!$opts.formatter.needs-whole-files));
 
   # Build one job per spec file (manifest + argv + env), then feed them through
   # a closed Channel to a fixed pool of exactly worker-count threads. Each
@@ -639,7 +640,9 @@ sub run-parallel-isolated-impl(
         $proc.stdout.tap(-> $chunk {
             for $parser.feed($chunk) -> $event {
               $event-lock.protect: {
-                handle-event($opts.formatter, $result, $idx, $event, @suites);
+                for $event-buffer.hold($idx, $event) -> $ready {
+                  handle-event($opts.formatter, $result, $idx, $ready, @suites);
+                }
               }
             }
         });
@@ -649,9 +652,12 @@ sub run-parallel-isolated-impl(
 
         my $proc-result = await $proc.start(:ENV(%env));
 
-        for $parser.flush -> $event {
-          $event-lock.protect: {
-            handle-event($opts.formatter, $result, $idx, $event, @suites);
+        $event-lock.protect: {
+          my @ready = $parser.flush.map({ |$event-buffer.hold($idx, $_) });
+          @ready.append: $event-buffer.release($idx);
+
+          for @ready -> $ready {
+            handle-event($opts.formatter, $result, $idx, $ready, @suites);
           }
         }
 
@@ -704,7 +710,14 @@ sub run-parallel-queue-impl(
 
     my Lock $dispatch-lock .= new;
     my Lock $event-lock    .= new;
+    my $event-buffer = WorkerEventBuffer.new(:pass-through(!$opts.formatter.needs-whole-files));
     my $pool;
+
+    my &dispatch-events = sub (Int $wi, @events --> Nil) {
+      for @events -> $event {
+        handle-event($opts.formatter, $result, $wi, $event, @suites);
+      }
+    }
 
     my &dispatch-or-shutdown = sub (Int $wi --> Nil) {
       my $next;
@@ -732,11 +745,14 @@ sub run-parallel-queue-impl(
       # all per-event work behind a single lock.
       :on-event(sub ($wi, $event) {
           $event-lock.protect: {
-            handle-event($opts.formatter, $result, $wi, $event, @suites);
+            dispatch-events($wi, $event-buffer.hold($wi, $event));
           }
       }),
       :on-ready(&dispatch-or-shutdown),
       :on-done(sub ($wi, $id) {
+          $event-lock.protect: {
+            dispatch-events($wi, $event-buffer.release($wi));
+          }
           $dispatch-lock.protect: { $scheduler.mark-complete }
           dispatch-or-shutdown($wi);
       }),
@@ -744,6 +760,9 @@ sub run-parallel-queue-impl(
 
     $pool.launch;
     $pool.wait-all;
+    for $event-buffer.release-all -> $held {
+      dispatch-events($held.key, $held.value);
+    }
     for $pool.workers -> $w {
       if $w.exit-code > 1 {
         $result.exit-code = 1;
@@ -881,6 +900,7 @@ sub run-parallel(
 
   if @parallel-manifests.grep({ .elems }).elems {
     my Lock $event-lock .= new;
+    my $event-buffer = WorkerEventBuffer.new(:pass-through(!$opts.formatter.needs-whole-files));
     my $pool = WorkerPool.new(
       :worker-count($opts.worker-count),
       :worker-argv($opts.worker-argv),
@@ -894,7 +914,9 @@ sub run-parallel(
       # writes to the parent formatter. Serialize both.
       :on-event(sub ($wi, $event) {
           $event-lock.protect: {
-            handle-event($opts.formatter, $result, $wi, $event, @suites);
+            for $event-buffer.hold($wi, $event) -> $ready {
+              handle-event($opts.formatter, $result, $wi, $ready, @suites);
+            }
           }
       }),
       :on-shard-retry(sub ($wi, $attempt, $exit-code) {
@@ -905,6 +927,11 @@ sub run-parallel(
     );
     $pool.launch(@parallel-manifests);
     $pool.wait-all;
+    for $event-buffer.release-all -> $held {
+      for $held.value.list -> $ready {
+        handle-event($opts.formatter, $result, $held.key, $ready, @suites);
+      }
+    }
     for $pool.workers -> $w {
       if $w.attempt > 1 {
         my $outcome = $w.exit-code > 1 ?? 'crashed' !! 'recovered';
