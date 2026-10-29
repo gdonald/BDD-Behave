@@ -67,6 +67,45 @@ describe 'a discovery subprocess that never finishes', {
   }
 }
 
+describe 'a discovery subprocess that stops while loading a spec file', {
+  let(:errors, {
+    discovery-with(
+      ('raku', '-e', 'note "behave-loading: /abs/spec.raku"; $*ERR.flush; sleep 30'),
+      :timeout(1),
+    )[1];
+  });
+
+  it 'names the spec file it was loading', {
+    expect(errors()[0]<message>).to.include('while loading /abs/spec.raku');
+  }
+}
+
+describe 'a discovery subprocess that exits with an error after loading a spec file', {
+  let(:errors, {
+    discovery-with(('raku', '-e', 'note "behave-loading: /abs/spec.raku"; note "load failed"; exit 2'))[1];
+  });
+
+  it 'leaves the load progress lines out of the stderr it passes on', {
+    expect(errors()[0]<message>).not.to.include('behave-loading');
+  }
+}
+
+describe 'a discovery subprocess given a progress callable', {
+  let(:printed, {
+    my @lines;
+    discovery-with(
+      ('raku', '-e', 'note "behave-loading: /abs/spec.raku"; say "\{\}"'),
+      :progress(-> $text, :$partial { @lines.push: $text }),
+      :clock({ 0 }),
+    );
+    @lines.join;
+  });
+
+  it 'prints a numbered and timed line for each spec file as it loads', {
+    expect(printed()).to.eq('  [1/1] /abs/spec.raku (0.0s)');
+  }
+}
+
 describe 'discovering no spec files at all', {
   it 'reports nothing and asks nothing of a subprocess', {
     expect(discover-suites-subprocess(())[1].elems).to.be(0);

@@ -6,12 +6,28 @@ use BDD::Behave::Parallel;
 # `behave --compile-only`, so the crash-and-rebuild path can be exercised
 # without a genuinely corrupt precomp cache.
 
+class ProgressCapture is export {
+  has @.lines;
+  has Str $!partial-line = q{};
+
+  method record(Str $text, Bool :$partial) {
+    $!partial-line ~= $text;
+    return if $partial;
+
+    @!lines.push: $!partial-line;
+    $!partial-line = q{};
+  }
+}
+
 class StubRun is export {
   has IO::Path $.sandbox;
   has IO::Path $.state-file;
   has IO::Path $.cache-prefix;
   has IO::Path $.no-cache-prefix;
   has          @.spec-files;
+  has          $.stall is rw;
+  has          $.result is rw;
+  has ProgressCapture $.progress = ProgressCapture.new;
 
   method invocations() {
     $!state-file.e ?? $!state-file.slurp.lines !! ();
@@ -37,6 +53,8 @@ class StubRun is export {
 sub make-stub-run(
   :$crash             = False,
   :$hang              = False,
+  :$hang-every-union  = False,
+  :&parallel-runner,
   :$report-prefixes   = True,
   :$spec-file-count   = 2,
   :$timeout,
@@ -75,6 +93,7 @@ sub make-stub-run(
   %env<BEHAVE_STUB_STATE> = $state-file.absolute;
   %env<BEHAVE_STUB_CRASH_FIRST> = '1' if $crash;
   %env<BEHAVE_STUB_HANG_FIRST>  = '1' if $hang;
+  %env<BEHAVE_STUB_HANG_UNION>  = '1' if $hang-every-union;
 
   if $report-prefixes {
     %env<BEHAVE_STUB_PREFIX>          = $cache-prefix.absolute;
@@ -90,10 +109,24 @@ sub make-stub-run(
       !! (%*ENV<BEHAVE_DISCOVERY_TIMEOUT>:delete);
   }
 
-  precompile-specs-serially(
+  my &progress = -> $text, Bool :$partial { $run.progress.record($text, :$partial) };
+
+  if &parallel-runner.defined {
+    $run.result = parallel-runner(
+      :spec-files($run.spec-files.map(*.absolute)),
+      :discovery-argv(('raku', $stub.absolute)),
+      :base-env(%env),
+      :&progress,
+    );
+    return $run;
+  }
+
+  $run.stall = precompile-specs-serially(
     $run.spec-files,
     :discovery-argv(('raku', $stub.absolute)),
     :base-env(%env),
+    :&progress,
+    :clock({ 0 }),
   );
 
   $run;

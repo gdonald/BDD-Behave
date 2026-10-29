@@ -5,6 +5,7 @@ use BDD::Behave::Parallel::WorkerPool;
 use BDD::Behave::Parallel::Queue;
 use BDD::Behave::Parallel::Manifest;
 use BDD::Behave::Parallel::EventStream;
+use BDD::Behave::LoadProgress;
 use BDD::Behave::SpecRegistry;
 use BDD::Behave::SpecLoader;
 use BDD::Behave::Runner;
@@ -45,6 +46,7 @@ class ParallelRunOptions is export {
   has Int      $.parallel-retry = 0;
   has IO::Path $.coverage-log-dir = IO::Path;
   has Bool     $.coverage-counts = False;
+  has          &.progress = &note-progress;
 }
 
 sub discover-suites(@spec-files --> List) is export {
@@ -125,13 +127,18 @@ our sub should-precompile(
 # those dirs' .precomp caches are cleared and the pass runs once more to
 # rebuild them consistently. Nonzero exits are ignored: discovery reports
 # real load errors with their messages.
+#
+# Returns Nil when the cache ends up built, or a load error naming the file the
+# final pass was loading when it ran out of time, so the caller can stop
+# before discovery waits out the same timeout on the same file.
 sub precompile-specs-serially(
   @spec-files,
   :@discovery-argv,
   :%base-env,
-  --> Nil
+  :&progress = &note-progress,
+  :&clock    = { now },
 ) is export {
-  return unless @spec-files.elems;
+  return Nil unless @spec-files.elems;
 
   my @base = (@discovery-argv.elems ?? @discovery-argv.list !! default-discovery-argv()).list;
 
@@ -143,45 +150,74 @@ sub precompile-specs-serially(
   %env<BEHAVE_WORKER_INDEX> //= '0';
   %env<BEHAVE_WORKER_COUNT> //= '1';
   %env<BEHAVE_COMPILE_REPORT> = $report.absolute;
+  %env<BEHAVE_LOAD_PROGRESS> = '1';
   %env<MVM_COVERAGE_LOG>:delete;
   %env<MVM_COVERAGE_CONTROL>:delete;
   %env<BEHAVE_COVERAGE_LOG>:delete;
 
   my $timeout-secs = (%*ENV<BEHAVE_DISCOVERY_TIMEOUT> // 300).Numeric;
 
-  sub run-pass(@files --> Bool) {
+  sub run-pass(@files, :$show-each-file --> Hash) {
     my @argv = |@base, '--no-config', '--compile-only', |@files.map(*.Str);
     my $proc = Proc::Async.new(|@argv);
+    my $loads = LoadProgress.new(
+      :total(@files.elems),
+      :output($show-each-file ?? &progress !! Callable),
+      :&clock,
+    );
     $proc.stdout.tap(-> $ { });
-    $proc.stderr.tap(-> $ { });
+    $proc.stderr.tap(-> $chunk { $loads.feed($chunk) });
 
-    my $died-by-signal = False;
+    my %outcome = :!died, :!timed-out, :signal(0);
     try {
       my $promise = $proc.start(:ENV(%env));
       await Promise.anyof($promise, Promise.in($timeout-secs));
       if $promise.status ~~ Kept {
-        $died-by-signal = $promise.result.signal != 0;
+        %outcome<signal> = $promise.result.signal;
+        %outcome<died>   = %outcome<signal> != 0;
       } else {
         $proc.kill(SIGKILL);
-        try await $promise;
-        $died-by-signal = True;
+        my $reaped = try await $promise;
+        %outcome<died>      = True;
+        %outcome<timed-out> = True;
       }
-      CATCH { default { $died-by-signal = True } }
+      CATCH { default { %outcome<died> = True } }
     }
-    $died-by-signal;
+    $loads.finish;
+
+    %outcome<file>  = $loads.loaded[*-1] // @files[0].Str;
+    %outcome<stall> = "precompile pass timed out after {$timeout-secs}s {$loads.stall-description}";
+    %outcome;
   }
 
-  return unless run-pass(@spec-files);
+  sub timeout-error(%outcome) {
+    %outcome<timed-out> ?? %( :file(%outcome<file>), :message(%outcome<stall>) ) !! Nil;
+  }
+
+  progress("Precompiling {spec-file-count(@spec-files.elems)}");
+  my %first = run-pass(@spec-files, :show-each-file);
+  return Nil unless %first<died>;
+
+  progress(%first<timed-out>
+    ?? "The {%first<stall>}"
+    !! "The precompile pass died with signal {%first<signal>}");
 
   # The union pass crashed on an inconsistent cache. Loading one file per
   # process still works in that state, so run each file alone purely to learn
   # the project lib dirs the specs pull in (each process appends its repo
   # chain to the report), then clear those dirs' caches and rebuild the whole
   # graph in one pass.
-  run-pass(($_,)) for @spec-files;
+  progress("Loading each spec file alone to find the precompilation caches to clear");
+  for @spec-files.kv -> $index, $file {
+    progress("  [{$index + 1}/{@spec-files.elems}] $file", :partial);
+
+    my $started = clock();
+    run-pass(($file,));
+    progress(elapsed-text(clock() - $started));
+  }
 
   my @prefixes = $report.e ?? $report.slurp.lines.unique.grep(*.chars) !! ();
-  return unless @prefixes.elems;
+  return timeout-error(%first) unless @prefixes.elems;
 
   for @prefixes -> $prefix {
     my $precomp = $prefix.IO.add('.precomp');
@@ -189,7 +225,12 @@ sub precompile-specs-serially(
     remove-tree($precomp);
   }
 
-  run-pass(@spec-files);
+  progress("Rebuilding the precompilation cache for {spec-file-count(@spec-files.elems)}");
+  timeout-error(run-pass(@spec-files, :show-each-file));
+}
+
+sub spec-file-count(Int $count --> Str) {
+  $count == 1 ?? '1 spec file' !! "$count spec files";
 }
 
 # Recursive directory removal for the .precomp caches cleared above.
@@ -205,6 +246,8 @@ sub discover-suites-subprocess(
   :@discovery-argv,
   :%base-env,
   :$timeout,
+  :&progress,
+  :&clock = { now },
   --> List
 ) is export {
   my @suites;
@@ -225,12 +268,13 @@ sub discover-suites-subprocess(
   %env<MVM_COVERAGE_LOG>:delete;
   %env<MVM_COVERAGE_CONTROL>:delete;
   %env<BEHAVE_COVERAGE_LOG>:delete;
+  %env<BEHAVE_LOAD_PROGRESS> = '1';
 
   my $proc = Proc::Async.new(|@argv);
   my @stdout-chunks;
-  my @stderr-chunks;
+  my $loads = LoadProgress.new(:total(@spec-files.elems), :output(&progress), :&clock);
   $proc.stdout.tap(-> $chunk { @stdout-chunks.push($chunk) });
-  $proc.stderr.tap(-> $chunk { @stderr-chunks.push($chunk) });
+  $proc.stderr.tap(-> $chunk { $loads.feed($chunk) });
 
   my $timeout-secs = $timeout.defined
     ?? $timeout.Numeric
@@ -244,7 +288,8 @@ sub discover-suites-subprocess(
     unless $promise.status ~~ Kept {
       $proc.kill(SIGKILL);
       my $reaped = try await $promise;
-      my $msg = "discovery subprocess timed out after {$timeout-secs}s "
+      $loads.finish;
+      my $msg = "discovery subprocess timed out after {$timeout-secs}s {$loads.stall-description} "
               ~ "(a spec may hang while loading, e.g. a stale precompilation)";
       for @spec-files -> $f {
         @load-errors.push: %( file => $f.Str, :message($msg) );
@@ -264,7 +309,8 @@ sub discover-suites-subprocess(
   }
 
   my $stdout = @stdout-chunks.join;
-  my $stderr = @stderr-chunks.join;
+  $loads.finish;
+  my $stderr = $loads.other-text;
 
   if $result.signal || $result.exitcode > 1 {
     my $msg = $result.signal
@@ -839,15 +885,26 @@ sub run-parallel(
 ) is export {
   my $result = ParallelRunResult.new;
 
-  precompile-specs-serially(
-    $opts.spec-files,
-    :discovery-argv($opts.discovery-argv),
-    :base-env(%(|$opts.base-env)),
-  ) if should-precompile(
+  if should-precompile(
     :file-count($opts.spec-files.elems),
     :requested($opts.precompile-pass),
     :discovery-in-process($opts.discovery-in-process),
-  );
+  ) {
+    my $stall = precompile-specs-serially(
+      $opts.spec-files,
+      :discovery-argv($opts.discovery-argv),
+      :base-env(%(|$opts.base-env)),
+      :progress($opts.progress),
+    );
+
+    with $stall {
+      $result.load-errors.push: $stall;
+      return $result;
+    }
+  }
+
+  $opts.progress()("Discovering examples in {spec-file-count($opts.spec-files.elems)}")
+    unless $opts.discovery-in-process;
 
   my $disco = $opts.discovery-in-process
   ?? discover-suites($opts.spec-files)
@@ -855,6 +912,7 @@ sub run-parallel(
     $opts.spec-files,
     :discovery-argv($opts.discovery-argv),
     :base-env(%(|$opts.base-env)),
+    :progress($opts.progress),
   );
   my @suites      = $disco[0].list;
   my @load-errors = $disco[1].list;

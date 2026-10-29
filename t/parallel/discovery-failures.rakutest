@@ -4,7 +4,7 @@ use Test;
 
 use BDD::Behave::Parallel;
 
-plan 10;
+plan 13;
 
 # Discovery runs behave in a subprocess and reads a JSON document back. The
 # argv is a parameter, so each way that subprocess can let the parent down is
@@ -40,6 +40,35 @@ sub discovery-with(@argv, *%named --> List) {
   is @errors.elems, 1, 'a subprocess that never finishes reports one error';
   ok @errors[0]<message>.contains('timed out after 1s'), 'the wait is reported';
   ok @errors[0]<message>.contains('stale precompilation'), 'the usual cause is suggested';
+}
+
+{
+  my @errors = discovery-with(
+    ('raku', '-e', 'note "behave-loading: /abs/spec.raku"; $*ERR.flush; sleep 30'),
+    :timeout(1),
+  )[1];
+
+  ok @errors[0]<message>.contains('while loading /abs/spec.raku'),
+    'a subprocess that stops while loading names the spec file it was loading';
+}
+
+{
+  my @errors = discovery-with(('raku', '-e', 'note "behave-loading: /abs/spec.raku"; note "load failed"; exit 2'))[1];
+
+  nok @errors[0]<message>.contains('behave-loading'),
+    'load progress lines are left out of the stderr that is passed on';
+}
+
+{
+  my @printed;
+  discovery-with(
+    ('raku', '-e', 'note "behave-loading: /abs/spec.raku"; say "\{\}"'),
+    :progress(-> $text, :$partial { @printed.push: $text }),
+    :clock({ 0 }),
+  );
+
+  is @printed.join, '  [1/1] /abs/spec.raku (0.0s)',
+    'a progress callable gets a numbered and timed line for each spec file as it loads';
 }
 
 is discover-suites-subprocess(())[1].elems, 0,

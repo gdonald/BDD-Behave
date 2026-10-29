@@ -1,0 +1,32 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::LoadProgress;
+use BDD::Behave::SpecLoader;
+
+plan 2;
+
+my $empty-fixture = 't/fixtures/parallel/empty-fixture-spec.raku'.IO;
+
+my class CapturedStderr {
+  has @.lines;
+
+  method say($line) { @!lines.push: ~$line }
+  method flush() { }
+}
+
+sub stderr-while-loading(Bool :$progress --> List) {
+  my $*ERR = CapturedStderr.new;
+  temp %*ENV;
+  $progress ?? (%*ENV<BEHAVE_LOAD_PROGRESS> = '1') !! (%*ENV<BEHAVE_LOAD_PROGRESS>:delete);
+
+  load-spec-file($empty-fixture);
+  $*ERR.lines.List;
+}
+
+is-deeply stderr-while-loading(:progress), (LOAD-PROGRESS-MARKER ~ $empty-fixture,),
+  'loading a spec file writes a load progress line naming it when progress is asked for';
+is-deeply stderr-while-loading(:!progress), (),
+  'loading a spec file writes nothing when progress is not asked for';
+
+done-testing;

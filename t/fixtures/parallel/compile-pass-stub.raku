@@ -10,6 +10,17 @@ my $invocation = $state.IO.e ?? $state.IO.slurp.lines.elems !! 0;
 
 $state.IO.spurt(@*ARGS.join(' ') ~ "\n", :append);
 
+if %*ENV<BEHAVE_LOAD_PROGRESS> {
+  for @*ARGS.grep(*.ends-with('-spec.raku')) -> $file {
+    $*ERR.say("behave-loading: $file");
+    $*ERR.flush;
+  }
+}
+
+if %*ENV<BEHAVE_STUB_HANG_UNION> && @*ARGS.grep(*.ends-with('-spec.raku')).elems > 1 {
+  sleep 30;
+}
+
 if $invocation == 0 {
   if %*ENV<BEHAVE_STUB_CRASH_FIRST> {
     run 'kill', '-SEGV', $*PID.Str;

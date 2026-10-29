@@ -39,6 +39,7 @@
     "BDD::Behave::Formatter::TAP": "lib/BDD/Behave/Formatter/TAP.rakumod",
     "BDD::Behave::Formatter::Tree": "lib/BDD/Behave/Formatter/Tree.rakumod",
     "BDD::Behave::LetRuntime": "lib/BDD/Behave/LetRuntime.rakumod",
+    "BDD::Behave::LoadProgress": "lib/BDD/Behave/LoadProgress.rakumod",
     "BDD::Behave::Matcher": "lib/BDD/Behave/Matcher.rakumod",
     "BDD::Behave::Matcher::Async": "lib/BDD/Behave/Matcher/Async.rakumod",
     "BDD::Behave::Matcher::Boolean": "lib/BDD/Behave/Matcher/Boolean.rakumod",

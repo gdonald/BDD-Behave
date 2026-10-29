@@ -1,9 +1,25 @@
 use v6.d;
 use lib 'lib', 'specs/lib';
 use Test;
+use BDD::Behave::Formatter;
+use BDD::Behave::Parallel;
 use Behave::Test::CompilePassStub;
 
-plan 8;
+my class QuietFormatter does BDD::Behave::Formatter { }
+
+sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress) {
+  run-parallel(ParallelRunOptions.new(
+    :worker-count(1),
+    :@spec-files,
+    :worker-argv(@discovery-argv),
+    :@discovery-argv,
+    :%base-env,
+    :formatter(QuietFormatter.new),
+    :&progress,
+  ));
+}
+
+plan 19;
 
 {
   my $run = make-stub-run();
@@ -11,6 +27,9 @@ plan 8;
 
   is $run.pass-count, 1, 'a clean pass builds the whole graph in one subprocess';
   ok $run.precomp-exists, 'a clean pass leaves the project precomp cache alone';
+  is $run.progress.lines[0], 'Precompiling 2 spec files', 'the pass announces its file count';
+  is $run.progress.lines[2], "  [2/2] {$run.spec-files[1]} (0.0s)", 'the pass numbers and times each spec file as it loads';
+  nok $run.stall.defined, 'a clean pass reports no load error';
 }
 
 {
@@ -24,6 +43,10 @@ plan 8;
   my $rebuild = $run.invocations[*-1];
   is $run.spec-files.grep({ $rebuild.contains(.absolute) }).elems, 2,
     'the rebuild pass covers every spec file';
+
+  my $heading = $run.progress.lines.first(:k, 'Loading each spec file alone to find the precompilation caches to clear');
+  is $run.progress.lines[$heading + 1], "  [1/2] {$run.spec-files[0]} (0.0s)",
+    'each spec file loaded alone is timed';
 }
 
 {
@@ -31,6 +54,37 @@ plan 8;
   LEAVE $run.cleanup;
 
   is $run.pass-count, 4, 'a timed-out pass recovers the same way a signal death does';
+  ok $run.progress.lines.grep(
+    "The precompile pass timed out after 1s while loading {$run.spec-files[1]} (loaded after {$run.spec-files[0]})"
+  ), 'a timed-out pass names the spec file it was loading and the one before it';
+  nok $run.stall.defined, 'a finished rebuild pass reports no load error';
+}
+
+{
+  my $run = make-stub-run(:hang-every-union, :timeout(1));
+  LEAVE $run.cleanup;
+
+  is $run.stall<file>, $run.spec-files[1].Str,
+    'a timed-out rebuild pass reports a load error for the spec file it was loading';
+  is $run.stall<message>,
+    "precompile pass timed out after 1s while loading {$run.spec-files[1]} (loaded after {$run.spec-files[0]})",
+    'the load error says how long the rebuild pass waited and what it loaded before';
+}
+
+{
+  my $run = make-stub-run(:hang-every-union, :parallel-runner(&run-parallel-over), :timeout(1));
+  LEAVE $run.cleanup;
+
+  is-deeply $run.result.load-errors.map(*<file>).List, ($run.spec-files[1].absolute,),
+    'a parallel run stops before discovery with one load error for the spec file the rebuild pass was loading';
+}
+
+{
+  my $run = make-stub-run(:parallel-runner(&run-parallel-over));
+  LEAVE $run.cleanup;
+
+  ok $run.progress.lines.grep('Discovering examples in 2 spec files'),
+    'a parallel run announces discovery after the precompile pass';
 }
 
 {
@@ -39,6 +93,13 @@ plan 8;
 
   is $run.pass-count, 3,
     'a dead pass that reported no project lib dirs stops after the per-file passes';
+}
+
+{
+  my $run = make-stub-run(:spec-file-count(1));
+  LEAVE $run.cleanup;
+
+  is $run.progress.lines[0], 'Precompiling 1 spec file', 'one spec file is announced in the singular';
 }
 
 {
