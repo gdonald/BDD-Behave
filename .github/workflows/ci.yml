@@ -1,12 +1,15 @@
 name: CI
 
+# Runs after the home lab's Jenkins build passes and reports the
+# continuous-integration/jenkins/branch commit status. A status event runs
+# this file from the default branch, so each job checks out the commit the
+# status is for.
 on:
-  push:
-  pull_request:
-  workflow_dispatch:
+  status
 
 jobs:
   test:
+    if: github.event.context == 'continuous-integration/jenkins/branch' && github.event.state == 'success'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -15,6 +18,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.sha }}
       - uses: Raku/setup-raku@v1
         with:
           raku-version: 'latest'
@@ -43,7 +48,7 @@ jobs:
 
   coverage:
     needs: test
-    if: github.ref == 'refs/heads/main'
+    if: github.event.context == 'continuous-integration/jenkins/branch' && github.event.state == 'success' && contains(github.event.branches.*.name, 'main')
     runs-on: ubuntu-latest
     permissions:
       pages: write
