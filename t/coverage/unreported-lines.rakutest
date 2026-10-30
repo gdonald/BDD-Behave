@@ -1,0 +1,55 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::Coverage;
+
+plan 10;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $fixture = $root.add('t/fixtures/coverage/UnreportedLines.rakumod');
+my $spec    = $root.add('t/fixtures/coverage/unreported-lines-fixture-spec.raku');
+
+sub strip-ansi(Str $text --> Str) {
+  $text.subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
+}
+
+sub run-behave-with-coverage(--> Hash) {
+  my %env = |%*ENV;
+  %env<BEHAVE_DISABLE_CONFIG> = '1';
+  %env{$_}:delete for %env.keys.grep(*.starts-with('MVM_COVERAGE'));
+  %env<BEHAVE_COVERAGE_LOG>:delete;
+
+  my $proc = run 'raku', "-I{$root.add('lib').absolute}", $root.add('bin/behave').absolute,
+    '--coverage', '--coverage-format=text', '--coverage-minimum=100',
+    "--coverage-include={$fixture.absolute}", $spec.absolute,
+    :out, :err, :env(%env);
+
+  my $out = $proc.out.slurp(:close);
+  $proc.err.slurp(:close);
+
+  %( :exit($proc.exitcode), :out(strip-ansi($out)) );
+}
+
+{
+  my $executable = BDD::Behave::Coverage::identify-executable-lines($fixture);
+
+  nok $executable{4}, 'a CATCH opener alone on its line is not executable';
+  ok  $executable{5}, 'the default block inside the CATCH is executable';
+  nok $executable{13}, 'the first pair of a hash literal passed as an argument is not executable';
+  ok  $executable{12}, 'the line that opens the hash literal is executable';
+}
+
+ok  BDD::Behave::Coverage::is-pair-line('tenant-id => $tenant.id,'), 'a key followed by a fat arrow is a pair line';
+nok BDD::Behave::Coverage::is-pair-line('my %h = a => 1;'), 'an assignment is not a pair line';
+
+ok  BDD::Behave::Coverage::is-declarative-line('CONTROL {'), 'a CONTROL opener alone on its line is declarative';
+nok BDD::Behave::Coverage::is-declarative-line('CATCH { default { 1 } }'), 'a CATCH with its body on the same line is not declarative';
+
+{
+  my %coverage-run = run-behave-with-coverage();
+
+  ok %coverage-run<out>.contains('(100.0%)'), 'a coverage run over a file whose code all runs reports 100%';
+  is %coverage-run<exit>, 0, 'a coverage run over a file whose code all runs passes a 100% minimum';
+}
+
+done-testing;

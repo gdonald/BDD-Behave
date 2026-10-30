@@ -240,6 +240,7 @@ our sub identify-executable-lines(IO::Path $file --> SetHash) {
     if is-closing-continuation($trimmed)
     || is-bare-value-line($trimmed)
     || is-declarative-line($trimmed)
+    || is-pair-line($trimmed)
     || is-multiline-routine-header($trimmed)
     || (($idx < @continuations.elems) && @continuations[$idx])
     || !$prev-ended-cleanly {
@@ -347,6 +348,10 @@ our sub is-bare-value-line(Str $trimmed --> Bool) {
   False;
 }
 
+our sub is-pair-line(Str $trimmed --> Bool) {
+  so $trimmed ~~ / ^ <[\w-]>+ \s* '=>' /;
+}
+
 our sub is-multiline-routine-header(Str $trimmed --> Bool) {
   # `multi method foo(...` style line whose signature continues to the
   # next line (no `{` on this line). Marking as non-executable avoids
@@ -371,6 +376,7 @@ our sub is-declarative-line(Str $trimmed --> Bool) {
   return True if $trimmed.starts-with('constant ');
   return True if $trimmed.starts-with('subset ');
   return True if $trimmed.starts-with('enum ');
+  return True if $trimmed ~~ / ^ [ 'CATCH' | 'CONTROL' ] \s* '{' $ /;
 
   # `class Foo`, `role Foo`, `grammar Foo`, optionally with `my` or `our`,
   # and any trailing trait / signature.
