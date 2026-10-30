@@ -17,11 +17,11 @@ sub fresh() { Registry.new }
   $store.register('a database', &database-body);
 
   ok $store.exists('a database'), 'a registered name is reported as registered';
-  is $store.lookup('a database'), &database-body, 'a registered name looks its block up';
+  cmp-ok $store.lookup('a database'), q[===], &database-body, 'a registered name looks its block up';
   is $store.names.join(','), 'a database', 'a registered name is listed';
 }
 
-is fresh().register('a database', &database-body), &database-body,
+cmp-ok fresh().register('a database', &database-body), q[===], &database-body,
   'register hands back the block it was given';
 
 {

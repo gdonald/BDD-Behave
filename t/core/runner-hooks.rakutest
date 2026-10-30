@@ -79,7 +79,7 @@ sub passing-example(Str $description = 'an example', Int $line = 10 --> Example)
     $group.add-hook('before-each', { die 'before-each broke' });
   }));
 
-  is $result.total, 1, 'a before-each that fails still reaches the example';
+  is $result.failed, 1, 'a before-each that fails fails the example';
 }
 
 {

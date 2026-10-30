@@ -15,7 +15,7 @@ constant Suite         = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
 constant Example       = BDD::Behave::SpecTree::Example;
 
-# A hook that throws is reported on stderr and the run carries on.
+# A hook that throws is reported on stderr and fails the example.
 sub suite-recording-into(@log --> List) {
   my $suite = Suite.create(:description('hooks'), :file('synthetic'.IO), :line(1));
   my $group = ExampleGroup.new(:description('a group'), :file('synthetic'.IO), :line(1));
@@ -61,7 +61,7 @@ ok $group-err.contains('Hook before-all failed in a group'),
   'a group hook failure names the phase and the group';
 ok $group-err.contains('hook exploded'),
   'a group hook failure carries the message of the exception';
-is-deeply @group-log, ['example'], 'the example still runs after a group hook fails';
+is-deeply @group-log, [], 'the example does not run after a before-all hook fails';
 
 my @config-log;
 my $config-err = config-hook-stderr(@config-log);
@@ -70,6 +70,6 @@ ok $config-err.contains('Config before-each hook failed'),
   'a config hook failure names the phase';
 ok $config-err.contains('config hook exploded'),
   'a config hook failure carries the message of the exception';
-is-deeply @config-log, ['example'], 'the example still runs after a config hook fails';
+is-deeply @config-log, [], 'the example does not run after a config before-each hook fails';
 
 done-testing;

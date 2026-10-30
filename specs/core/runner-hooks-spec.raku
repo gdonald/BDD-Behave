@@ -98,8 +98,8 @@ describe 'a before-each hook that fails', {
     }));
   });
 
-  it 'still reaches the example', {
-    expect(outcome()<result>.total).to.be(1);
+  it 'fails the example', {
+    expect(outcome()<result>.failed).to.be(1);
   }
 }
 

@@ -10,7 +10,7 @@ constant Suite         = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup  = BDD::Behave::SpecTree::ExampleGroup;
 constant Example       = BDD::Behave::SpecTree::Example;
 
-# A hook that throws is reported on stderr and the run carries on. Each case
+# A hook that throws is reported on stderr and fails the example. Each case
 # builds its own suite and hands it to a second runner, so the outer run only
 # sees what that inner run wrote.
 sub suite-recording-into(@log --> List) {
@@ -55,10 +55,10 @@ describe 'a group hook that throws', {
     expect(stderr-of-run(@log)).to.include('hook exploded');
   }
 
-  it 'still runs the example', {
+  it 'does not run the example', {
     my @log;
     stderr-of-run(@log);
-    expect(@log).to.eq(['example']);
+    expect(@log).to.eq([]);
   }
 }
 
@@ -80,9 +80,9 @@ describe 'a config hook that throws', {
     expect(stderr-of-run(@log)).to.include('config hook exploded');
   }
 
-  it 'still runs the example', {
+  it 'does not run the example', {
     my @log;
     stderr-of-run(@log);
-    expect(@log).to.eq(['example']);
+    expect(@log).to.eq([]);
   }
 }

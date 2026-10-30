@@ -116,6 +116,7 @@ our class Runner {
   has Configuration $.config;
   has %!helper-cache;
   has @!effective-match-filters;
+  has %!before-all-errors;
 
   submethod TWEAK {
     $!formatter //= BDD::Behave::Formatter::Tree.new;
@@ -211,8 +212,9 @@ our class Runner {
     %h;
   }
 
-  method run-config-hooks(Str $phase, $example = Nil) {
-    return unless $!config.defined;
+  method run-config-hooks(Str $phase, $example = Nil --> Exception) {
+    return Exception unless $!config.defined;
+    my Exception $first-error;
     for $!config.hooks-for($phase).list -> $hook {
       next if $example.defined && !$hook.matches-example($example);
       try {
@@ -220,10 +222,13 @@ our class Runner {
         CATCH {
           default {
             warn "Config $phase hook failed: {.message}";
+            $first-error //= $_;
           }
         }
       }
+      last if $first-error.defined && $phase eq 'before-each';
     }
+    $first-error;
   }
 
   method run-config-around-each(Example $example, &core) {
@@ -466,9 +471,15 @@ our class Runner {
       my $continuation-called = False;
       my &core = sub {
         $continuation-called = True;
-        self.run-hooks($group, 'before-all');
-        self.run-group-body($group);
-        self.run-hooks($group, 'after-all');
+        if self.before-all-error($group).defined {
+          self.run-group-body($group);
+        } else {
+          with self.run-hooks($group, 'before-all') -> $error {
+            %!before-all-errors{$group.WHICH} = $error;
+          }
+          self.run-group-body($group);
+          self.run-hooks($group, 'after-all');
+        }
       };
 
       if @around-hooks.elems {
@@ -515,6 +526,14 @@ our class Runner {
       return;
     }
 
+    with self.before-all-error($example) -> $error {
+      my $result = AttemptResult.new(:description($example.description));
+      $example.duration = 0;
+      self.fail-attempt($example, $result, $error, :label('before-all hook failed in'));
+      self.commit-attempt-result($example, $result);
+      return;
+    }
+
     my $max-attempts  = self.resolve-max-attempts($example);
     my Int $attempt-num = 0;
     my AttemptResult $result;
@@ -532,6 +551,15 @@ our class Runner {
     }
 
     self.commit-attempt-result($example, $result, :attempts($attempt-num), :$max-attempts);
+  }
+
+  method before-all-error($node --> Exception) {
+    for $node.ancestry.grep(ExampleGroup) -> $group {
+      with %!before-all-errors{$group.WHICH} -> $error {
+        return $error;
+      }
+    }
+    Exception;
   }
 
   method resolve-max-attempts(Example $example --> Int) {
@@ -600,20 +628,30 @@ our class Runner {
   }
 
   method run-each-and-example-attempt(Example $example, $result, Bool :$first-attempt) {
-    self.run-config-hooks('before-each', $example);
+    my $before-error = self.run-config-hooks('before-each', $example);
     for self.ancestor-groups($example) -> $ancestor {
-      self.run-each-hooks($ancestor, 'before-each', $example);
+      last if $before-error.defined;
+      $before-error = self.run-each-hooks($ancestor, 'before-each', $example);
     }
 
-    self.run-config-around-each(
-      $example,
-      { self.run-example-attempt($example, $result, :$first-attempt) },
-    );
-
-    for self.ancestor-groups($example).reverse -> $ancestor {
-      self.run-each-hooks($ancestor, 'after-each', $example);
+    if $before-error.defined {
+      $example.duration = 0;
+      $result.duration  = 0;
+      self.fail-attempt($example, $result, $before-error, :label('before-each hook failed in'));
+    } else {
+      self.run-config-around-each(
+        $example,
+        { self.run-example-attempt($example, $result, :$first-attempt) },
+      );
     }
-    self.run-config-hooks('after-each', $example);
+
+    my @after-errors = self.ancestor-groups($example).reverse
+      .map({ self.run-each-hooks($_, 'after-each', $example) }).eager;
+    @after-errors.push: self.run-config-hooks('after-each', $example);
+
+    my $after-error = @after-errors.first(*.defined);
+    self.fail-attempt($example, $result, $after-error, :label('after-each hook failed in'))
+      if $after-error.defined && ($result.outcome // '') eq 'pass';
   }
 
   method matching-around-each-hooks(Example $example --> List) {
@@ -879,30 +917,7 @@ our class Runner {
     }
 
     if $error.defined {
-      $result.outcome = 'fail';
-      $result.failure-info = %(
-        description  => self.full-description($example),
-        file         => $example.file,
-        line         => $example.line,
-        example-line => $example.line-key,
-        exception    => $error,
-        message      => $error.message,
-      );
-
-      # Only the top-level Runner (bin/behave sets $*BEHAVE-TOP-LEVEL-RUN
-      # before entering the Runner) records exception failures in the global
-      # Failures.list so the end-of-run summary can render them. Nested runs —
-      # synthetic suites built inside spec bodies — would otherwise pollute
-      # the outer runner's failure delta accounting.
-      if $!top-level {
-        Failures.list.push(Failure.new(
-          :file($example.file.Str),
-          :line($example.line),
-          :message("exception in {self.full-description($example)}: " ~ $error.message),
-          :from-runner-exception,
-        ));
-      }
-
+      self.fail-attempt($example, $result, $error);
       return;
     }
 
@@ -941,6 +956,32 @@ our class Runner {
       }
     } else {
       $result.outcome = 'pass';
+    }
+  }
+
+  method fail-attempt(Example $example, $result, Exception $error, Str :$label = 'exception in') {
+    $result.outcome = 'fail';
+    $result.failure-info = %(
+      description  => self.full-description($example),
+      file         => $example.file,
+      line         => $example.line,
+      example-line => $example.line-key,
+      exception    => $error,
+      message      => $error.message,
+    );
+
+    # Only the top-level Runner (bin/behave sets $*BEHAVE-TOP-LEVEL-RUN
+    # before entering the Runner) records exception failures in the global
+    # Failures.list so the end-of-run summary can render them. Nested runs —
+    # synthetic suites built inside spec bodies — would otherwise pollute
+    # the outer runner's failure delta accounting.
+    if $!top-level {
+      Failures.list.push(Failure.new(
+        :file($example.file.Str),
+        :line($example.line),
+        :message("$label {self.full-description($example)}: " ~ $error.message),
+        :from-runner-exception,
+      ));
     }
   }
 
@@ -1029,9 +1070,10 @@ our class Runner {
     $node.ancestry.grep(ExampleGroup).List;
   }
 
-  method run-hooks(ExampleGroup $group, Str $phase) {
+  method run-hooks(ExampleGroup $group, Str $phase --> Exception) {
     my @hooks = $group.hooks($phase);
-    return unless @hooks.elems;
+    return Exception unless @hooks.elems;
+    my Exception $first-error;
     my @runnable;
     my $runnable-collected = False;
     for @hooks -> $hook {
@@ -1047,13 +1089,17 @@ our class Runner {
         CATCH {
           default {
             warn "Hook $phase failed in {$group.description}: {$_.message}";
+            $first-error //= $_;
           }
         }
       }
+      last if $first-error.defined && $phase eq 'before-all';
     }
+    $first-error;
   }
 
-  method run-each-hooks(ExampleGroup $group, Str $phase, Example $example) {
+  method run-each-hooks(ExampleGroup $group, Str $phase, Example $example --> Exception) {
+    my Exception $first-error;
     for $group.hooks($phase) -> $hook {
       next unless $hook.matches($example);
       try {
@@ -1061,10 +1107,13 @@ our class Runner {
         CATCH {
           default {
             warn "Hook $phase failed in {$group.description}: {$_.message}";
+            $first-error //= $_;
           }
         }
       }
+      last if $first-error.defined && $phase eq 'before-each';
     }
+    $first-error;
   }
 
   method runnable-examples(ExampleGroup $group --> List) {

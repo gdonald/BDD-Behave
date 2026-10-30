@@ -39,6 +39,7 @@ sub run-over(@files, Str :$mode = 'isolated') {
     :formatter(QuietFormatter.new),
     :parallel-mode($mode),
     :order('defined'),
+    :progress(-> Str $text, Bool :$partial { }),
   ));
 }
 
