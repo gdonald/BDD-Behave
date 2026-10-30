@@ -7,7 +7,7 @@ use Behave::Test::CompilePassStub;
 
 my class QuietFormatter does BDD::Behave::Formatter { }
 
-sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress) {
+sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress, :$meta-file) {
   run-parallel(ParallelRunOptions.new(
     :worker-count(1),
     :@spec-files,
@@ -16,6 +16,7 @@ sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress) {
     :%base-env,
     :formatter(QuietFormatter.new),
     :&progress,
+    :$meta-file,
   ));
 }
 
@@ -145,6 +146,50 @@ describe 'the precompile pass', {
     it 'announces it in the singular', {
       LEAVE single-run.cleanup;
       expect(single-run.progress.lines[0]).to.eq('Precompiling 1 spec file');
+    }
+  }
+
+  context 'when the project META6.json provides modules', {
+    let(:module-run, { make-stub-run(:modules<Acme::Alpha Acme::Beta>) });
+
+    it 'announces how many modules it is precompiling first', {
+      LEAVE module-run.cleanup;
+      expect(module-run.progress.lines[0]).to.eq('Precompiling 2 modules');
+    }
+
+    it 'prints a numbered and timed line as each module loads', {
+      LEAVE module-run.cleanup;
+      expect(module-run.progress.lines[2]).to.eq('  [2/2] Acme::Beta (0.0s)');
+    }
+
+    it 'precompiles the spec files after the modules', {
+      LEAVE module-run.cleanup;
+      expect(module-run.progress.lines[3]).to.eq('Precompiling 2 spec files');
+    }
+  }
+
+  context 'when the module pass exceeds the discovery timeout', {
+    let(:hung-module-run, { make-stub-run(:modules<Acme::Alpha Acme::Beta>, :hang-modules, :timeout(1)) });
+
+    it 'names the module it was loading and the one before it', {
+      LEAVE hung-module-run.cleanup;
+      expect(hung-module-run.progress.lines).to.include(
+        'The module precompile pass timed out after 1s while loading Acme::Beta (loaded after Acme::Alpha)'
+      );
+    }
+
+    it 'goes on to precompile the spec files', {
+      LEAVE hung-module-run.cleanup;
+      expect(hung-module-run.progress.lines).to.include('Precompiling 2 spec files');
+    }
+  }
+
+  context 'when the module pass dies by a signal', {
+    let(:crashed-module-run, { make-stub-run(:modules(('Acme::Alpha',)), :crash-modules) });
+
+    it 'reports the signal', {
+      LEAVE crashed-module-run.cleanup;
+      expect(crashed-module-run.progress.lines).to.include('The module precompile pass died with signal 11');
     }
   }
 

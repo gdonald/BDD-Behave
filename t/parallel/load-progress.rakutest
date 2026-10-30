@@ -3,7 +3,7 @@ use lib 'lib';
 use Test;
 use BDD::Behave::LoadProgress;
 
-plan 10;
+plan 11;
 
 {
   my $progress = LoadProgress.new(:total(2));
@@ -43,6 +43,9 @@ plan 10;
 
 is LoadProgress.new.stall-description, 'before loading any spec file',
   'a stall before any marker says no spec file had started';
+
+is LoadProgress.new(:noun<module>).stall-description, 'before loading any module',
+  'a stall before any marker names the kind of thing being loaded';
 
 {
   my $progress = LoadProgress.new;

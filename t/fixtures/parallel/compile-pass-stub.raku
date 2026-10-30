@@ -6,9 +6,23 @@ use v6.d;
 # the passes the runner performed and see which files each one covered.
 
 my $state = %*ENV<BEHAVE_STUB_STATE>;
-my $invocation = $state.IO.e ?? $state.IO.slurp.lines.elems !! 0;
+my $invocation = $state.IO.e ?? $state.IO.slurp.lines.grep({ !.contains('--compile-modules=') }).elems !! 0;
 
 $state.IO.spurt(@*ARGS.join(' ') ~ "\n", :append);
+
+with @*ARGS.first(*.starts-with('--compile-modules=')) -> $arg {
+  my $meta = $arg.substr('--compile-modules='.chars).IO;
+  my @modules = $meta.slurp.lines.map({ ~$0 if / '"' (<[\w:]>+) '": "' / }).grep(*.defined);
+
+  for @modules -> $module {
+    $*ERR.say("behave-loading: $module");
+    $*ERR.flush;
+  }
+
+  run 'kill', '-SEGV', $*PID.Str if %*ENV<BEHAVE_STUB_CRASH_MODULES>;
+  sleep 30 if %*ENV<BEHAVE_STUB_HANG_MODULES> || %*ENV<BEHAVE_STUB_CRASH_MODULES>;
+  exit 0;
+}
 
 if %*ENV<BEHAVE_LOAD_PROGRESS> {
   for @*ARGS.grep(*.ends-with('-spec.raku')) -> $file {

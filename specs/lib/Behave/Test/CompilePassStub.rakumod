@@ -54,6 +54,9 @@ sub make-stub-run(
   :$crash             = False,
   :$hang              = False,
   :$hang-every-union  = False,
+  :$hang-modules      = False,
+  :$crash-modules     = False,
+  :@modules,
   :&parallel-runner,
   :$report-prefixes   = True,
   :$spec-file-count   = 2,
@@ -81,6 +84,12 @@ sub make-stub-run(
   my @spec-files = (^$spec-file-count).map(-> $index { $sandbox.add("file-{$index}-spec.raku") });
   .spurt('') for @spec-files;
 
+  my $meta-file = $sandbox.add('META6.json');
+  if @modules {
+    my $provides = @modules.map({ "    \"$_\": \"lib/$_.rakumod\"" }).join(",\n");
+    $meta-file.spurt("\{\n  \"provides\": \{\n$provides\n  }\n}\n");
+  }
+
   my $run = StubRun.new(
     :$sandbox,
     :$state-file,
@@ -94,6 +103,8 @@ sub make-stub-run(
   %env<BEHAVE_STUB_CRASH_FIRST> = '1' if $crash;
   %env<BEHAVE_STUB_HANG_FIRST>  = '1' if $hang;
   %env<BEHAVE_STUB_HANG_UNION>  = '1' if $hang-every-union;
+  %env<BEHAVE_STUB_HANG_MODULES> = '1' if $hang-modules;
+  %env<BEHAVE_STUB_CRASH_MODULES> = '1' if $crash-modules;
 
   if $report-prefixes {
     %env<BEHAVE_STUB_PREFIX>          = $cache-prefix.absolute;
@@ -117,6 +128,7 @@ sub make-stub-run(
       :discovery-argv(('raku', $stub.absolute)),
       :base-env(%env),
       :&progress,
+      :$meta-file,
     );
     return $run;
   }
@@ -127,6 +139,7 @@ sub make-stub-run(
     :base-env(%env),
     :&progress,
     :clock({ 0 }),
+    :$meta-file,
   );
 
   $run;

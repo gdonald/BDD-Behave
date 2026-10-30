@@ -58,6 +58,10 @@ describe 'LoadProgress', {
       expect(LoadProgress.new.stall-description).to.eq('before loading any spec file');
     }
 
+    it 'names the kind of thing being loaded when none loaded', {
+      expect(LoadProgress.new(:noun<module>).stall-description).to.eq('before loading any module');
+    }
+
     it 'names the only spec file that started loading', {
       my $progress = LoadProgress.new;
       $progress.feed("{LOAD-PROGRESS-MARKER}specs/a-spec.raku\n");

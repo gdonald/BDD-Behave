@@ -1,0 +1,5 @@
+{
+  "provides": {
+    "BDD::Behave::LoadProgress": "lib/BDD/Behave/LoadProgress.rakumod"
+  }
+}

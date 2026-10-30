@@ -7,7 +7,7 @@ use Behave::Test::CompilePassStub;
 
 my class QuietFormatter does BDD::Behave::Formatter { }
 
-sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress) {
+sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress, :$meta-file) {
   run-parallel(ParallelRunOptions.new(
     :worker-count(1),
     :@spec-files,
@@ -16,10 +16,11 @@ sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress) {
     :%base-env,
     :formatter(QuietFormatter.new),
     :&progress,
+    :$meta-file,
   ));
 }
 
-plan 19;
+plan 25;
 
 {
   my $run = make-stub-run();
@@ -100,6 +101,33 @@ plan 19;
   LEAVE $run.cleanup;
 
   is $run.progress.lines[0], 'Precompiling 1 spec file', 'one spec file is announced in the singular';
+}
+
+{
+  my $run = make-stub-run(:modules<Acme::Alpha Acme::Beta>);
+  LEAVE $run.cleanup;
+
+  is $run.progress.lines[0], 'Precompiling 2 modules', 'the module pass announces its module count first';
+  is $run.progress.lines[2], '  [2/2] Acme::Beta (0.0s)', 'the module pass numbers and times each module as it loads';
+  is $run.progress.lines[3], 'Precompiling 2 spec files', 'the spec files are precompiled after the modules';
+}
+
+{
+  my $run = make-stub-run(:modules<Acme::Alpha Acme::Beta>, :hang-modules, :timeout(1));
+  LEAVE $run.cleanup;
+
+  ok $run.progress.lines.grep('The module precompile pass timed out after 1s while loading Acme::Beta (loaded after Acme::Alpha)'),
+    'a module pass timeout names the module it was loading and the one before it';
+  ok $run.progress.lines.grep('Precompiling 2 spec files'),
+    'a module pass timeout goes on to precompile the spec files';
+}
+
+{
+  my $run = make-stub-run(:modules(('Acme::Alpha',)), :crash-modules);
+  LEAVE $run.cleanup;
+
+  ok $run.progress.lines.grep('The module precompile pass died with signal 11'),
+    'a module pass signal death reports the signal';
 }
 
 {

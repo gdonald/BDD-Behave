@@ -47,6 +47,7 @@ class ParallelRunOptions is export {
   has IO::Path $.coverage-log-dir = IO::Path;
   has Bool     $.coverage-counts = False;
   has          &.progress = &note-progress;
+  has IO::Path $.meta-file = 'META6.json'.IO;
 }
 
 sub discover-suites(@spec-files --> List) is export {
@@ -137,6 +138,7 @@ sub precompile-specs-serially(
   :%base-env,
   :&progress = &note-progress,
   :&clock    = { now },
+  IO::Path :$meta-file = 'META6.json'.IO,
 ) is export {
   return Nil unless @spec-files.elems;
 
@@ -157,11 +159,16 @@ sub precompile-specs-serially(
 
   my $timeout-secs = (%*ENV<BEHAVE_DISCOVERY_TIMEOUT> // 300).Numeric;
 
-  sub run-pass(@files, :$show-each-file --> Hash) {
-    my @argv = |@base, '--no-config', '--compile-only', |@files.map(*.Str);
-    my $proc = Proc::Async.new(|@argv);
+  sub run-pass(@files, :$show-each-file, IO::Path :$modules-from, Int :$total = @files.elems --> Hash) {
+    my @pass-args = $modules-from.defined
+      ?? ("--compile-modules={$modules-from.absolute}",)
+      !! ('--compile-only', |@files.map(*.Str));
+    my $pass-name = $modules-from.defined ?? 'module precompile pass' !! 'precompile pass';
+
+    my $proc = Proc::Async.new(|@base, '--no-config', |@pass-args);
     my $loads = LoadProgress.new(
-      :total(@files.elems),
+      :$total,
+      :noun($modules-from.defined ?? 'module' !! 'spec file'),
       :output($show-each-file ?? &progress !! Callable),
       :&clock,
     );
@@ -185,13 +192,23 @@ sub precompile-specs-serially(
     }
     $loads.finish;
 
-    %outcome<file>  = $loads.loaded[*-1] // @files[0].Str;
-    %outcome<stall> = "precompile pass timed out after {$timeout-secs}s {$loads.stall-description}";
+    %outcome<file>  = $loads.loaded[*-1] // @files.map(*.Str).head;
+    %outcome<stall> = "$pass-name timed out after {$timeout-secs}s {$loads.stall-description}";
     %outcome;
   }
 
   sub timeout-error(%outcome) {
     %outcome<timed-out> ?? %( :file(%outcome<file>), :message(%outcome<stall>) ) !! Nil;
+  }
+
+  my @modules = provided-modules($meta-file);
+  if @modules {
+    progress("Precompiling {count-of(@modules.elems, 'module')}");
+    my %module-pass = run-pass((), :modules-from($meta-file), :total(@modules.elems), :show-each-file);
+
+    progress(%module-pass<timed-out>
+      ?? "The {%module-pass<stall>}"
+      !! "The module precompile pass died with signal {%module-pass<signal>}") if %module-pass<died>;
   }
 
   progress("Precompiling {spec-file-count(@spec-files.elems)}");
@@ -230,7 +247,11 @@ sub precompile-specs-serially(
 }
 
 sub spec-file-count(Int $count --> Str) {
-  $count == 1 ?? '1 spec file' !! "$count spec files";
+  count-of($count, 'spec file');
+}
+
+sub count-of(Int $count, Str $noun --> Str) {
+  $count == 1 ?? "1 $noun" !! "$count {$noun}s";
 }
 
 # Recursive directory removal for the .precomp caches cleared above.
@@ -895,6 +916,7 @@ sub run-parallel(
       :discovery-argv($opts.discovery-argv),
       :base-env(%(|$opts.base-env)),
       :progress($opts.progress),
+      :meta-file($opts.meta-file),
     );
 
     with $stall {

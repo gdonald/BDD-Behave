@@ -13,6 +13,7 @@ sub elapsed-text(Real $seconds --> Str) is export {
 
 class LoadProgress is export {
   has Int $.total = 0;
+  has Str $.noun  = 'spec file';
   has     &.output;
   has     &.clock = { now };
   has     @.loaded;
@@ -41,7 +42,7 @@ class LoadProgress is export {
   }
 
   method stall-description(--> Str) {
-    return 'before loading any spec file' unless @!loaded;
+    return "before loading any $!noun" unless @!loaded;
 
     my $description = "while loading {@!loaded[*-1]}";
     $description ~= " (loaded after {@!loaded[*-2]})" if @!loaded.elems > 1;

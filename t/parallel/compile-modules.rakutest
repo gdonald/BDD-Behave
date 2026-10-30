@@ -1,0 +1,48 @@
+use v6.d;
+use lib 'lib';
+use Test;
+use BDD::Behave::LoadProgress;
+use BDD::Behave::SpecLoader;
+
+plan 5;
+
+my $meta-file         = 't/fixtures/parallel/compile-modules/META6.json'.IO;
+my $missing-meta-file = 't/fixtures/parallel/compile-modules-missing/META6.json'.IO;
+
+my class CapturedStderr {
+  has @.lines;
+
+  method say($line) { @!lines.push: ~$line }
+  method flush() { }
+}
+
+sub compile-modules-exit-code(IO::Path $meta --> Int) {
+  my $proc = run 'raku', '-Ilib', 'bin/behave', '--no-config', "--compile-modules={$meta.absolute}", :out, :err;
+  $proc.out.slurp(:close);
+  $proc.err.slurp(:close);
+
+  $proc.exitcode;
+}
+
+is-deeply provided-modules($meta-file), ('BDD::Behave::LoadProgress',),
+  'the modules listed under provides are read from META6.json';
+is-deeply provided-modules('t/fixtures/parallel/no-such-dir/META6.json'.IO), (),
+  'a missing META6.json provides no modules';
+
+{
+  my $*ERR = CapturedStderr.new;
+  temp %*ENV;
+  %*ENV<BEHAVE_LOAD_PROGRESS> = '1';
+
+  load-module('BDD::Behave::LoadProgress');
+
+  is-deeply $*ERR.lines.List, (LOAD-PROGRESS-MARKER ~ 'BDD::Behave::LoadProgress',),
+    'loading a module writes a load progress line naming it when progress is asked for';
+}
+
+is compile-modules-exit-code($meta-file), 0,
+  'behave --compile-modules exits 0 when every provided module loads';
+is compile-modules-exit-code($missing-meta-file), 1,
+  'behave --compile-modules exits 1 when a provided module fails to load';
+
+done-testing;

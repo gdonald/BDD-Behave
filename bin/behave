@@ -35,6 +35,7 @@ my @watch-paths;
 my $dry-run-mode    = False;
 my $list-examples   = False;
 my $compile-only    = False;
+my $compile-modules;
 my $no-precompile   = False;
 my $list-format     = 'text';
 my $cli-config = CLI-CONFIG.new;
@@ -271,6 +272,10 @@ sub usage() {
                              modules' precompilation) and exit without
                              running examples or printing. Exit 0 when
                              every file loaded; 1 on a load error.
+    --compile-modules=FILE   Load each module listed under "provides" in
+                             the META6.json FILE (writing its
+                             precompilation) and exit. Exit 0 when every
+                             module loaded; 1 on a load error.
     --no-precompile          Skip the serial precompile pass the parallel
                              runner performs before discovery (one
                              --compile-only subprocess for all spec
@@ -634,6 +639,8 @@ while @args {
     $dry-run-mode = True;
   } elsif $arg eq '--compile-only' {
     $compile-only = True;
+  } elsif $arg.starts-with('--compile-modules=') {
+    $compile-modules = $arg.substr('--compile-modules='.chars);
   } elsif $arg eq '--no-precompile' {
     $no-precompile = True;
   } elsif $arg eq '--list-examples' {
@@ -1114,6 +1121,18 @@ if $worker-manifest-path.defined {
   if $seed.defined && $seed-mode eq 'xor' {
     $seed = $seed +^ BDD::Behave::Worker.id;
   }
+}
+
+if $compile-modules.defined {
+  my $exit = 0;
+
+  for BDD::Behave::SpecLoader::provided-modules($compile-modules.IO) -> $module {
+    try {
+      BDD::Behave::SpecLoader::load-module($module);
+      CATCH { default { $exit = 1 } }
+    }
+  }
+  exit($exit);
 }
 
 my @config-spec-paths = $final-config.spec-paths.list;
