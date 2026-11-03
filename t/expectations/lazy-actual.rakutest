@@ -1,0 +1,23 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 3;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $fixture = $root.add('t/fixtures/lazy-actual-fixture-spec.raku');
+
+my %env = |%*ENV;
+%env<BEHAVE_DISABLE_CONFIG> = '1';
+
+my $proc = run 'raku', "-I{$root.add('lib').absolute}", $root.add('bin/behave').absolute, $fixture.absolute,
+  :out, :err, :env(%env);
+
+my $out = $proc.out.slurp(:close).subst(/ \e '[' <[0..9;]>* 'm' /, '', :g);
+my $err = $proc.err.slurp(:close);
+
+ok $out.contains('Expected: (Bool::False, Bool::False)'), 'a failing list built by a map that calls a let reports its values';
+nok ($out ~ $err).contains('$*LET-RUNTIME'), 'a failing list built by a map that calls a let does not report a missing let runtime';
+is $proc.exitcode, 1, 'a failing list built by a map that calls a let fails the run';
+
+done-testing;

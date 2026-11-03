@@ -682,6 +682,8 @@ our sub expect(|c) is export {
     die "expect requires either a positional argument or a single named argument";
   }
 
+  $resolved-given.eager if $resolved-given ~~ List && $resolved-given.DEFINITE && !$resolved-given.is-lazy;
+
   ExpectationBuilder.new(
     :given($resolved-given),
     :file($caller-file),
