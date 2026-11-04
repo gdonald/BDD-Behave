@@ -23,7 +23,7 @@ constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example      = BDD::Behave::SpecTree::Example;
 constant RunResult    = BDD::Behave::Runner::RunResult;
 
-constant STALE-PRECOMPILATION-ERROR is export = / 'New type Stash for ' \w+ ' is not a mixin type' /;
+constant STALE-PRECOMPILATION-ERROR is export = / 'New type Stash for ' .+? ' is not a mixin type' /;
 
 class ParallelRunOptions is export {
   has Int      $.worker-count is required;

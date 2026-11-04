@@ -160,6 +160,21 @@ describe 'the precompile pass', {
     }
   }
 
+  context 'when the inconsistent cache load error names a mixed-in type', {
+    let(:mixin-run, {
+      make-stub-run(
+        :stale-cache,
+        :stale-type('Submethod+{is-hidden-from-backtrace} mixin'),
+        :parallel-runner(&run-parallel-over),
+      )
+    });
+
+    it 'reports no load error once the rebuild clears it', {
+      LEAVE mixin-run.cleanup;
+      expect(mixin-run.result.load-errors.List).to.eq(());
+    }
+  }
+
   context 'when the inconsistent cache load error survives the rebuild', {
     let(:stale-always-run, { make-stub-run(:stale-always, :parallel-runner(&run-parallel-over)) });
 

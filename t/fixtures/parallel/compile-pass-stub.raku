@@ -29,8 +29,10 @@ if @*ARGS.grep('--list-examples') {
   my $stale = %*ENV<BEHAVE_STUB_STALE_ALWAYS>
     || (%*ENV<BEHAVE_STUB_STALE_CACHE> && %*ENV<BEHAVE_STUB_PREFIX>.IO.add('.precomp').d);
 
+  my $type = %*ENV<BEHAVE_STUB_STALE_TYPE> // 'Method';
+
   my @errors = $stale
-    ?? @files.map({ qq[\{"file":"$_","message":"New type Stash for Method is not a mixin type"\}] })
+    ?? @files.map({ qq[\{"file":"$_","message":"New type Stash for $type is not a mixin type"\}] })
     !! ();
 
   say qq[\{"suites":[],"load-errors":[{@errors.join(',')}]\}];

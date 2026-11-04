@@ -20,7 +20,7 @@ sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress, :$
   ));
 }
 
-plan 31;
+plan 32;
 
 {
   my $run = make-stub-run();
@@ -100,6 +100,18 @@ plan 31;
   is $run.discovery-passes.elems, 2, 'discovery runs again after the rebuild';
   is-deeply $run.result.load-errors.List, (),
     'a stale cache load error that the rebuild clears is not reported';
+}
+
+{
+  my $run = make-stub-run(
+    :stale-cache,
+    :stale-type('Submethod+{is-hidden-from-backtrace} mixin'),
+    :parallel-runner(&run-parallel-over),
+  );
+  LEAVE $run.cleanup;
+
+  is-deeply $run.result.load-errors.List, (),
+    'a stale cache load error naming a mixed-in type is cleared by the rebuild';
 }
 
 {
