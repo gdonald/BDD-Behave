@@ -20,7 +20,7 @@ sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress, :$
   ));
 }
 
-plan 32;
+plan 34;
 
 {
   my $run = make-stub-run();
@@ -112,6 +112,18 @@ plan 32;
 
   is-deeply $run.result.load-errors.List, (),
     'a stale cache load error naming a mixed-in type is cleared by the rebuild';
+}
+
+{
+  my $run = make-stub-run(:stale-cache, :stale-first-only, :parallel-runner(&run-parallel-over));
+  LEAVE $run.cleanup;
+
+  ok $run.progress.lines.grep('Discovering examples in 2 spec files again'),
+    'a stale cache load error in one spec file announces discovery of every spec file again';
+
+  my $rediscovery = $run.discovery-passes[*-1];
+  is $run.spec-files.grep({ $rediscovery.contains(.absolute) }).elems, 2,
+    'a stale cache load error in one spec file discovers every spec file again after the rebuild';
 }
 
 {

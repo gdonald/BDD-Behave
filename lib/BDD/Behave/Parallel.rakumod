@@ -971,17 +971,17 @@ sub run-parallel(
       return $result;
     }
 
-    $opts.progress()("Discovering examples in {spec-file-count(@stale-cache-files.elems)} again");
+    $opts.progress()("Discovering examples in {spec-file-count($opts.spec-files.elems)} again");
 
     my $retry = discover-suites-subprocess(
-      @stale-cache-files,
+      $opts.spec-files,
       :discovery-argv($opts.discovery-argv),
       :base-env(%(|$opts.base-env)),
       :progress($opts.progress),
     );
 
-    @suites.append: $retry[0].list;
-    @load-errors = |@load-errors.grep({ .<message> !~~ STALE-PRECOMPILATION-ERROR }), |$retry[1].list;
+    @suites      = $retry[0].list;
+    @load-errors = $retry[1].list;
   }
 
   $result.load-errors.append: @load-errors;

@@ -63,6 +63,7 @@ sub make-stub-run(
   :$stale-cache       = False,
   :$stale-always      = False,
   :$stale-type,
+  :$stale-first-only  = False,
   :@modules,
   :&parallel-runner,
   :$report-prefixes   = True,
@@ -115,6 +116,7 @@ sub make-stub-run(
   %env<BEHAVE_STUB_STALE_CACHE> = '1' if $stale-cache;
   %env<BEHAVE_STUB_STALE_ALWAYS> = '1' if $stale-always;
   %env<BEHAVE_STUB_STALE_TYPE>   = $stale-type if $stale-type.defined;
+  %env<BEHAVE_STUB_STALE_FIRST_ONLY> = '1' if $stale-first-only;
 
   if $report-prefixes {
     %env<BEHAVE_STUB_PREFIX>          = $cache-prefix.absolute;

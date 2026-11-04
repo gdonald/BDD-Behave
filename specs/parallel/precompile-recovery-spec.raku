@@ -175,6 +175,21 @@ describe 'the precompile pass', {
     }
   }
 
+  context 'when only one spec file fails to load from an inconsistent cache', {
+    let(:partial-stale-run, { make-stub-run(:stale-cache, :stale-first-only, :parallel-runner(&run-parallel-over)) });
+
+    it 'announces discovery of every spec file again', {
+      LEAVE partial-stale-run.cleanup;
+      expect(partial-stale-run.progress.lines).to.include('Discovering examples in 2 spec files again');
+    }
+
+    it 'discovers every spec file again after the rebuild', {
+      LEAVE partial-stale-run.cleanup;
+      my $rediscovery = partial-stale-run.discovery-passes[*-1];
+      expect(partial-stale-run.spec-files.grep({ $rediscovery.contains(.absolute) }).elems).to.be(2);
+    }
+  }
+
   context 'when the inconsistent cache load error survives the rebuild', {
     let(:stale-always-run, { make-stub-run(:stale-always, :parallel-runner(&run-parallel-over)) });
 

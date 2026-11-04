@@ -26,13 +26,14 @@ with @*ARGS.first(*.starts-with('--compile-modules=')) -> $arg {
 
 if @*ARGS.grep('--list-examples') {
   my @files = @*ARGS.grep(*.ends-with('-spec.raku'));
+  my @stale-files = %*ENV<BEHAVE_STUB_STALE_FIRST_ONLY> ?? @files.head(1) !! @files;
   my $stale = %*ENV<BEHAVE_STUB_STALE_ALWAYS>
     || (%*ENV<BEHAVE_STUB_STALE_CACHE> && %*ENV<BEHAVE_STUB_PREFIX>.IO.add('.precomp').d);
 
   my $type = %*ENV<BEHAVE_STUB_STALE_TYPE> // 'Method';
 
   my @errors = $stale
-    ?? @files.map({ qq[\{"file":"$_","message":"New type Stash for $type is not a mixin type"\}] })
+    ?? @stale-files.map({ qq[\{"file":"$_","message":"New type Stash for $type is not a mixin type"\}] })
     !! ();
 
   say qq[\{"suites":[],"load-errors":[{@errors.join(',')}]\}];
