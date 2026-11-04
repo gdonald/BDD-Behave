@@ -1062,7 +1062,7 @@ if $queue-worker-mode {
         try {
           my $*IN = $devnull-in;
           BDD::Behave::SpecLoader::load-spec-file($bucket-file.IO);
-          CATCH { default { $load-err = .message } }
+          CATCH { default { $load-err = BDD::Behave::SpecLoader::load-error-message($_) } }
         }
         if $load-err.defined {
           my $esc-file = json-escape($bucket-file);
@@ -1205,8 +1205,9 @@ if $dry-run-mode || $list-examples {
       BDD::Behave::SpecLoader::load-spec-file($file);
       CATCH {
         default {
-          @load-errors.push: %( :$file, :message(.message) );
-          note "Error: Could not load $file: {.message}";
+          my $message = BDD::Behave::SpecLoader::load-error-message($_);
+          @load-errors.push: %( :$file, :$message );
+          note "Error: Could not load $file: $message";
           $load-failed = True;
         }
       }
@@ -1614,8 +1615,9 @@ if $doc-mode {
       BDD::Behave::SpecLoader::load-spec-file($file);
       CATCH {
         default {
-          @doc-load-errors.push: %( :$file, :message(.message) );
-          note "Error: Could not load $file: {.message}";
+          my $message = BDD::Behave::SpecLoader::load-error-message($_);
+          @doc-load-errors.push: %( :$file, :$message );
+          note "Error: Could not load $file: $message";
           $load-failed = True;
         }
       }
@@ -1699,8 +1701,9 @@ for @files -> $file {
     BDD::Behave::SpecLoader::load-spec-file($file);
     CATCH {
       default {
-        @load-errors.push: %( :$file, :message(.message) );
-        note red("Error: Could not load $file: {.message}") unless $bisect-data;
+        my $message = BDD::Behave::SpecLoader::load-error-message($_);
+        @load-errors.push: %( :$file, :$message );
+        note red("Error: Could not load $file: $message") unless $bisect-data;
         $load-failed = True;
       }
     }

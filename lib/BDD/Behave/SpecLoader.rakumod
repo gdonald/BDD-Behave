@@ -28,6 +28,10 @@ our sub load-spec-file($file) is export {
   eval-spec-source($path.slurp, $path.absolute.Str);
 }
 
+our sub load-error-message(Exception:D $error --> Str) is export {
+  quietly $error.message;
+}
+
 our sub load-module(Str $module) is export {
   note-loading($module);
 

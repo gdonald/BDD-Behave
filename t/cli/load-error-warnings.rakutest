@@ -1,0 +1,38 @@
+use v6.d;
+use lib 'lib';
+use Test;
+
+plan 4;
+
+my $root    = $*PROGRAM.parent.parent.parent;
+my $bin     = $root.add('bin/behave');
+my $fixture = $root.add('t/fixtures/undeclared-routine-fixture-spec.raku');
+
+sub run-behave(*@args) {
+  my $proc = run('raku', "-I{$root.add('lib').absolute}", $bin.absolute, |@args, :out, :err,
+    :env(%( |%*ENV, BEHAVE_DISABLE_CONFIG => '1' )));
+
+  my $out = $proc.out.slurp(:close);
+  my $err = $proc.err.slurp(:close);
+  %( :exit($proc.exitcode), :output($out ~ $err) );
+}
+
+{
+  my %run = run-behave($fixture.absolute);
+
+  ok %run<output>.contains('Member used at line 5'),
+    'a serial run reports the undeclared routine';
+  nok %run<output>.contains('Use of uninitialized value'),
+    'a serial run prints no uninitialized value warning with the load error';
+}
+
+{
+  my %run = run-behave('--parallel', '1', $fixture.absolute);
+
+  ok %run<output>.contains('Member used at line 5'),
+    'a parallel run reports the undeclared routine';
+  nok %run<output>.contains('Use of uninitialized value'),
+    'a parallel run prints no uninitialized value warning with the load error';
+}
+
+done-testing;

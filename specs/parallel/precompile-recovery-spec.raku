@@ -131,6 +131,44 @@ describe 'the precompile pass', {
     }
   }
 
+  context "when a parallel run's spec files fail to load from an inconsistent cache", {
+    let(:stale-run, { make-stub-run(:stale-cache, :parallel-runner(&run-parallel-over)) });
+
+    it 'announces the spec files that failed to load', {
+      LEAVE stale-run.cleanup;
+      expect(stale-run.progress.lines).to.include('2 spec files failed to load from an inconsistent precompilation cache');
+    }
+
+    it 'clears the reported precompilation cache', {
+      LEAVE stale-run.cleanup;
+      expect(stale-run.precomp-exists).to.be-falsy;
+    }
+
+    it 'runs the precompile pass, one pass for each failed spec file, and the rebuild pass', {
+      LEAVE stale-run.cleanup;
+      expect(stale-run.compile-passes.elems).to.be(4);
+    }
+
+    it 'discovers the examples again after the rebuild', {
+      LEAVE stale-run.cleanup;
+      expect(stale-run.discovery-passes.elems).to.be(2);
+    }
+
+    it 'reports no load error once the rebuild clears it', {
+      LEAVE stale-run.cleanup;
+      expect(stale-run.result.load-errors.List).to.eq(());
+    }
+  }
+
+  context 'when the inconsistent cache load error survives the rebuild', {
+    let(:stale-always-run, { make-stub-run(:stale-always, :parallel-runner(&run-parallel-over)) });
+
+    it 'reports the load error once for each spec file', {
+      LEAVE stale-always-run.cleanup;
+      expect(stale-always-run.result.load-errors.map(*<file>).List).to.eq(stale-always-run.spec-files.map(*.absolute).List);
+    }
+  }
+
   context 'when the dead pass reported no project lib dirs', {
     let(:unreported-run, { make-stub-run(:crash, :!report-prefixes) });
 

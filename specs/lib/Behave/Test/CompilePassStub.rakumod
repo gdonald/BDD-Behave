@@ -35,6 +35,10 @@ class StubRun is export {
 
   method pass-count() { self.invocations.elems }
 
+  method compile-passes() { self.invocations.grep(*.contains('--compile-only')).List }
+
+  method discovery-passes() { self.invocations.grep(*.contains('--list-examples')).List }
+
   method precomp-dir() { $!cache-prefix.add('.precomp') }
 
   method precomp-exists() { self.precomp-dir.d }
@@ -56,6 +60,8 @@ sub make-stub-run(
   :$hang-every-union  = False,
   :$hang-modules      = False,
   :$crash-modules     = False,
+  :$stale-cache       = False,
+  :$stale-always      = False,
   :@modules,
   :&parallel-runner,
   :$report-prefixes   = True,
@@ -105,6 +111,8 @@ sub make-stub-run(
   %env<BEHAVE_STUB_HANG_UNION>  = '1' if $hang-every-union;
   %env<BEHAVE_STUB_HANG_MODULES> = '1' if $hang-modules;
   %env<BEHAVE_STUB_CRASH_MODULES> = '1' if $crash-modules;
+  %env<BEHAVE_STUB_STALE_CACHE> = '1' if $stale-cache;
+  %env<BEHAVE_STUB_STALE_ALWAYS> = '1' if $stale-always;
 
   if $report-prefixes {
     %env<BEHAVE_STUB_PREFIX>          = $cache-prefix.absolute;

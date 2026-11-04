@@ -23,6 +23,8 @@ constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
 constant Example      = BDD::Behave::SpecTree::Example;
 constant RunResult    = BDD::Behave::Runner::RunResult;
 
+constant STALE-PRECOMPILATION-ERROR is export = / 'New type Stash for ' \w+ ' is not a mixin type' /;
+
 class ParallelRunOptions is export {
   has Int      $.worker-count is required;
   has @.spec-files;
@@ -59,7 +61,7 @@ sub discover-suites(@spec-files --> List) is export {
       BDD::Behave::SpecLoader::load-spec-file($file);
       CATCH {
         default {
-          @load-errors.push: %( :$file, :message(.message) );
+          @load-errors.push: %( :$file, :message(BDD::Behave::SpecLoader::load-error-message($_)) );
         }
       }
     }
@@ -129,6 +131,11 @@ our sub should-precompile(
 # rebuild them consistently. Nonzero exits are ignored: discovery reports
 # real load errors with their messages.
 #
+# The pass can also survive and leave a cache that later loads reject with
+# STALE-PRECOMPILATION-ERROR. Passing those files as @stale-cache-files skips
+# straight to the recovery: each is loaded alone, the dirs they report are
+# cleared, and every spec file is rebuilt in one pass.
+#
 # Returns Nil when the cache ends up built, or a load error naming the file the
 # final pass was loading when it ran out of time, so the caller can stop
 # before discovery waits out the same timeout on the same file.
@@ -139,6 +146,7 @@ sub precompile-specs-serially(
   :&progress = &note-progress,
   :&clock    = { now },
   IO::Path :$meta-file = 'META6.json'.IO,
+  :@stale-cache-files,
 ) is export {
   return Nil unless @spec-files.elems;
 
@@ -201,6 +209,31 @@ sub precompile-specs-serially(
     %outcome<timed-out> ?? %( :file(%outcome<file>), :message(%outcome<stall>) ) !! Nil;
   }
 
+  sub rebuild-cache(@load-alone, %failed-pass?) {
+    progress("Loading each spec file alone to find the precompilation caches to clear");
+    for @load-alone.kv -> $index, $file {
+      progress("  [{$index + 1}/{@load-alone.elems}] $file", :partial);
+
+      my $started = clock();
+      run-pass(($file,));
+      progress(elapsed-text(clock() - $started));
+    }
+
+    my @prefixes = $report.e ?? $report.slurp.lines.unique.grep(*.chars) !! ();
+    return %failed-pass ?? timeout-error(%failed-pass) !! Nil unless @prefixes.elems;
+
+    for @prefixes -> $prefix {
+      my $precomp = $prefix.IO.add('.precomp');
+      next unless $precomp.d;
+      remove-tree($precomp);
+    }
+
+    progress("Rebuilding the precompilation cache for {spec-file-count(@spec-files.elems)}");
+    timeout-error(run-pass(@spec-files, :show-each-file));
+  }
+
+  return rebuild-cache(@stale-cache-files) if @stale-cache-files;
+
   my @modules = provided-modules($meta-file);
   if @modules {
     progress("Precompiling {count-of(@modules.elems, 'module')}");
@@ -224,26 +257,7 @@ sub precompile-specs-serially(
   # the project lib dirs the specs pull in (each process appends its repo
   # chain to the report), then clear those dirs' caches and rebuild the whole
   # graph in one pass.
-  progress("Loading each spec file alone to find the precompilation caches to clear");
-  for @spec-files.kv -> $index, $file {
-    progress("  [{$index + 1}/{@spec-files.elems}] $file", :partial);
-
-    my $started = clock();
-    run-pass(($file,));
-    progress(elapsed-text(clock() - $started));
-  }
-
-  my @prefixes = $report.e ?? $report.slurp.lines.unique.grep(*.chars) !! ();
-  return timeout-error(%first) unless @prefixes.elems;
-
-  for @prefixes -> $prefix {
-    my $precomp = $prefix.IO.add('.precomp');
-    next unless $precomp.d;
-    remove-tree($precomp);
-  }
-
-  progress("Rebuilding the precompilation cache for {spec-file-count(@spec-files.elems)}");
-  timeout-error(run-pass(@spec-files, :show-each-file));
+  rebuild-cache(@spec-files, %first);
 }
 
 sub spec-file-count(Int $count --> Str) {
@@ -938,6 +952,38 @@ sub run-parallel(
   );
   my @suites      = $disco[0].list;
   my @load-errors = $disco[1].list;
+
+  my @stale-cache-files = @load-errors.grep({ .<message> ~~ STALE-PRECOMPILATION-ERROR }).map(*<file>);
+  if @stale-cache-files && !$opts.discovery-in-process {
+    $opts.progress()("{spec-file-count(@stale-cache-files.elems)} failed to load from an inconsistent precompilation cache");
+
+    my $stall = precompile-specs-serially(
+      $opts.spec-files,
+      :discovery-argv($opts.discovery-argv),
+      :base-env(%(|$opts.base-env)),
+      :progress($opts.progress),
+      :meta-file($opts.meta-file),
+      :@stale-cache-files,
+    );
+
+    with $stall {
+      $result.load-errors.push: $stall;
+      return $result;
+    }
+
+    $opts.progress()("Discovering examples in {spec-file-count(@stale-cache-files.elems)} again");
+
+    my $retry = discover-suites-subprocess(
+      @stale-cache-files,
+      :discovery-argv($opts.discovery-argv),
+      :base-env(%(|$opts.base-env)),
+      :progress($opts.progress),
+    );
+
+    @suites.append: $retry[0].list;
+    @load-errors = |@load-errors.grep({ .<message> !~~ STALE-PRECOMPILATION-ERROR }), |$retry[1].list;
+  }
+
   $result.load-errors.append: @load-errors;
 
   my $mode = BDD::Behave::Configuration::resolve-parallel-mode($opts.parallel-mode);

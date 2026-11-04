@@ -24,6 +24,19 @@ with @*ARGS.first(*.starts-with('--compile-modules=')) -> $arg {
   exit 0;
 }
 
+if @*ARGS.grep('--list-examples') {
+  my @files = @*ARGS.grep(*.ends-with('-spec.raku'));
+  my $stale = %*ENV<BEHAVE_STUB_STALE_ALWAYS>
+    || (%*ENV<BEHAVE_STUB_STALE_CACHE> && %*ENV<BEHAVE_STUB_PREFIX>.IO.add('.precomp').d);
+
+  my @errors = $stale
+    ?? @files.map({ qq[\{"file":"$_","message":"New type Stash for Method is not a mixin type"\}] })
+    !! ();
+
+  say qq[\{"suites":[],"load-errors":[{@errors.join(',')}]\}];
+  exit 0;
+}
+
 if %*ENV<BEHAVE_LOAD_PROGRESS> {
   for @*ARGS.grep(*.ends-with('-spec.raku')) -> $file {
     $*ERR.say("behave-loading: $file");

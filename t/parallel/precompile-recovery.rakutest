@@ -20,7 +20,7 @@ sub run-parallel-over(:@spec-files, :@discovery-argv, :%base-env, :&progress, :$
   ));
 }
 
-plan 25;
+plan 31;
 
 {
   my $run = make-stub-run();
@@ -86,6 +86,28 @@ plan 25;
 
   ok $run.progress.lines.grep('Discovering examples in 2 spec files'),
     'a parallel run announces discovery after the precompile pass';
+}
+
+{
+  my $run = make-stub-run(:stale-cache, :parallel-runner(&run-parallel-over));
+  LEAVE $run.cleanup;
+
+  ok $run.progress.lines.grep('2 spec files failed to load from an inconsistent precompilation cache'),
+    'a parallel run announces the spec files that failed to load from an inconsistent cache';
+  nok $run.precomp-exists, 'a stale cache load error clears the reported precomp cache';
+  is $run.compile-passes.elems, 4,
+    'the precompile pass, one per-file pass for each failed spec file, and the rebuild pass all ran';
+  is $run.discovery-passes.elems, 2, 'discovery runs again after the rebuild';
+  is-deeply $run.result.load-errors.List, (),
+    'a stale cache load error that the rebuild clears is not reported';
+}
+
+{
+  my $run = make-stub-run(:stale-always, :parallel-runner(&run-parallel-over));
+  LEAVE $run.cleanup;
+
+  is-deeply $run.result.load-errors.map(*<file>).List, $run.spec-files.map(*.absolute).List,
+    'a stale cache load error that survives the rebuild is reported once for each spec file';
 }
 
 {
