@@ -7,7 +7,7 @@ use BDD::Behave::Configuration;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
-plan 6;
+plan 11;
 
 constant Configuration = BDD::Behave::Configuration::Configuration;
 constant Runner        = BDD::Behave::Runner::Runner;
@@ -47,6 +47,13 @@ sub group-hook-stderr(@log --> Str) {
   stderr-from({ run-quiet($suite) });
 }
 
+sub each-hook-stderr(Str $phase --> Str) {
+  my @log;
+  my ($suite, $group) = suite-recording-into(@log);
+  $group.add-hook($phase, sub { die 'each hook exploded' });
+  stderr-from({ run-quiet($suite) });
+}
+
 sub config-hook-stderr(@log --> Str) {
   my ($suite, $group) = suite-recording-into(@log);
   my $config = Configuration.new;
@@ -62,6 +69,17 @@ ok $group-err.contains('Hook before-all failed in a group'),
 ok $group-err.contains('hook exploded'),
   'a group hook failure carries the message of the exception';
 is-deeply @group-log, [], 'the example does not run after a before-all hook fails';
+nok $group-err.contains('in block'), 'a group hook failure prints no source location';
+
+my $before-each-err = each-hook-stderr('before-each');
+
+is $before-each-err, '', 'a before-each hook failure prints nothing on stderr';
+
+my $after-each-err = each-hook-stderr('after-each');
+
+ok $after-each-err.contains('Hook after-each failed in a group: each hook exploded'),
+  'an after-each hook failure names the phase, the group, and the message';
+nok $after-each-err.contains('in block'), 'an after-each hook failure prints no source location';
 
 my @config-log;
 my $config-err = config-hook-stderr(@config-log);
@@ -71,5 +89,6 @@ ok $config-err.contains('Config before-each hook failed'),
 ok $config-err.contains('config hook exploded'),
   'a config hook failure carries the message of the exception';
 is-deeply @config-log, [], 'the example does not run after a config before-each hook fails';
+nok $config-err.contains('in block'), 'a config hook failure prints no source location';
 
 done-testing;

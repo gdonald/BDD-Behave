@@ -60,6 +60,38 @@ describe 'a group hook that throws', {
     stderr-of-run(@log);
     expect(@log).to.eq([]);
   }
+
+  it 'prints no source location', {
+    my @log;
+    expect(stderr-of-run(@log).contains('in block')).to.be-falsy;
+  }
+}
+
+describe 'an each hook that throws', {
+  sub stderr-of-run(Str $phase --> Str) {
+    my @log;
+    my ($suite, $group) = suite-recording-into(@log);
+    $group.add-hook($phase, sub { die 'each hook exploded' });
+    stderr-from({ run-quiet($suite) });
+  }
+
+  context 'in before-each', {
+    it 'prints nothing on stderr', {
+      expect(stderr-of-run('before-each')).to.eq('');
+    }
+  }
+
+  context 'in after-each', {
+    let(:after-each-stderr, { stderr-of-run('after-each') });
+
+    it 'names the phase, the group, and the message on stderr', {
+      expect(after-each-stderr).to.include('Hook after-each failed in a group: each hook exploded');
+    }
+
+    it 'prints no source location', {
+      expect(after-each-stderr.contains('in block')).to.be-falsy;
+    }
+  }
 }
 
 describe 'a config hook that throws', {
@@ -84,5 +116,10 @@ describe 'a config hook that throws', {
     my @log;
     stderr-of-run(@log);
     expect(@log).to.eq([]);
+  }
+
+  it 'prints no source location', {
+    my @log;
+    expect(stderr-of-run(@log).contains('in block')).to.be-falsy;
   }
 }

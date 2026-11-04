@@ -221,7 +221,7 @@ our class Runner {
         ($hook.block)();
         CATCH {
           default {
-            warn "Config $phase hook failed: {.message}";
+            note "Config $phase hook failed: {.message}";
             $first-error //= $_;
           }
         }
@@ -493,7 +493,7 @@ our class Runner {
           chain();
           CATCH {
             default {
-              warn "around-all hook failed in {$group.description}: {.message}";
+              note "around-all hook failed in {$group.description}: {.message}";
             }
           }
         }
@@ -604,7 +604,7 @@ our class Runner {
         CATCH {
           default {
             if $result.continuation-called {
-              warn "around-each hook raised after example: {.message}";
+              note "around-each hook raised after example: {.message}";
               $reached-end = True;
             } else {
               $result.outcome = 'fail';
@@ -1088,7 +1088,7 @@ our class Runner {
         ($hook.callback)();
         CATCH {
           default {
-            warn "Hook $phase failed in {$group.description}: {$_.message}";
+            note "Hook $phase failed in {$group.description}: {$_.message}";
             $first-error //= $_;
           }
         }
@@ -1106,7 +1106,7 @@ our class Runner {
         ($hook.callback)();
         CATCH {
           default {
-            warn "Hook $phase failed in {$group.description}: {$_.message}";
+            note "Hook $phase failed in {$group.description}: {$_.message}" unless $phase eq 'before-each';
             $first-error //= $_;
           }
         }
