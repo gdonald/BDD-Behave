@@ -21,6 +21,22 @@ sub greeting-spec(Str $expected --> Str) {
     SPEC
 }
 
+sub search-path-spec(--> Str) {
+  q:to/SPEC/;
+    use BDD::Behave;
+
+    describe 'the module search path', {
+      it 'starts with the configured path', {
+        expect($*REPO.repo-chain.first(CompUnit::Repository::FileSystem).prefix.basename).to.eq('app');
+      }
+
+      it 'does not pass the inherited path marker to processes the spec starts', {
+        expect(%*ENV<BEHAVE_INHERITED_LIB_PATHS>:exists).to.eq(False);
+      }
+    }
+    SPEC
+}
+
 sub behave-config(Str $paths --> Str) {
   "use BDD::Behave::Configuration;\nconfigure-behave -> \$c \{ \$c.lib($paths) \};\n";
 }
@@ -77,6 +93,26 @@ describe 'the lib setting', {
 
       it 'loads the code in parallel workers', {
         expect(run-project(files, '--parallel', '2', 'specs/greeting-spec.raku', 'specs/second-spec.raku')<exit>).to.eq(0);
+      }
+    }
+
+    context 'with lib app in .behave and a lib directory present', {
+      let(:files, {
+        %(
+          '.behave'                  => behave-config("'app'"),
+          'app/Greeting.rakumod'     => greeting-module('from app'),
+          'lib/Other.rakumod'        => "unit module Other;\n",
+          'specs/chain-spec.raku'    => search-path-spec(),
+          'specs/second-spec.raku'   => search-path-spec(),
+        );
+      });
+
+      it 'searches app first in the same process', {
+        expect(run-project(files, 'specs/chain-spec.raku')<exit>).to.eq(0);
+      }
+
+      it 'searches app first in parallel workers', {
+        expect(run-project(files, '--parallel', '2', 'specs/chain-spec.raku', 'specs/second-spec.raku')<exit>).to.eq(0);
       }
     }
 

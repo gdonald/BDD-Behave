@@ -299,6 +299,17 @@ our sub use-lib-paths(@paths, IO::Path :$base = $*CWD --> Nil) {
   }
 }
 
+our constant INHERITED-LIB-PATHS-ENV = 'BEHAVE_INHERITED_LIB_PATHS';
+
+our sub mark-lib-paths-inherited(%env --> Nil) is export {
+  %env{INHERITED-LIB-PATHS-ENV} = '1';
+}
+
+# Deleting the marker keeps it out of processes the specs themselves start.
+our sub take-lib-paths-inherited(--> Bool) {
+  so %*ENV{INHERITED-LIB-PATHS-ENV}:delete;
+}
+
 our sub current-include-flags(--> List) is export {
   (gather for $*REPO.repo-chain {
       take '-I' ~ .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;

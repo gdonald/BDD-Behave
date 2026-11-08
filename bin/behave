@@ -686,9 +686,11 @@ my $final-config = BDD::Behave::Configuration::defaults()
   .merge($project-config)
   .merge($cli-config);
 
-BDD::Behave::Configuration::use-lib-paths(
-  BDD::Behave::Configuration::resolve-lib-paths($final-config),
-);
+unless BDD::Behave::Configuration::take-lib-paths-inherited() {
+  BDD::Behave::Configuration::use-lib-paths(
+    BDD::Behave::Configuration::resolve-lib-paths($final-config),
+  );
+}
 
 my $format               = $final-config.format;
 my $order                = $final-config.order;
@@ -894,6 +896,7 @@ if $coverage-enabled && !$coverage-running && $parallel-workers == 0 {
   %child-env<MVM_COVERAGE_LOG>      = $raw-path.absolute;
   %child-env<MVM_COVERAGE_CONTROL>  = $coverage-counts ?? '2' !! '0';
   %child-env<BEHAVE_COVERAGE_LOG>   = $raw-path.absolute;
+  mark-lib-paths-inherited(%child-env);
 
   my @child-cmd = 'raku', |current-include-flags(), $*PROGRAM-NAME, |@*ARGS;
   my $proc = run(|@child-cmd, :env(|%child-env));
@@ -1354,6 +1357,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
 
   my %base-env = |%*ENV;
   %base-env<BEHAVE_DISABLE_CONFIG> = '1';
+  mark-lib-paths-inherited(%base-env);
   # Each worker gets its own isolated log below; an inherited MVM_COVERAGE_FILES
   # passes through to shrink the per-worker logs at instrumentation time. The
   # merge-time grep still applies --coverage-include exactly.

@@ -172,7 +172,10 @@ our class Bisector {
       note "  [iter $!iterations] raku {@!include-flags.join(' ')} $!behave-bin {@args.join(' ')}";
     }
 
-    my $proc = run('raku', |@!include-flags, $!behave-bin, |@args, :out, :err);
+    my %env = |%*ENV;
+    mark-lib-paths-inherited(%env);
+
+    my $proc = run('raku', |@!include-flags, $!behave-bin, |@args, :out, :err, :%env);
     my $out = $proc.out.slurp(:close);
     my $err = $proc.err.slurp(:close);
 

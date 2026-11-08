@@ -155,6 +155,7 @@ sub precompile-specs-serially(
   %env<BEHAVE_WORKER_COUNT> //= '1';
   %env<BEHAVE_COMPILE_REPORT> = $report.absolute;
   %env<BEHAVE_LOAD_PROGRESS> = '1';
+  mark-lib-paths-inherited(%env);
   %env<MVM_COVERAGE_LOG>:delete;
   %env<MVM_COVERAGE_CONTROL>:delete;
   %env<BEHAVE_COVERAGE_LOG>:delete;
@@ -298,6 +299,7 @@ sub discover-suites-subprocess(
   %env<MVM_COVERAGE_CONTROL>:delete;
   %env<BEHAVE_COVERAGE_LOG>:delete;
   %env<BEHAVE_LOAD_PROGRESS> = '1';
+  mark-lib-paths-inherited(%env);
 
   my $proc = Proc::Async.new(|@argv);
   my @stdout-chunks;

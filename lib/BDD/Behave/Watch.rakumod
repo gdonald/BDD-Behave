@@ -4,6 +4,7 @@ use BDD::Behave::Watch::Watcher;
 use BDD::Behave::Watch::SmartSelector;
 use BDD::Behave::Watch::UI;
 use BDD::Behave::Watch::Session;
+use BDD::Behave::Configuration;
 
 our sub default-paths(IO::Path :$base = $*CWD --> List) {
   my @paths;
@@ -43,6 +44,7 @@ our sub make-subprocess-runner(
     }
     my %env = |%*ENV;
     %env<BEHAVE_DISABLE_CONFIG> = '1' if %env<BEHAVE_DISABLE_CONFIG>:!exists;
+    mark-lib-paths-inherited(%env);
     my @args = @argv[1..*];
     my $proc;
     if $cwd.defined {
