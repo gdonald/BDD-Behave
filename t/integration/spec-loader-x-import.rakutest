@@ -1,5 +1,4 @@
 use v6.d;
-use lib 'lib';
 use Test;
 
 # Regression: when one spec triggers DBIish.connect at file load (which does

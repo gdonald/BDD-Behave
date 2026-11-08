@@ -16,6 +16,8 @@ our sub is-parallel-mode(Str $mode --> Bool) {
   so $mode ∈ PARALLEL-MODES;
 }
 
+our constant DEFAULT-LIB-PATHS = ('lib',);
+
 our class ConfigInclude {
   has Mu  $.class is required;
   has Str $.as;
@@ -98,6 +100,7 @@ our class Configuration {
   has Str @.spec-paths;
   has Str @.coverage-include;
   has Str @.coverage-exclude;
+  has Str @.lib-paths;
 
   has ConfigInclude @.includes;
   has ConfigHook    @.hooks;
@@ -127,6 +130,11 @@ our class Configuration {
 
   method include-spec(*@paths) {
     @!spec-paths.append: @paths.map(*.Str);
+    self;
+  }
+
+  method lib(*@paths) {
+    @!lib-paths.append: @paths.map(*.Str);
     self;
   }
 
@@ -221,6 +229,7 @@ our class Configuration {
     $result.spec-paths.append:        |self.spec-paths,        |$other.spec-paths;
     $result.coverage-include.append:  |self.coverage-include,  |$other.coverage-include;
     $result.coverage-exclude.append:  |self.coverage-exclude,  |$other.coverage-exclude;
+    $result.lib-paths.append:         |self.lib-paths,         |$other.lib-paths;
     $result.includes.append:          |self.includes,          |$other.includes;
     $result.hooks.append:             |self.hooks,             |$other.hooks;
     $result.match-filters.append:     |self.match-filters,     |$other.match-filters;
@@ -267,6 +276,33 @@ our sub defaults(--> Configuration) {
   $c.coverage-branch      = False;
   $c.coverage-counts      = False;
   $c;
+}
+
+our sub resolve-lib-paths(Configuration $config --> List) {
+  $config.lib-paths.elems ?? $config.lib-paths.unique.List !! DEFAULT-LIB-PATHS;
+}
+
+# Rakudo caches each repository's id as a hash of the repositories after it,
+# so moving one already on the chain leaves precomp ids for a chain that no
+# process starts with.
+our sub use-lib-paths(@paths, IO::Path :$base = $*CWD --> Nil) {
+  for @paths -> $path {
+    my $directory = ($path.IO.is-absolute ?? $path.IO !! $base.add($path)).absolute;
+
+    next if $*REPO.repo-chain.first({
+      $_ ~~ CompUnit::Repository::FileSystem && .prefix.resolve.absolute eq $directory.IO.resolve.absolute
+    });
+
+    CompUnit::RepositoryRegistry.use-repository(
+      CompUnit::RepositoryRegistry.repository-for-spec($directory),
+    );
+  }
+}
+
+our sub current-include-flags(--> List) is export {
+  (gather for $*REPO.repo-chain {
+      take '-I' ~ .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;
+  }).List;
 }
 
 our sub user-config-path(--> IO::Path) {

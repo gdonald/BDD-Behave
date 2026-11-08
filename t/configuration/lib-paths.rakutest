@@ -1,0 +1,120 @@
+use v6.d;
+use Test;
+
+use BDD::Behave::Configuration;
+use Behave::Test::ProjectDir;
+
+constant Configuration = BDD::Behave::Configuration::Configuration;
+
+plan 11;
+
+sub greeting-module(Str $greeting --> Str) {
+  "unit module Greeting;\nour sub greet \{ '$greeting' \}\n";
+}
+
+sub greeting-spec(Str $expected --> Str) {
+  qq:to/SPEC/;
+    use BDD::Behave;
+    use Greeting;
+
+    describe 'a greeting', \{
+      it 'comes from the configured path', \{
+        expect(Greeting::greet()).to.eq('$expected');
+      \}
+    \}
+    SPEC
+}
+
+sub behave-config(Str $paths --> Str) {
+  "use BDD::Behave::Configuration;\nconfigure-behave -> \$c \{ \$c.lib($paths) \};\n";
+}
+
+{
+  my $config = Configuration.new;
+  $config.lib('app');
+  $config.lib('specs/lib', 'vendor');
+
+  is-deeply $config.lib-paths.List, <app specs/lib vendor>.List, 'lib appends paths across calls';
+}
+
+{
+  my $merged = Configuration.new.lib('user-lib').merge(Configuration.new.lib('app'));
+
+  is-deeply $merged.lib-paths.List, <user-lib app>.List, 'merge keeps the user paths ahead of the project paths';
+}
+
+is-deeply BDD::Behave::Configuration::resolve-lib-paths(Configuration.new), ('lib',),
+  'resolve-lib-paths defaults to lib when no path is configured';
+
+is-deeply BDD::Behave::Configuration::resolve-lib-paths(Configuration.new.lib('app', 'specs/lib', 'app')),
+  <app specs/lib>.List,
+  'resolve-lib-paths returns each configured path once';
+
+{
+  my %files =
+    '.behave'                  => behave-config("'app'"),
+    'app/Greeting.rakumod'     => greeting-module('from app'),
+    'specs/greeting-spec.raku' => greeting-spec('from app'),
+    'specs/second-spec.raku'   => greeting-spec('from app');
+
+  is run-project(%files, 'specs/greeting-spec.raku')<exit>, 0,
+    'lib app in .behave loads code under app in the same process';
+
+  is run-project(%files, '--parallel', '2', 'specs/greeting-spec.raku', 'specs/second-spec.raku')<exit>, 0,
+    'lib app in .behave loads code under app in parallel workers';
+}
+
+{
+  my %files =
+    'lib/Greeting.rakumod'     => greeting-module('from lib'),
+    'specs/greeting-spec.raku' => greeting-spec('from lib');
+
+  is run-project(%files, 'specs/greeting-spec.raku')<exit>, 0,
+    'with no .behave the code under lib loads';
+}
+
+{
+  my %files =
+    '.behave'                  => behave-config("'app'"),
+    'lib/Greeting.rakumod'     => greeting-module('from lib'),
+    'specs/greeting-spec.raku' => greeting-spec('from lib');
+
+  my %result = run-project(%files, 'specs/greeting-spec.raku');
+
+  ok (%result<out> ~ %result<err>).contains('Could not find Greeting'),
+    'lib app in .behave does not search lib';
+}
+
+{
+  my %files =
+    '.behave'                  => behave-config("'first', 'second'"),
+    'first/Greeting.rakumod'   => greeting-module('from first'),
+    'second/Greeting.rakumod'  => greeting-module('from second'),
+    'specs/greeting-spec.raku' => greeting-spec('from second');
+
+  is run-project(%files, 'specs/greeting-spec.raku')<exit>, 0,
+    'the last configured path is searched first, as use lib does';
+}
+
+{
+  my %files =
+    '.behave'                  => behave-config("'second'"),
+    'first/Greeting.rakumod'   => greeting-module('from first'),
+    'second/Greeting.rakumod'  => greeting-module('from second'),
+    'specs/greeting-spec.raku' => greeting-spec('from first');
+
+  is run-project(%files, 'specs/greeting-spec.raku', :include<first second>)<exit>, 0,
+    'a configured path that -I already put on the search path stays where -I put it';
+}
+
+{
+  my %files =
+    '.behave'                  => behave-config('$*CWD.add(\'app\').absolute'),
+    'app/Greeting.rakumod'     => greeting-module('from app'),
+    'specs/greeting-spec.raku' => greeting-spec('from app');
+
+  is run-project(%files, 'specs/greeting-spec.raku')<exit>, 0,
+    'an absolute path in .behave loads the code from that path';
+}
+
+done-testing;

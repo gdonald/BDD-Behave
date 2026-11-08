@@ -1,5 +1,4 @@
 use v6.d;
-use lib 'lib';
 use Test;
 
 use BDD::Behave::Parallel;
@@ -181,10 +180,10 @@ sub summarize-suite($s) {
 # default-discovery-argv shape.
 {
   my @argv = default-discovery-argv();
-  is @argv.elems, 3, 'default-discovery-argv returns 3 components';
   is @argv[0], 'raku', 'first arg is the raku interpreter';
-  ok @argv[1].starts-with('-I'),
-    'second arg is the -I lib path';
+  is @argv[*-1], $*PROGRAM-NAME, 'last arg is the running program';
+  ok @argv[1 ..^ *-1].all.starts-with('-I'),
+    'the args between them are the -I paths of the repo chain';
 }
 
 {

@@ -1,5 +1,4 @@
 use v6.d;
-use lib 'lib';
 use Test;
 
 use BDD::Behave;
@@ -219,4 +218,3 @@ plan 54;
   is $expected[0], 1, 'Failure.expected[0] is min';
   is $expected[1], 10, 'Failure.expected[1] is max';
 }
-

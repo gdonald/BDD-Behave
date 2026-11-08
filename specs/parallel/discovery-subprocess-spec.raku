@@ -180,6 +180,22 @@ describe 'discover-suites-subprocess', :order<defined>, {
     }
   }
 
+  context 'the default discovery command', {
+    let(:argv, { default-discovery-argv() });
+
+    it 'starts with the raku interpreter', {
+      expect(argv()[0]).to.eq('raku');
+    }
+
+    it 'ends with the running program', {
+      expect(argv()[*-1]).to.eq($*PROGRAM-NAME);
+    }
+
+    it 'passes the repo chain as -I paths between them', {
+      expect(argv()[1 ..^ *-1].all.starts-with('-I').so).to.be-truthy;
+    }
+  }
+
   context 'when a spec hangs while loading', {
     my $lib  = $root.add('lib');
     my $bin  = $root.add('bin/behave');

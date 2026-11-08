@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use BDD::Behave::Failure;
 use BDD::Behave::Failures;

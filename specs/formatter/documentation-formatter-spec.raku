@@ -1,4 +1,3 @@
-use lib 'specs/lib';
 use BDD::Behave;
 use BDD::Behave::Formatter;
 use BDD::Behave::Formatter::Tree;

@@ -1,5 +1,4 @@
 use v6.d;
-use lib 'lib';
 use Test;
 
 # The example in the first group calls the same helper the second group was

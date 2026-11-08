@@ -71,12 +71,6 @@ sub discover-suites(@spec-files --> List) is export {
   (@suites.List, @load-errors.List).List;
 }
 
-sub current-include-flags(--> List) is export {
-  (gather for $*REPO.repo-chain.reverse {
-      take '-I' ~ .prefix.absolute if $_ ~~ CompUnit::Repository::FileSystem;
-  }).List;
-}
-
 sub default-discovery-argv(--> List) is export {
   ('raku', |current-include-flags(), $*PROGRAM-NAME).List;
 }

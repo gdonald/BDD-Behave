@@ -1,5 +1,4 @@
 use v6.d;
-use lib 'lib';
 use Test;
 
 # The first file keeps its group open until the second file has reported an

@@ -1,6 +1,7 @@
 unit module BDD::Behave::Bisect;
 
 use BDD::Behave::Colors;
+use BDD::Behave::Configuration;
 
 our class BisectResult {
   has Str @.initial-failing;
@@ -13,6 +14,7 @@ our class BisectResult {
 our class Bisector {
   has @.spec-files;
   has Str $.behave-bin = 'bin/behave';
+  has Str @.include-flags = current-include-flags();
   has @.extra-args;
   has Bool $.verbose = False;
   has Bool $.quiet = False;
@@ -167,10 +169,10 @@ our class Bisector {
     @args.append: @!spec-files;
 
     if $!verbose {
-      note "  [iter $!iterations] raku -Ilib $!behave-bin {@args.join(' ')}";
+      note "  [iter $!iterations] raku {@!include-flags.join(' ')} $!behave-bin {@args.join(' ')}";
     }
 
-    my $proc = run('raku', '-Ilib', $!behave-bin, |@args, :out, :err);
+    my $proc = run('raku', |@!include-flags, $!behave-bin, |@args, :out, :err);
     my $out = $proc.out.slurp(:close);
     my $err = $proc.err.slurp(:close);
 

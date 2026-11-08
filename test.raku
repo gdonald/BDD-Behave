@@ -15,11 +15,13 @@ my @all-stages = (
       'prove6',
       "-j$jobs",
       '-Ilib',
+      '-Ispecs/lib',
       't'
   ] },
   { :name<behave>, :cmd[
       'raku',
       '-Ilib',
+      '-Ispecs/lib',
       'bin/behave',
       '--parallel', $jobs.Str,
       '--parallel-mode', 'queue'
