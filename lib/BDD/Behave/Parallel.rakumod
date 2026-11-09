@@ -231,8 +231,11 @@ sub precompile-specs-serially(
 
   my @modules = provided-modules($meta-file);
   if @modules {
-    progress("Precompiling {count-of(@modules.elems, 'module')}");
-    my %module-pass = run-pass((), :modules-from($meta-file), :total(@modules.elems), :show-each-file);
+    progress("Precompiling {count-of(@modules.elems, 'module')}", :partial);
+
+    my $started = clock();
+    my %module-pass = run-pass((), :modules-from($meta-file), :total(@modules.elems));
+    progress(elapsed-text(clock() - $started));
 
     progress(%module-pass<timed-out>
       ?? "The {%module-pass<stall>}"

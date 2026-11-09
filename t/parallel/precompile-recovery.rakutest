@@ -152,9 +152,9 @@ plan 34;
   my $run = make-stub-run(:modules<Acme::Alpha Acme::Beta>);
   LEAVE $run.cleanup;
 
-  is $run.progress.lines[0], 'Precompiling 2 modules', 'the module pass announces its module count first';
-  is $run.progress.lines[2], '  [2/2] Acme::Beta (0.0s)', 'the module pass numbers and times each module as it loads';
-  is $run.progress.lines[3], 'Precompiling 2 spec files', 'the spec files are precompiled after the modules';
+  is $run.progress.lines[0], 'Precompiling 2 modules (0.0s)', 'the module pass announces its module count and time on one line';
+  is $run.progress.lines.grep(*.contains('Acme::')).elems, 0, 'the module pass prints no line for each module';
+  is $run.progress.lines[1], 'Precompiling 2 spec files', 'the spec files are precompiled after the modules';
 }
 
 {

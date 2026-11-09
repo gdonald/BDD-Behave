@@ -220,19 +220,19 @@ describe 'the precompile pass', {
   context 'when the project META6.json provides modules', {
     let(:module-run, { make-stub-run(:modules<Acme::Alpha Acme::Beta>) });
 
-    it 'announces how many modules it is precompiling first', {
+    it 'announces how many modules it precompiled and how long that took on one line', {
       LEAVE module-run.cleanup;
-      expect(module-run.progress.lines[0]).to.eq('Precompiling 2 modules');
+      expect(module-run.progress.lines[0]).to.eq('Precompiling 2 modules (0.0s)');
     }
 
-    it 'prints a numbered and timed line as each module loads', {
+    it 'prints no line for each module', {
       LEAVE module-run.cleanup;
-      expect(module-run.progress.lines[2]).to.eq('  [2/2] Acme::Beta (0.0s)');
+      expect(module-run.progress.lines.grep(*.contains('Acme::')).elems).to.eq(0);
     }
 
     it 'precompiles the spec files after the modules', {
       LEAVE module-run.cleanup;
-      expect(module-run.progress.lines[3]).to.eq('Precompiling 2 spec files');
+      expect(module-run.progress.lines[1]).to.eq('Precompiling 2 spec files');
     }
   }
 
