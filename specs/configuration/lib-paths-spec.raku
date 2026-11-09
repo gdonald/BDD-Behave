@@ -33,6 +33,10 @@ sub search-path-spec(--> Str) {
       it 'does not pass the inherited path marker to processes the spec starts', {
         expect(%*ENV<BEHAVE_INHERITED_LIB_PATHS>:exists).to.eq(False);
       }
+
+      it 'does not pass the disabled config marker to processes the spec starts', {
+        expect(%*ENV<BEHAVE_DISABLE_CONFIG>:exists).to.eq(False);
+      }
     }
     SPEC
 }

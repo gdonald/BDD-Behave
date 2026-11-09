@@ -658,7 +658,8 @@ while @args {
   }
 }
 
-my $disable-config = $no-config || %*ENV<BEHAVE_DISABLE_CONFIG>;
+my $config-disabled-by-env = so %*ENV<BEHAVE_DISABLE_CONFIG>:delete;
+my $disable-config         = $no-config || $config-disabled-by-env;
 
 my $user-config    = CLI-CONFIG.new;
 my $project-config = CLI-CONFIG.new;
