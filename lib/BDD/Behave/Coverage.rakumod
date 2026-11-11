@@ -233,7 +233,8 @@ our sub identify-executable-lines(IO::Path $file --> SetHash) {
       }
     }
 
-    if $trimmed eq 'else' | 'else {' | '} else {' | '}else{' {
+    if $trimmed eq 'else' | 'else {' | '} else {' | '}else{'
+    || $trimmed ~~ / ^ 'elsif' [ \h | '(' ] / {
       update-state();
       next;
     }
@@ -349,7 +350,8 @@ our sub is-bare-value-line(Str $trimmed --> Bool) {
 }
 
 our sub is-pair-line(Str $trimmed --> Bool) {
-  so $trimmed ~~ / ^ <[\w-]>+ \s* '=>' /;
+  so $trimmed ~~ / ^ <[\w-]>+ \s* '=>' /
+  || $trimmed ~~ / ^ ':' '!'? <[\w-]>+ /;
 }
 
 our sub is-multiline-routine-header(Str $trimmed --> Bool) {
@@ -402,6 +404,7 @@ our sub identify-branch-lines(IO::Path $file --> SetHash) {
   my $set = SetHash.new;
   return $set unless $file.f;
   my @lines = $file.lines;
+  my $executable = identify-executable-lines($file);
   my $rx = / ^ \h* [
     'if' | 'elsif' | 'unless' | 'with' | 'without'
     | 'when' | 'while' | 'until' | 'given' | 'for'
@@ -430,6 +433,7 @@ our sub identify-branch-lines(IO::Path $file --> SetHash) {
     next if $in-nocov;
     next if $trimmed eq '';
     next if $trimmed.starts-with('#');
+    next unless $executable{$lineno};
     if $line ~~ $rx || $line ~~ $rx-postfix {
       $set{$lineno} = True;
     }

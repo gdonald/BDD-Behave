@@ -16,7 +16,7 @@ sub run-behave-with-coverage(--> Hash) {
   %env<BEHAVE_COVERAGE_LOG>:delete;
 
   my $proc = run 'raku', "-I{$root.add('lib').absolute}", $root.add('bin/behave').absolute,
-    '--coverage', '--coverage-format=text', '--coverage-minimum=100',
+    '--coverage', '--coverage-branch', '--coverage-format=text', '--coverage-minimum=100',
     "--coverage-include={$fixture.absolute}", $spec.absolute,
     :out, :err, :env(%env);
 
@@ -44,6 +44,42 @@ describe 'executable lines MoarVM attributes to another line', {
   it 'keeps the line that opens the hash literal', {
     expect(?executable(){12}).to.be-truthy;
   }
+
+  it 'leaves out an elsif line', {
+    expect(?executable(){25}).to.be-falsy;
+  }
+
+  it 'keeps the body of an elsif', {
+    expect(?executable(){26}).to.be-truthy;
+  }
+
+  it 'leaves out a colon pair inside a hash literal', {
+    expect(?executable(){33}).to.be-falsy;
+  }
+
+  it 'leaves out a negated colon pair inside a hash literal', {
+    expect(?executable(){35}).to.be-falsy;
+  }
+}
+
+describe 'branch lines MoarVM attributes to another line', {
+  let(:branches, { BDD::Behave::Coverage::identify-branch-lines($fixture) });
+
+  it 'leaves out an elsif line', {
+    expect(?branches(){25}).to.be-falsy;
+  }
+
+  it 'keeps the if line', {
+    expect(?branches(){22}).to.be-truthy;
+  }
+
+  it 'leaves out a postfix unless on a continuation line', {
+    expect(?branches(){41}).to.be-falsy;
+  }
+
+  it 'leaves out a postfix until after a closing brace', {
+    expect(?branches(){49}).to.be-falsy;
+  }
 }
 
 describe 'recognizing a pair line', {
@@ -53,6 +89,18 @@ describe 'recognizing a pair line', {
 
   it 'does not match an assignment', {
     expect(BDD::Behave::Coverage::is-pair-line('my %h = a => 1;')).to.be-falsy;
+  }
+
+  it 'matches a line starting with a colon pair', {
+    expect(BDD::Behave::Coverage::is-pair-line(':presence, length => { max => 255 },')).to.be-truthy;
+  }
+
+  it 'matches a line starting with a negated colon pair', {
+    expect(BDD::Behave::Coverage::is-pair-line(':!blank,')).to.be-truthy;
+  }
+
+  it 'does not match a method call on the topic', {
+    expect(BDD::Behave::Coverage::is-pair-line('.say;')).to.be-falsy;
   }
 }
 
@@ -71,6 +119,10 @@ describe 'a coverage run over a file whose code all runs', {
 
   it 'reports 100%', {
     expect(coverage-run<out>).to.include('(100.0%)');
+  }
+
+  it 'reports every branch covered', {
+    expect(coverage-run<out>).to.include('Branches: 1/1 (100.0%)');
   }
 
   it 'passes a 100% minimum', {
