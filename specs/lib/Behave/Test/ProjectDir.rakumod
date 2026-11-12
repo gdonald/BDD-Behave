@@ -14,7 +14,7 @@ sub make-project(%files --> IO::Path) is export {
   $dir;
 }
 
-sub remove-project(IO::Path $dir --> Nil) {
+sub remove-project(IO::Path $dir --> Nil) is export {
   for $dir.dir -> $entry {
     $entry.d && !$entry.l ?? remove-project($entry) !! $entry.unlink;
   }

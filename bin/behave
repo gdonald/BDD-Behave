@@ -705,7 +705,8 @@ $parallel-workers        = $final-config.parallel // $*KERNEL.cpu-cores;
 my $progress-total       = ?$final-config.progress-total;
 my $fail-fast            = $final-config.fail-fast;
 my $retry-default        = $final-config.retry // 0;
-my $only-failures        = ?$final-config.only-failures;
+my $worker-mode          = $worker-manifest-path.defined || $queue-worker-mode;
+my $only-failures        = ?$final-config.only-failures && !$worker-mode;
 my $failures-path        = $final-config.failures-path // $*CWD.IO.add('.behave-failures');
 my $verbose              = ?$final-config.verbose;
 my $aggregate-failures   = $final-config.aggregate-failures;
@@ -718,10 +719,10 @@ my $benchmark-save       = $final-config.benchmark-save;
 my $benchmark-threshold  = $final-config.benchmark-threshold;
 my $benchmark-format     = $final-config.benchmark-format;
 my $benchmark-output     = $final-config.benchmark-output;
-my @include-tags         = $final-config.include-tags.list;
-my @exclude-tags         = $final-config.exclude-tags.list;
-my @example-patterns     = $final-config.example-patterns.list;
-my @only-locations       = $final-config.only-locations.list;
+my @include-tags         = $worker-mode ?? () !! $final-config.include-tags.list;
+my @exclude-tags         = $worker-mode ?? () !! $final-config.exclude-tags.list;
+my @example-patterns     = $worker-mode ?? () !! $final-config.example-patterns.list;
+my @only-locations       = $worker-mode ?? () !! $final-config.only-locations.list;
 
 if $only-failures {
   if $failures-path.defined && $failures-path.e {
@@ -737,7 +738,7 @@ if $only-failures {
     note "--only-failures: '{$failures-path}' not found; running all examples";
   }
 }
-my $coverage-enabled     = ?$final-config.coverage;
+my $coverage-enabled     = ?$final-config.coverage && !$worker-mode;
 my $coverage-minimum     = $final-config.coverage-minimum // 0.Real;
 my $coverage-format      = $final-config.coverage-format // 'text';
 my $coverage-output      = $final-config.coverage-output;
@@ -1314,9 +1315,7 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   my @worker-argv = 'raku', |current-include-flags(), $*PROGRAM-NAME;
 
   my $worker-order = $seed-mode eq 'stable' ?? 'defined' !! $order;
-  if $worker-order eq 'defined' {
-    @worker-argv.push: '--order', 'defined';
-  }
+  @worker-argv.push: '--order', $worker-order;
 
   @worker-argv.push: '--seed-mode', $seed-mode;
 
@@ -1326,14 +1325,15 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
 
   if $config-path-arg.defined {
     @worker-argv.push: '--config', $config-path-arg.IO.absolute;
-  } else {
+  } elsif $disable-config {
     @worker-argv.push: '--no-config';
+  } else {
+    @worker-argv.push: '--no-user-config'    if $no-user-config;
+    @worker-argv.push: '--no-project-config' if $no-project-config;
   }
 
   @worker-argv.push: '--format', 'json-events';
-  if $retry-default > 0 {
-    @worker-argv.push: '--retry', $retry-default.Str;
-  }
+  @worker-argv.push: '--retry', $retry-default.Str;
   if $fail-fast > 0 {
     @worker-argv.push: '--fail-fast=' ~ $fail-fast.Str;
   }
@@ -1357,7 +1357,6 @@ if $parallel-workers >= 1 && !$worker-manifest-path.defined && !$doc-mode {
   my $parent-formatter = BDD::Behave::Formatter::Registry.create($format);
 
   my %base-env = |%*ENV;
-  %base-env<BEHAVE_DISABLE_CONFIG> = '1';
   mark-lib-paths-inherited(%base-env);
   # Each worker gets its own isolated log below; an inherited MVM_COVERAGE_FILES
   # passes through to shrink the per-worker logs at instrumentation time. The

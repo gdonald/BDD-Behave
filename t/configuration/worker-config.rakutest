@@ -1,0 +1,60 @@
+use v6.d;
+use Test;
+use Behave::Test::ProjectDir;
+
+plan 6;
+
+my $fixtures = $*PROGRAM.parent.parent.add('fixtures/worker-config');
+
+my @spec-files = $fixtures.add('first-spec.raku').absolute,
+                 $fixtures.add('second-spec.raku').absolute;
+
+my $hook-config = q:to/CONFIG/;
+  use BDD::Behave::Configuration;
+
+  configure-behave -> $c {
+    $c.before-all({ 'hook.log'.IO.spurt("{%*ENV<BEHAVE_WORKER_INDEX>}\n", :append) });
+  };
+  CONFIG
+
+my $tag-config = q:to/CONFIG/;
+  use BDD::Behave::Configuration;
+
+  configure-behave -> $c { $c.include-tag('fast') };
+  CONFIG
+
+sub hook-log-lines(*@args --> List) {
+  my $project = make-project(%('.behave' => $hook-config));
+  LEAVE remove-project($project);
+
+  run-behave-in($project, |@args, |@spec-files);
+
+  my $log = $project.add('hook.log');
+
+  $log.e ?? $log.lines.sort.List !! ();
+}
+
+is hook-log-lines('--parallel', '2', '--parallel-mode', 'isolated').elems, 2,
+  'isolated mode runs the project config hook once in the worker for each spec file';
+
+is hook-log-lines('--parallel', '2', '--parallel-mode', 'lpt').join(','), '0,1',
+  'lpt mode runs the project config hook in both workers';
+
+ok hook-log-lines('--parallel', '2', '--parallel-mode', 'queue').elems > 0,
+  'queue mode runs the project config hook in the workers that receive examples';
+
+is hook-log-lines('--no-project-config', '--parallel', '2').elems, 0,
+  '--no-project-config keeps the project config hook out of the workers';
+
+is hook-log-lines('--no-config', '--parallel', '2').elems, 0,
+  '--no-config keeps the project config hook out of the workers';
+
+{
+  my $project = make-project(%('.behave' => $tag-config));
+  LEAVE remove-project($project);
+
+  my %result = run-behave-in($project, '--tag', 'slow', '--parallel', '2', |@spec-files);
+
+  like %result<out>, /'Overall: 2 examples'/,
+    'workers run the examples matching a config tag or a command line tag';
+}
