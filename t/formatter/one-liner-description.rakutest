@@ -1,0 +1,86 @@
+use v6.d;
+use Test;
+
+use BDD::Behave;
+use BDD::Behave::Failures;
+use BDD::Behave::Formatter::Documentation;
+use BDD::Behave::Formatter::Tree;
+use BDD::Behave::Runner;
+use BDD::Behave::SpecTree;
+use Test::Output;
+
+plan 8;
+
+constant Suite        = BDD::Behave::SpecTree::Suite;
+constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
+constant Example      = BDD::Behave::SpecTree::Example;
+
+sub strip-ansi(Str $text) { $text.subst(/ \x1b '[' <[0..9;]>+ 'm' /, '', :g) }
+
+sub one-liner-suite(&block) {
+  my $suite = Suite.create(:description('synthetic'), :file('synth'.IO), :line(1));
+  my $group = ExampleGroup.new(:description('a number'), :file('synth'.IO), :line(1));
+  $suite.add-group($group);
+
+  $group.add-example(Example.new(
+    :description('example at synth:7'),
+    :file('synth'.IO),
+    :line(7),
+    :&block,
+    :metadata(%( auto-description => True )),
+  ));
+
+  $suite;
+}
+
+sub run-one-liner($formatter, &block) {
+  my $runner   = BDD::Behave::Runner::Runner.new(:$formatter);
+  my $snapshot = Failures.list.elems;
+
+  my $output = strip-ansi stdout-from({ $runner.run(one-liner-suite(&block)) });
+  my @failures = Failures.list[$snapshot ..^ Failures.list.elems];
+  Failures.list.splice($snapshot);
+
+  %( :$output, :@failures );
+}
+
+{
+  my %run = run-one-liner(BDD::Behave::Formatter::Documentation.new, { expect(42).to.eq(42) });
+
+  ok %run<output>.lines.grep('  should eq 42'),
+    'a passing one-liner prints the description derived from its matcher';
+  nok %run<output>.contains('example at synth:7'),
+    'a passing one-liner leaves its placeholder description out of the output';
+}
+
+{
+  my %run = run-one-liner(BDD::Behave::Formatter::Documentation.new, { expect(42).to.eq(7) });
+
+  ok %run<output>.lines.grep('  should eq 7 (FAILED)'),
+    'a failing one-liner marks the derived description as failed';
+  nok %run<output>.contains('example at synth:7'),
+    'a failing one-liner leaves its placeholder description out of the output';
+  is-deeply %run<failures>.map(*.description).List, ('a number should eq 7',),
+    'a failing one-liner records the failure under the derived description';
+}
+
+{
+  my %run = run-one-liner(BDD::Behave::Formatter::Documentation.new, { 1 + 1 });
+
+  ok %run<output>.lines.grep('  example at synth:7'),
+    'a one-liner that runs no matcher prints its placeholder description';
+}
+
+{
+  my %run = run-one-liner(BDD::Behave::Formatter::Tree.new, { expect(42).to.eq(42) });
+
+  is %run<output>.lines.grep(*.contains("'should eq 42'")).elems, 1,
+    'the tree formatter names a passing one-liner once, with its derived description';
+}
+
+{
+  my %run = run-one-liner(BDD::Behave::Formatter::Tree.new, { expect(42).to.eq(7) });
+
+  is %run<output>.lines.grep(*.contains("'should eq 7'")).elems, 1,
+    'the tree formatter names a failing one-liner once, with its derived description';
+}

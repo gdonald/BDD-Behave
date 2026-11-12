@@ -2,6 +2,7 @@ use v6.d;
 use Test;
 
 use BDD::Behave::Parallel;
+use BDD::Behave::SpecTree;
 
 my $example = BDD::Behave::Parallel::resolve-example((), %(
   :id('/abs/spec.raku:9'), :description('checks totals'), :file('/abs/spec.raku'), :line(9),
@@ -11,5 +12,23 @@ is $example.description, 'checks totals',
   'an event whose id names no loaded example resolves to an example built from its description';
 is $example.line, 9,
   'an event whose id names no loaded example resolves to an example built from its line';
+
+{
+  my $suite = BDD::Behave::SpecTree::Suite.create(:description('synthetic'), :file('/abs/spec.raku'.IO), :line(1));
+  my $loaded = BDD::Behave::SpecTree::Example.new(
+    :description('example at spec.raku:9'), :file('/abs/spec.raku'.IO), :line(9), :block(sub { }),
+  );
+  $suite.add-child($loaded);
+
+  my $resolved = BDD::Behave::Parallel::resolve-example(($suite,), %( :id('/abs/spec.raku:9') ));
+  is $resolved.description, 'example at spec.raku:9',
+    'an event with no description keeps the loaded example description';
+
+  $resolved = BDD::Behave::Parallel::resolve-example(($suite,), %(
+    :id('/abs/spec.raku:9'), :description('should eq 42'),
+  ));
+  is $resolved.description, 'should eq 42',
+    'an event carrying the derived description renames the loaded example';
+}
 
 done-testing;

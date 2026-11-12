@@ -28,8 +28,6 @@ our class AttemptResult {
   has %.failure-info              is rw;
   has Int  $.new-failures         is rw = 0;
   has @.captured-matchers         is rw;
-  has Bool $.auto                 is rw = False;
-  has Str  $.description          is rw;
   has Real $.duration             is rw;
   has Bool $.continuation-called  is rw = False;
 }
@@ -527,7 +525,7 @@ our class Runner {
     }
 
     with self.before-all-error($example) -> $error {
-      my $result = AttemptResult.new(:description($example.description));
+      my $result = AttemptResult.new;
       $example.duration = 0;
       self.fail-attempt($example, $result, $error, :label('before-all hook failed in'));
       self.commit-attempt-result($example, $result);
@@ -848,8 +846,6 @@ our class Runner {
 
   method run-example-attempt(Example $example, $result, Bool :$first-attempt) {
     my Bool $auto = ?$example.get-metadata('auto-description', :default(False));
-    $result.auto = $auto;
-    $result.description = $example.description;
 
     if $example.pending {
       $result.outcome = 'pending';
@@ -911,10 +907,7 @@ our class Runner {
     $result.duration = $example.duration;
     $result.captured-matchers = @captured-matchers if $auto;
 
-    if $auto {
-      my $derived = self.derive-auto-description(@captured-matchers);
-      $result.description = $derived if $derived.defined;
-    }
+    self.apply-derived-description($example, @captured-matchers, $initial-failure-count) if $auto;
 
     if $error.defined {
       self.fail-attempt($example, $result, $error);
@@ -1005,11 +998,6 @@ our class Runner {
           description => self.full-description($example),
           duration    => $example.duration,
         );
-        if $result.auto {
-          $!formatter.example-auto-description(
-            $example, :description($result.description),
-          );
-        }
         $!result.add-pass;
         $!formatter.example-pass($example);
         self.record-retry($example, $result, :$attempts, :$max-attempts) if $attempts > 1;
@@ -1021,11 +1009,6 @@ our class Runner {
           description => self.full-description($example),
           duration    => $example.duration,
         );
-        if $result.auto {
-          $!formatter.example-auto-description(
-            $example, :description($result.description),
-          );
-        }
         $!result.add-fail($result.failure-info);
         $!formatter.example-fail($example, :failure-info($result.failure-info));
         self.record-retry($example, $result, :$attempts, :$max-attempts) if $attempts > 1;
@@ -1053,6 +1036,16 @@ our class Runner {
     return unless $example.duration.defined;
     return unless $example.duration >= $!slow-threshold;
     $!formatter.example-slow($example, :threshold($!slow-threshold));
+  }
+
+  method apply-derived-description(Example $example, @captured, Int $initial-failure-count) {
+    my $derived = self.derive-auto-description(@captured);
+    return unless $derived.defined;
+
+    $example.description = $derived;
+
+    my $full = self.full-description($example);
+    .description = $full for Failures.list[$initial-failure-count ..^ Failures.list.elems];
   }
 
   method derive-auto-description(@captured) {

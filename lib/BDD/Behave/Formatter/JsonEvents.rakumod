@@ -107,14 +107,6 @@ method example-start($example, Bool :$auto = False) {
   );
 }
 
-method example-auto-description($example, Str :$description) {
-  emit %(
-    :type<example-auto-description>,
-    :id(self.node-id($example)),
-    :$description,
-  );
-}
-
 method example-pass($example) {
   emit %(
     :type<example-pass>,

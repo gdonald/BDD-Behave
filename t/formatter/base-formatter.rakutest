@@ -7,7 +7,7 @@ use BDD::Behave::Formatter::Tree;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
-plan 8;
+plan 7;
 
 constant Suite     = BDD::Behave::SpecTree::Suite;
 constant Example   = BDD::Behave::SpecTree::Example;
@@ -37,9 +37,6 @@ is stdout-from({ $formatter.run-summary(RunResult.new) }), '', 'the end of the r
 
   ok stdout-from({ $tree.suite-loading(:file('/abs/spec.raku')) })
     .contains('Loading: /abs/spec.raku'), 'the tree formatter names the file it is loading';
-  ok stdout-from({
-    $tree.example-auto-description($example, :description('derived from the matcher'));
-  }).contains('derived from the matcher'), 'the tree formatter writes a derived description';
 }
 
 done-testing;

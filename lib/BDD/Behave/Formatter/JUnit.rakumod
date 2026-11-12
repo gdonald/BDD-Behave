@@ -30,7 +30,6 @@ has Testsuite @!suites;
 has Bool $!multi-file = False;
 has Bool $!emitted    = False;
 has Int  $!failure-watermark = 0;
-has Str  $!pending-auto-description;
 has Real $!total-time = 0e0;
 has Int  $!tests   = 0;
 has Int  $!failures = 0;
@@ -80,7 +79,7 @@ method !ensure-suite($example) {
 
 method !push-case($example, Str $status, %extras = %()) {
   self!ensure-suite($example);
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   my $tc = TestCase.new(
     :classname(self!classname),
     :name($description),
@@ -108,16 +107,10 @@ method !push-case($example, Str $status, %extras = %()) {
 
 method example-start($example, Bool :$auto = False) {
   $!failure-watermark = Failures.list.elems;
-  $!pending-auto-description = Str;
-}
-
-method example-auto-description($example, Str :$description) {
-  $!pending-auto-description = $description;
 }
 
 method example-pass($example) {
   self!push-case($example, 'passed');
-  $!pending-auto-description = Str;
 }
 
 method example-fail($example, :$failure-info) {
@@ -147,7 +140,6 @@ method example-fail($example, :$failure-info) {
          failure-body => $body,
          line => $fail-line ));
   }
-  $!pending-auto-description = Str;
 }
 
 method example-pending($example) {

@@ -5,7 +5,6 @@ unit class BDD::Behave::Formatter::JSON does BDD::Behave::Formatter;
 
 has @!description-stack;
 has @!examples;
-has Str $!pending-auto-description;
 has Bool $!multi-file = False;
 has Int $!seed;
 has Str $!order = 'defined';
@@ -22,7 +21,7 @@ method !full-description(Str $description --> Str) {
 }
 
 method !ex-record($example, Str $status, %extras = %()) {
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   my %record = (
     description      => $description,
     full_description => self!full-description($description),
@@ -55,17 +54,10 @@ method group-end($group) {
 
 method group-around-skipped($group) { }
 
-method example-start($example, Bool :$auto = False) {
-  $!pending-auto-description = Str;
-}
-
-method example-auto-description($example, Str :$description) {
-  $!pending-auto-description = $description;
-}
+method example-start($example, Bool :$auto = False) { }
 
 method example-pass($example) {
   @!examples.push: self!ex-record($example, 'passed');
-  $!pending-auto-description = Str;
 }
 
 method example-fail($example, :$failure-info) {
@@ -94,7 +86,6 @@ method example-fail($example, :$failure-info) {
   }
 
   @!examples.push: self!ex-record($example, 'failed', %( failure => %fail ));
-  $!pending-auto-description = Str;
 }
 
 method example-pending($example) {

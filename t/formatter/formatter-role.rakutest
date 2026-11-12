@@ -3,7 +3,7 @@ use Test;
 
 use BDD::Behave::Formatter;
 
-plan 19;
+plan 18;
 
 class TestFormatter does BDD::Behave::Formatter {
   method name(--> Str) { 'test' }
@@ -22,8 +22,6 @@ lives-ok { $f.group-start(Any) },                         'group-start is a no-o
 lives-ok { $f.group-end(Any) },                           'group-end is a no-op';
 lives-ok { $f.group-around-skipped(Any) },                'group-around-skipped is a no-op';
 lives-ok { $f.example-start(Any) },                       'example-start is a no-op';
-lives-ok { $f.example-auto-description(Any, :description('d')) },
-                                                          'example-auto-description is a no-op';
 lives-ok { $f.example-pass(Any) },                        'example-pass is a no-op';
 lives-ok { $f.example-fail(Any, :failure-info(%())) },    'example-fail is a no-op';
 lives-ok { $f.example-pending(Any) },                     'example-pending is a no-op';

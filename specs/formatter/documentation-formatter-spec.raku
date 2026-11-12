@@ -156,17 +156,6 @@ describe 'BDD::Behave::Formatter::Documentation', {
       expect($out.lines[1]).to.include('group skipped');
       expect($out.lines[1]).to.include('around-all did not invoke continuation');
     }
-
-    it 'renders the description from example-auto-description for `it { }` form', {
-      my $f  = BDD::Behave::Formatter::Documentation.new;
-      my $g  = make-group('g');
-      my $ex = make-example('e');
-      my $out = strip-ansi capture-formatter-output({
-        $f.group-start($g);
-        $f.example-auto-description($ex, :description('derived description'));
-      });
-      expect($out.lines[1]).to.eq('  derived description');
-    }
   }
 
   describe 'silent hooks', {

@@ -11,7 +11,7 @@ use Behave::Test::FakeResult;
 
 my $*BEHAVE-AGGREGATING = True;
 
-plan 31;
+plan 29;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -218,21 +218,4 @@ is $f.name, 'json',              'name is "json"';
   });
   ok $out.contains('"summary_line":"4 examples, 1 failed, 3 passed"'),
                                               'summary_line matches default phrasing';
-}
-
-{
-  my $f12 = BDD::Behave::Formatter::JSON.new;
-  my $g = make-group('Calculator');
-  my $ex = make-example('original');
-  my $out = capture({
-    $f12.group-start($g);
-    $f12.example-start($ex, :auto);
-    $f12.example-auto-description($ex, :description('derived'));
-    $f12.example-pass($ex);
-    $f12.run-summary(fake-result(%( total => 1, passed => 1 )));
-  });
-  ok $out.contains('"description":"derived"'),
-                                              'auto-description rewrites description';
-  ok $out.contains('"full_description":"Calculator derived"'),
-                                              'auto-description rewrites full_description';
 }

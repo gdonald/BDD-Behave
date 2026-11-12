@@ -14,7 +14,7 @@ class Failure is export {
   has Str  $.message;
   has Str  $.aggregation-label;
   has Bool $.from-runner-exception = False;
-  has Str  $.description;
+  has Str  $.description is rw;
 
   submethod BUILD(
     :$!file, :$!line, Mu :$given is raw, Mu :$expected is raw,

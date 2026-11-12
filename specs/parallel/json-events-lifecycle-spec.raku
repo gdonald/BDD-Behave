@@ -100,22 +100,6 @@ describe 'the events the json-events formatter emits', {
     }
   }
 
-  context 'naming an example the runner described for itself', {
-    let(:event, {
-      event-of({
-        formatter().example-auto-description(example(), :description('derived from the matcher'));
-      });
-    });
-
-    it 'reports the description the runner derived', {
-      expect(event()<description>).to.eq('derived from the matcher');
-    }
-
-    it 'identifies the example it belongs to', {
-      expect(event()<id>).to.eq('/abs/spec.raku:7');
-    }
-  }
-
   context 'a pending example', {
     let(:event, { event-of({ formatter().example-pending(example()) }) });
 

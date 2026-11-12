@@ -47,15 +47,6 @@ describe 'the junit document', {
     })).to.include('skipped="1"');
   }
 
-  it 'records the description the runner derived for an example', {
-    expect(document-of(formatter(), -> $f, $suite {
-      my $ex = example-in($suite);
-      $f.example-start($ex);
-      $f.example-auto-description($ex, :description('derived from the matcher'));
-      $f.example-pass($ex);
-    })).to.include('derived from the matcher');
-  }
-
   it 'writes nothing of its own for a group its around hook never ran', {
     expect(document-of(formatter(), -> $f, $suite {
       my $group = ExampleGroup.new(
@@ -98,15 +89,6 @@ describe 'the junit document', {
 
 describe 'the tap document', {
   let(:formatter, { BDD::Behave::Formatter::TAP.new });
-
-  it 'records the description the runner derived for an example', {
-    expect(document-of(formatter(), -> $f, $suite {
-      my $ex = example-in($suite);
-      $f.example-start($ex);
-      $f.example-auto-description($ex, :description('derived from the matcher'));
-      $f.example-pass($ex);
-    })).to.include('derived from the matcher');
-  }
 
   it 'writes nothing of its own for a group its around hook never ran', {
     expect(document-of(formatter(), -> $f, $suite {

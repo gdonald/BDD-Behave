@@ -39,21 +39,26 @@ method group-around-skipped($group) {
 
 method example-start($example, Bool :$auto = False) {
   return if $auto;
+  self!print-name($example);
+}
+
+method !print-name($example) {
   self.print-indent;
   say light-blue('⮑') ~ "  " ~ yellow("'{$example.description}'");
 }
 
-method example-auto-description($example, Str :$description) {
-  self.print-indent;
-  say light-blue('⮑') ~ "  " ~ yellow("'{$description}'");
+method !print-derived-name($example) {
+  self!print-name($example) if $example.get-metadata('auto-description', :default(False));
 }
 
 method example-pass($example) {
+  self!print-derived-name($example);
   self.print-indent;
   say "  " ~ light-blue('⮑') ~ "  " ~ green('SUCCESS');
 }
 
 method example-fail($example, :$failure-info) {
+  self!print-derived-name($example);
   self.print-indent;
   say "  " ~ light-blue('⮑') ~ "  " ~ red('FAILURE');
 }

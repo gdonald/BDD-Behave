@@ -36,7 +36,6 @@ describe 'BDD::Behave::Formatter role', {
     expect({ $f.group-around-skipped(Any);         }).to.not.raise-error;
     expect({ $f.example-around-skipped(Any);       }).to.not.raise-error;
     expect({ $f.example-slow(Any, :threshold(0.1)); }).to.not.raise-error;
-    expect({ $f.example-auto-description(Any, :description('x')); }).to.not.raise-error;
     expect({ $f.run-summary(Any);                  }).to.not.raise-error;
     expect({ $f.profile-summary([], :limit(0));    }).to.not.raise-error;
     expect({ $f.benchmark-summary-section([], []); }).to.not.raise-error;

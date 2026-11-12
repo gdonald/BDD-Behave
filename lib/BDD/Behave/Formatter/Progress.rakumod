@@ -36,7 +36,6 @@ method group-around-skipped($group) {
 }
 
 method example-start($example, Bool :$auto = False) { }
-method example-auto-description($example, Str :$description) { }
 
 method example-pass($example) {
   print green('.');

@@ -176,22 +176,6 @@ describe 'BDD::Behave::Formatter::JSON', {
       expect($out).to.include('around-each did not invoke continuation');
     }
 
-    it 'derives full_description from auto-description for `it { }` form', {
-      my $f = BDD::Behave::Formatter::JSON.new;
-      my $g = make-group('Calculator');
-      my $ex = make-example('original');
-      my $out = capture-formatter-output({
-        $f.group-start($g);
-        $f.example-start($ex, :auto);
-        $f.example-auto-description($ex, :description('derived label'));
-        $f.example-pass($ex);
-        $f.group-end($g);
-        $f.run-summary(fake-result(%( total => 1, passed => 1 )));
-      });
-      expect($out).to.include('"description":"derived label"');
-      expect($out).to.include('"full_description":"Calculator derived label"');
-    }
-
     it 'captures expectation failures from the failure-info', {
       my $f = BDD::Behave::Formatter::JSON.new;
       my $g = make-group('g');

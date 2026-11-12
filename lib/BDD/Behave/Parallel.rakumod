@@ -1156,11 +1156,6 @@ sub handle-event($formatter, ParallelRunResult $result, Int $worker, %event, @su
         $formatter.example-start($example, :auto(?%event<auto>));
       }
     }
-    when 'example-auto-description' {
-      my $example = resolve-example(@suites, %event);
-      $formatter.example-auto-description($example, :description(%event<description> // ''))
-      if $example.defined;
-    }
     when 'example-pass' {
       my $example = resolve-example(@suites, %event);
       if $example.defined {
@@ -1377,7 +1372,12 @@ sub lookup-example(@suites, Str $id) {
 
 our sub resolve-example(@suites, %event) {
   my $hit = lookup-example(@suites, %event<id>);
-  return $hit if $hit.defined;
+
+  if $hit.defined {
+    $hit.description = %event<description>.Str if %event<description>;
+    return $hit;
+  }
+
   my $desc = (%event<description> // %event<failure-description> // '').Str;
   my $file = (%event<file>        // %event<failure-file>        // '').Str;
   my $line = (%event<line>        // %event<failure-line>        // 0).Int;

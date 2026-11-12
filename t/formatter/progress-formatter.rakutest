@@ -7,7 +7,7 @@ use BDD::Behave::Formatter::Progress;
 use BDD::Behave::SpecTree;
 use Behave::Test::FakeResult;
 
-plan 24;
+plan 23;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -74,8 +74,6 @@ my $g = make-group('outer');
 is capture({ $f.group-start($g); $f.group-end($g) }), '',   'group-start/-end silent';
 is capture({ $f.example-start($p); $f.example-start($p, :auto) }),
    '',                                                      'example-start silent';
-is capture({ $f.example-auto-description($p, :description('d')) }),
-   '',                                                      'example-auto-description silent';
 
 $p.duration = 0.5;
 is capture({ $f.example-slow($p, :threshold(0.1.Rat)) }),

@@ -8,7 +8,7 @@ subset HookPhase of Str where { $_ eq any(<before-all after-all before-each afte
 my Int $tree-generation = 0;
 
 our class SpecNode {
-  has Str $.description is required;
+  has Str $.description is rw is required;
   has IO::Path $.file is required;
   has Int $.line is required;
   has Int $.occurrence = 1;

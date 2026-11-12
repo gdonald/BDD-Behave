@@ -7,7 +7,6 @@ has @!fragments;
 has Bool $!multi-file = False;
 has Bool $!emitted    = False;
 has Int  $!failure-watermark = 0;
-has Str  $!pending-auto-description;
 has Real $!started-at;
 
 method name(--> Str) { 'html' }
@@ -46,11 +45,6 @@ method group-around-skipped($group) {
 
 method example-start($example, Bool :$auto = False) {
   $!failure-watermark = Failures.list.elems;
-  $!pending-auto-description = Str;
-}
-
-method example-auto-description($example, Str :$description) {
-  $!pending-auto-description = $description;
 }
 
 method !escape(Str $s --> Str) {
@@ -77,7 +71,7 @@ method !duration-span($example --> Str) {
 }
 
 method !render-example($example, Str $status, Str $marker, Str :$detail) {
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   my $body = '<div class="example ' ~ $status ~ '">'
            ~ '<span class="marker">' ~ $marker ~ '</span> '
            ~ '<span class="desc">' ~ self!escape($description) ~ '</span> '
@@ -91,7 +85,6 @@ method !render-example($example, Str $status, Str $marker, Str :$detail) {
 
 method example-pass($example) {
   self!render-example($example, 'pass', '✓');
-  $!pending-auto-description = Str;
 }
 
 method example-fail($example, :$failure-info) {
@@ -114,7 +107,6 @@ method example-fail($example, :$failure-info) {
     }
   }
   self!render-example($example, 'fail', '✗', :detail(@lines.join("\n")));
-  $!pending-auto-description = Str;
 }
 
 method example-pending($example) {

@@ -7,7 +7,7 @@ use BDD::Behave::Formatter::Documentation;
 use BDD::Behave::SpecTree;
 use Behave::Test::FakeResult;
 
-plan 23;
+plan 22;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -112,14 +112,6 @@ ok $around-skipped-out.lines[1].contains('aborted (SKIPPED'),
    'around-each-skipped: SKIPPED suffix';
 ok $around-skipped-out.lines[1].contains('around-each did not invoke continuation'),
    'around-each-skipped: continuation hint included';
-
-my $auto-out = strip-ansi capture({
-  my $f9 = BDD::Behave::Formatter::Documentation.new;
-  $f9.group-start($g);
-  $f9.example-auto-description(make-example('e'), :description('derived label'));
-});
-is $auto-out.lines[1], '  derived label',
-   'auto-description rendered just like a passing example';
 
 is capture({
   my $f10 = BDD::Behave::Formatter::Documentation.new;

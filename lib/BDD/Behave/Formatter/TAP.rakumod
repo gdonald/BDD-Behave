@@ -16,7 +16,6 @@ has @!entries;
 has Bool $!multi-file = False;
 has Bool $!emitted    = False;
 has Int  $!failure-watermark = 0;
-has Str  $!pending-auto-description;
 
 method name(--> Str) { 'tap' }
 
@@ -46,24 +45,18 @@ method !full-description(Str $description --> Str) {
 
 method example-start($example, Bool :$auto = False) {
   $!failure-watermark = Failures.list.elems;
-  $!pending-auto-description = Str;
-}
-
-method example-auto-description($example, Str :$description) {
-  $!pending-auto-description = $description;
 }
 
 method example-pass($example) {
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   @!entries.push: Entry.new(
     :status('ok'),
     :description(self!full-description($description)),
   );
-  $!pending-auto-description = Str;
 }
 
 method example-fail($example, :$failure-info) {
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   my $entry = Entry.new(
     :status('not ok'),
     :description(self!full-description($description)),
@@ -93,12 +86,11 @@ method example-fail($example, :$failure-info) {
   }
   $entry.diagnostics = @diag;
   @!entries.push: $entry;
-  $!pending-auto-description = Str;
 }
 
 method example-pending($example) {
   my $reason = $example.get-metadata('pending-reason') // 'pending';
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   @!entries.push: Entry.new(
     :status('ok'),
     :description(self!full-description($description)),
@@ -108,7 +100,7 @@ method example-pending($example) {
 }
 
 method example-skipped($example) {
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   @!entries.push: Entry.new(
     :status('ok'),
     :description(self!full-description($description)),
@@ -118,7 +110,7 @@ method example-skipped($example) {
 }
 
 method example-around-skipped($example) {
-  my $description = $!pending-auto-description // $example.description;
+  my $description = $example.description;
   @!entries.push: Entry.new(
     :status('ok'),
     :description(self!full-description($description)),

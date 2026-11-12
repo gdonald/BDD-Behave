@@ -7,7 +7,7 @@ use BDD::Behave::Parallel::EventStream;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
-plan 37;
+plan 35;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -66,15 +66,6 @@ is $formatter.name, 'json-events', 'the formatter names itself';
   my %event = event-of({ $formatter.example-around-skipped($example) });
   is %event<description>, 'an example', 'a skipped example is described';
   is %event<line>, 7, 'a skipped example reports where it was declared';
-}
-
-{
-  my %event = event-of({
-    $formatter.example-auto-description($example, :description('derived from the matcher'));
-  });
-
-  is %event<description>, 'derived from the matcher', 'an auto description reports what was derived';
-  is %event<id>, '/abs/spec.raku:7', 'an auto description identifies its example';
 }
 
 {

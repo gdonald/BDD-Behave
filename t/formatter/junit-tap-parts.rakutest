@@ -9,7 +9,7 @@ use BDD::Behave::Formatter::TAP;
 use BDD::Behave::Runner;
 use BDD::Behave::SpecTree;
 
-plan 13;
+plan 11;
 
 constant Suite        = BDD::Behave::SpecTree::Suite;
 constant ExampleGroup = BDD::Behave::SpecTree::ExampleGroup;
@@ -55,13 +55,6 @@ sub group-in($suite --> ExampleGroup) {
     $f.example-around-skipped(example-in($suite));
   }).contains('skipped="1"'), 'junit counts it in the skipped total';
 
-  ok document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
-    my $ex = example-in($suite);
-    $f.example-start($ex);
-    $f.example-auto-description($ex, :description('derived from the matcher'));
-    $f.example-pass($ex);
-  }).contains('derived from the matcher'), 'junit records a derived description';
-
   nok document-of(BDD::Behave::Formatter::JUnit.new, -> $f, $suite {
     $f.group-around-skipped(group-in($suite));
   }).contains('a group'), 'junit writes nothing of its own for a skipped group';
@@ -92,13 +85,6 @@ sub group-in($suite --> ExampleGroup) {
 }
 
 {
-  ok document-of(BDD::Behave::Formatter::TAP.new, -> $f, $suite {
-    my $ex = example-in($suite);
-    $f.example-start($ex);
-    $f.example-auto-description($ex, :description('derived from the matcher'));
-    $f.example-pass($ex);
-  }).contains('derived from the matcher'), 'tap records a derived description';
-
   nok document-of(BDD::Behave::Formatter::TAP.new, -> $f, $suite {
     $f.group-around-skipped(group-in($suite));
   }).contains('a group'), 'tap writes nothing of its own for a skipped group';

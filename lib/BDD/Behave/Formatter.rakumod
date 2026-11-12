@@ -13,7 +13,6 @@ method group-end($group)              { }
 method group-around-skipped($group)   { }
 
 method example-start($example, Bool :$auto = False)              { }
-method example-auto-description($example, Str :$description)     { }
 method example-pass($example)                                    { }
 method example-fail($example, :$failure-info)                    { }
 method example-pending($example)                                 { }

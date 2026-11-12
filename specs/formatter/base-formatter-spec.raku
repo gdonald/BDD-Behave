@@ -47,18 +47,9 @@ describe 'a formatter that overrides nothing', {
 
 describe 'the tree formatter announcing its work', {
   let(:formatter, { BDD::Behave::Formatter::Tree.new });
-  let(:example, {
-    Example.new(:description('an example'), :file('/abs/spec.raku'.IO), :line(7), :block(sub { }));
-  });
 
   it 'names the file it is loading', {
     expect(stdout-from({ formatter().suite-loading(:file('/abs/spec.raku')) }))
       .to.include('Loading: /abs/spec.raku');
-  }
-
-  it 'writes the description the runner derived for an example', {
-    expect(stdout-from({
-      formatter().example-auto-description(example(), :description('derived from the matcher'));
-    })).to.include('derived from the matcher');
   }
 }

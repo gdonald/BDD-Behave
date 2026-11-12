@@ -144,15 +144,6 @@ describe 'BDD::Behave::Formatter::Progress', {
       expect($out).to.eq('');
     }
 
-    it 'example-auto-description is silent', {
-      my $f  = BDD::Behave::Formatter::Progress.new;
-      my $ex = make-example('e');
-      my $out = capture-formatter-output({
-        $f.example-auto-description($ex, :description('derived'));
-      });
-      expect($out).to.eq('');
-    }
-
     it 'example-slow does not interrupt the dots stream', {
       my $f  = BDD::Behave::Formatter::Progress.new;
       my $ex = make-example('slow');

@@ -47,12 +47,11 @@ describe 'example (file)', :order<defined>, {
       expect($ex.tags).to.include('demo');
     }
 
-    it 'supports the block-only form (auto-description placeholder)', {
+    it 'registers the block-only form as an example described by its matcher', {
       my $fixture = find-fixture();
-      my $auto    = $fixture.examples.first({
-        .description.starts-with('example at example-spec.raku:')
-      });
-      expect($auto.description).to.start-with('example at example-spec.raku:');
+      my @auto    = $fixture.examples.grep(*.get-metadata('auto-description', :default(False)));
+
+      expect(@auto.elems).to.eq(1);
     }
 
     it 'stores the block as a Callable for deferred execution', {

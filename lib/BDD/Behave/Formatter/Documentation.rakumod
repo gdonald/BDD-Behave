@@ -38,9 +38,6 @@ method group-around-skipped($group) {
 }
 
 method example-start($example, Bool :$auto = False) { }
-method example-auto-description($example, Str :$description) {
-  say self!prefix ~ green($description);
-}
 
 method example-pass($example) {
   say self!prefix ~ green($example.description);

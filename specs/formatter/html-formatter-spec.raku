@@ -221,20 +221,6 @@ describe 'BDD::Behave::Formatter::HTML', {
       expect($out).to.include('a &amp; b');
       expect($out).to.include('&quot;quoted&quot; &lt;thing&gt;');
     }
-
-    it 'derives the description from auto-description before render', {
-      my $f = BDD::Behave::Formatter::HTML.new;
-      my $g = make-group('g');
-      my $ex = make-example('original');
-      my $out = capture-formatter-output({
-        $f.group-start($g);
-        $f.example-start($ex, :auto);
-        $f.example-auto-description($ex, :description('derived'));
-        $f.example-pass($ex);
-        $f.run-summary(fake-result(%( total => 1, passed => 1 )));
-      });
-      expect($out).to.include('>derived<');
-    }
   }
 
   describe 'load errors', {
